@@ -1,0 +1,5 @@
+#this service is used to set joint position, velocity and effort
+sensor_msgs/JointState joint_state
+---
+bool success                                              # return true if spawn successful
+string status_message                                     # comments if available
