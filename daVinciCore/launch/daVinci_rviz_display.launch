@@ -1,5 +1,5 @@
 <launch>
-  <arg name="model" default="$(find daVinciCore)/urdf/daVinci_Stable.urdf" />
+  <arg name="model" default="$(find daVinciCore)/urdf/daVinci_jhu.urdf" />
   <arg name="gui" default="true" />
   <param name="robot_description"
          command="cat $(arg model)"/>
