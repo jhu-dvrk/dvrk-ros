@@ -1,0 +1,28 @@
+<launch>
+  <arg name="model" default="$(find daVinciCore)/urdf/daVinci_Stable.urdf" />
+  <arg name="gui" default="true" />
+  <param name="robot_description"
+         command="cat $(arg model)"/>
+  <param name="use_gui" value="$(arg gui)"/>
+
+  <!-- joint state publisher -->
+  <node name="joint_state_publisher"
+        pkg="joint_state_publisher"
+        type="joint_state_publisher" />
+
+  <!-- robot state publisher -->
+  <node name="robot_state_publisher"
+        pkg="robot_state_publisher"
+        type="state_publisher" />
+
+  <!-- rviz node -->
+  <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find merlin_definition)/merlin.vcg" /> -->
+  <node name="rviz" pkg="rviz" type="rviz"/>
+  
+  <rosparam>
+    <!-- if connect to dv hardware, update this source list  -->
+    <!-- source_list: [/adjutant/device/merlin/joint_states] -->
+  </rosparam>
+</launch>
+
+

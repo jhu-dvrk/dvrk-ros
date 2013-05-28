@@ -1,0 +1,20 @@
+<launch>
+
+  <!-- start gazebo with an empty plane -->
+  <param name="/use_sim_time" value="true" />
+  <arg name="gui" default="true"/>
+
+  <!-- start empty world -->
+  <node name="gazebo" pkg="gazebo" type="debug" args="$(find gazebo_worlds)/worlds/empty.world" respawn="false" output="screen"/>
+
+  <!-- start gui -->
+  <group if="$(arg gui)">
+    <node name="gazebo_gui" pkg="gazebo" type="gui" respawn="false" output="screen"/>
+  </group>
+
+  <!-- send robot description to parameter sercer-->
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find daVinciCore)/urdf/daVinci_exp.urdf.xacro'" />
+
+   <node name="daVinciCore" pkg="gazebo" type="spawn_model" args="-urdf -param robot_description -model daVinci" respawn="false" output="screen" />
+  
+</launch>
