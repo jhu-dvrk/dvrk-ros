@@ -16,12 +16,12 @@
         type="state_publisher" />
 
   <!-- rviz node -->
-  <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find merlin_definition)/merlin.vcg" /> -->
-  <node name="rviz" pkg="rviz" type="rviz"/>
+  <node name="rviz" pkg="rviz" type="rviz"
+        args="-d $(find daVinciCore)/davinci.rviz" />
   
   <rosparam>
     <!-- if connect to dv hardware, update this source list  -->
-    <!-- source_list: [/adjutant/device/merlin/joint_states] -->
+    source_list: [/adjutant/device/merlin/joint_states]
   </rosparam>
 </launch>
 
