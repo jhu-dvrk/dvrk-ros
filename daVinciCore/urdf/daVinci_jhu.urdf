@@ -1,324 +1,270 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <robot name="daVinci">
 
-  <!-- /// LINKS ///////////////////////////////////////////// -->
-  <!-- /////////////////////////////////////////////////////// -->
+  <!-- link 0: psm base link -->
+  <link name="psm_base_link">
+    <visual>
+      <origin rpy="1.5708 0 3.1416" xyz="0.039 -0.03888 -0.07879"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/psm_base.dae"/>      
+      </geometry>
+    </visual>
+  </link>
   
-  <!-- 0: 80/20 table -->
-  <link name="mounting_platform">
-    <inertial>
-      <mass value="0.01"/>
-      <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://daVinciCore/meshes/slave_frame.dae"/>      
-      </geometry>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 1.0"/>
-      <geometry>
-        <mesh filename="package://daVinciCore/meshes/slave_frame.dae"/>      
-      </geometry>
-    </collision>
-  </link>  
-
-  <!-- 1: PSM base -->
-  <link name="mounting_base_link">
-    <inertial>
-      <mass value="0.01"/>
-      <origin xyz="0 0 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://daVinciCore/meshes/mounting_base.dae"/>      
-      </geometry>
-      <material name="green">
-        <color rgba="0 1 0 1"/>
-      </material>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://daVinciCore/meshes/mounting_base.dae"/>      
-      </geometry>
-    </collision>
-  </link>
-
-  <!-- 2: outer_yaw -->
+  <!-- joint 1 -->
+  <joint name="outer_yaw_joint" type="revolute">
+    <parent link="psm_base_link"/>
+    <child link="outer_yaw_link"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="1.5708 -1.5708 0" xyz="0.0 0.0 0.0"/>
+    <limit lower="-1.5707" upper="1.5707" velocity=".4" effort="1000"/>
+  </joint> 
+  
+  
+  <!-- link 1: outer_yaw -->
   <link name="outer_yaw_link">
-    <inertial>
-      <mass value="0.01"/>
-      <origin xyz="0.001 -0.1 -0.1375"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0.001 -0.1 -0.1375"/>
+      <!-- <origin rpy="0 0 -1.5708" xyz="0.0125 0 0.1575"/> -->
+      <origin rpy="3.1416 0 1.5708" xyz="0.0125 0 0.1575"/>
       <geometry>
         <mesh filename="package://daVinciCore/meshes/outer_yaw.dae"/>      
       </geometry>
-      <material name="red">
-        <color rgba="1 0 0 1"/>
-      </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0.001 -0.1 -0.1375"/>
-      <geometry>
-        <mesh filename="package://daVinciCore/meshes/outer_yaw.dae"/>      
-      </geometry>
-    </collision>
   </link>
 
-  <!-- 3-1: outter_pitch_base -->
-  <link name="outer_pitch_base_link">
-    <inertial>
-      <mass value="0.01"/>
-      <origin xyz="-0.040 -0.130 -0.0901"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial>
+  <!-- joint 2-1: outer_pitch_1 -->
+  <joint name="outer_pitch_joint_1" type="revolute">
+    <parent link="outer_yaw_link"/>
+    <child link="outer_pitch_back_link"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="-1.5708 -1.5708 0" xyz="0 0.0295 0.1495"/>
+    <limit lower="-0.7854" upper="0.7854" velocity=".4" effort="1000"/>
+  </joint> 
+  
+  <!-- link 2: outer_pitch_back -->
+  <link name="outer_pitch_back_link">
     <visual>
-      <origin rpy="0 0 0" xyz="-0.040 -0.130 -0.0901"/>
+      <origin rpy="0 0 -0.27129" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://daVinciCore/meshes/outer_pitch_base.dae"/>      
+        <mesh filename="package://daVinciCore/meshes/outer_pitch_back.dae"/>      
       </geometry>
-      <material name="blue">
-        <color rgba="0 0 1 1"/>
-      </material>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="-0.040 -0.130 -0.0901"/>
-      <geometry>
-        <mesh filename="package://daVinciCore/meshes/outer_pitch_base.dae"/>      
-      </geometry>
-    </collision>
   </link>
 
-  <!-- 3-2: outer_pitch_front -->
+  <!-- joint 2-2: outer_pitch_2 -->
+  <joint name="outer_pitch_joint_2" type="continuous">
+    <parent link="outer_yaw_link"/>
+    <child link="outer_pitch_front_link"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="-1.5708 -1.5708 0" xyz="0 0.0295 0.0595"/>
+    <mimic joint="outer_pitch_joint_1" multiplier="1"/>
+  </joint>
+
+  <!-- link 2-2: outer_pitch_front -->
   <link name="outer_pitch_front_link">
-    <inertial>
-      <mass value="0.01"/>
-      <origin xyz="0 -0.066 -0.010"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0 -0.066 -0.010"/>
+      <origin rpy="0 0 -0.27129" xyz="0 0 0"/>
+      <!-- <origin rpy="0 0 0" xyz="0 0 0"/> -->
       <geometry>
         <mesh filename="package://daVinciCore/meshes/outer_pitch_front.dae"/>      
       </geometry>
-      <material name="red"/>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 -0.066 -0.010"/>
-      <geometry>
-        <mesh filename="package://daVinciCore/meshes/outer_pitch_front.dae"/>      
-      </geometry>
-    </collision>
   </link>
 
-  <!-- 3-3: outer_pitch_bottom -->
+  <!-- joint 2-3: outer_pitch_3 -->
+  <joint name="outer_pitch_joint_3" type="continuous">
+    <parent link="outer_pitch_back_link"/>
+    <child link="outer_pitch_bottom_link"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="0 0 0" xyz="0.04178 0.15007 -0.0137"/>
+    <mimic joint="outer_pitch_joint_1" multiplier="-1"/>
+  </joint>
+
+  <!-- link 2-3: outer_pitch_bottom -->
   <link name="outer_pitch_bottom_link">
-    <inertial>
-      <mass value="0.01"/>
-      <origin xyz="0 -0.093 -0.010"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0 -0.093 -0.010"/>
+      <origin rpy="0 -1.5708 0" xyz="0.009 0 0"/>
       <geometry>
         <mesh filename="package://daVinciCore/meshes/outer_pitch_bottom.dae"/>      
       </geometry>
-      <material name="green"/>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 -0.093 -0.010"/>
-      <geometry>
-        <mesh filename="package://daVinciCore/meshes/outer_pitch_bottom.dae"/>      
-      </geometry>
-    </collision>
   </link>
 
-  <!-- 3-4: outer_pitch_top -->
+  <!-- joint 2-4: outer_pitch_4 -->
+  <joint name="outer_pitch_joint_4" type="continuous">
+    <parent link="outer_pitch_back_link"/>
+    <child link="outer_pitch_top_link"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="0 0 0" xyz="0.04209 0.18695 -0.02412"/>
+    <mimic joint="outer_pitch_joint_1" multiplier="-1"/>
+  </joint>
+
+  <!-- link 2-4: outer_pitch_top -->
   <link name="outer_pitch_top_link">
-    <inertial>
-      <mass value="0.01"/>
-      <origin xyz="0 -0.093 -0.010"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="0 -0.093 -0.010"/>
+      <origin rpy="0 -1.5708 0" xyz="0.009 0 0"/>
       <geometry>
         <mesh filename="package://daVinciCore/meshes/outer_pitch_top.dae"/>      
       </geometry>
-      <material name="green"/>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 -0.093 -0.010"/>
-      <geometry>
-        <mesh filename="package://daVinciCore/meshes/outer_pitch_top.dae"/>      
-      </geometry>
-    </collision>
   </link>
 
-  <!-- 3-5: outer_insertion_link -->
+  <!-- joint 2-5: outer_pitch_5 -->
+  <joint name="outer_pitch_joint_5" type="continuous">
+    <parent link="outer_pitch_bottom_link"/>
+    <child link="outer_insertion_link"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="0 0 0" xyz="-0.520 0 -0.0175"/>
+    <mimic joint="outer_pitch_joint_1" multiplier="1"/>
+  </joint>
+
+  <!-- link 2-5: outer_insertion -->
   <link name="outer_insertion_link">
-    <inertial>
-      <mass value="0.01"/>
-      <origin xyz="-0.031 -0.086 -0.070"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial>
     <visual>
-      <origin rpy="0 0 0" xyz="-0.031 -0.086 -0.070"/>
-      <geometry>
-        <mesh filename="package://daVinciCore/meshes/outer_insertion.dae"/>
-      </geometry>
-      <material name="blue"/>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="-0.031 -0.086 -0.070"/>
+      <origin rpy="0 -1.5708 1.5708" xyz="0.02528 0.429 0"/>
       <geometry>
         <mesh filename="package://daVinciCore/meshes/outer_insertion.dae"/>      
       </geometry>
-    </collision>
-  </link>
-
-  <!-- 4: tool_adapter_link -->
-  <link name="tool_adaptor_link">
-    <inertial>
-      <mass value="0.01"/>
-      <origin xyz="0 -0.041 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 -0.041 0"/>
-      <geometry>
-        <mesh filename="package://daVinciCore/meshes/tool_adaptor.dae"/>
-      </geometry>
-      <material name="green"/>
     </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 -0.041 0"/>
-      <geometry>
-        <mesh filename="package://daVinciCore/meshes/tool_adaptor.dae"/>
-      </geometry>
-    </collision>
   </link>
 
-  <!-- 5: tool_link -->
-  <link name="tool_link">
-    <inertial>
-      <mass value="0.01"/>
-      <origin xyz="0 -0.034 0"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial>
-    <visual>
-      <origin rpy="0 0 0" xyz="0 -0.034 0"/>
-      <geometry>
-        <mesh filename="package://daVinciCore/meshes/tool_asm.dae"/>
-      </geometry>
-      <material name="red"/>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 -0.034 0"/>
-      <geometry>
-        <mesh filename="package://daVinciCore/meshes/tool_asm.dae"/>
-      </geometry>
-    </collision>
-  </link>
-
-
-  <!-- /// JOINTS///////////////////////////////////////////// -->
-  <!-- /////////////////////////////////////////////////////// -->
-  
-  <!-- joint 0: fixed offset only -->
-  <joint name="mounting_base_joint" type="fixed">
-    <parent link="mounting_platform"/>
-    <child link="mounting_base_link"/>
-    <origin rpy="0 0 0" xyz="0.38114 1.03237 1.60767"/>
-  </joint>
-
-  <!-- joint 1 -->
-  <joint name="outer_yaw_joint" type="revolute">
-    <parent link="mounting_base_link"/>
-    <child link="outer_yaw_link"/>
-    <axis xyz="1 0 0"/>
-    <origin rpy="0 0 0" xyz="0.094 0.0525 0.147"/>
-    <limit lower="-1.5707" upper="1.5707" velocity=".4" effort="1000"/>
-    <dynamics damping="0.1"/>
-  </joint> 
-
-  <!-- TODO: should be revolute joint with limits -->
-  <!-- joint 2-1: outer_pitch_base_joint -->
-  <joint name="outer_pitch_base_joint" type="revolute">
-    <parent link="outer_yaw_link"/>
-    <child link="outer_pitch_base_link"/>
-    <axis xyz="0 1 0"/>
-    <origin rpy="0 0 0" xyz="0.150 0.085 0.0"/>
-    <limit lower="-0.7854" upper="0.7854" velocity=".4" effort="1000"/>
-    <dynamics damping="0.1"/>
-  </joint>
-
-  <!-- joint 2-2: outer_pitch_front_joint -->
-  <joint name="outer_pitch_front_joint" type="fixed">
-    <parent link="outer_pitch_base_link"/>
-    <child link="outer_pitch_front_link"/>
-    <axis xyz="0 1 0"/>
-    <!-- <origin rpy="0 0 0" xyz="0.245 0.085 0"/> -->
-    <origin rpy="0 0 0" xyz="0.095 0.0 0.0"/>
-    <dynamics damping="0.1"/>
-  </joint>
-  
-  <!-- joint 2-3: outer_pitch_botton_joint -->
-  <!-- j_2_5 = -j_2_1 -->
-  <joint name="outer_pitch_bottom_joint" type="revolute">
-    <axis xyz="0 1 0"/>
-    <parent link="outer_pitch_base_link"/>
-    <child link="outer_pitch_bottom_link"/>
-    <origin rpy="0 0 0" xyz="-0.03 -0.040 0.147"/>
-    <limit lower="-0.7854" upper="0.7854" velocity=".4" effort="1000"/>
-    <dynamics damping="0.1"/>
-  </joint>
-
-  <!-- joint 2-4: outer_pitch_top_joint -->
-  <joint name="outer_pitch_top_joint" type="fixed">
-    <parent link="outer_pitch_bottom_link"/>
-    <child link="outer_pitch_top_link"/>
-    <axis xyz="0 1 0"/>
-    <origin rpy="0 0 0" xyz="0.000 0.000 0.038"/>
-    <dynamics damping="0.1"/>
-  </joint>
-
-  <!-- joint 2-5: outer_insertion_joint -->
-  <!-- j_2_5 = j_2_1 -->
-  <joint name="outer_insertion_joint" type="revolute">
-    <parent link="outer_pitch_bottom_link"/>
-    <child link="outer_insertion_link"/>
-    <axis xyz="0 1 0"/>
-    <origin rpy="0 0 0" xyz="0.510 0.003 0"/>
-    <limit lower="-0.7854" upper="0.7854" velocity=".4" effort="1000"/>
-    <dynamics damping="0.1"/>
-  </joint>
-
-  <!-- joint 3: outer_insertion_joint -->
-  <joint name="tool_insertion_joint" type="prismatic">
+  <!-- joint 3: insertion -->
+  <joint name="outer_insertion_joint" type="prismatic">
     <parent link="outer_insertion_link"/>
-    <child link="tool_adaptor_link"/>
-    <axis xyz="0 0 -1"/>
-    <!-- <origin rpy="0 0 0" xyz="0.005 -0.048 -0.200"/> -->
-    <origin rpy="0 0 0" xyz="0.005 -0.048 -0.100"/>
-    <dynamics damping="0.1"/>
-    <limit effort="30" velocity="1.0" lower="0.0" upper="0.25"/>
+    <child link="tool_main_link"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="1.5708 0 0" xyz="-0.0403 0.23622 0"/>
+    <limit lower="0" upper="0.240" velocity=".4" effort="1000"/>
   </joint>
 
-
-  <!-- joint 4: fixed tool_joint -->
-  <joint name="tool_joint" type="fixed">
-    <parent link="tool_adaptor_link"/>
-    <child link="tool_link"/>
-    <origin rpy="0 0 0" xyz="0.010 0 0"/>
+  <!-- link 3: tool_main_link -->
+  <link name="tool_main_link">
+    <visual>
+      <origin rpy="0 0 1.5708" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/tool_main.dae"/>      
+      </geometry>
+    </visual>
+  </link>
+  
+  <!-- joint 4-1: Outer Roll -->
+  <joint name="outer_roll_joint" type="revolute">
+    <parent link="tool_main_link"/>
+    <child link="tool_wrist_link"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="0 0 0" xyz="0 0 0.36680"/>
+    <limit lower="-2.2689" upper="2.2689" velocity=".4" effort="1000"/>
   </joint>
 
+  <!-- link 4-1: tool_main_link -->
+  <link name="tool_wrist_link">
+    <visual>
+      <origin rpy="0 0 1.5708" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/tool_wrist_link.dae"/>      
+      </geometry>
+    </visual>
+  </link>
+
+  <!-- joint 4-1: Outer Roll shaft -->
+  <joint name="outer_roll_shaft_joint" type="fixed">
+    <parent link="tool_wrist_link"/>
+    <child link="tool_wrist_shaft_link"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="0 0 0" xyz="0 0 0.0091"/>
+  </joint>
+
+  <!-- link 4-1: tool_wrist_shaft_link -->
+  <link name="tool_wrist_shaft_link">
+    <visual>
+      <origin rpy="1.5708 0 0" xyz="0 0.00401 0"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/tool_wrist_shaft_link.dae"/> 
+      </geometry>
+    </visual>
+  </link>
+
+  <!-- joint 5: Outer wrist pitch joint -->
+  <joint name="outer_wrist_pitch_joint" type="revolute">
+    <parent link="tool_wrist_shaft_link"/>
+    <child link="tool_wrist_sca_link"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="-1.5708 -1.5708 0" xyz="0 0 0"/>
+    <limit lower="-1.5707" upper="1.5707" velocity=".4" effort="1000"/>
+  </joint>
+
+  <!-- link 5: tool_wrist_sca_link -->
+  <link name="tool_wrist_sca_link">
+    <visual>
+      <!-- <origin rpy="0 3.1416 0" xyz="0 0 0"/> -->
+      <origin rpy="1.5708 3.1416 0" xyz="0.0051 0.0032 0"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/tool_wrist_sca_link.dae"/> 
+      </geometry>
+    </visual>
+  </link>
+
+  <!-- joint 5-2: Outer wristyaw joint -->
+  <joint name="outer_wrist_yaw_joint" type="revolute">
+    <parent link="tool_wrist_sca_link"/>
+    <child link="tool_wrist_sca_shaft_link"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="-1.5708 -1.5708 0" xyz="0.0089 0 0"/>
+    <!-- +/- 80 deg -->
+    <limit lower="-1.3963" upper="1.3963" velocity=".4" effort="1000"/>
+  </joint>
+
+  <!-- link 5-2: tool_wrist_sca_shaft_link -->
+  <link name="tool_wrist_sca_shaft_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 -0.0025"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/tool_wrist_sca_shaft_link.dae"/> 
+      </geometry>
+    </visual>
+  </link>
+  
+  <!-- joint 6-1: Outer open angle 1  -->
+  <joint name="outer_wrist_open_angle_joint_1" type="revolute">
+    <parent link="tool_wrist_sca_shaft_link"/>
+    <child link="tool_wrist_sca_ee_link_1"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <!-- <origin rpy="-1.5708 -1.5708 0" xyz="0 0 0"/> -->
+    <limit lower="0" upper="1.5707" velocity=".4" effort="1000"/>
+  </joint>
+
+  <!-- link 6-1: Outer open angle link 1 -->
+  <link name="tool_wrist_sca_ee_link_1">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/tool_wrist_sca_link_2.dae"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <!-- joint 6-2: Outer open angle 2   -->
+  <joint name="outer_wrist_open_angle_joint_2" type="revolute">
+    <parent link="tool_wrist_sca_shaft_link"/>
+    <child link="tool_wrist_sca_ee_link_2"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <limit lower="-1.5707" upper="1.5707" velocity=".4" effort="1000"/>
+    <mimic joint="outer_wrist_open_angle_joint_1" multiplier="-1"/>
+  </joint>
+
+  <!-- link 6-2: Outer open angle link 2 -->
+  <link name="tool_wrist_sca_ee_link_2">
+    <visual>
+      <origin rpy="0 3.1516 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/tool_wrist_sca_link_2.dae"/>
+      </geometry>
+    </visual>
+  </link>
+
+
+  
 </robot>
