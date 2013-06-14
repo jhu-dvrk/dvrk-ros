@@ -67,7 +67,7 @@
     <axis xyz="0 0 1"/>
     <!--rotates about z axis-->
     <!--limit effort and velocity picked arbitrarily check-->
-    <limit effort="1000.0" lower="0.0" upper="3.14159" velocity="1000"/>
+    <limit effort="1000.0" lower="-.70" upper="2.16" velocity="1000"/>
     <joint_properties damping="0.0" friction="0.0"/>
   </joint>
 
@@ -114,7 +114,7 @@
     <axis xyz="0 0 1"/>
     <!--rotates about  x axis-->
     <!--limit effort and velocity picked arbitrarily check-->
-    <limit effort="100.0" lower="0" upper="3.14159" velocity="1000"/>
+    <limit effort="100.0" lower="-1.14" upper="1.0" velocity="1000"/>
     <joint_properties damping="0.0" friction="0.0"/>
   </joint>
 
@@ -125,7 +125,7 @@
     <axis xyz="0 0 1"/>
     <!--rotates about  x axis-->
     <!--limit effort and velocity picked arbitrarily check-->
-    <limit effort="100.0" lower="-3.14159" upper="3.14159" velocity="1000"/>
+    <limit effort="100.0" lower="-1.14" upper="1.0" velocity="1000"/>
     <joint_properties damping="0.0" friction="0.0"/>
   </joint>
 
@@ -135,9 +135,9 @@
     <child link="Link_APar"/>
     <origin rpy="0 0 0" xyz=".1011 0 0"/>
     <axis xyz="0 0 1"/>
-       <!--rotates about  x axis
-    limit effort and velocity picked arbitrarily check-->
-    <limit effort="100.0" lower="-3.14159" upper="3.14159" velocity="1000"/>
+       <!--limit effort and velocity picked arbitrarily check-->
+       <!-- Link_APar will not move from its attached link (A_Parx2)-->
+    <limit effort="100.0" lower="0" upper="0" velocity="1000"/>
     <joint_properties damping="0.0" friction="0.0"/>
   </joint>
 
@@ -165,7 +165,7 @@
     <axis xyz="0 0 1"/>
     <!--rotates about x axis-->
     <!--limit effort and velocity picked arbitrarily check-->
-    <limit effort="100.0" lower="1.57" upper="1.57" velocity="1000"/>
+    <limit effort="100.0" lower=".33" upper="2.35" velocity="1000"/>
     <joint_properties damping="0.0" friction="0.0"/>
   </joint>
 
@@ -187,12 +187,12 @@
 
   <joint name="ABottom_to_WristPlat" type="revolute">
     <parent link="A_Bottom"/>
-    <child link="Wrist_Platform"/>  <!-- -.3048 defined from MTMDaVinci paper and  added -.01 from original to align, -0.02746 defined from CAD file-->
-    <origin rpy="3.14 1.57 1.57" xyz="-.3148 -.02746 0"/>
+    <child link="Wrist_Platform"/>  <!-- -.3048 & -.02746 defined from MTMDaVinci paper and  added -.01 from original to align, -0.02746 defined from CAD file-->
+    <origin rpy="3.14 1.57 1.57" xyz="-.3148 -.02646 0"/>
     <axis xyz="0 0 1"/>
     <!--rotates about z axis-->
     <!--limit effort and velocity picked arbitrarily check-->
-    <limit effort="100.0" lower="1.57" upper="1.57" velocity="1000"/>
+    <limit effort="100.0" lower="0" upper="3.14159" velocity="1000"/>
     <joint_properties damping="0.0" friction="0.0"/>
   </joint>
 
@@ -220,7 +220,7 @@
     <axis xyz="0 1 0"/>
     <!--rotates about x axis-->
     <!--limit effort and velocity picked arbitrarily check-->
-    <limit effort="100.0" lower="0.0" upper="3.14159" velocity="1000"/>
+    <limit effort="100.0" lower="-1.57" upper="3.14159" velocity="1000"/>
     <joint_properties damping="0.0" friction="0.0"/>
   </joint>
 
@@ -250,7 +250,7 @@
     <axis xyz="0 0 1"/>
     <!--rotates about z axis-->
     <!--limit effort and velocity picked arbitrarily check-->
-    <limit effort="100.0"  lower="-3.14159" upper="3.14159" velocity="1000"/>
+    <limit effort="100.0"  lower="-2.60" upper="2.50" velocity="1000"/>
     <joint_properties damping="0.0" friction="0.0"/>
   </joint>
 
@@ -274,7 +274,7 @@
     <axis xyz="0 0 1"/>
     <!--rotates about y axis-->
     <!--limit effort and velocity picked arbitrarily check-->
-    <limit effort="100.0" lower="-2.57" upper="2.57" velocity="1000"/>
+    <limit effort="100.0" lower="-3.14159" upper="3.14159" velocity="1000"/>
     <joint_properties damping="0.0" friction="0.0"/>
   </joint>
   <!-- </gazebo>-->
