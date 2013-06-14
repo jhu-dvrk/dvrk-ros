@@ -12,13 +12,14 @@
   <link name="base_link">
     <visual>
       <origin xyz="0 0 .3"/>
+      <!-- IF user desires visual for base/frame
       <geometry>
         <cylinder length="0.005" radius="0.2"/>
-      </geometry>
-      <material name="white">
-        <color rgba="1 1 1 1"/>
-      </material>
-    </visual>
+        </geometry>
+          <material name="white">
+          <color rgba="1 1 1 1"/>
+          </material>        -->
+  </visual>
   </link>
 
   <link name="Top_Panel">
@@ -31,10 +32,10 @@
         <color rgba="0 0 .8 1"/>
       </material>
     </visual>
-    <!-- <inertial>
-      <mass value="10"/>
-       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial> -->
+    <inertial>
+       <mass value="900"/>
+       <inertia ixx="90.0" ixy="0.0" ixz="0.0" iyy="90.0" iyz="0.0" izz="90.0"/>
+    </inertial> 
   </link>
 
 
@@ -54,10 +55,10 @@
     <material name="white">
       <color rgba="1 1 1 1"/>
     </material>
-    <!--  <inertial>
-      <mass value="10"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial>-->
+    <inertial>
+      <mass value="1000"/>
+      <inertia ixx="100.0" ixy="0.0" ixz="0.0" iyy="100.0" iyz="0.0" izz="100.0"/>
+    </inertial>
   </link>
 
   <joint name="Top_panel_to_OutPitchSh" type="revolute">
@@ -77,10 +78,10 @@
         <mesh filename="package://DaVinci_tutorials/intuitiveresearchkit_ros/MTM_CAD_Model/meshes/ArmParallel.dae"/>
       </geometry>
     </visual>
-    <!--  <inertial>
-      <mass value="10"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial>-->
+      <inertial>
+      <mass value="900"/>
+      <inertia ixx="90.0" ixy="0.0" ixz="0.0" iyy="90.0" iyz="0.0" izz="90.0"/>
+    </inertial>
   </link>
 
   <link name="A_Par_x2">
@@ -89,10 +90,10 @@
         <mesh filename="package://DaVinci_tutorials/intuitiveresearchkit_ros/MTM_CAD_Model/meshes/ArmParallel1.STL"/>
       </geometry>
     </visual>
-    <!--  <inertial>
-      <mass value="10"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial>-->
+     <inertial>
+      <mass value="500"/>
+      <inertia ixx="50.0" ixy="0.0" ixz="0.0" iyy="50.0" iyz="0.0" izz="50.0"/>
+    </inertial>
   </link>
   
   <link name="Link_APar">
@@ -102,8 +103,8 @@
       </geometry>
     </visual>
      <inertial>
-      <mass value="10"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+      <mass value="300"/>
+      <inertia ixx="30.0" ixy="0.0" ixz="0.0" iyy="30.0" iyz="0.0" izz="30.0"/>
     </inertial>
     </link> 
 
@@ -152,10 +153,10 @@
         <color rgba="0 0 .8 1"/>
       </material>
     </visual>
-    <!--  <inertial>
-      <mass value="10"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial> -->
+     <inertial>
+      <mass value="800"/>
+      <inertia ixx="80.0" ixy="0.0" ixz="0.0" iyy="90.0" iyz="0.0" izz="80.0"/>
+    </inertial> 
   </link>
 
   <joint name="Aparallel_to_Abottom" type="revolute">
@@ -179,10 +180,10 @@
         <mesh filename="package://DaVinci_tutorials/intuitiveresearchkit_ros/MTM_CAD_Model/meshes/WristPlatform.STL"/>
       </geometry>
     </visual>
-    <!--  <inertial>
-      <mass value="10"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial>-->
+      <inertial>
+      <mass value="300"/>
+      <inertia ixx="30.0" ixy="0.0" ixz="0.0" iyy="30.0" iyz="0.0" izz="30.0"/>
+    </inertial>
   </link>
 
   <joint name="ABottom_to_WristPlat" type="revolute">
@@ -206,10 +207,10 @@
         <color rgba="0 0 .8 1"/>
       </material>
     </visual>
-    <!--  <inertial>
-      <mass value="10"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial>-->
+     <inertial>
+      <mass value="250"/>
+      <inertia ixx="25.0" ixy="0.0" ixz="0.0" iyy="25.0" iyz="0.0" izz="25.0"/>
+    </inertial>
   </link> 
 
 
@@ -237,10 +238,10 @@
         <mesh filename="package://DaVinci_tutorials/intuitiveresearchkit_ros/MTM_CAD_Model/meshes/WristYaw.STL"/>
       </geometry>
     </visual>
-    <!--  <inertial>
-      <mass value="10"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-    </inertial>-->
+     <inertial>
+      <mass value="200"/>
+      <inertia ixx="20.0" ixy="0.0" ixz="0.0" iyy="20.0" iyz="0.0" izz="20.0"/>
+    </inertial>
   </link>
 
   <joint name="Pitch_to_yaw" type="revolute">
@@ -260,11 +261,10 @@
         <mesh filename="package://DaVinci_tutorials/intuitiveresearchkit_ros/MTM_CAD_Model/meshes/WristRoll.STL"/>
       </geometry>
     </visual>
-    <!--  <inertial>
-      <mass value="10"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
-      u
-    </inertial>-->
+     <inertial>
+      <mass value="140"/>
+      <inertia ixx="10.0" ixy="0.0" ixz="0.0" iyy="10.0" iyz="0.0" izz="10.0"/>
+    </inertial>
   </link>
 
   <joint name="Yaw_to_Roll" type="revolute">
@@ -277,5 +277,5 @@
     <limit effort="100.0" lower="-3.14159" upper="3.14159" velocity="1000"/>
     <joint_properties damping="0.0" friction="0.0"/>
   </joint>
-  <!-- </gazebo>-->
+  <!--</gazebo>-->
 </robot>
