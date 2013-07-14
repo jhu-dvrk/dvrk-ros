@@ -1,0 +1,24 @@
+<package>
+  <description brief="irk_teleop">
+
+     irk_teleop
+
+  </description>
+  <author>Zihan Chen</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/irk_teleop</url>
+
+  <depend package="roscpp"/>
+  <depend package="rospy"/>
+  <depend package="roslib"/>
+  <depend package="tf"/>
+  <depend package="tf_conversions"/>
+  <depend package="std_msgs"/>
+  <depend package="sawROS"/>
+  <depend package="sensor_msgs" />
+  <depend package="geometry_msgs" />
+  
+</package>
+
+
