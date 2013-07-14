@@ -8,12 +8,11 @@
     <!-- if connect to dv hardware, update this source list  -->
     source_list: [/irk_psm/joint_states]
   </rosparam>
-
   
   <!-- psm_kinematics node  -->
-  <!-- <node name="psm_kinematics" -->
-  <!--       pkg="irk_psm_kinematics" -->
-  <!--       type="irk_psm_logic"/> -->
+  <node name="psm_kinematics"
+        pkg="irk_psm_kinematics"
+        type="irk_psm_logic"/>
   
   <!-- joint state publisher -->
   <node name="joint_state_publisher"
@@ -28,7 +27,6 @@
   <!-- rviz node -->
   <node name="rviz" pkg="rviz" type="rviz"
         args="-d $(find irk_model)/davinci.rviz" />
-  
 
 </launch>
 

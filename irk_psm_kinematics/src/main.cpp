@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     ros::Publisher pub_psm_joint_state =
             nh.advertise<sensor_msgs::JointState>("/irk_psm/joint_states", 1000);
     ros::Publisher pub_psm_pose =
-            nh.advertise<geometry_msgs::Pose>("/irk_psm/cartesian_pose", 1000);
+            nh.advertise<geometry_msgs::Pose>("/irk_psm/cartesian_pose_current", 1000);
 
 
     // cisst robManipulator
