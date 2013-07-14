@@ -1,5 +1,5 @@
 <launch>
-  <arg name="model" default="$(find daVinciCore)/urdf/daVinci_jhu.urdf" />
+  <arg name="model" default="$(find irk_model)/urdf/daVinci_jhu.urdf" />
   <arg name="gui" default="true" />
   <param name="robot_description"
          command="cat $(arg model)"/>
@@ -17,7 +17,7 @@
 
   <!-- rviz node -->
   <node name="rviz" pkg="rviz" type="rviz"
-        args="-d $(find daVinciCore)/davinci.rviz" />
+        args="-d $(find irk_model)/davinci.rviz" />
   
   <rosparam>
     <!-- if connect to dv hardware, update this source list  -->
