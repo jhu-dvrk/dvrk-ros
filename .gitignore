@@ -11,3 +11,4 @@ controller_manager_msgs/src/controller_manager_msgs/__init__.py
 qtcreator-build-*
 CMakeLists.txt.user
 cisstLog.txt
+.ropeproject
