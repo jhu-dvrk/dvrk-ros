@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<robot include-once="true" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Mathematical Constants -->
+  <xacro:property name="PI" value="3.1415926535897931" />
+
+  <!-- Colors -->
+  <xacro:property name="DaVinciWhite"     value="1.0 1.0 1.0 1"/>
+  <xacro:property name="DaVinciLightGray" value="0.8 0.8 0.8 1"/>
+  <xacro:property name="DaVinciMedGray"   value="0.6 0.6 0.6 1"/>
+  <xacro:property name="DaVinciDarkGray"  value="0.4 0.4 0.4 1"/>
+  <xacro:property name="DaVinciRed"       value="0.5 0.4 0.4 1"/>
+  <xacro:property name="DaVinciGreen"     value="0.4 0.5 0.4 1"/>
+  <xacro:property name="DaVinciBlue"      value="0.4 0.4 0.5 1"/>
+
+  <material name="DaVinciWhite">    <color rgba="${DaVinciWhite}"/></material>
+  <material name="DaVinciLightGray"><color rgba="${DaVinciLightGray}"/></material>
+  <material name="DaVinciMedGray">  <color rgba="${DaVinciMedGray}"/></material>
+  <material name="DaVinciDarkGray"> <color rgba="${DaVinciDarkGray}"/></material>
+  <material name="DaVinciRed">      <color rgba="${DaVinciRed}"/></material>
+  <material name="DaVinciGreen">    <color rgba="${DaVinciGreen}"/></material>
+  <material name="DaVinciBlue">     <color rgba="${DaVinciBlue}"/></material>
+</robot>
+

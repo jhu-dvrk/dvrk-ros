@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="daVinci">
+
+
+  <!-- /// LINKS ///////////////////////////////////////////// -->
+  <!-- /////////////////////////////////////////////////////// -->
+  
+  <link name="world"/>
+
+  <!-- 80/20 table -->
+  <link name="mounting_platform">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/slave_frame.stl"/>      
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 1.0"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/slave_frame.stl"/>      
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- PSM base -->
+  <link name="mounting_base_link">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/mounting_base.stl"/>      
+      </geometry>
+      <material name="green">
+        <color rgba="0 1 0 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/mounting_base.stl"/>      
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- outer_yaw -->
+  <link name="outer_yaw_link">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0.001 -0.1 -0.1375"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0.001 -0.1 -0.1375"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/outer_yaw.stl"/>      
+      </geometry>
+      <material name="red">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0.001 -0.1 -0.1375"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/outer_yaw.stl"/>      
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- outter_pitch_base -->
+  <link name="outer_pitch_base_link">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="-0.040 -0.130 -0.0901"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="-0.040 -0.130 -0.0901"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/outer_pitch_base.stl"/>      
+      </geometry>
+      <material name="blue">
+        <color rgba="0 0 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="-0.040 -0.130 -0.0901"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/outer_pitch_base.stl"/>      
+      </geometry>
+    </collision>
+  </link>
+
+
+  <!-- outer_pitch_front -->
+  <link name="outer_pitch_front_link">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0 -0.066 -0.010"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 -0.066 -0.010"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/outer_pitch_front.stl"/>      
+      </geometry>
+      <material name="red"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 -0.066 -0.010"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/outer_pitch_front.stl"/>      
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- outer_pitch_botton -->
+  <link name="outer_pitch_bottom_link">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0 -0.093 -0.010"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 -0.093 -0.010"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/outer_pitch_bottom.stl"/>      
+      </geometry>
+      <material name="green"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 -0.093 -0.010"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/outer_pitch_bottom.stl"/>      
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- outer_pitch_top -->
+  <link name="outer_pitch_top_link">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0 -0.093 -0.010"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 -0.093 -0.010"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/outer_pitch_top.stl"/>      
+      </geometry>
+      <material name="green"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 -0.093 -0.010"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/outer_pitch_top.stl"/>      
+      </geometry>
+    </collision>
+  </link>
+
+
+  <!-- outer_insertion_link -->
+  <link name="outer_insertion_link">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="-0.031 -0.086 -0.070"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="-0.031 -0.086 -0.070"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/outer_insertion.stl"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="-0.031 -0.086 -0.070"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/outer_insertion.stl"/>      
+      </geometry>
+    </collision>
+  </link>
+
+
+  <!-- tool_adapter_link -->
+  <link name="tool_adaptor_link">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0 -0.041 0"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 -0.041 0"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/tool_adaptor.stl"/>
+      </geometry>
+      <material name="green"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 -0.041 0"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/tool_adaptor.stl"/>
+      </geometry>
+    </collision>
+  </link>
+
+
+
+  <!-- tool_link -->
+  <link name="tool_link">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0 -0.034 0"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 -0.034 0"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/tool_asm.stl"/>      
+      </geometry>
+      <material name="red"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 -0.034 0"/>
+      <geometry>
+        <mesh filename="package://daVinciCore/meshes/tool_asm.stl"/>      
+      </geometry>
+    </collision>
+  </link>
+
+
+  <!-- /// JOINTS //////////////////////////////////////////// -->
+  <!-- /////////////////////////////////////////////////////// -->
+
+
+  <joint name="wall_joint" type="fixed">
+    <parent link="world"/>
+    <child link="mounting_platform"/>
+    <origin rpy="0 0 0" xyz="0 -0.762 0"/>
+  </joint>
+
+  <joint name="mounting_base_joint" type="fixed">
+    <parent link="mounting_platform"/>
+    <child link="mounting_base_link"/>
+    <origin rpy="0 0 0" xyz="0.38114 1.03237 1.60767"/>
+  </joint>
+
+  <!-- TODO: should be revolute joint with limits -->
+  <!-- joint 1 -->
+  <joint name="outer_yaw_joint" type="continuous">
+    <parent link="mounting_base_link"/>
+    <child link="outer_yaw_link"/>
+    <axis xyz="1 0 0"/>
+    <origin rpy="0 0 0" xyz="0.094 0.0525 0.147"/>
+    <dynamics damping="0.1"/>
+  </joint>  
+  
+  <!-- TODO: should be revolute joint with limits -->
+  <!-- joint 2 -->
+  <joint name="outer_pitch_base_joint" type="continuous">
+    <parent link="outer_yaw_link"/>
+    <child link="outer_pitch_base_link"/>
+    <axis xyz="0 1 0"/>
+    <origin rpy="0 0 0" xyz="0.150 0.085 0"/>
+    <dynamics damping="0.1"/>
+  </joint>
+
+  <!-- outer_pitch_front_joint -->
+  <joint name="outer_pitch_front_joint" type="continuous">
+    <axis xyz="0 1 0"/>
+    <parent link="outer_yaw_link"/>
+    <origin rpy="0 0 0" xyz="0.245 0.085 0"/>
+    <child link="outer_pitch_front_link"/>
+    <dynamics damping="0.1"/>
+  </joint>
+
+  <!-- outer_pitch_botton_joint -->
+  <joint name="outer_pitch_bottom_joint" type="continuous">
+    <axis xyz="0 1 0"/>
+    <parent link="outer_pitch_base_link"/>
+    <origin rpy="0 0 0" xyz="-0.03 -0.040 0.147"/>
+    <child link="outer_pitch_bottom_link"/>
+    <dynamics damping="0.1"/>
+  </joint>
+  
+
+  <!-- outer_pitch_top_joint -->
+  <joint name="outer_pitch_top_joint" type="continuous">
+    <axis xyz="0 1 0"/>
+    <parent link="outer_pitch_base_link"/>
+    <origin rpy="0 0 0" xyz="-0.03 -0.040 0.185"/>
+    <child link="outer_pitch_top_link"/>
+    <dynamics damping="0.1"/>
+  </joint>
+
+
+  <!-- outer_insertion_joint -->
+  <joint name="outer_insertion_joint" type="continuous">
+    <parent link="outer_pitch_bottom_link"/>
+    <child link="outer_insertion_link"/>
+    <axis xyz="0 1 0"/>
+    <origin rpy="0 0 0" xyz="0.510 0.003 0"/>
+    <dynamics damping="0.1"/>
+  </joint>
+
+  <!-- TODO: set correct limit -->
+  <!-- joint 3 -->
+  <joint name="tool_insertion_joint" type="prismatic">
+    <parent link="outer_insertion_link"/>
+    <child link="tool_adaptor_link"/>
+    <axis xyz="0 0 1"/>
+    <origin rpy="0 0 0" xyz="0.005 -0.048 -0.200"/>
+    <dynamics damping="0.1"/>
+    <limit effort="30" velocity="1.0" lower="-0.5" upper="0.5"/>
+  </joint>
+
+  <!-- TODO: tool is fixed to adapter ???   -->
+  <joint name="tool_joint" type="fixed">
+    <parent link="tool_adaptor_link"/>
+    <child link="tool_link"/>
+    <origin rpy="0 0 0" xyz="0.010 0 0"/>
+  </joint>
+  
+  
+
+  <!-- /// GAZEBO //////////////////////////////////////////// -->
+  <!-- /////////////////////////////////////////////////////// -->
+  <gazebo reference="world">
+    <material>Gazebo/WoodFloor</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+
+  <gazebo reference="mounting_platform">
+    <material>Gazebo/Gold</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+
+  <gazebo reference="mounting_base_link">
+    <material>Gazebo/Blue</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+
+  <gazebo reference="outer_yaw_link">
+    <material>Gazebo/Red</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+
+  <gazebo reference="outer_pitch_base_link">
+    <material>Gazebo/Green</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+
+  <gazebo reference="outer_pitch_front_link">
+    <material>Gazebo/Blue</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+
+  <gazebo reference="outer_pitch_bottom_link">
+    <material>Gazebo/Red</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+
+  <gazebo reference="outer_pitch_top_link">
+    <material>Gazebo/Red</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+
+  <gazebo reference="outer_insertion_link">
+    <material>Gazebo/Blue</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+
+  <gazebo reference="tool_adaptor_link">
+    <material>Gazebo/Red</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+
+  <gazebo reference="tool_link">
+    <material>Gazebo/Green</material>
+    <turnGravityOff>false</turnGravityOff>
+  </gazebo>
+
+  <!-- <gazebo> -->
+  <!--   <controller:daVinciGazeboJointController -->
+  <!--       name="daVinciGazeboJointController" -->
+  <!--       plugin="libdaVinciGazeboJointController.so"> -->
+  <!--     <alwaysOn>true</alwaysOn> -->
+  <!--     <updateRate>100.0</updateRate> -->
+  <!--   </controller:daVinciGazeboJointController> -->
+  <!-- </gazebo> -->
+
+</robot>
+
+
+
+
