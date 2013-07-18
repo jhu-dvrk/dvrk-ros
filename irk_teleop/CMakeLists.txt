@@ -28,3 +28,55 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 #rosbuild_add_executable(example examples/example.cpp)
 #target_link_libraries(example ${PROJECT_NAME})
+
+
+set (REQUIRED_CISST_LIBRARIES
+  cisstCommon
+  cisstCommonXML
+  cisstVector
+  cisstVectorQt
+  cisstOSAbstraction
+  cisstMultiTask
+  cisstMultiTaskQt
+  cisstParameterTypes
+  cisstRobot
+  cisstNumerical
+  cisstQt)
+
+# find cisst and make sure the required libraries have been compiled
+find_package (cisst REQUIRED ${REQUIRED_CISST_LIBRARIES})
+
+if (cisst_FOUND_AS_REQUIRED)
+
+  # load cisst configuration
+  include (${CISST_USE_FILE})
+
+  # sawRobotIO1394 has been compiled within cisst, we should find it automatically
+  cisst_find_saw_component (sawRobotIO1394 REQUIRED)
+  cisst_find_saw_component (sawIntuitiveResearchKit REQUIRED)
+  cisst_find_saw_component (sawControllers REQUIRED)
+
+  if (sawRobotIO1394_FOUND)
+
+    include_directories (${sawRobotIO1394_INCLUDE_DIR}
+                         ${sawIntuitiveResearchKit_INCLUDE_DIR}
+                         ${sawControllers_INCLUDE_DIR})
+
+    link_directories (${sawRobotIO1394_LIBRARY_DIR}
+                      ${sawIntuitiveResearchKit_LIBRARY_DIR}
+                      ${sawControllers_LIBRARY_DIR})
+
+    rosbuild_add_executable(irk_teleop src/teleop.cpp)
+
+    # link against non cisst libraries and cisst components
+    target_link_libraries (irk_teleop
+                           ${sawRobotIO1394_LIBRARIES}
+                           ${sawIntuitiveResearchKit_LIBRARIES}
+                           ${sawControllers_LIBRARIES})
+
+    # link against cisst libraries (and dependencies)
+    cisst_target_link_libraries (irk_teleop ${REQUIRED_CISST_LIBRARIES})
+
+  endif (sawRobotIO1394_FOUND)
+
+endif (cisst_FOUND_AS_REQUIRED)
