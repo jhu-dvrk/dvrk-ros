@@ -1,5 +1,5 @@
 <launch>
-  <arg name="model" default="$(find irk_model)/urdf/daVinci_jhu.urdf" />
+  <arg name="model" default="$(find irk_model)/model/psm_jhu.urdf" />
   <arg name="gui" default="true" />
   <param name="robot_description"
          command="cat $(arg model)"/>
@@ -17,11 +17,11 @@
 
   <!-- rviz node -->
   <node name="rviz" pkg="rviz" type="rviz"
-        args="-d $(find irk_model)/davinci.rviz" />
+        args="-d $(find irk_model)/rviz_config/psm_rviz.rviz" />
   
   <rosparam>
     <!-- if connect to dv hardware, update this source list  -->
-    source_list: [/adjutant/device/merlin/joint_states]
+    <!-- source_list: [/adjutant/device/merlin/joint_states] -->
   </rosparam>
 </launch>
 
