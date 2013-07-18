@@ -9,15 +9,25 @@
 #include <ros/package.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Pose.h>
+#include <std_msgs/Float32.h>
+#include <std_msgs/Int8.h>
 
 #include <cisstRobot/robManipulator.h>
 #include <cisstVector.h>
+
+#include <sawROS/mtsCISSTToROS.h>
 
 // set up joint state variables
 vctDoubleVec psm_joint_current;
 vctDoubleVec psm_joint_command;
 vctFrm4x4 psm_pose_current;
 vctFrm4x4 psm_pose_command;
+double mtm_gripper;
+int control_mode;
+
+const int MODE_RESET = 0;
+const int MODE_MANUAL = 1;
+const int MODE_TELEOP = 2;
 
 
 void psm_cmd_pose_cb(const geometry_msgs::Pose &msg)
@@ -39,6 +49,11 @@ void psm_cmd_pose_cb(const geometry_msgs::Pose &msg)
     std::cout << psm_pose_command << std::endl;
 }
 
+void mtm_gripper_cb(const std_msgs::Float32 &msg)
+{
+    mtm_gripper = msg.data;
+}
+
 void psm_joint_feedback_cb(const sensor_msgs::JointState &msg)
 {
 //    ROS_ERROR("joint_feedback_cb %f", msg.position.at(0));
@@ -48,21 +63,14 @@ void psm_joint_feedback_cb(const sensor_msgs::JointState &msg)
     psm_joint_current[3] = msg.position[7];  // outer_roll_joint
     psm_joint_current[4] = msg.position[8];  // outer_wrist_pitch_joint
     psm_joint_current[5] = msg.position[9];  // outer_wrist_yaw_joint
-//    psm_joint_current[6] = msg.position[10]; // outer_wrist_open_angle_joint_1
-
-//    ROS_ERROR(psm_joint_current.ToString().c_str());
+    //    psm_joint_current[6] = msg.position[10]; // outer_wrist_open_angle_joint_1
 }
 
-void cisstToROS(const vctFrm4x4 &cisstData, geometry_msgs::Pose &rosData)
+void psm_mode_cb(const std_msgs::Int8 &msg)
 {
-    vctQuatRot3 quat(cisstData.Rotation(), VCT_NORMALIZE);
-    rosData.orientation.x = quat.X();
-    rosData.orientation.y = quat.Y();
-    rosData.orientation.z = quat.Z();
-    rosData.orientation.w = quat.W();
-    rosData.position.x = cisstData.Translation().X();
-    rosData.position.y = cisstData.Translation().Y();
-    rosData.position.z = cisstData.Translation().Z();
+    if (msg.data >= 0 && msg.data <=2) {
+        control_mode = msg.data;
+    }
 }
 
 int main(int argc, char** argv)
@@ -70,14 +78,19 @@ int main(int argc, char** argv)
     // ros initialization
     ros::init(argc, argv, "irk_psm_kinematics");
     ros::NodeHandle nh;
-    ros::Rate rate(50);  // 50 hz rate
+    ros::Rate rate(100);  // 100 hz rate
 
     // subscriber
     ros::Subscriber sub_psm_cmd =
             nh.subscribe("/irk_psm/cartesian_pose_command", 1000, psm_cmd_pose_cb);
+    ros::Subscriber sub_mtm_gripper =
+        nh.subscribe("/irk_mtm/gripper_position", 1000, mtm_gripper_cb);
 
     ros::Subscriber sub_psm_fb =
             nh.subscribe("/joint_states", 1000, psm_joint_feedback_cb);
+
+    ros::Subscriber sub_mode =
+            nh.subscribe("/irk_psm/control_mode", 1000, psm_mode_cb);
 
     // publisher
     ros::Publisher pub_psm_joint_state =
@@ -111,12 +124,17 @@ int main(int argc, char** argv)
     msg_js.name.push_back("outer_roll_joint");
     msg_js.name.push_back("outer_wrist_pitch_joint");
     msg_js.name.push_back("outer_wrist_yaw_joint");
-//    msg.name.push_back("outer_wrist_open_angle_joint_1");
+    msg_js.name.push_back("outer_wrist_open_angle_joint_1");
 
     geometry_msgs::Pose msg_pose;
 
     int count = 0;
-    double deltaX = 0.001;
+    control_mode = MODE_RESET;  // start with reset_mode
+    vctFrm4x4 frame6to7;
+    frame6to7.Assign(0.0, -1.0, 0.0, 0.0,
+                     0.0,  0.0, 1.0, 0.0102,
+                     -1.0, 0.0, 0.0, 0.0,
+                     0.0,  0.0, 0.0, 1.0);
 
     // ------------ run() --------------------------
     ros::Time start_time = ros::Time::now();
@@ -125,7 +143,10 @@ int main(int argc, char** argv)
         // --------- Compute current pose & publish ----------
         // psm forward kinematics
         psm_pose_current = psm_manip.ForwardKinematics(psm_joint_current);
-        cisstToROS(psm_pose_current, msg_pose);
+        psm_pose_current = psm_pose_current * frame6to7;
+        psm_pose_current.Rotation().NormalizedSelf();
+
+        mtsCISSTToROS(psm_pose_current, msg_pose);
         if (count % 10 == 0) {
 //            std::cout << psm_pose_current << std::endl << std::endl;
         }
@@ -137,28 +158,35 @@ int main(int argc, char** argv)
 
         // 2 sec, set robot to start position
         // after, in teleop mode
-        if ((ros::Time::now() - start_time).sec < 2.0) {
+        vctFrm4x4 pose6;
+        switch(control_mode)
+        {
+        case MODE_RESET:
             psm_joint_command.SetAll(0.0);
             psm_joint_command[2] = 0.10;
             psm_pose_command.Assign(psm_pose_current);
-        } else {
-//            vctFrm4x4 psm_pose_command(psm_pose_current);
-//            psm_pose_command.Translation().X() += deltaX;
-//            if (psm_pose_command.Translation().X() > 0.08) {
-//                deltaX = -0.001;
-//            } else if (psm_pose_command.Translation().X() < -0.08) {
-//                deltaX = 0.001;
-//            }
-//            psm_joint_command.ForceAssign(psm_joint_current);
+            break;
+        case MODE_MANUAL:
+            psm_pose_command.Assign(psm_pose_current);
+            break;
+        case MODE_TELEOP:
             // psm_pose_command updated in callback
-            psm_manip.InverseKinematics(psm_joint_command, psm_pose_command);
+            pose6 = psm_pose_command * frame6to7.Inverse();
+            psm_manip.InverseKinematics(psm_joint_command, pose6);
+            break;
+        default:
+            break;
         }
 
-        msg_js.position.resize(psm_joint_command.size());
+        // 6 + open angle (gripper)
+        msg_js.position.resize(psm_joint_command.size() + 1);
         std::copy(psm_joint_command.begin(), psm_joint_command.end(), msg_js.position.begin());
+        msg_js.position[6] = mtm_gripper;
 
-        // publish command psm_joint_state
-        pub_psm_joint_state.publish(msg_js);
+        if (control_mode != MODE_MANUAL) {
+            // publish command psm_joint_state
+            pub_psm_joint_state.publish(msg_js);
+        }
 
         ros::spinOnce();
 
