@@ -12,3 +12,4 @@ qtcreator-build-*
 CMakeLists.txt.user
 cisstLog.txt
 .ropeproject
+*.log

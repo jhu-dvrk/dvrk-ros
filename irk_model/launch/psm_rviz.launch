@@ -1,14 +1,16 @@
 <launch>
   <arg name="model" default="$(find irk_model)/model/psm_jhu.urdf" />
   <arg name="gui" default="true" />
+  <arg name="rate" default="100" />
   <param name="robot_description"
          command="cat $(arg model)"/>
   <param name="use_gui" value="$(arg gui)"/>
+  <param name="rate" value="$(arg rate)"/>
 
   <!-- joint state publisher -->
   <node name="joint_state_publisher"
         pkg="joint_state_publisher"
-        type="joint_state_publisher" />
+        type="joint_state_publisher"/>
 
   <!-- robot state publisher -->
   <node name="robot_state_publisher"

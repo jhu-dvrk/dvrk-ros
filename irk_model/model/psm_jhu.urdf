@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<robot name="daVinci">
+<robot name="irk_psm">
 
   <!-- link 0: psm base link -->
   <link name="psm_base_link">
