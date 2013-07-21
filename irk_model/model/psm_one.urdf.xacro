@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<robot name="irk_psm" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Macros -->
+  <xacro:include filename="$(find irk_model)/model/psm.urdf.xacro"/>
+
+  <link name="world"/>
+  <xacro:psm 
+      prefix=""
+      parent_link="world"
+      xyz="-0.5 0.0 0.5" rpy="0.0 0.0 3.1415926"/>
+  
+</robot>

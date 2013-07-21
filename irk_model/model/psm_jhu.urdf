@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <robot name="irk_psm">
+  
+  <link name="world"/>
 
+  <joint name="fixed_joint" type="fixed">
+    <parent link="world"/>
+    <child link="psm_base_link"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+  </joint>
+  
   <!-- link 0: psm base link -->
   <link name="psm_base_link">
     <visual>
@@ -264,7 +272,5 @@
       </geometry>
     </visual>
   </link>
-
-
   
 </robot>

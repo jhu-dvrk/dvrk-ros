@@ -123,22 +123,22 @@
       </inertial>
     </link>
 
-    <link name="${prefix}front_parallel_link">
-      <visual>
-        <geometry>
-          <mesh filename="package://irk_model/meshes/mtm/Link.dae"/>
-        </geometry>
-      </visual>
-      <collision>
-        <geometry>
-          <mesh filename="package://irk_model/meshes/mtm/Link.STL"/>
-        </geometry>
-      </collision>
-      <inertial>
-        <mass value="0.8"/>
-        <inertia ixx="8.0" ixy="0.0" ixz="0.0" iyy="8.0" iyz="0.0" izz="8.0"/>
-      </inertial> 
-    </link>
+    <!-- <link name="${prefix}front_parallel_link"> -->
+    <!--   <visual> -->
+    <!--     <geometry> -->
+    <!--       <mesh filename="package://irk_model/meshes/mtm/Link.dae"/> -->
+    <!--     </geometry> -->
+    <!--   </visual> -->
+    <!--   <collision> -->
+    <!--     <geometry> -->
+    <!--       <mesh filename="package://irk_model/meshes/mtm/Link.STL"/> -->
+    <!--     </geometry> -->
+    <!--   </collision> -->
+    <!--   <inertial> -->
+    <!--     <mass value="0.8"/> -->
+    <!--     <inertia ixx="8.0" ixy="0.0" ixz="0.0" iyy="8.0" iyz="0.0" izz="8.0"/> -->
+    <!--   </inertial>  -->
+    <!-- </link> -->
 
     <joint name="${prefix}shoulder_pitch_joint" type="revolute">
       <parent link="${prefix}outer_yaw_link"/>
@@ -160,18 +160,17 @@
       <!--limit effort and velocity picked arbitrarily check-->
       <limit effort="100.0" lower="${-PI/2}" upper="${PI/2}" velocity="10"/>
       <joint_properties damping="1.0" friction="0.0"/>
+      <mimic joint="${prefix}shoulder_pitch_joint" multiplier="1"/>
     </joint>
 
-    <joint name="${prefix}elbow_pitch_parallel_joint" type="revolute">
-      <parent link="${prefix}top_parallel_link"/>
-      <child link="${prefix}front_parallel_link"/>
-      <origin rpy="0 0 0" xyz=".1011 0 -0.03"/>
-      <axis xyz="0 0 1"/>
-      <!--limit effort and velocity picked arbitrarily check-->
-      <!-- front_parallel_link will not move from its attached link (A_Parx2)-->
-      <limit effort="100.0" lower="${-PI/4}" upper="${PI/4}" velocity="10"/>
-      <joint_properties damping="1.0" friction="0.0"/>
-    </joint>
+    <!-- <joint name="${prefix}elbow_pitch_parallel_joint" type="revolute"> -->
+    <!--   <parent link="${prefix}top_parallel_link"/> -->
+    <!--   <child link="${prefix}front_parallel_link"/> -->
+    <!--   <origin rpy="0 0 0" xyz=".1011 0 -0.03"/> -->
+    <!--   <axis xyz="0 0 1"/> -->
+    <!--   <limit effort="100.0" lower="${-PI/4}" upper="${PI/4}" velocity="10"/> -->
+    <!--   <joint_properties damping="1.0" friction="0.0"/> -->
+    <!-- </joint> -->
 
     <joint name="${prefix}elbow_pitch_joint" type="revolute">
       <parent link="${prefix}back_parallel_link"/>
