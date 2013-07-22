@@ -100,7 +100,7 @@ int main(int argc, char** argv)
 
 
     // cisst robManipulator
-    std::string filename = ros::package::getPath("irk_psm_kinematics");
+    std::string filename = ros::package::getPath("irk_kinematics");
     filename.append("/config/dvpsm.rob");
     robManipulator psm_manip;
     robManipulator::Errno result;

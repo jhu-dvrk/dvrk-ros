@@ -1,0 +1,18 @@
+<launch>
+
+  <!-- mtm kinematics node -->
+  <node name="mtm_kinematics"
+        pkg="irk_kinematics"
+        type="irk_mtm_logic"/>
+
+  <!-- psm kinematics node -->
+  <node name="psm_kinematics"
+        pkg="irk_kinematics"
+        type="irk_psm_logic"/>
+  
+  <!-- mtm rviz  -->
+  <include file="$(find irk_model)/launch/mtm_psm_rviz.launch"/>
+
+</launch>
+
+

@@ -1,7 +1,7 @@
 <!-- one mtmr + one psm1  -->
 
 <launch>
-  <group ns="/irk_mtmr">
+  <group ns="/irk_mtm">
     <arg name="model" default="$(find irk_model)/model/mtm_right.urdf.xacro" />
     <arg name="gui" default="true" />
     <arg name="rate" default="20" />
@@ -15,7 +15,7 @@
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
   </group>
 
-  <group ns="/irk_psm1">
+  <group ns="/irk_psm">
     <arg name="model" default="$(find irk_model)/model/psm_one.urdf.xacro" />
     <arg name="gui" default="true" />
     <arg name="rate" default="20" />

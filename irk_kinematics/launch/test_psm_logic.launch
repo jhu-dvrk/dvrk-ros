@@ -11,7 +11,7 @@
   
   <!-- psm_kinematics node  -->
   <node name="psm_kinematics"
-        pkg="irk_psm_kinematics"
+        pkg="irk_kinematics"
         type="irk_psm_logic"/>
   
   <!-- joint state publisher -->

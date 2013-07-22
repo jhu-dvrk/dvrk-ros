@@ -1,7 +1,7 @@
 <package>
-  <description brief="irk_psm_kinematics">
+  <description brief="irk_kinematics">
 
-     irk_psm_kinematics
+     irk_kinematics
 
   </description>
   <author>Zihan Chen</author>

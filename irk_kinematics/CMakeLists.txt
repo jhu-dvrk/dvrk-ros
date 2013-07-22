@@ -57,14 +57,20 @@ if (cisst_FOUND_AS_REQUIRED)
     include_directories (${sawRobotIO1394_INCLUDE_DIR})
     link_directories (${sawRobotIO1394_LIBRARY_DIR})
 
-    rosbuild_add_executable(irk_psm_logic src/main.cpp)
-
+    rosbuild_add_executable(irk_psm_logic src/psm_logic.cpp)
     # link against non cisst libraries and cisst components
     target_link_libraries (irk_psm_logic
                            ${sawRobotIO1394_LIBRARIES})
-
     # link against cisst libraries (and dependencies)
     cisst_target_link_libraries (irk_psm_logic ${REQUIRED_CISST_LIBRARIES})
+
+
+    rosbuild_add_executable(irk_mtm_logic src/mtm_logic.cpp)
+    # link against non cisst libraries and cisst components
+    target_link_libraries (irk_mtm_logic
+                           ${sawRobotIO1394_LIBRARIES})
+    # link against cisst libraries (and dependencies)
+    cisst_target_link_libraries (irk_mtm_logic ${REQUIRED_CISST_LIBRARIES})
 
   endif (sawRobotIO1394_FOUND)
 
