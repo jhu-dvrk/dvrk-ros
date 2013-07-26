@@ -24,6 +24,7 @@ class mtsTeleop: public mtsTaskPeriodic
 public:
     mtsTeleop(const std::string &name, const double &period):
         mtsTaskPeriodic(name, period, 256),
+        has_clutch_(false),
         is_clutch_pressed_(false),
         counter_(0)
     {
@@ -62,13 +63,14 @@ public:
 #if 1
         if (counter_%10 == 0) {
 //            std::cerr << "clutch = " << is_clutch_pressed_ << std::endl;
-            std::cerr << " mtm = " << std::endl
-                      << mtm_pose_cur_ << std::endl;
+//            std::cerr << " mtm = " << std::endl
+//                      << mtm_pose_cur_ << std::endl;
         }
 #endif
 
-        if (is_clutch_pressed_) {
-            std::cerr << "pressed" << std::endl;
+        if (!has_clutch_ || (has_clutch_ && is_clutch_pressed_)) {
+
+            psm_pose_cmd_.Assign(psm_pose_cur_);
 
             // translation
             double scale = 1.0;
@@ -80,23 +82,24 @@ public:
                             0.0, 0.0, 1.0);
             psm_tra = psm_tra * mtm2psm;
             psm_pose_cmd_.Translation() = psm_pose_cur_.Translation() + psm_tra;
+            psm_pose_cmd_.Rotation().FromNormalized(psm_pose_cur_.Rotation());
 
             // rotation
-            vctFrm4x4 mtm_motion;
-            mtm_motion = mtm_pose_pre_.Inverse() * mtm_pose_cur_;
-            vctAxAnRot3 mtm_motion_rot;
-            mtm_motion_rot.FromNormalized(mtm_motion.Rotation());
-            vctFrm4x4 mtm_wrt_psm;
-            mtm_wrt_psm = psm_pose_pre_.Inverse() * mtm_pose_pre_;
+//            vctFrm4x4 mtm_motion;
+//            mtm_motion = mtm_pose_pre_.Inverse() * mtm_pose_cur_;
+//            vctAxAnRot3 mtm_motion_rot;
+//            mtm_motion_rot.FromNormalized(mtm_motion.Rotation());
+//            vctFrm4x4 mtm_wrt_psm;
+//            mtm_wrt_psm = psm_pose_pre_.Inverse() * mtm_pose_pre_;
 
-            vct3 psm_rot_axis;
-            psm_rot_axis = mtm_wrt_psm.Rotation() * mtm_motion_rot.Axis();
-            vctMatRot3 psm_motion_rot(vctAxAnRot3(psm_rot_axis, mtm_motion_rot.Angle()));
+//            vct3 psm_rot_axis;
+//            psm_rot_axis = mtm_wrt_psm.Rotation() * mtm_motion_rot.Axis();
+//            vctMatRot3 psm_motion_rot(vctAxAnRot3(psm_rot_axis, mtm_motion_rot.Angle()));
 
-            psm_motion_rot = psm_pose_pre_.Rotation() * psm_motion_rot;
-            psm_motion_rot = mtm2psm * psm_motion_rot;
+//            psm_motion_rot = psm_pose_pre_.Rotation() * psm_motion_rot;
+//            psm_motion_rot = mtm2psm * psm_motion_rot;
 
-            psm_pose_cmd_.Rotation().FromNormalized(psm_motion_rot);
+//            psm_pose_cmd_.Rotation().FromNormalized(psm_motion_rot);
 
         } else {
             psm_pose_cmd_.Assign(psm_pose_cur_);
@@ -119,10 +122,12 @@ public:
         mtm_pose_pre_.Assign(mtm_pose_cur_);
         psm_pose_pre_.Assign(psm_pose_pre_);
 
-#if 0
+#if 1
         if (counter_%10 == 0) {
-            std::cerr << " mtm pre = " << std::endl
-                      << mtm_pose_pre_ << std::endl;
+            std::cerr << " mtm = " << std::endl
+                      << mtm_pose_cur_ << std::endl;
+            std::cerr << "psm = " << std::endl
+                      << psm_pose_cur_ << std::endl << std::endl;
         }
 #endif
 
@@ -147,6 +152,7 @@ protected:
 
     void footpedal_clutch_cb(const std_msgs::BoolConstPtr &msg)
     {
+        has_clutch_ = true;
         // here
         if (msg->data == true) {
             is_clutch_pressed_ = false;
@@ -155,6 +161,7 @@ protected:
         }
     }
 
+    bool has_clutch_;
     bool is_clutch_pressed_;
     size_t counter_;
     double delta;

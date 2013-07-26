@@ -1,19 +1,27 @@
 <launch>
-  <arg name="model" default="$(find irk_model)/model/mtm_right.urdf.xacro" />
-  <arg name="gui" default="true" />
-  <arg name="rate" default="20" />
-
-  <param name="robot_description"
-         command="rosrun xacro xacro.py $(arg model)"/>
-  <param name="use_gui" value="$(arg gui)"/>
-  <param name="rate" value="$(arg rate)"/>
-
-  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
-
-  <node name="rviz" pkg="rviz" type="rviz"
-    args="-d $(find irk_model)/rviz_config/mtm_rviz.rviz" />
-
+  <group ns="/irk_mtm">
+  
+    <arg name="model" default="$(find irk_model)/model/mtm_right.urdf.xacro" />
+    <arg name="gui" default="true" />
+    <arg name="rate" default="20" />
+    
+    <param name="robot_description"
+           command="rosrun xacro xacro.py $(arg model)"/>
+    <param name="use_gui" value="$(arg gui)"/>
+    <param name="rate" value="$(arg rate)"/>
+    
+    <node name="joint_state_publisher"
+          pkg="joint_state_publisher"
+          type="joint_state_publisher" />
+    
+    <node name="robot_state_publisher"
+          pkg="robot_state_publisher"
+          type="state_publisher" />
+    
+    <node name="rviz" pkg="rviz" type="rviz"
+          args="-d $(find irk_model)/rviz_config/mtm_rviz.rviz" />
+  </group>
+  
   <!-- <rosparam> -->
   <!--   source_list: [/irk_psm/joint_states] -->
   <!-- </rosparam> -->

@@ -81,21 +81,11 @@ int main(int argc, char** argv)
 
         mtsCISSTToROS(mtm_pose_current, msg_pose);
         if (count % 10 == 0) {
-//            std::cerr << mtm_pose_current << std::endl << std::endl;
+            std::cerr << mtm_pose_current << std::endl << std::endl;
         }
 
         // publish current pose
         pub_mtm_pose.publish(msg_pose);
-
-        // ---------- Compute command psm joint positin -----------
-
-        // 2 sec, set robot to start position
-        // after, in teleop mode
-//        vctFrm4x4 pose6;
-//        mtm_manip.InverseKinematics(mtm_joint_command, pose6);
-
-        // publish command psm_joint_state
-//        pub_mtm_joint_state.publish(msg_js);
 
         ros::spinOnce();
 

@@ -68,8 +68,10 @@ void psm_joint_feedback_cb(const sensor_msgs::JointState &msg)
 
 void psm_mode_cb(const std_msgs::Int8 &msg)
 {
+    std::cerr << "-------------- GOT ----------" << std::endl;
     if (msg.data >= 0 && msg.data <=2) {
         control_mode = msg.data;
+        ROS_WARN("PSM switched to %d", msg.data);
     }
 }
 
@@ -87,14 +89,14 @@ int main(int argc, char** argv)
         nh.subscribe("/irk_mtm/gripper_position", 1000, mtm_gripper_cb);
 
     ros::Subscriber sub_psm_fb =
-            nh.subscribe("/joint_states", 1000, psm_joint_feedback_cb);
+            nh.subscribe("/irk_psm/joint_states", 1000, psm_joint_feedback_cb);
 
     ros::Subscriber sub_mode =
             nh.subscribe("/irk_psm/control_mode", 1000, psm_mode_cb);
 
     // publisher
     ros::Publisher pub_psm_joint_state =
-            nh.advertise<sensor_msgs::JointState>("/irk_psm/joint_states", 1000);
+            nh.advertise<sensor_msgs::JointState>("/irk_psm/joint_states_command", 1000);
     ros::Publisher pub_psm_pose =
             nh.advertise<geometry_msgs::Pose>("/irk_psm/cartesian_pose_current", 1000);
 
@@ -148,6 +150,7 @@ int main(int argc, char** argv)
 
         mtsCISSTToROS(psm_pose_current, msg_pose);
         if (count % 10 == 0) {
+//            std::stringstream ss;
 //            std::cout << psm_pose_current << std::endl << std::endl;
         }
 
@@ -162,15 +165,19 @@ int main(int argc, char** argv)
         switch(control_mode)
         {
         case MODE_RESET:
+            psm_pose_command.Assign(psm_pose_current);
             psm_joint_command.SetAll(0.0);
             psm_joint_command[2] = 0.10;
-            psm_pose_command.Assign(psm_pose_current);
             break;
         case MODE_MANUAL:
             psm_pose_command.Assign(psm_pose_current);
+            pose6 = psm_pose_command * frame6to7.Inverse();
+            psm_manip.InverseKinematics(psm_joint_command, pose6);
+            std::cerr << "manual " << psm_joint_command << std::endl;
             break;
         case MODE_TELEOP:
-            // psm_pose_command updated in callback
+            // psm_pose_command updated in callback!
+            psm_pose_current.Assign(psm_pose_current);
             pose6 = psm_pose_command * frame6to7.Inverse();
             psm_manip.InverseKinematics(psm_joint_command, pose6);
             break;

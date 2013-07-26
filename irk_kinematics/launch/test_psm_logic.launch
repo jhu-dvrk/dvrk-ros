@@ -1,32 +1,18 @@
 <launch>
-  <arg name="model" default="$(find irk_model)/urdf/daVinci_jhu.urdf" />
-  <arg name="gui" default="true" />
-  <param name="robot_description"
-         command="cat $(arg model)"/>
-  <param name="use_gui" value="$(arg gui)"/>
-  <rosparam>
-    <!-- if connect to dv hardware, update this source list  -->
-    source_list: [/irk_psm/joint_states]
-  </rosparam>
-  
-  <!-- psm_kinematics node  -->
-  <node name="psm_kinematics"
-        pkg="irk_kinematics"
-        type="irk_psm_logic"/>
-  
-  <!-- joint state publisher -->
-  <node name="joint_state_publisher"
-        pkg="joint_state_publisher"
-        type="joint_state_publisher" />
 
-  <!-- robot state publisher -->
-  <node name="robot_state_publisher"
-        pkg="robot_state_publisher"
-        type="state_publisher" />
+  <group ns="/irk_psm">
 
-  <!-- rviz node -->
-  <node name="rviz" pkg="rviz" type="rviz"
-        args="-d $(find irk_model)/davinci.rviz" />
+    <rosparam>
+      <!-- if connect to dv hardware, update this source list  -->
+      source_list: [/irk_psm/joint_states_command]
+    </rosparam>
+
+    <!-- <node name="psm_kinematics" -->
+    <!--       pkg="irk_kinematics" -->
+    <!--       type="irk_psm_logic"/> -->
+    
+    <include file="$(find irk_model)/launch/psm_rviz.launch"/>
+  </group>
 
 </launch>
 

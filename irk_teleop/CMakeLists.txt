@@ -77,6 +77,23 @@ if (cisst_FOUND_AS_REQUIRED)
     # link against cisst libraries (and dependencies)
     cisst_target_link_libraries (irk_teleop ${REQUIRED_CISST_LIBRARIES})
 
+
+    qt4_wrap_cpp (QT_WRAPPED_CPP include/irk_teleop/irkTeleopQWidget.h)
+    rosbuild_add_executable(irk_teleop_gui
+      include/irk_teleop/irkTeleopQWidget.h
+      src/irkTeleopQWidget.cpp
+      src/teleopGUI.cpp
+      ${QT_WRAPPED_CPP})
+    
+    # link against non cisst libraries and cisst components
+    target_link_libraries (irk_teleop_gui
+      ${sawRobotIO1394_LIBRARIES}
+      ${sawIntuitiveResearchKit_LIBRARIES}
+      ${sawControllers_LIBRARIES})
+    
+    # link against cisst libraries (and dependencies)
+    cisst_target_link_libraries (irk_teleop_gui ${REQUIRED_CISST_LIBRARIES})
+    
   endif (sawRobotIO1394_FOUND)
 
 endif (cisst_FOUND_AS_REQUIRED)

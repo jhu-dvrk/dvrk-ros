@@ -4,7 +4,7 @@
   <group ns="/irk_mtm">
     <arg name="model" default="$(find irk_model)/model/mtm_right.urdf.xacro" />
     <arg name="gui" default="true" />
-    <arg name="rate" default="20" />
+    <arg name="rate" default="100" />
     
     <param name="robot_description"
            command="rosrun xacro xacro.py $(arg model)"/>
@@ -18,11 +18,15 @@
   <group ns="/irk_psm">
     <arg name="model" default="$(find irk_model)/model/psm_one.urdf.xacro" />
     <arg name="gui" default="true" />
-    <arg name="rate" default="20" />
+    <arg name="rate" default="100" />
 
     <param name="robot_description" command="rosrun xacro xacro.py $(arg model)"/>
     <param name="use_gui" value="$(arg gui)"/>
     <param name="rate" value="$(arg rate)"/>
+
+    <rosparam>
+      source_list: [/irk_psm/joint_states_command]
+    </rosparam>
 
     <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
