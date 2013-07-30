@@ -295,8 +295,8 @@
     <joint name="${prefix}wrist_roll_joint" type="revolute">
       <parent link="${prefix}wrist_yaw_link"/>
       <child link="${prefix}wrist_roll_link"/>  <!-- -.039 & .055 defined from CAD file-->
-      <origin rpy="${-PI/2} 0 0" xyz="0 -.039 0"/>
-      <axis xyz="0 0 1"/>
+      <origin rpy="${-PI/2} ${PI/2} 0" xyz="0 -.039 0"/>
+      <axis xyz="0 0 -1"/>
       <!--rotates about y axis-->
       <!--limit effort and velocity picked arbitrarily check-->
       <limit effort="100.0" lower="${-1.5*PI}" upper="${1.5*PI}" velocity="10"/>
