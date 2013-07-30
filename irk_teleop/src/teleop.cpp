@@ -1,6 +1,7 @@
 // Zihan Chen
 // 2013-07-14
 // Brief: da Vinci teleop
+// 50 Hz
 
 
 #include <iostream>
@@ -18,7 +19,6 @@
 #include <sawROS/mtsCISSTToROS.h>
 
 // set up joint state variables
-
 class mtsTeleop: public mtsTaskPeriodic
 {
 public:
@@ -26,7 +26,9 @@ public:
         mtsTaskPeriodic(name, period, 256),
         has_clutch_(false),
         is_clutch_pressed_(false),
-        counter_(0)
+        counter_(0),
+        counter_master_cb_(0),
+        counter_slave_cb_(0)
     {
         delta = 0.0005;
 
@@ -52,7 +54,11 @@ public:
     void Startup(void) {
     }
 
-    void Run(void) {
+    void Run(void)
+    {
+        // increment counter
+        counter_++;
+
         // cisst process queued commands
         ProcessQueuedCommands();
 
@@ -72,17 +78,25 @@ public:
 
             psm_pose_cmd_.Assign(psm_pose_cur_);
 
+#if 0
+            psm_pose_cmd_.Translation().X() += delta;
+            if (psm_pose_cur_.Translation().X() > 0.07) {
+                delta = -0.0005;
+            } else if (psm_pose_cur_.Translation().X() < -0.07) {
+                delta = 0.0005;
+            }
+#endif
+
             // translation
             double scale = 1.0;
             vct3 mtm_tra = mtm_pose_cur_.Translation() - mtm_pose_pre_.Translation();
-            vct3 psm_tra = mtm_tra * scale;
+            vct3 psm_tra = scale * mtm_tra;
             vctMatRot3 mtm2psm;
             mtm2psm.Assign(-1.0, 0.0, 0.0,
                             0.0,-1.0, 0.0,
                             0.0, 0.0, 1.0);
-            psm_tra = psm_tra * mtm2psm;
-            psm_pose_cmd_.Translation() = psm_pose_cur_.Translation() + psm_tra;
-            psm_pose_cmd_.Rotation().FromNormalized(psm_pose_cur_.Rotation());
+
+            psm_pose_cmd_.Translation() = psm_pose_cmd_.Translation() + mtm2psm * psm_tra;
 
             // rotation
 //            vctFrm4x4 mtm_motion;
@@ -101,28 +115,19 @@ public:
 
 //            psm_pose_cmd_.Rotation().FromNormalized(psm_motion_rot);
 
+//            std::cerr << "here -----" << std::endl;
+
         } else {
             psm_pose_cmd_.Assign(psm_pose_cur_);
-
-#if 0
-            // NOTE: testing teleop
-            psm_pose_cmd_.Translation().X() += delta;
-            if (psm_pose_cur_.Translation().X() > 0.07) {
-                delta = -0.0005;
-            } else if (psm_pose_cur_.Translation().X() < -0.07) {
-                delta = 0.0005;
-            }
-#endif
         }
 
         mtsCISSTToROS(psm_pose_cmd_, msg_psm_pose_);
         pub_pose_.publish(msg_psm_pose_);
 
-        // save previous
+        // save current pose as previous
         mtm_pose_pre_.Assign(mtm_pose_cur_);
-        psm_pose_pre_.Assign(psm_pose_pre_);
 
-#if 1
+#if 0
         if (counter_%10 == 0) {
             std::cerr << " mtm = " << std::endl
                       << mtm_pose_cur_ << std::endl;
@@ -131,7 +136,6 @@ public:
         }
 #endif
 
-        counter_++;
     }
 
     void Cleanup(void) {
@@ -142,11 +146,18 @@ protected:
 
     void master_pose_cb(const geometry_msgs::PoseConstPtr &msg)
     {
+        counter_master_cb_++;
         mtsROSToCISST((*msg), mtm_pose_cur_);
+
+        // initialize mtm_pose_pre_
+        if (counter_master_cb_ == 1) {
+            mtm_pose_pre_.Assign(mtm_pose_cur_);
+        }
     }
 
     void slave_pose_cb(const geometry_msgs::PoseConstPtr &msg)
     {
+        counter_slave_cb_++;
         mtsROSToCISST((*msg), psm_pose_cur_);
     }
 
@@ -164,12 +175,13 @@ protected:
     bool has_clutch_;
     bool is_clutch_pressed_;
     size_t counter_;
+    size_t counter_master_cb_;
+    size_t counter_slave_cb_;
     double delta;
 
     vctFrm4x4 mtm_pose_cur_;
     vctFrm4x4 psm_pose_cur_;
     vctFrm4x4 mtm_pose_pre_;
-    vctFrm4x4 psm_pose_pre_;
 
     vctFrm4x4 psm_pose_cmd_;
     geometry_msgs::Pose msg_psm_pose_;
@@ -177,6 +189,7 @@ protected:
     // ros variables
     ros::NodeHandle nh_;
 
+    // subscribers
     ros::Subscriber sub_mtm_pose_;
     ros::Subscriber sub_psm_pose_;
     ros::Subscriber sub_foodpedal_clutch_;
@@ -191,6 +204,7 @@ int main(int argc, char** argv)
     // log configuration
     cmnLogger::SetMask(CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskDefaultLog(CMN_LOG_ALLOW_ALL);
+    cmnLogger::SetMaskFunction(CMN_LOG_ALLOW_ALL);
     cmnLogger::AddChannel(std::cerr, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
 
     // ros initialization
@@ -205,7 +219,7 @@ int main(int argc, char** argv)
     manager->StartAllAndWait(2.0 * cmn_s);
 
     // ros::spin() callback for subscribers
-    std::cout << "Hit Ctrl-c to quit" << std::endl;
+    std::cerr << "Hit Ctrl-c to quit" << std::endl;
     ros::spin();
 
     manager->KillAllAndWait(2.0 * cmn_s);

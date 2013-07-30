@@ -1,5 +1,9 @@
 <launch>
-
+  <!-- irk_teleop node -->
+  <node name="irk_teleop_gui"
+        pkg="irk_teleop"
+        type="irk_teleop_gui"/>
+  
   <!-- mtm kinematics node -->
   <node name="mtm_kinematics"
         pkg="irk_kinematics"

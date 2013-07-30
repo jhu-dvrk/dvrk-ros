@@ -21,6 +21,11 @@
 vctDoubleVec mtm_joint_current;
 vctDoubleVec mtm_joint_command;
 vctFrm4x4 mtm_pose_current;
+int control_mode;
+
+const int MODE_RESET = 0;
+const int MODE_MANUAL = 1;
+const int MODE_TELEOP = 2;
 
 void mtm_joint_feedback_cb(const sensor_msgs::JointStateConstPtr &msg)
 {
@@ -33,23 +38,33 @@ void mtm_joint_feedback_cb(const sensor_msgs::JointStateConstPtr &msg)
     mtm_joint_current[6] = msg->position[7];   // wrist_roll_joint
 }
 
+void mtm_mode_cb(const std_msgs::Int8 &msg)
+{
+    std::cerr << "----- MTM GOT " << msg.data << "------" << std::endl;
+    if (msg.data >= 0 && msg.data <=2) {
+        control_mode = msg.data;
+        ROS_WARN("MTM switched to %d", msg.data);
+    }
+}
 
 int main(int argc, char** argv)
 {
     // ros initialization
     ros::init(argc, argv, "irk_mtm_logic");
     ros::NodeHandle nh;
-    ros::Rate rate(100);  // 100 hz rate
+    ros::Rate rate(200);  // 100 hz rate
 
     // subscriber
     ros::Subscriber sub_mtm_fb =
-            nh.subscribe("/irk_mtm/joint_states", 1000, mtm_joint_feedback_cb);
+            nh.subscribe("/irk_mtm/joint_states", 1, mtm_joint_feedback_cb);
+    ros::Subscriber sub_mode =
+            nh.subscribe("/irk/control_mode", 1, mtm_mode_cb);
 
     // publisher
     ros::Publisher pub_mtm_joint_state =
-            nh.advertise<sensor_msgs::JointState>("/irk_mtm/joint_states", 1000);
+            nh.advertise<sensor_msgs::JointState>("/irk_mtm/joint_states_command", 1);
     ros::Publisher pub_mtm_pose =
-            nh.advertise<geometry_msgs::Pose>("/irk_mtm/cartesian_pose_current", 1000);
+            nh.advertise<geometry_msgs::Pose>("/irk_mtm/cartesian_pose_current", 1);
 
 
     // cisst robManipulator
@@ -64,10 +79,20 @@ int main(int argc, char** argv)
         ROS_INFO("loaded psm manipulator");
     }
 
+    // initialize joint current/command/msg_js
     mtm_joint_current.SetSize(7);  // 7 joints
     mtm_joint_current.SetAll(0.0);
 
-//    mtm_joint_command.ForceAssign(mtm_joint_current);
+    mtm_joint_command.ForceAssign(mtm_joint_current);
+    sensor_msgs::JointState msg_js;
+    msg_js.name.clear();
+    msg_js.name.push_back("right_outer_yaw_joint");
+    msg_js.name.push_back("right_shoulder_pitch_joint");
+    msg_js.name.push_back("right_elbow_pitch_joint");
+    msg_js.name.push_back("right_wrist_platform_joint");
+    msg_js.name.push_back("right_wrist_pitch_joint");
+    msg_js.name.push_back("right_wrist_yaw_joint");
+    msg_js.name.push_back("right_wrist_roll_joint");
 
     geometry_msgs::Pose msg_pose;
 
@@ -80,15 +105,40 @@ int main(int argc, char** argv)
         mtm_pose_current = mtm_manip.ForwardKinematics(mtm_joint_current);
 
         mtsCISSTToROS(mtm_pose_current, msg_pose);
-        if (count % 10 == 0) {
-            std::cerr << mtm_pose_current << std::endl << std::endl;
-        }
+//        if (count % 10 == 0) {
+//            std::cerr << mtm_pose_current << std::endl << std::endl;
+//        }
 
         // publish current pose
         pub_mtm_pose.publish(msg_pose);
 
-        ros::spinOnce();
+        // ----- control mode -------
+        switch (control_mode)
+        {
+        case MODE_RESET:
+            mtm_joint_command.SetAll(0.0);
+            mtm_joint_command[3] = cmnPI_2;
+            mtm_joint_command[4] = cmnPI_2;
+            break;
+        case MODE_MANUAL:
+            mtm_joint_command.ForceAssign(mtm_joint_current);
+            break;
+        case MODE_TELEOP:
+            // teleop
+            break;
+        default:
+            break;
+        }
 
+        // copy to msg
+        msg_js.position.resize(mtm_joint_command.size());
+        std::copy(mtm_joint_command.begin(), mtm_joint_command.end(), msg_js.position.begin());
+        if (control_mode == MODE_RESET) {
+            // publish cmd joint state
+            pub_mtm_joint_state.publish(msg_js);
+        }
+
+        ros::spinOnce();
         rate.sleep();
         count++;
     }

@@ -37,7 +37,7 @@ void irkTeleopQWidget::timerEvent(QTimerEvent *)
     mtm_pose_qt_->SetValue(mtm_pose_cur_);
     psm_pose_qt_->SetValue(psm_pose_cur_);
 
-#if 1
+#if 0
     if (counter_%20 == 0) {
         std::cerr << " mtm = " << std::endl
                   << mtm_pose_cur_ << std::endl;
