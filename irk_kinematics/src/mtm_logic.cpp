@@ -40,7 +40,7 @@ void mtm_joint_feedback_cb(const sensor_msgs::JointStateConstPtr &msg)
 
 void mtm_mode_cb(const std_msgs::Int8 &msg)
 {
-    std::cerr << "----- MTM GOT " << msg.data << "------" << std::endl;
+    std::cerr << "----- MTM GOT ------" << std::endl;
     if (msg.data >= 0 && msg.data <=2) {
         control_mode = msg.data;
         ROS_WARN("MTM switched to %d", msg.data);

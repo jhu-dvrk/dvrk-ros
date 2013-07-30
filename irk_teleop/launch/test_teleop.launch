@@ -1,5 +1,11 @@
 <launch>
-  <!-- irk_teleop node -->
+
+  <!-- irk_teleop gui node -->
+  <node name="irk_teleop"
+        pkg="irk_teleop"
+        type="irk_teleop"/>
+  
+  <!-- irk_teleop gui node -->
   <node name="irk_teleop_gui"
         pkg="irk_teleop"
         type="irk_teleop_gui"/>

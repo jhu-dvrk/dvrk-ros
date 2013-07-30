@@ -76,6 +76,7 @@ public:
 
         if (!has_clutch_ || (has_clutch_ && is_clutch_pressed_)) {
 
+            // assign current psm pose
             psm_pose_cmd_.Assign(psm_pose_cur_);
 
 #if 0
@@ -99,25 +100,12 @@ public:
             psm_pose_cmd_.Translation() = psm_pose_cmd_.Translation() + mtm2psm * psm_tra;
 
             // rotation
-//            vctFrm4x4 mtm_motion;
-//            mtm_motion = mtm_pose_pre_.Inverse() * mtm_pose_cur_;
-//            vctAxAnRot3 mtm_motion_rot;
-//            mtm_motion_rot.FromNormalized(mtm_motion.Rotation());
-//            vctFrm4x4 mtm_wrt_psm;
-//            mtm_wrt_psm = psm_pose_pre_.Inverse() * mtm_pose_pre_;
-
-//            vct3 psm_rot_axis;
-//            psm_rot_axis = mtm_wrt_psm.Rotation() * mtm_motion_rot.Axis();
-//            vctMatRot3 psm_motion_rot(vctAxAnRot3(psm_rot_axis, mtm_motion_rot.Angle()));
-
-//            psm_motion_rot = psm_pose_pre_.Rotation() * psm_motion_rot;
-//            psm_motion_rot = mtm2psm * psm_motion_rot;
-
-//            psm_pose_cmd_.Rotation().FromNormalized(psm_motion_rot);
-
-//            std::cerr << "here -----" << std::endl;
+            vctMatRot3 psm_motion_rot;
+            psm_motion_rot = mtm2psm * mtm_pose_cur_.Rotation();
+            psm_pose_cmd_.Rotation().FromNormalized(psm_motion_rot);
 
         } else {
+            // keep current pose
             psm_pose_cmd_.Assign(psm_pose_cur_);
         }
 
