@@ -21,6 +21,7 @@
 // set up joint state variables
 vctDoubleVec psm_joint_current;
 vctDoubleVec psm_joint_command;
+vctDoubleVec psm_joint_command_prev;
 vctFrm4x4 psm_pose_current;
 vctFrm4x4 psm_pose_command;
 double mtm_gripper;
@@ -35,7 +36,6 @@ const int MODE_TELEOP = 2;
 void psm_cmd_pose_cb(const geometry_msgs::Pose &msg)
 {
     mtsROSToCISST(msg, psm_pose_command);
-//    std::cout << psm_pose_command << std::endl;
 }
 
 // mtm gripper open angle
@@ -135,6 +135,9 @@ int main(int argc, char** argv)
                      -1.0, 0.0, 0.0, 0.0,
                      0.0,  0.0, 0.0, 1.0);
 
+    // used to compensate joint 4
+    double j4_compensate = 0;
+
     // ------------ run() --------------------------
     while (ros::ok()) {
 
@@ -150,29 +153,44 @@ int main(int argc, char** argv)
 
         // ---------- Compute command psm joint positin -----------
         vctFrm4x4 pose6;
+
         switch(control_mode)
         {
         case MODE_RESET:
             psm_joint_command.SetAll(0.0);
             psm_joint_command[2] = 0.10;
+            j4_compensate = 0;
             psm_pose_command.Assign(psm_pose_current);
             break;
         case MODE_MANUAL:
             // do nothing for MANUAL
             // controlled using Slifer GUI
+            j4_compensate = 0;
             psm_pose_command.Assign(psm_pose_current);
             break;
         case MODE_TELEOP:
             // psm_pose_command updated in callback!
             pose6 = psm_pose_command * frame6to7.Inverse();
             psm_manip.InverseKinematics(psm_joint_command, pose6);
+
+            // joint 4 is special
+            if (psm_joint_command_prev[3] - psm_joint_command[3] > 5) {
+                j4_compensate = 2 * cmnPI;
+            } else if (psm_joint_command_prev[3] - psm_joint_command[3] < -5) {
+                j4_compensate = - 2 * cmnPI;
+            } else {
+                j4_compensate = 0;
+            }
+            psm_joint_command[3] += j4_compensate;
             psm_joint_current.Assign(psm_joint_command);
 
-//            ROS_WARN(psm_joint_command.ToString().c_str());
             break;
         default:
+            ROS_ERROR_STREAM("Should not come here !");
             break;
         }
+
+        psm_joint_command_prev.ForceAssign(psm_joint_command);
 
         // -----  Assign command joint state and Publish --------
         // 6 + open angle (gripper)

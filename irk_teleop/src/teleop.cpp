@@ -89,7 +89,7 @@ public:
 #endif
 
             // translation
-            double scale = 1.0;
+            double scale = 0.2;
             vct3 mtm_tra = mtm_pose_cur_.Translation() - mtm_pose_pre_.Translation();
             vct3 psm_tra = scale * mtm_tra;
             vctMatRot3 mtm2psm;
