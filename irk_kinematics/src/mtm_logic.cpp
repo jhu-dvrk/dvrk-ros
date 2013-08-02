@@ -57,7 +57,7 @@ int main(int argc, char** argv)
     ros::Subscriber sub_mtm_fb =
             nh.subscribe("/irk_mtm/joint_states", 1, mtm_joint_feedback_cb);
     ros::Subscriber sub_mode =
-            nh.subscribe("/irk/control_mode", 1, mtm_mode_cb);
+            nh.subscribe("/irk_mtm/control_mode", 1, mtm_mode_cb);
 
     // publisher
     ros::Publisher pub_mtm_joint_state =

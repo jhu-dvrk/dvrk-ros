@@ -4,6 +4,7 @@
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Pose.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/Int8.h>
 
 #include <cisstRobot/robManipulator.h>
 #include <cisstVector.h>
@@ -27,11 +28,17 @@ public:
     void timerEvent(QTimerEvent *);
 
 protected slots:
+    // console
     void slot_homeButton_pressed(void);
     void slot_manualButton_pressed(void);
     void slot_teleopButton_pressed(void);
 
+    // mtm
+    void slot_clutchButton_pressed(bool state);
     void slot_headButton_pressed(bool state);
+
+    // psm
+    void slot_moveToolButton_pressed(bool state);
 
 protected:
     void master_pose_cb(const geometry_msgs::PoseConstPtr &msg);
@@ -51,6 +58,10 @@ protected:
     ros::Subscriber sub_mtm_pose_;
     ros::Subscriber sub_psm_pose_;
 
-    ros::Publisher pub_control_mode_;
+    ros::Publisher pub_mtm_control_mode_;
+    ros::Publisher pub_psm_control_mode_;
     ros::Publisher pub_enable_slider_;
+
+    std_msgs::Int8 msg_mtm_mode_;
+    std_msgs::Int8 msg_psm_mode_;
 };

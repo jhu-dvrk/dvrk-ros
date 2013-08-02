@@ -1,5 +1,4 @@
 #include <ros/package.h>
-#include <std_msgs/Int8.h>
 
 #include "irk_teleop/irkTeleopQWidget.h"
 
@@ -16,7 +15,8 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
     sub_psm_pose_ = nh_.subscribe("/irk_psm/cartesian_pose_current", 1,
                                    &irkTeleopQWidget::slave_pose_cb, this);
 
-    pub_control_mode_ = nh_.advertise<std_msgs::Int8>("/irk/control_mode", 100);
+    pub_mtm_control_mode_ = nh_.advertise<std_msgs::Int8>("/irk_mtm/control_mode", 100);
+    pub_psm_control_mode_ = nh_.advertise<std_msgs::Int8>("/irk_psm/control_mode", 100);
     pub_enable_slider_ = nh_.advertise<sensor_msgs::JointState>("/irk_mtm/joint_state_publisher/enable_slider", 100);
 
 
@@ -61,6 +61,7 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
     QGroupBox *psmBox = new QGroupBox("PSM");
     QVBoxLayout *psmBoxLayout = new QVBoxLayout;
     QPushButton *psmMoveButton = new QPushButton(tr("Move Tool"));
+    psmMoveButton->setCheckable(true);
     psmBoxLayout->addWidget(psmMoveButton);
     psmBoxLayout->addStretch();
     psmBox->setLayout(psmBoxLayout);
@@ -93,7 +94,8 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
     connect(consoleTeleopButton, SIGNAL(clicked()), this, SLOT(slot_teleopButton_pressed()));
 
     connect(mtmHeadButton, SIGNAL(clicked(bool)), this, SLOT(slot_headButton_pressed(bool)));
-
+    connect(mtmClutchButton, SIGNAL(clicked(bool)), this, SLOT(slot_headButton_pressed(bool)));
+    connect(psmMoveButton, SIGNAL(clicked(bool)), this, SLOT(slot_moveToolButton_pressed(bool)));
 
     // show widget & start timer
     startTimer(period);  // 50 ms
@@ -110,12 +112,10 @@ void irkTeleopQWidget::timerEvent(QTimerEvent *)
 
 #if 0
     if (counter_%20 == 0) {
-        std::cerr << " mtm = " << std::endl
-                  << mtm_pose_cur_ << std::endl;
-        std::cerr << "psm = " << std::endl
-                  << psm_pose_cur_ << std::endl << std::endl;
     }
 #endif
+
+
     counter_++;
 }
 
@@ -134,23 +134,34 @@ void irkTeleopQWidget::slave_pose_cb(const geometry_msgs::PoseConstPtr &msg)
 // -------- slot -----------
 void irkTeleopQWidget::slot_homeButton_pressed(void)
 {
-    std_msgs::Int8 msg_mode;
-    msg_mode.data = 0;  // 0 is HOME
-    pub_control_mode_.publish(msg_mode);
+    msg_mtm_mode_.data = msg_psm_mode_.data = 0; // 0 is HOME
+    pub_mtm_control_mode_.publish(msg_mtm_mode_);
+    pub_psm_control_mode_.publish(msg_psm_mode_);
 }
 
 void irkTeleopQWidget::slot_manualButton_pressed(void)
 {
-    std_msgs::Int8 msg_mode;
-    msg_mode.data = 1;  // 1 is MANUAL
-    pub_control_mode_.publish(msg_mode);
+    msg_mtm_mode_.data = msg_psm_mode_.data = 1; // 1 is MANUAL
+    pub_mtm_control_mode_.publish(msg_mtm_mode_);
+    pub_psm_control_mode_.publish(msg_psm_mode_);
 }
 
 void irkTeleopQWidget::slot_teleopButton_pressed(void)
 {
-    std_msgs::Int8 msg_mode;
-    msg_mode.data = 2;  // 2 is TELEOP
-    pub_control_mode_.publish(msg_mode);
+    msg_mtm_mode_.data = msg_psm_mode_.data = 2; // 2 is TELEOP
+    pub_mtm_control_mode_.publish(msg_mtm_mode_);
+    pub_psm_control_mode_.publish(msg_psm_mode_);
+}
+
+void irkTeleopQWidget::slot_clutchButton_pressed(bool state)
+{
+    if (state) {
+        // clutch MOVE
+        ROS_ERROR_STREAM("MOVE IT");
+    } else {
+        // no MOVE
+        ROS_ERROR_STREAM("HOLD IT!");
+    }
 }
 
 void irkTeleopQWidget::slot_headButton_pressed(bool state)
@@ -188,6 +199,15 @@ void irkTeleopQWidget::slot_headButton_pressed(bool state)
 }
 
 
+void irkTeleopQWidget::slot_moveToolButton_pressed(bool state)
+{
+    if (state) {
+        msg_psm_mode_.data = 1;  // MANUAL
+    } else {
+        msg_psm_mode_.data = 2;  // TELEOP
+    }
+    pub_psm_control_mode_.publish(msg_psm_mode_);
+}
 
 
 

@@ -88,7 +88,7 @@ int main(int argc, char** argv)
             nh.subscribe("/irk_psm/joint_states", 1, psm_joint_feedback_cb);
 
     ros::Subscriber sub_mode =
-            nh.subscribe("/irk/control_mode", 1, psm_mode_cb);
+            nh.subscribe("/irk_psm/control_mode", 1, psm_mode_cb);
 
     // publisher
     ros::Publisher pub_psm_joint_state_cmd =

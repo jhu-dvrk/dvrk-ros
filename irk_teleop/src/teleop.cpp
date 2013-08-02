@@ -79,15 +79,6 @@ public:
             // assign current psm pose
             psm_pose_cmd_.Assign(psm_pose_cur_);
 
-#if 0
-            psm_pose_cmd_.Translation().X() += delta;
-            if (psm_pose_cur_.Translation().X() > 0.07) {
-                delta = -0.0005;
-            } else if (psm_pose_cur_.Translation().X() < -0.07) {
-                delta = 0.0005;
-            }
-#endif
-
             // translation
             double scale = 0.2;
             vct3 mtm_tra = mtm_pose_cur_.Translation() - mtm_pose_pre_.Translation();
