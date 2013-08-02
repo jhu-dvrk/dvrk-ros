@@ -194,8 +194,11 @@ int main(int argc, char** argv)
             psm_joint_command[3] += j4_compensate;
             psm_joint_current.Assign(psm_joint_command);
 
-            std::cerr << "PSM_teleop" << std::endl;
+            // disable slider
+            std::fill(msg_js.position.begin(), msg_js.position.end(), -1);
+            pub_psm_enable_slider.publish(msg_js);
 
+            //            std::cerr << "PSM_teleop" << std::endl;
             break;
         default:
             ROS_ERROR_STREAM("Should not come here !");

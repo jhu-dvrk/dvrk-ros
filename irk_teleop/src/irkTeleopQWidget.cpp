@@ -9,6 +9,10 @@
 irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period):
     QWidget(), counter_(0)
 {
+    is_head_in_ = false;
+    is_clutched_ = false;
+    is_move_psm_ = false;
+
     // subscriber
     // NOTE: queue size is set to 1 to make sure data is fresh
     sub_mtm_pose_ = nh_.subscribe("/irk_mtm/cartesian_pose_current", 1,
@@ -25,8 +29,6 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
     // pose display
     mtm_pose_qt_ = new vctQtWidgetFrame4x4DoubleRead;
     psm_pose_qt_ = new vctQtWidgetFrame4x4DoubleRead;
-//    mtm_pose_qt_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-//    psm_pose_qt_->resize(200, 200);
 
     QVBoxLayout *poseLayout = new QVBoxLayout;
     poseLayout->addWidget(mtm_pose_qt_);
@@ -37,7 +39,7 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
     QPushButton *consoleHomeButton = new QPushButton(tr("Home"));
     QPushButton *consoleManualButton = new QPushButton(tr("Manual"));
     QPushButton *consoleTeleopTestButton = new QPushButton(tr("TeleopTest"));
-    QPushButton *consoleTeleopButton = new QPushButton(tr("Teleop"));
+    consoleTeleopButton = new QPushButton(tr("Teleop"));
     consoleHomeButton->setStyleSheet("font: bold; color: green;");
     consoleManualButton->setStyleSheet("font: bold; color: red;");
     consoleTeleopTestButton->setStyleSheet("font: bold; color: blue;");
@@ -63,7 +65,7 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
     consoleBox->setLayout(consoleBoxLayout);
 
     // mtm console
-    QGroupBox *mtmBox = new QGroupBox("MTM");
+    mtmBox = new QGroupBox("MTM");
     QVBoxLayout *mtmBoxLayout = new QVBoxLayout;
     mtmClutchButton = new QPushButton(tr("Clutch"));
     mtmClutchButton->setCheckable(true);
@@ -77,7 +79,7 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
     mtmBox->setLayout(mtmBoxLayout);
 
     // psm console
-    QGroupBox *psmBox = new QGroupBox("PSM");
+    psmBox = new QGroupBox("PSM");
     QVBoxLayout *psmBoxLayout = new QVBoxLayout;
     psmMoveButton = new QPushButton(tr("Move Tool"));
     psmMoveButton->setCheckable(true);
@@ -111,7 +113,7 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
     connect(consoleHomeButton, SIGNAL(clicked()), this, SLOT(slot_homeButton_pressed()));
     connect(consoleManualButton, SIGNAL(clicked()), this, SLOT(slot_manualButton_pressed()));
     connect(consoleTeleopTestButton, SIGNAL(clicked()), this, SLOT(slot_teleopTestButton_pressed()));
-    connect(consoleTeleopButton, SIGNAL(clicked()), this, SLOT(slot_teleopButton_pressed()));
+    connect(consoleTeleopButton, SIGNAL(toggled(bool)), this, SLOT(slot_teleopButton_toggled(bool)));
 
     connect(mtmHeadButton, SIGNAL(clicked(bool)), this, SLOT(slot_headButton_pressed(bool)));
     connect(mtmClutchButton, SIGNAL(clicked(bool)), this, SLOT(slot_clutchButton_pressed(bool)));
@@ -119,6 +121,7 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
 
     // show widget & start timer
     startTimer(period);  // 50 ms
+    slot_teleopButton_toggled(false);
 }
 
 
@@ -136,16 +139,40 @@ void irkTeleopQWidget::timerEvent(QTimerEvent *)
     psm_pose_qt_->SetValue(psm_pose_cur_);
 
     // check teleop enable status
-    std_msgs::Bool msg_teleop_enable;
-    if (mtmHeadButton->isChecked() && !mtmClutchButton->isChecked() && !psmMoveButton->isChecked() )
-    {
-//        std::cerr << "YEAH ---teleop: " << counter_ << std::endl;
-        msg_teleop_enable.data = true;
-        pub_teleop_enable_.publish(msg_teleop_enable);
+    if (is_head_in_) {
+        if (!is_clutched_ && !is_move_psm_) {
+            // enable teleop node
+            msg_teleop_enable.data = true;
+            msg_mtm_mode_.data = MTM::MODE_TELEOP;
+            msg_psm_mode_.data = PSM::MODE_TELEOP;
+        } else if (is_clutched_) {
+            // mtm move, keep orientation as psm
+            msg_teleop_enable.data = false;
+            msg_mtm_mode_.data = MTM::MODE_CLUTCH;
+            msg_psm_mode_.data = PSM::MODE_HOLD;
+        } else {
+            msg_teleop_enable.data = false;
+            msg_mtm_mode_.data = MTM::MODE_HOLD;
+            msg_psm_mode_.data = PSM::MODE_HOLD;
+        }
     } else {
         msg_teleop_enable.data = false;
-        pub_teleop_enable_.publish(msg_teleop_enable);
+        if (is_clutched_) {
+            msg_mtm_mode_.data = MTM::MODE_CLUTCH;
+        } else {
+            msg_mtm_mode_.data = MTM::MODE_HOLD;
+        }
+
+        if (is_move_psm_) {
+            msg_psm_mode_.data = PSM::MODE_MANUAL;
+        } else {
+            msg_psm_mode_.data = PSM::MODE_HOLD;
+        }
     }
+
+    pub_teleop_enable_.publish(msg_teleop_enable);
+    pub_mtm_control_mode_.publish(msg_mtm_mode_);
+    pub_psm_control_mode_.publish(msg_psm_mode_);
 
     counter_++;
 }
@@ -187,66 +214,37 @@ void irkTeleopQWidget::slot_teleopTestButton_pressed(void)
     pub_psm_control_mode_.publish(msg_psm_mode_);
 }
 
-void irkTeleopQWidget::slot_teleopButton_pressed(void)
+void irkTeleopQWidget::slot_teleopButton_toggled(bool state)
 {
-    msg_mtm_mode_.data = MTM::MODE_TELEOP;
-    msg_psm_mode_.data = PSM::MODE_HOLD;
-    pub_mtm_control_mode_.publish(msg_mtm_mode_);
-    pub_psm_control_mode_.publish(msg_psm_mode_);
+    if (state) {
+        msg_mtm_mode_.data = MTM::MODE_HOLD;
+        msg_psm_mode_.data = PSM::MODE_HOLD;
+        pub_mtm_control_mode_.publish(msg_mtm_mode_);
+        pub_psm_control_mode_.publish(msg_psm_mode_);
+
+        // enable boxes
+        mtmBox->setEnabled(true);
+        psmBox->setEnabled(true);
+    } else {
+        mtmBox->setEnabled(false);
+        psmBox->setEnabled(false);
+    }
 }
 
 void irkTeleopQWidget::slot_clutchButton_pressed(bool state)
 {
-    if (state) {
-        // clutch MOVE
-        ROS_ERROR_STREAM("MOVE IT");
-    } else {
-        // no MOVE
-        ROS_ERROR_STREAM("HOLD IT!");
-    }
+    is_clutched_ = state;
 }
 
 void irkTeleopQWidget::slot_headButton_pressed(bool state)
 {
-    sensor_msgs::JointState msg_js;
-    msg_js.name.clear();
-    msg_js.name.push_back("right_outer_yaw_joint");
-    msg_js.name.push_back("right_shoulder_pitch_joint");
-    msg_js.name.push_back("right_elbow_pitch_joint");
-    msg_js.name.push_back("right_wrist_platform_joint");
-    msg_js.name.push_back("right_wrist_pitch_joint");
-    msg_js.name.push_back("right_wrist_yaw_joint");
-    msg_js.name.push_back("right_wrist_roll_joint");
-
-    msg_js.position.resize(7);
-    msg_js.position[0] = 1;
-    msg_js.position[1] = 1;
-    msg_js.position[2] = 1;
-    msg_js.position[3] = 1;
-    msg_js.position[4] = 1;
-    msg_js.position[5] = 1;
-    msg_js.position[6] = 1;
-
-    if (state) {
-        pub_enable_slider_.publish(msg_js);
-    } else {
-        msg_js.position[3] = -1;
-        msg_js.position[4] = -1;
-        msg_js.position[5] = -1;
-        msg_js.position[6] = -1;
-        pub_enable_slider_.publish(msg_js);
-    }
+    is_head_in_ = state;
 }
 
 
 void irkTeleopQWidget::slot_moveToolButton_pressed(bool state)
 {
-    if (state) {
-        msg_psm_mode_.data = PSM::MODE_MANUAL;  // MANUAL
-    } else {
-        msg_psm_mode_.data = PSM::MODE_HOLD;  // HOLD
-    }
-    pub_psm_control_mode_.publish(msg_psm_mode_);
+    is_move_psm_ = state;
 }
 
 

@@ -2,7 +2,6 @@
 // 2013-07-14
 // Brief: da Vinci teleop
 
-
 #include <iostream>
 
 #include <ros/ros.h>

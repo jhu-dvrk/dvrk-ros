@@ -66,6 +66,8 @@ int main(int argc, char** argv)
             nh.advertise<sensor_msgs::JointState>("/irk_mtm/joint_states_command", 1);
     ros::Publisher pub_mtm_pose =
             nh.advertise<geometry_msgs::Pose>("/irk_mtm/cartesian_pose_current", 1);
+    ros::Publisher pub_mtm_enable_slider =
+            nh.advertise<sensor_msgs::JointState>("/irk_mtm/joint_state_publisher/enable_slider", 100);
 
 
     // cisst robManipulator
@@ -113,6 +115,12 @@ int main(int argc, char** argv)
         // publish current pose
         pub_mtm_pose.publish(msg_pose);
 
+        // MODE_RESET: send HOME joint position
+        // MODE_MANUAL: controled by JSP GUI, not sending anything to jsp
+        // MODE_HOLD: disable JSP GUI, not sending anything to jsp
+        // MODE_CLUTCH: enable J1-3 slider, J4-7 follow
+        // MODE_TELEOP: take command pose, send to jsp
+
         // ----- control mode -------
         switch (control_mode)
         {
@@ -123,9 +131,24 @@ int main(int argc, char** argv)
             break;
         case MTM::MODE_MANUAL:
             mtm_joint_command.ForceAssign(mtm_joint_current);
+            std::fill(msg_js.position.begin(), msg_js.position.end(), 1);
+            pub_mtm_enable_slider.publish(msg_js);
+            break;
+        case MTM::MODE_HOLD:
+            mtm_joint_command.ForceAssign(mtm_joint_current);
+            std::fill(msg_js.position.begin(), msg_js.position.end(), -1);
+            pub_mtm_enable_slider.publish(msg_js);
+            break;
+        case MTM::MODE_CLUTCH:
+            mtm_joint_command.ForceAssign(mtm_joint_current);
+            std::fill(msg_js.position.begin(), msg_js.position.begin()+3, 1);
+            std::fill(msg_js.position.begin()+3, msg_js.position.end(), -1);
+            pub_mtm_enable_slider.publish(msg_js);
             break;
         case MTM::MODE_TELEOP:
             // teleop
+            std::fill(msg_js.position.begin(), msg_js.position.end(), 1);
+            pub_mtm_enable_slider.publish(msg_js);
             break;
         default:
             break;

@@ -32,7 +32,7 @@ protected slots:
     void slot_homeButton_pressed(void);
     void slot_manualButton_pressed(void);
     void slot_teleopTestButton_pressed(void);
-    void slot_teleopButton_pressed(void);
+    void slot_teleopButton_toggled(bool state);
 
     // mtm
     void slot_clutchButton_pressed(bool state);
@@ -49,12 +49,19 @@ protected:
     vctFrm4x4 psm_pose_cur_;
     size_t counter_;
 
+    bool is_clutched_;
+    bool is_head_in_;
+    bool is_move_psm_;
+
     // gui
     vctQtWidgetFrame4x4DoubleRead *mtm_pose_qt_;
     vctQtWidgetFrame4x4DoubleRead *psm_pose_qt_;
+    QPushButton *consoleTeleopButton;
     QPushButton *mtmClutchButton;
     QPushButton *mtmHeadButton;
     QPushButton *psmMoveButton;
+    QGroupBox *mtmBox;
+    QGroupBox *psmBox;
 
     // ros variables
     ros::NodeHandle nh_;
@@ -69,4 +76,5 @@ protected:
 
     std_msgs::Int8 msg_mtm_mode_;
     std_msgs::Int8 msg_psm_mode_;
+    std_msgs::Bool msg_teleop_enable;
 };
