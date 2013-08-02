@@ -33,7 +33,8 @@ mtsTeleop::mtsTeleop(const std::string &name, const double &period):
 
 
     // publisher
-    pub_pose_ = nh_.advertise<geometry_msgs::Pose>("/irk_psm/cartesian_pose_command", 1);
+    pub_mtm_pose_ = nh_.advertise<geometry_msgs::Pose>("/irk_mtm/cartesian_pose_command", 1);
+    pub_psm_pose_ = nh_.advertise<geometry_msgs::Pose>("/irk_psm/cartesian_pose_command", 1);
 }
 
 void mtsTeleop::Configure(const std::string &)
@@ -63,6 +64,11 @@ void mtsTeleop::Run(void)
     }
 #endif
 
+    vctMatRot3 mtm2psm;
+    mtm2psm.Assign(-1.0, 0.0, 0.0,
+                   0.0,-1.0, 0.0,
+                   0.0, 0.0, 1.0);
+
     if (is_enabled_) {
 
         // assign current psm pose
@@ -72,10 +78,6 @@ void mtsTeleop::Run(void)
         double scale = 0.2;
         vct3 mtm_tra = mtm_pose_cur_.Translation() - mtm_pose_pre_.Translation();
         vct3 psm_tra = scale * mtm_tra;
-        vctMatRot3 mtm2psm;
-        mtm2psm.Assign(-1.0, 0.0, 0.0,
-                       0.0,-1.0, 0.0,
-                       0.0, 0.0, 1.0);
 
         psm_pose_cmd_.Translation() = psm_pose_cmd_.Translation() + mtm2psm * psm_tra;
 
@@ -84,15 +86,25 @@ void mtsTeleop::Run(void)
         psm_motion_rot = mtm2psm * mtm_pose_cur_.Rotation();
         psm_pose_cmd_.Rotation().FromNormalized(psm_motion_rot);
 
-        std::cerr << " teleop enabled " << counter_ << std::endl;
+//        std::cerr << " teleop enabled " << counter_ << std::endl;
 
     } else {
+        // In this mode, MTM orientation follows PSM orientation
+
         // keep current pose
         psm_pose_cmd_.Assign(psm_pose_cur_);
+
+        // mtm needs to follow psm orientation
+        mtm_pose_cmd_.Assign(mtm_pose_cur_);
+        vctMatRot3 mtm_rot_cmd;
+        mtm_rot_cmd = mtm2psm.Inverse() * psm_pose_cur_.Rotation();
+        mtm_pose_cmd_.Rotation().FromNormalized(mtm_rot_cmd);
     }
 
     mtsCISSTToROS(psm_pose_cmd_, msg_psm_pose_);
-    pub_pose_.publish(msg_psm_pose_);
+    pub_psm_pose_.publish(msg_psm_pose_);
+    mtsCISSTToROS(mtm_pose_cmd_, msg_mtm_pose_);
+    pub_mtm_pose_.publish(msg_mtm_pose_);
 
     // save current pose as previous
     mtm_pose_pre_.Assign(mtm_pose_cur_);

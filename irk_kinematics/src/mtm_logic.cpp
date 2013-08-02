@@ -16,6 +16,7 @@
 #include <cisstVector.h>
 
 #include <sawROS/mtsCISSTToROS.h>
+#include <sawROS/mtsROSToCISST.h>
 
 #include "irk_kinematics/mtm_logic.h"
 
@@ -23,11 +24,14 @@
 vctDoubleVec mtm_joint_current;
 vctDoubleVec mtm_joint_command;
 vctFrm4x4 mtm_pose_current;
+vctFrm4x4 mtm_pose_command;
 int control_mode;
 
-//const int MODE_RESET = 0;
-//const int MODE_MANUAL = 1;
-//const int MODE_TELEOP = 2;
+// command psm pose from teleop
+void mtm_cmd_pose_cb(const geometry_msgs::Pose &msg)
+{
+    mtsROSToCISST(msg, mtm_pose_command);
+}
 
 void mtm_joint_feedback_cb(const sensor_msgs::JointStateConstPtr &msg)
 {
@@ -56,6 +60,8 @@ int main(int argc, char** argv)
     ros::Rate rate(200);  // 100 hz rate
 
     // subscriber
+    ros::Subscriber sub_mtm_cmd =
+            nh.subscribe("/irk_mtm/cartesian_pose_command", 1, mtm_cmd_pose_cb);
     ros::Subscriber sub_mtm_fb =
             nh.subscribe("/irk_mtm/joint_states", 1, mtm_joint_feedback_cb);
     ros::Subscriber sub_mode =
@@ -87,19 +93,19 @@ int main(int argc, char** argv)
     mtm_joint_current.SetAll(0.0);
 
     mtm_joint_command.ForceAssign(mtm_joint_current);
-    sensor_msgs::JointState msg_js;
-    msg_js.name.clear();
-    msg_js.name.push_back("right_outer_yaw_joint");
-    msg_js.name.push_back("right_shoulder_pitch_joint");
-    msg_js.name.push_back("right_elbow_pitch_joint");
-    msg_js.name.push_back("right_wrist_platform_joint");
-    msg_js.name.push_back("right_wrist_pitch_joint");
-    msg_js.name.push_back("right_wrist_yaw_joint");
-    msg_js.name.push_back("right_wrist_roll_joint");
+    sensor_msgs::JointState msg_full_js;
+    msg_full_js.name.clear();
+    msg_full_js.name.push_back("right_outer_yaw_joint");
+    msg_full_js.name.push_back("right_shoulder_pitch_joint");
+    msg_full_js.name.push_back("right_elbow_pitch_joint");
+    msg_full_js.name.push_back("right_wrist_platform_joint");
+    msg_full_js.name.push_back("right_wrist_pitch_joint");
+    msg_full_js.name.push_back("right_wrist_yaw_joint");
+    msg_full_js.name.push_back("right_wrist_roll_joint");
 
     geometry_msgs::Pose msg_pose;
 
-    int count = 0;
+    int counter = 0;
     // ------------ run() --------------------------
     while (ros::ok()) {
 
@@ -131,41 +137,62 @@ int main(int argc, char** argv)
             break;
         case MTM::MODE_MANUAL:
             mtm_joint_command.ForceAssign(mtm_joint_current);
-            std::fill(msg_js.position.begin(), msg_js.position.end(), 1);
-            pub_mtm_enable_slider.publish(msg_js);
+            std::fill(msg_full_js.position.begin(), msg_full_js.position.end(), 1);
+            pub_mtm_enable_slider.publish(msg_full_js);
             break;
         case MTM::MODE_HOLD:
             mtm_joint_command.ForceAssign(mtm_joint_current);
-            std::fill(msg_js.position.begin(), msg_js.position.end(), -1);
-            pub_mtm_enable_slider.publish(msg_js);
+            std::fill(msg_full_js.position.begin(), msg_full_js.position.end(), -1);
+            pub_mtm_enable_slider.publish(msg_full_js);
             break;
         case MTM::MODE_CLUTCH:
             mtm_joint_command.ForceAssign(mtm_joint_current);
-            std::fill(msg_js.position.begin(), msg_js.position.begin()+3, 1);
-            std::fill(msg_js.position.begin()+3, msg_js.position.end(), -1);
-            pub_mtm_enable_slider.publish(msg_js);
+            std::fill(msg_full_js.position.begin(), msg_full_js.position.begin()+3, 1);
+            std::fill(msg_full_js.position.begin()+3, msg_full_js.position.end(), -1);
+            pub_mtm_enable_slider.publish(msg_full_js);
             break;
         case MTM::MODE_TELEOP:
             // teleop
-            std::fill(msg_js.position.begin(), msg_js.position.end(), 1);
-            pub_mtm_enable_slider.publish(msg_js);
+            std::fill(msg_full_js.position.begin(), msg_full_js.position.end(), 1);
+            pub_mtm_enable_slider.publish(msg_full_js);
             break;
         default:
             break;
         }
 
         // copy to msg
-        msg_js.position.resize(mtm_joint_command.size());
-        std::copy(mtm_joint_command.begin(), mtm_joint_command.end(), msg_js.position.begin());
+        msg_full_js.position.resize(mtm_joint_command.size());
+        std::copy(mtm_joint_command.begin(), mtm_joint_command.end(), msg_full_js.position.begin());
         if (control_mode == MTM::MODE_RESET) {
             // publish cmd joint state
-            pub_mtm_joint_state.publish(msg_js);
+            pub_mtm_joint_state.publish(msg_full_js);
+        }
+
+        // MODE_HOLE && MODE_CLUTCH
+        if (control_mode == MTM::MODE_HOLD || control_mode == MTM::MODE_CLUTCH) {
+            // inverse kinematics
+            mtm_joint_command.ForceAssign(mtm_joint_current);
+            mtm_manip.InverseKinematics(mtm_joint_command, mtm_pose_command);
+
+            // now copy to msg_rot_js rotation only
+            sensor_msgs::JointState msg_rot_js;
+            msg_rot_js.name.clear();
+            msg_rot_js.name.push_back("right_wrist_platform_joint");
+            msg_rot_js.name.push_back("right_wrist_pitch_joint");
+            msg_rot_js.name.push_back("right_wrist_yaw_joint");
+            msg_rot_js.name.push_back("right_wrist_roll_joint");
+            msg_rot_js.position.resize(4); // only last 4 joints
+            std::copy(mtm_joint_command.begin()+3, mtm_joint_command.end(), msg_rot_js.position.begin());
+            pub_mtm_joint_state.publish(msg_rot_js);
         }
 
         ros::spinOnce();
         rate.sleep();
-        count++;
+        counter++;
     }
 
     return 0;
 }
+
+
+

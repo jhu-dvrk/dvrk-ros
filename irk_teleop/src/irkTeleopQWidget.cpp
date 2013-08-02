@@ -263,5 +263,3 @@ void irkTeleopQWidget::slot_moveToolButton_pressed(bool state)
 
 
 
-
-

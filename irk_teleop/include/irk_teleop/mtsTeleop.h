@@ -41,7 +41,9 @@ protected:
     vctFrm4x4 mtm_pose_pre_;
 
     vctFrm4x4 psm_pose_cmd_;
+    vctFrm4x4 mtm_pose_cmd_;
     geometry_msgs::Pose msg_psm_pose_;
+    geometry_msgs::Pose msg_mtm_pose_;
 
     // ros variables
     ros::NodeHandle nh_;
@@ -52,7 +54,8 @@ protected:
     ros::Subscriber sub_psm_pose_;
     ros::Subscriber sub_foodpedal_clutch_;
 
-    ros::Publisher pub_pose_;
+    ros::Publisher pub_psm_pose_;
+    ros::Publisher pub_mtm_pose_;
 };
 
 CMN_DECLARE_SERVICES_INSTANTIATION(mtsTeleop);

@@ -65,10 +65,6 @@ void psm_mode_cb(const std_msgs::Int8 &msg)
     if (msg.data == PSM::MODE_TELEOP) {
         psm_joint_command.Assign(psm_joint_current);
     }
-
-    if (control_mode == PSM::MODE_MANUAL ){
-        ROS_ERROR_STREAM("MANUAL");
-    }
 }
 
 int main(int argc, char** argv)
@@ -186,7 +182,7 @@ int main(int argc, char** argv)
             pose6 = psm_pose_command * frame6to7.Inverse();
             psm_manip.InverseKinematics(psm_joint_command, pose6);
 
-            // joint 4 is special
+            // joint 4 is a special case
             if (psm_joint_command_prev[3] - psm_joint_command[3] > 5) {
                 j4_compensate = 2 * cmnPI;
             } else if (psm_joint_command_prev[3] - psm_joint_command[3] < -5) {
