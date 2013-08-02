@@ -34,13 +34,30 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
 
     // common console
     QGroupBox *consoleBox = new QGroupBox("Console");
-    QHBoxLayout *consoleBoxLayout = new QHBoxLayout;
     QPushButton *consoleHomeButton = new QPushButton(tr("Home"));
     QPushButton *consoleManualButton = new QPushButton(tr("Manual"));
+    QPushButton *consoleTeleopTestButton = new QPushButton(tr("TeleopTest"));
     QPushButton *consoleTeleopButton = new QPushButton(tr("Teleop"));
-    consoleHomeButton->setStyleSheet("background: green; font: bold; color: yellow;");
+    consoleHomeButton->setStyleSheet("font: bold; color: green;");
+    consoleManualButton->setStyleSheet("font: bold; color: red;");
+    consoleTeleopTestButton->setStyleSheet("font: bold; color: blue;");
+    consoleTeleopButton->setStyleSheet("font: bold; color: brown;");
+    consoleHomeButton->setCheckable(true);
+    consoleManualButton->setCheckable(true);
+    consoleTeleopTestButton->setCheckable(true);
+    consoleTeleopButton->setCheckable(true);
+
+    QButtonGroup *consoleButtonGroup = new QButtonGroup;
+    consoleButtonGroup->setExclusive(true);
+    consoleButtonGroup->addButton(consoleHomeButton);
+    consoleButtonGroup->addButton(consoleManualButton);
+    consoleButtonGroup->addButton(consoleTeleopTestButton);
+    consoleButtonGroup->addButton(consoleTeleopButton);
+
+    QHBoxLayout *consoleBoxLayout = new QHBoxLayout;
     consoleBoxLayout->addWidget(consoleHomeButton);
     consoleBoxLayout->addWidget(consoleManualButton);
+    consoleBoxLayout->addWidget(consoleTeleopTestButton);
     consoleBoxLayout->addWidget(consoleTeleopButton);
     consoleBoxLayout->addStretch();
     consoleBox->setLayout(consoleBoxLayout);
@@ -93,6 +110,7 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
     // now connect everything
     connect(consoleHomeButton, SIGNAL(clicked()), this, SLOT(slot_homeButton_pressed()));
     connect(consoleManualButton, SIGNAL(clicked()), this, SLOT(slot_manualButton_pressed()));
+    connect(consoleTeleopTestButton, SIGNAL(clicked()), this, SLOT(slot_teleopTestButton_pressed()));
     connect(consoleTeleopButton, SIGNAL(clicked()), this, SLOT(slot_teleopButton_pressed()));
 
     connect(mtmHeadButton, SIGNAL(clicked(bool)), this, SLOT(slot_headButton_pressed(bool)));
@@ -106,6 +124,11 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
 
 void irkTeleopQWidget::timerEvent(QTimerEvent *)
 {
+    // check ros::ok()
+    if (!ros::ok()) {
+        QApplication::quit();
+    }
+
     // refresh data
     ros::spinOnce();
 
@@ -156,10 +179,18 @@ void irkTeleopQWidget::slot_manualButton_pressed(void)
     pub_psm_control_mode_.publish(msg_psm_mode_);
 }
 
-void irkTeleopQWidget::slot_teleopButton_pressed(void)
+void irkTeleopQWidget::slot_teleopTestButton_pressed(void)
 {
     msg_mtm_mode_.data = MTM::MODE_TELEOP;
     msg_psm_mode_.data = PSM::MODE_TELEOP;
+    pub_mtm_control_mode_.publish(msg_mtm_mode_);
+    pub_psm_control_mode_.publish(msg_psm_mode_);
+}
+
+void irkTeleopQWidget::slot_teleopButton_pressed(void)
+{
+    msg_mtm_mode_.data = MTM::MODE_TELEOP;
+    msg_psm_mode_.data = PSM::MODE_HOLD;
     pub_mtm_control_mode_.publish(msg_mtm_mode_);
     pub_psm_control_mode_.publish(msg_psm_mode_);
 }

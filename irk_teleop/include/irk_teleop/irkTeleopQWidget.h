@@ -31,6 +31,7 @@ protected slots:
     // console
     void slot_homeButton_pressed(void);
     void slot_manualButton_pressed(void);
+    void slot_teleopTestButton_pressed(void);
     void slot_teleopButton_pressed(void);
 
     // mtm
