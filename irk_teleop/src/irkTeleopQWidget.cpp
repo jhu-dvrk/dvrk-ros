@@ -1,7 +1,8 @@
 #include <ros/package.h>
 
 #include "irk_teleop/irkTeleopQWidget.h"
-
+#include "irk_kinematics/mtm_logic.h"
+#include "irk_kinematics/psm_logic.h"
 
 // set up joint state variables
 
@@ -15,10 +16,11 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
     sub_psm_pose_ = nh_.subscribe("/irk_psm/cartesian_pose_current", 1,
                                    &irkTeleopQWidget::slave_pose_cb, this);
 
+    // publisher
+    pub_teleop_enable_ = nh_.advertise<std_msgs::Bool>("/irk_teleop/enable", 100);
     pub_mtm_control_mode_ = nh_.advertise<std_msgs::Int8>("/irk_mtm/control_mode", 100);
     pub_psm_control_mode_ = nh_.advertise<std_msgs::Int8>("/irk_psm/control_mode", 100);
     pub_enable_slider_ = nh_.advertise<sensor_msgs::JointState>("/irk_mtm/joint_state_publisher/enable_slider", 100);
-
 
     // pose display
     mtm_pose_qt_ = new vctQtWidgetFrame4x4DoubleRead;
@@ -46,11 +48,11 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
     // mtm console
     QGroupBox *mtmBox = new QGroupBox("MTM");
     QVBoxLayout *mtmBoxLayout = new QVBoxLayout;
-    QPushButton *mtmClutchButton = new QPushButton(tr("Clutch"));
+    mtmClutchButton = new QPushButton(tr("Clutch"));
     mtmClutchButton->setCheckable(true);
     mtmBoxLayout->addWidget(mtmClutchButton);
 
-    QPushButton *mtmHeadButton = new QPushButton(tr("Head"));
+    mtmHeadButton = new QPushButton(tr("Head"));
     mtmHeadButton->setCheckable(true);
     mtmBoxLayout->addWidget(mtmHeadButton);
 
@@ -60,7 +62,7 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
     // psm console
     QGroupBox *psmBox = new QGroupBox("PSM");
     QVBoxLayout *psmBoxLayout = new QVBoxLayout;
-    QPushButton *psmMoveButton = new QPushButton(tr("Move Tool"));
+    psmMoveButton = new QPushButton(tr("Move Tool"));
     psmMoveButton->setCheckable(true);
     psmBoxLayout->addWidget(psmMoveButton);
     psmBoxLayout->addStretch();
@@ -94,7 +96,7 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
     connect(consoleTeleopButton, SIGNAL(clicked()), this, SLOT(slot_teleopButton_pressed()));
 
     connect(mtmHeadButton, SIGNAL(clicked(bool)), this, SLOT(slot_headButton_pressed(bool)));
-    connect(mtmClutchButton, SIGNAL(clicked(bool)), this, SLOT(slot_headButton_pressed(bool)));
+    connect(mtmClutchButton, SIGNAL(clicked(bool)), this, SLOT(slot_clutchButton_pressed(bool)));
     connect(psmMoveButton, SIGNAL(clicked(bool)), this, SLOT(slot_moveToolButton_pressed(bool)));
 
     // show widget & start timer
@@ -110,11 +112,17 @@ void irkTeleopQWidget::timerEvent(QTimerEvent *)
     mtm_pose_qt_->SetValue(mtm_pose_cur_);
     psm_pose_qt_->SetValue(psm_pose_cur_);
 
-#if 0
-    if (counter_%20 == 0) {
+    // check teleop enable status
+    std_msgs::Bool msg_teleop_enable;
+    if (mtmHeadButton->isChecked() && !mtmClutchButton->isChecked() && !psmMoveButton->isChecked() )
+    {
+//        std::cerr << "YEAH ---teleop: " << counter_ << std::endl;
+        msg_teleop_enable.data = true;
+        pub_teleop_enable_.publish(msg_teleop_enable);
+    } else {
+        msg_teleop_enable.data = false;
+        pub_teleop_enable_.publish(msg_teleop_enable);
     }
-#endif
-
 
     counter_++;
 }
@@ -134,21 +142,24 @@ void irkTeleopQWidget::slave_pose_cb(const geometry_msgs::PoseConstPtr &msg)
 // -------- slot -----------
 void irkTeleopQWidget::slot_homeButton_pressed(void)
 {
-    msg_mtm_mode_.data = msg_psm_mode_.data = 0; // 0 is HOME
+    msg_mtm_mode_.data = MTM::MODE_RESET;
+    msg_psm_mode_.data = PSM::MODE_RESET;
     pub_mtm_control_mode_.publish(msg_mtm_mode_);
     pub_psm_control_mode_.publish(msg_psm_mode_);
 }
 
 void irkTeleopQWidget::slot_manualButton_pressed(void)
 {
-    msg_mtm_mode_.data = msg_psm_mode_.data = 1; // 1 is MANUAL
+    msg_mtm_mode_.data = MTM::MODE_MANUAL;
+    msg_psm_mode_.data = PSM::MODE_MANUAL;
     pub_mtm_control_mode_.publish(msg_mtm_mode_);
     pub_psm_control_mode_.publish(msg_psm_mode_);
 }
 
 void irkTeleopQWidget::slot_teleopButton_pressed(void)
 {
-    msg_mtm_mode_.data = msg_psm_mode_.data = 2; // 2 is TELEOP
+    msg_mtm_mode_.data = MTM::MODE_TELEOP;
+    msg_psm_mode_.data = PSM::MODE_TELEOP;
     pub_mtm_control_mode_.publish(msg_mtm_mode_);
     pub_psm_control_mode_.publish(msg_psm_mode_);
 }
@@ -166,8 +177,6 @@ void irkTeleopQWidget::slot_clutchButton_pressed(bool state)
 
 void irkTeleopQWidget::slot_headButton_pressed(bool state)
 {
-    QPushButton *headButton = (QPushButton*)sender();
-
     sensor_msgs::JointState msg_js;
     msg_js.name.clear();
     msg_js.name.push_back("right_outer_yaw_joint");
@@ -202,9 +211,9 @@ void irkTeleopQWidget::slot_headButton_pressed(bool state)
 void irkTeleopQWidget::slot_moveToolButton_pressed(bool state)
 {
     if (state) {
-        msg_psm_mode_.data = 1;  // MANUAL
+        msg_psm_mode_.data = PSM::MODE_MANUAL;  // MANUAL
     } else {
-        msg_psm_mode_.data = 2;  // TELEOP
+        msg_psm_mode_.data = PSM::MODE_HOLD;  // HOLD
     }
     pub_psm_control_mode_.publish(msg_psm_mode_);
 }

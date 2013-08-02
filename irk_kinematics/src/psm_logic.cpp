@@ -2,7 +2,6 @@
 // 2013-07-14
 // Brief: da Vinci psm kinematics
 
-
 #include <iostream>
 
 #include <ros/ros.h>
@@ -18,6 +17,8 @@
 #include <sawROS/mtsCISSTToROS.h>
 #include <sawROS/mtsROSToCISST.h>
 
+#include "irk_kinematics/psm_logic.h"
+
 // set up joint state variables
 vctDoubleVec psm_joint_current;
 vctDoubleVec psm_joint_command;
@@ -26,10 +27,6 @@ vctFrm4x4 psm_pose_current;
 vctFrm4x4 psm_pose_command;
 double mtm_gripper;
 int control_mode;
-
-const int MODE_RESET = 0;
-const int MODE_MANUAL = 1;
-const int MODE_TELEOP = 2;
 
 
 // command psm pose from teleop
@@ -60,13 +57,13 @@ void psm_joint_feedback_cb(const sensor_msgs::JointState &msg)
 
 void psm_mode_cb(const std_msgs::Int8 &msg)
 {
-    if (msg.data >= 0 && msg.data <=2) {
+    if (msg.data >= 0 && msg.data <=PSM::MODE_TELEOP) {
         control_mode = msg.data;
         ROS_WARN_STREAM("PSM switched to " << msg.data);
     }
 
     // mode = TELEOP
-    if (msg.data == 2) {
+    if (msg.data == PSM::MODE_TELEOP) {
         psm_joint_command.Assign(psm_joint_current);
     }
 }
@@ -95,7 +92,8 @@ int main(int argc, char** argv)
             nh.advertise<sensor_msgs::JointState>("/irk_psm/joint_states_command", 1);
     ros::Publisher pub_psm_pose_current =
             nh.advertise<geometry_msgs::Pose>("/irk_psm/cartesian_pose_current", 1);
-
+    ros::Publisher pub_psm_enable_slider =
+            nh.advertise<sensor_msgs::JointState>("/irk_psm/joint_state_publisher/enable_slider", 100);
 
     // --- cisst robManipulator ---
     std::string filename = ros::package::getPath("irk_kinematics");
@@ -127,7 +125,7 @@ int main(int argc, char** argv)
     geometry_msgs::Pose msg_pose;
 
     int count = 0;
-    control_mode = MODE_RESET;  // start with reset_mode
+    control_mode = PSM::MODE_RESET;  // start with reset_mode
     vctFrm4x4 frame6to7;
     frame6to7.Assign(0.0, -1.0, 0.0, 0.0,
                      0.0,  0.0, 1.0, 0.0102,
@@ -153,21 +151,34 @@ int main(int argc, char** argv)
         // ---------- Compute command psm joint positin -----------
         vctFrm4x4 pose6;
 
+        // MODE_RESET: send HOME joint position
+        // MODE_MANUAL: controled by JSP GUI, not sending anything to jsp
+        // MODE_HOLD: disable JSP GUI, not sending anything to jsp
+        // MODE_TELEOP: take command pose, send to jsp
+
         switch(control_mode)
         {
-        case MODE_RESET:
+        case PSM::MODE_RESET:
             psm_joint_command.SetAll(0.0);
             psm_joint_command[2] = 0.10;
             j4_compensate = 0;
             psm_pose_command.Assign(psm_pose_current);
             break;
-        case MODE_MANUAL:
+        case PSM::MODE_MANUAL:
             // do nothing for MANUAL
             // controlled using Slifer GUI
             j4_compensate = 0;
             psm_pose_command.Assign(psm_pose_current);
+
+            std::fill(msg_js.position.begin(), msg_js.position.end(), 1);
+            pub_psm_enable_slider.publish(msg_js);
             break;
-        case MODE_TELEOP:
+        case PSM::MODE_HOLD:
+            psm_pose_command.Assign(psm_pose_current);
+            std::fill(msg_js.position.begin(), msg_js.position.end(), -1);
+            pub_psm_enable_slider.publish(msg_js);
+            break;
+        case PSM::MODE_TELEOP:
             // psm_pose_command updated in callback!
             pose6 = psm_pose_command * frame6to7.Inverse();
             psm_manip.InverseKinematics(psm_joint_command, pose6);
@@ -197,7 +208,7 @@ int main(int argc, char** argv)
         std::copy(psm_joint_command.begin(), psm_joint_command.end(), msg_js.position.begin());
         msg_js.position[6] = mtm_gripper;
 
-        if (control_mode != MODE_MANUAL) {
+        if (control_mode != PSM::MODE_MANUAL && control_mode != PSM::MODE_HOLD) {
             pub_psm_joint_state_cmd.publish(msg_js);
         }
 

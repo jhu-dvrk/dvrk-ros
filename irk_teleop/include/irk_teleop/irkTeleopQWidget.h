@@ -51,6 +51,9 @@ protected:
     // gui
     vctQtWidgetFrame4x4DoubleRead *mtm_pose_qt_;
     vctQtWidgetFrame4x4DoubleRead *psm_pose_qt_;
+    QPushButton *mtmClutchButton;
+    QPushButton *mtmHeadButton;
+    QPushButton *psmMoveButton;
 
     // ros variables
     ros::NodeHandle nh_;
@@ -58,6 +61,7 @@ protected:
     ros::Subscriber sub_mtm_pose_;
     ros::Subscriber sub_psm_pose_;
 
+    ros::Publisher pub_teleop_enable_;
     ros::Publisher pub_mtm_control_mode_;
     ros::Publisher pub_psm_control_mode_;
     ros::Publisher pub_enable_slider_;

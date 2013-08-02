@@ -59,25 +59,28 @@ if (cisst_FOUND_AS_REQUIRED)
   if (sawRobotIO1394_FOUND)
 
     include_directories (${sawRobotIO1394_INCLUDE_DIR}
-                         ${sawIntuitiveResearchKit_INCLUDE_DIR}
-                         ${sawControllers_INCLUDE_DIR})
-
+      ${sawIntuitiveResearchKit_INCLUDE_DIR}
+      ${sawControllers_INCLUDE_DIR})
+    
     link_directories (${sawRobotIO1394_LIBRARY_DIR}
-                      ${sawIntuitiveResearchKit_LIBRARY_DIR}
-                      ${sawControllers_LIBRARY_DIR})
-
-    rosbuild_add_executable(irk_teleop src/teleop.cpp)
-
+      ${sawIntuitiveResearchKit_LIBRARY_DIR}
+      ${sawControllers_LIBRARY_DIR})
+    
+    rosbuild_add_executable(irk_teleop
+      src/teleop.cpp
+      include/irk_teleop/mtsTeleop.h
+      src/mtsTeleop.cpp)
+    
     # link against non cisst libraries and cisst components
     target_link_libraries (irk_teleop
-                           ${sawRobotIO1394_LIBRARIES}
-                           ${sawIntuitiveResearchKit_LIBRARIES}
-                           ${sawControllers_LIBRARIES})
-
+      ${sawRobotIO1394_LIBRARIES}
+      ${sawIntuitiveResearchKit_LIBRARIES}
+      ${sawControllers_LIBRARIES})
+    
     # link against cisst libraries (and dependencies)
     cisst_target_link_libraries (irk_teleop ${REQUIRED_CISST_LIBRARIES})
-
-
+    
+    
     qt4_wrap_cpp (QT_WRAPPED_CPP include/irk_teleop/irkTeleopQWidget.h)
     rosbuild_add_executable(irk_teleop_gui
       include/irk_teleop/irkTeleopQWidget.h

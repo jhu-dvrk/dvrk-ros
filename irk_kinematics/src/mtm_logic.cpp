@@ -17,15 +17,17 @@
 
 #include <sawROS/mtsCISSTToROS.h>
 
+#include "irk_kinematics/mtm_logic.h"
+
 // set up joint state variables
 vctDoubleVec mtm_joint_current;
 vctDoubleVec mtm_joint_command;
 vctFrm4x4 mtm_pose_current;
 int control_mode;
 
-const int MODE_RESET = 0;
-const int MODE_MANUAL = 1;
-const int MODE_TELEOP = 2;
+//const int MODE_RESET = 0;
+//const int MODE_MANUAL = 1;
+//const int MODE_TELEOP = 2;
 
 void mtm_joint_feedback_cb(const sensor_msgs::JointStateConstPtr &msg)
 {
@@ -40,7 +42,7 @@ void mtm_joint_feedback_cb(const sensor_msgs::JointStateConstPtr &msg)
 
 void mtm_mode_cb(const std_msgs::Int8 &msg)
 {
-    if (msg.data >= 0 && msg.data <=2) {
+    if (msg.data >= 0 && msg.data <=MTM::MODE_TELEOP) {
         control_mode = msg.data;
         ROS_WARN("MTM switched to %d", msg.data);
     }
@@ -114,15 +116,15 @@ int main(int argc, char** argv)
         // ----- control mode -------
         switch (control_mode)
         {
-        case MODE_RESET:
+        case MTM::MODE_RESET:
             mtm_joint_command.SetAll(0.0);
             mtm_joint_command[3] = cmnPI_2;
             mtm_joint_command[4] = cmnPI_2;
             break;
-        case MODE_MANUAL:
+        case MTM::MODE_MANUAL:
             mtm_joint_command.ForceAssign(mtm_joint_current);
             break;
-        case MODE_TELEOP:
+        case MTM::MODE_TELEOP:
             // teleop
             break;
         default:
@@ -132,7 +134,7 @@ int main(int argc, char** argv)
         // copy to msg
         msg_js.position.resize(mtm_joint_command.size());
         std::copy(mtm_joint_command.begin(), mtm_joint_command.end(), msg_js.position.begin());
-        if (control_mode == MODE_RESET) {
+        if (control_mode == MTM::MODE_RESET) {
             // publish cmd joint state
             pub_mtm_joint_state.publish(msg_js);
         }

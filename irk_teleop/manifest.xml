@@ -18,6 +18,7 @@
   <depend package="sawROS"/>
   <depend package="sensor_msgs" />
   <depend package="geometry_msgs" />
+  <depend package="irk_kinematics" />
   
 </package>
 

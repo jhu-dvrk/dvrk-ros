@@ -15,6 +15,10 @@
   <depend package="geometry_msgs"/>
   <depend package="std_msgs"/>
   <depend package="sawROS"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include"/>
+  </export>
   
 </package>
 
