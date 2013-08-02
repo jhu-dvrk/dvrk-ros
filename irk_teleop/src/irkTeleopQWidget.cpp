@@ -138,41 +138,43 @@ void irkTeleopQWidget::timerEvent(QTimerEvent *)
     mtm_pose_qt_->SetValue(mtm_pose_cur_);
     psm_pose_qt_->SetValue(psm_pose_cur_);
 
-    // check teleop enable status
-    if (is_head_in_) {
-        if (!is_clutched_ && !is_move_psm_) {
-            // enable teleop node
-            msg_teleop_enable.data = true;
-            msg_mtm_mode_.data = MTM::MODE_TELEOP;
-            msg_psm_mode_.data = PSM::MODE_TELEOP;
-        } else if (is_clutched_) {
-            // mtm move, keep orientation as psm
-            msg_teleop_enable.data = false;
-            msg_mtm_mode_.data = MTM::MODE_CLUTCH;
-            msg_psm_mode_.data = PSM::MODE_HOLD;
+    if (consoleTeleopButton->isChecked()) {
+        // check teleop enable status
+        if (is_head_in_) {
+            if (!is_clutched_ && !is_move_psm_) {
+                // enable teleop node
+                msg_teleop_enable.data = true;
+                msg_mtm_mode_.data = MTM::MODE_TELEOP;
+                msg_psm_mode_.data = PSM::MODE_TELEOP;
+            } else if (is_clutched_) {
+                // mtm move, keep orientation as psm
+                msg_teleop_enable.data = false;
+                msg_mtm_mode_.data = MTM::MODE_CLUTCH;
+                msg_psm_mode_.data = PSM::MODE_HOLD;
+            } else {
+                msg_teleop_enable.data = false;
+                msg_mtm_mode_.data = MTM::MODE_HOLD;
+                msg_psm_mode_.data = PSM::MODE_HOLD;
+            }
         } else {
             msg_teleop_enable.data = false;
-            msg_mtm_mode_.data = MTM::MODE_HOLD;
-            msg_psm_mode_.data = PSM::MODE_HOLD;
-        }
-    } else {
-        msg_teleop_enable.data = false;
-        if (is_clutched_) {
-            msg_mtm_mode_.data = MTM::MODE_CLUTCH;
-        } else {
-            msg_mtm_mode_.data = MTM::MODE_HOLD;
+            if (is_clutched_) {
+                msg_mtm_mode_.data = MTM::MODE_CLUTCH;
+            } else {
+                msg_mtm_mode_.data = MTM::MODE_HOLD;
+            }
+
+            if (is_move_psm_) {
+                msg_psm_mode_.data = PSM::MODE_MANUAL;
+            } else {
+                msg_psm_mode_.data = PSM::MODE_HOLD;
+            }
         }
 
-        if (is_move_psm_) {
-            msg_psm_mode_.data = PSM::MODE_MANUAL;
-        } else {
-            msg_psm_mode_.data = PSM::MODE_HOLD;
-        }
+        pub_teleop_enable_.publish(msg_teleop_enable);
+        pub_mtm_control_mode_.publish(msg_mtm_mode_);
+        pub_psm_control_mode_.publish(msg_psm_mode_);
     }
-
-    pub_teleop_enable_.publish(msg_teleop_enable);
-    pub_mtm_control_mode_.publish(msg_mtm_mode_);
-    pub_psm_control_mode_.publish(msg_psm_mode_);
 
     counter_++;
 }

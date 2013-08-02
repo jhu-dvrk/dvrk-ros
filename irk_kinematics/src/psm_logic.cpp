@@ -59,12 +59,15 @@ void psm_mode_cb(const std_msgs::Int8 &msg)
 {
     if (msg.data >= 0 && msg.data <=PSM::MODE_TELEOP) {
         control_mode = msg.data;
-        ROS_WARN_STREAM("PSM switched to " << msg.data);
     }
 
     // mode = TELEOP
     if (msg.data == PSM::MODE_TELEOP) {
         psm_joint_command.Assign(psm_joint_current);
+    }
+
+    if (control_mode == PSM::MODE_MANUAL ){
+        ROS_ERROR_STREAM("MANUAL");
     }
 }
 
