@@ -16,10 +16,10 @@
 int main(int argc, char** argv)
 {
     // ros initialization
-    ros::init(argc, argv, "irk_teleop");
+    ros::init(argc, argv, "irk_teleop_gui");
     QApplication qapp(argc, argv);
 
-    irkTeleopQWidget gui("irk_teleop", 20 * cmn_ms);
+    irkTeleopQWidget gui("irk_teleop_gui", 20 * cmn_ms);
 
     gui.show();   // show gui widget
     qapp.exec();  //

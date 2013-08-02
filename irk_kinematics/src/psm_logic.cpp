@@ -60,10 +60,9 @@ void psm_joint_feedback_cb(const sensor_msgs::JointState &msg)
 
 void psm_mode_cb(const std_msgs::Int8 &msg)
 {
-    std::cerr << "----- PSM GOT ------" << std::endl;
     if (msg.data >= 0 && msg.data <=2) {
         control_mode = msg.data;
-        ROS_WARN("PSM switched to %d", msg.data);
+        ROS_WARN_STREAM("PSM switched to " << msg.data);
     }
 
     // mode = TELEOP

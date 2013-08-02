@@ -26,6 +26,13 @@ public:
     ~irkTeleopQWidget(){}
     void timerEvent(QTimerEvent *);
 
+protected slots:
+    void slot_homeButton_pressed(void);
+    void slot_manualButton_pressed(void);
+    void slot_teleopButton_pressed(void);
+
+    void slot_headButton_pressed(bool state);
+
 protected:
     void master_pose_cb(const geometry_msgs::PoseConstPtr &msg);
     void slave_pose_cb(const geometry_msgs::PoseConstPtr &msg);
@@ -43,4 +50,7 @@ protected:
 
     ros::Subscriber sub_mtm_pose_;
     ros::Subscriber sub_psm_pose_;
+
+    ros::Publisher pub_control_mode_;
+    ros::Publisher pub_enable_slider_;
 };

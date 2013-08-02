@@ -1,0 +1,18 @@
+/* for gui qstylesheet */
+
+QGroupBox {
+    border: 1px solid gray;
+    border-radius: 2px;
+    margin-top: 0.5em;
+    font: bold;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 3px 0 3px;
+}
+
+/* QPushButton:hover { */
+/*     background-color: khaki; */
+/* } */
