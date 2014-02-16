@@ -13,3 +13,4 @@ CMakeLists.txt.user
 cisstLog.txt
 .ropeproject
 *.log
+*.html
