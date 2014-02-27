@@ -1,81 +1,84 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 2.8.3)
+project(irk_kinematics)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
-
-rosbuild_init()
-
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-rosbuild_gensrv()
-
-#common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-#rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(example ${PROJECT_NAME})
+## Find catkin macros and libraries
+## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
+## is used, also find other catkin packages
+find_package(catkin REQUIRED COMPONENTS
+  cisst_ros_bridge
+  geometry_msgs
+  roscpp
+  roslib
+  sensor_msgs
+  std_msgs
+)
 
 # create a list of required cisst libraries
-set (REQUIRED_CISST_LIBRARIES cisstCommon
-                              cisstVector
-                              cisstVectorQt
-                              cisstOSAbstraction
-                              cisstMultiTask
-                              cisstParameterTypes
-                              cisstRobot
-                              cisstNumerical
-                              cisstQt)
+set (REQUIRED_CISST_LIBRARIES
+  cisstCommon
+  cisstVector
+  cisstVectorQt
+  cisstOSAbstraction
+  cisstMultiTask
+  cisstParameterTypes
+  cisstRobot
+  cisstNumerical
+  cisstQt
+  )
+
 
 # find cisst and make sure the required libraries have been compiled
 find_package (cisst REQUIRED ${REQUIRED_CISST_LIBRARIES})
+include (${CISST_USE_FILE})
 
-if (cisst_FOUND_AS_REQUIRED)
-
-  # load cisst configuration
-  include (${CISST_USE_FILE})
-
-  # sawRobotIO1394 has been compiled within cisst, we should find it automatically
-  cisst_find_saw_component (sawRobotIO1394 REQUIRED)
-
-  if (sawRobotIO1394_FOUND)
-
-    # sawRobotIO1394 configuration
-    include_directories (${sawRobotIO1394_INCLUDE_DIR})
-    link_directories (${sawRobotIO1394_LIBRARY_DIR})
-
-    rosbuild_add_executable(irk_psm_logic
-      include/irk_kinematics/psm_logic.h
-      src/psm_logic.cpp)
-    # link against non cisst libraries and cisst components
-    target_link_libraries (irk_psm_logic
-                           ${sawRobotIO1394_LIBRARIES})
-    # link against cisst libraries (and dependencies)
-    cisst_target_link_libraries (irk_psm_logic ${REQUIRED_CISST_LIBRARIES})
+# saw components 
+cisst_find_saw_component (sawRobotIO1394 REQUIRED)
+include_directories (${sawRobotIO1394_INCLUDE_DIR})
+link_directories (${sawRobotIO1394_LIBRARY_DIR})
 
 
-    rosbuild_add_executable(irk_mtm_logic
-      include/irk_kinematics/mtm_logic.h
-      src/mtm_logic.cpp)
-    # link against non cisst libraries and cisst components
-    target_link_libraries (irk_mtm_logic
-                           ${sawRobotIO1394_LIBRARIES})
-    # link against cisst libraries (and dependencies)
-    cisst_target_link_libraries (irk_mtm_logic ${REQUIRED_CISST_LIBRARIES})
+## Uncomment this if the package has a setup.py. This macro ensures
+## modules and global scripts declared therein get installed
+## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
+# catkin_python_setup()
 
-  endif (sawRobotIO1394_FOUND)
+###################################
+## catkin specific configuration ##
+###################################
+## The catkin_package macro generates cmake config files for your package
+## Declare things to be passed to dependent projects
+## INCLUDE_DIRS: uncomment this if you package contains header files
+## LIBRARIES: libraries you create in this project that dependent projects also need
+## CATKIN_DEPENDS: catkin_packages dependent projects also need
+## DEPENDS: system dependencies of this project that dependent projects also need
+catkin_package(
+#  INCLUDE_DIRS include
+#  LIBRARIES irk_kinematics
+#  CATKIN_DEPENDS cisst_ros_bridge geometry_msgs roscpp roslib sensor_msgs std_msgs
+#  DEPENDS system_lib
+)
 
-endif (cisst_FOUND_AS_REQUIRED)
+###########
+## Build ##
+###########
+
+## Specify additional locations of header files
+## Your package locations should be listed before other locations
+include_directories(include)
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+)
+
+# psm
+add_executable(irk_psm_logic
+  include/irk_kinematics/psm_logic.h
+  src/psm_logic.cpp)
+target_link_libraries (irk_psm_logic ${sawRobotIO1394_LIBRARIES} ${catkin_LIBRARIES})
+cisst_target_link_libraries (irk_psm_logic ${REQUIRED_CISST_LIBRARIES})
+
+# mtm
+add_executable(irk_mtm_logic
+  include/irk_kinematics/mtm_logic.h
+  src/mtm_logic.cpp)
+target_link_libraries (irk_mtm_logic ${sawRobotIO1394_LIBRARIES} ${catkin_LIBRARIES})
+cisst_target_link_libraries (irk_mtm_logic ${REQUIRED_CISST_LIBRARIES})

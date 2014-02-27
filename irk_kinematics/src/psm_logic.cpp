@@ -14,8 +14,8 @@
 #include <cisstRobot/robManipulator.h>
 #include <cisstVector.h>
 
-#include <sawROS/mtsCISSTToROS.h>
-#include <sawROS/mtsROSToCISST.h>
+#include <cisst_ros_bridge/mtsCISSTToROS.h>
+#include <cisst_ros_bridge/mtsROSToCISST.h>
 
 #include "irk_kinematics/psm_logic.h"
 
