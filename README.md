@@ -9,7 +9,7 @@ This repository has code realted to daVinci\_research\_kit ROS packages.
 * download & build cisst, see dvrk tutorial wiki for detail 
 * download & compile cisst\_ros\_integration
 
-```
+```sh
 # cd to catkin ws src dir
 cd /PATH/TO/CATKIN_WS/src
 # clone repo
@@ -20,7 +20,7 @@ catkin_make
 ```
 * download & compile dvrk\_research\_kit\_ros
 
-```
+```sh
 # cd to catkin ws src dir
 cd /PATH/TO/CATKIN_WS/src
 # clone repo
