@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package>
+  <name>irk_model</name>
+  <version>0.0.1</version>
+  <description>The irk_model package</description>
+
+  <maintainer email="zihan@jhu.edu">Zihan Chen</maintainer>
+  <license>CISST</license>
+
+  <author email="zihan.chen@jhu.edu">Zihan Chen</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <run_depend>joint_state_publisher</run_depend>
+  <run_depend>robot_state_publisher</run_depend>
+  <run_depend>rviz</run_depend>
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+  </export>
+</package>
