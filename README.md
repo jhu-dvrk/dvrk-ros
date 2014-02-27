@@ -1,13 +1,18 @@
 # About
 This repository has code realted to intuitive\_research\_kit ROS packages
 
+# Todo
+* rename irk to dvrk 
+* move to github 
+* merge catkin to master
+
 # How to run the code
 * dependencies: xxxxx
 
 # Branches
 * master: current stable version
 * dev\_groovy: groovy development verison
-* catkin: port to use catkin, work in progress
+* catkin: catkin version 
 
 # About packages:
 * dv\_gazebo\_plugins: from WPI Nirav, don't know how to use Nirav? 

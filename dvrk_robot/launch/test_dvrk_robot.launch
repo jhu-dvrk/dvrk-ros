@@ -1,0 +1,23 @@
+<launch>
+
+  <!-- dvrk mtm -->
+  <node name="dvrk_mtm_ros_node"
+        pkg="dvrk_robot"
+        type="dvrk_mtm_ros"
+        args="-i sawRobotIO1394-MTMR-28247.xml
+              -p sawControllersPID-MTM.xml
+              -k dvmtm.rob -n MTMR"/>
+  
+  <!-- irk -->
+  <node name="irk_jnt_pub_node"
+        pkg="irk_joint_publisher"
+        type="mtm_joint_publisher.py"/>
+
+  <!-- mtm rviz  -->
+  <include file="$(find irk_model)/launch/mtm_right_rviz.launch"/>
+
+  <group ns="/irk_mtm">
+    <arg name="gui" default="false" />
+  </group>
+  
+</launch>
