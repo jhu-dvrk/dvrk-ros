@@ -29,7 +29,7 @@ int main(int argc, char** argv)
     manager->StartAllAndWait(2.0 * cmn_s);
 
     // ros::spin() callback for subscribers
-//    std::cerr << "Hit Ctrl-c to quit" << std::endl;
+    std::cerr << "Hit Ctrl-c to quit" << std::endl;
     ros::spin();
 
     manager->KillAllAndWait(2.0 * cmn_s);

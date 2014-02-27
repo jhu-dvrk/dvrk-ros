@@ -11,8 +11,8 @@
 #include <cisstVector/vctQtWidgetFrame4x4.h>
 #include <cisstMultiTask/mtsTaskPeriodic.h>
 
-#include <sawROS/mtsROSToCISST.h>
-#include <sawROS/mtsCISSTToROS.h>
+#include <cisst_ros_bridge/mtsCISSTToROS.h>
+#include <cisst_ros_bridge/mtsROSToCISST.h>
 
 #include <QtGui>
 #include <QObject>
