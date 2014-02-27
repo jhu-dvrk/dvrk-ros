@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include <ros/ros.h>
-#include "irk_teleop/mtsTeleop.h"
+#include "dvrk_teleop/mtsTeleop.h"
 
 int main(int argc, char** argv)
 {
@@ -18,11 +18,11 @@ int main(int argc, char** argv)
     cmnLogger::AddChannel(std::cerr, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
 
     // ros initialization
-    ros::init(argc, argv, "irk_teleop");
+    ros::init(argc, argv, "dvrk_teleop");
 
     mtsComponentManager * manager = mtsManagerLocal::GetInstance();
 
-    mtsTeleop teleop("irk_teleop", 20 * cmn_ms);
+    mtsTeleop teleop("dvrk_teleop", 20 * cmn_ms);
     manager->AddComponent(&teleop);
 
     manager->CreateAllAndWait(2.0 * cmn_s);

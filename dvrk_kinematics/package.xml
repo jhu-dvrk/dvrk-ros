@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>irk_kinematics</name>
+  <name>dvrk_kinematics</name>
   <version>0.0.0</version>
-  <description>The irk_kinematics package</description>
+  <description>The dvrk_kinematics package</description>
 
   <maintainer email="zihan@jhu.edu">Zihan Chen</maintainer>
   <license>CISST</license>

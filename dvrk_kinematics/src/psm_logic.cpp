@@ -17,7 +17,7 @@
 #include <cisst_ros_bridge/mtsCISSTToROS.h>
 #include <cisst_ros_bridge/mtsROSToCISST.h>
 
-#include "irk_kinematics/psm_logic.h"
+#include "dvrk_kinematics/psm_logic.h"
 
 // set up joint state variables
 vctDoubleVec psm_joint_current;
@@ -70,32 +70,32 @@ void psm_mode_cb(const std_msgs::Int8 &msg)
 int main(int argc, char** argv)
 {
     // ros initialization
-    ros::init(argc, argv, "irk_psm_kinematics");
+    ros::init(argc, argv, "dvrk_psm_kinematics");
     ros::NodeHandle nh;
     ros::Rate rate(200);  // 100 hz rate
 
     // subscriber
     ros::Subscriber sub_psm_cmd =
-            nh.subscribe("/irk_psm/cartesian_pose_command", 1, psm_cmd_pose_cb);
+            nh.subscribe("/dvrk_psm/cartesian_pose_command", 1, psm_cmd_pose_cb);
     ros::Subscriber sub_mtm_gripper =
-        nh.subscribe("/irk_mtm/gripper_position", 1, mtm_gripper_cb);
+        nh.subscribe("/dvrk_mtm/gripper_position", 1, mtm_gripper_cb);
 
     ros::Subscriber sub_psm_fb =
-            nh.subscribe("/irk_psm/joint_states", 1, psm_joint_feedback_cb);
+            nh.subscribe("/dvrk_psm/joint_states", 1, psm_joint_feedback_cb);
 
     ros::Subscriber sub_mode =
-            nh.subscribe("/irk_psm/control_mode", 1, psm_mode_cb);
+            nh.subscribe("/dvrk_psm/control_mode", 1, psm_mode_cb);
 
     // publisher
     ros::Publisher pub_psm_joint_state_cmd =
-            nh.advertise<sensor_msgs::JointState>("/irk_psm/joint_states_command", 1);
+            nh.advertise<sensor_msgs::JointState>("/dvrk_psm/joint_states_command", 1);
     ros::Publisher pub_psm_pose_current =
-            nh.advertise<geometry_msgs::Pose>("/irk_psm/cartesian_pose_current", 1);
+            nh.advertise<geometry_msgs::Pose>("/dvrk_psm/cartesian_pose_current", 1);
     ros::Publisher pub_psm_enable_slider =
-            nh.advertise<sensor_msgs::JointState>("/irk_psm/joint_state_publisher/enable_slider", 100);
+            nh.advertise<sensor_msgs::JointState>("/dvrk_psm/joint_state_publisher/enable_slider", 100);
 
     // --- cisst robManipulator ---
-    std::string filename = ros::package::getPath("irk_kinematics");
+    std::string filename = ros::package::getPath("dvrk_kinematics");
     filename.append("/config/dvpsm.rob");
     robManipulator psm_manip;
     robManipulator::Errno result;

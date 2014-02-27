@@ -19,12 +19,12 @@
 
 // set up joint state variables
 
-class irkTeleopQWidget: public QWidget
+class dvrkTeleopQWidget: public QWidget
 {
     Q_OBJECT
 public:
-    irkTeleopQWidget(const std::string &name, const double &period);
-    ~irkTeleopQWidget(){}
+    dvrkTeleopQWidget(const std::string &name, const double &period);
+    ~dvrkTeleopQWidget(){}
     void timerEvent(QTimerEvent *);
 
 protected slots:

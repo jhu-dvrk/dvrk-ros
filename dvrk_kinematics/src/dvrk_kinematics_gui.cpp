@@ -33,9 +33,9 @@ public:
     {
         // subscriber
         // NOTE: queue size is set to 1 to make sure data is fresh
-        sub_mtm_pose_ = nh_.subscribe("/irk_mtm/cartesian_pose_current", 1,
+        sub_mtm_pose_ = nh_.subscribe("/dvrk_mtm/cartesian_pose_current", 1,
                                         &RobotQWidget::master_pose_cb, this);
-        sub_psm_pose_ = nh_.subscribe("/irk_psm/cartesian_pose_current", 1,
+        sub_psm_pose_ = nh_.subscribe("/dvrk_psm/cartesian_pose_current", 1,
                                        &RobotQWidget::slave_pose_cb, this);
 
         mtm_pose_qt_ = new vctQtWidgetFrame4x4DoubleRead;
@@ -105,7 +105,7 @@ protected:
 int main(int argc, char** argv)
 {
     // ros initialization
-    ros::init(argc, argv, "irk_teleop");
+    ros::init(argc, argv, "dvrk_teleop");
 
     QApplication qapp(argc, argv);
     RobotQWidget gui("gui", 50);

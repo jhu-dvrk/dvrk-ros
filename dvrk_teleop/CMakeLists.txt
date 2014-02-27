@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(irk_teleop)
+project(dvrk_teleop)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   cisst_ros_bridge
-  irk_kinematics
+  dvrk_kinematics
   geometry_msgs
   roscpp
   roslib
@@ -44,7 +44,7 @@ include (${CISST_USE_FILE})
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES irk_teleop
+#  LIBRARIES dvrk_teleop
 #  CATKIN_DEPENDS cisst_ros_bridge geometry_msgs roscpp rospy sensor_msgs std_msgs tf tf_conversions
 #  DEPENDS system_lib
 )
@@ -57,22 +57,22 @@ include_directories(include)
 include_directories(${catkin_INCLUDE_DIRS})
 
 
-# irk_teleop
-add_executable(irk_teleop
+# dvrk_teleop
+add_executable(dvrk_teleop
   src/teleop.cpp
-  include/irk_teleop/mtsTeleop.h
+  include/dvrk_teleop/mtsTeleop.h
   src/mtsTeleop.cpp)
-target_link_libraries (irk_teleop ${catkin_LIBRARIES})
-cisst_target_link_libraries (irk_teleop ${REQUIRED_CISST_LIBRARIES})
+target_link_libraries (dvrk_teleop ${catkin_LIBRARIES})
+cisst_target_link_libraries (dvrk_teleop ${REQUIRED_CISST_LIBRARIES})
 
 
-# irk_teleop_gui
-qt4_wrap_cpp (QT_WRAPPED_CPP include/irk_teleop/irkTeleopQWidget.h)
-add_executable(irk_teleop_gui
-  include/irk_teleop/irkTeleopQWidget.h
-  src/irkTeleopQWidget.cpp
+# dvrk_teleop_gui
+qt4_wrap_cpp (QT_WRAPPED_CPP include/dvrk_teleop/dvrkTeleopQWidget.h)
+add_executable(dvrk_teleop_gui
+  include/dvrk_teleop/dvrkTeleopQWidget.h
+  src/dvrkTeleopQWidget.cpp
   src/teleopGUI.cpp
   ${QT_WRAPPED_CPP})
-target_link_libraries (irk_teleop_gui ${catkin_LIBRARIES})
-cisst_target_link_libraries (irk_teleop_gui ${REQUIRED_CISST_LIBRARIES})
+target_link_libraries (dvrk_teleop_gui ${catkin_LIBRARIES})
+cisst_target_link_libraries (dvrk_teleop_gui ${REQUIRED_CISST_LIBRARIES})
 

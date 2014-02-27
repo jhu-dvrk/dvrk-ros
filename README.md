@@ -2,7 +2,7 @@
 This repository has code realted to intuitive\_research\_kit ROS packages
 
 # Todo
-* rename irk to dvrk 
+* rename dvrk to dvrk 
 * move to github 
 * merge catkin to master
 
@@ -16,14 +16,14 @@ This repository has code realted to intuitive\_research\_kit ROS packages
 
 # About packages:
 * dv\_gazebo\_plugins: from WPI Nirav, don't know how to use Nirav? 
-* irk\_joint\_publisher: publishes joint state
-* irk_kinematics:
+* dvrk\_joint\_publisher: publishes joint state
+* dvrk_kinematics:
   * kinematics model of MTM/PSM
-* irk_model:
+* dvrk_model:
   * MTM + PSM cat model & meshes
   * rviz config
   * lauch files
-* irk_teleop:
+* dvrk_teleop:
   * dummy teleop component with a Qt GUI
 
   

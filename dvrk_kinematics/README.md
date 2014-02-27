@@ -1,4 +1,4 @@
-### irk_kinematics package
+### dvrk_kinematics package
 
 **launch:**  
  - test\_mtm\_logic.launch: start mtm\_right\_only visulization and a MTM kinematics node  

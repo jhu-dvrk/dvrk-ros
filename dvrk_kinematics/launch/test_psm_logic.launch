@@ -1,0 +1,19 @@
+<launch>
+
+  <group ns="/dvrk_psm">
+
+    <rosparam>
+      <!-- if connect to dv hardware, update this source list  -->
+      source_list: [/dvrk_psm/joint_states_command]
+    </rosparam>
+
+    <node name="psm_kinematics"
+          pkg="dvrk_kinematics"
+          type="dvrk_psm_logic"/>
+    
+    <include file="$(find dvrk_model)/launch/psm_rviz.launch"/>
+  </group>
+
+</launch>
+
+

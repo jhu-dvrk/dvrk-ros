@@ -5,7 +5,7 @@
 #include <cisst_ros_bridge/mtsCISSTToROS.h>
 #include <cisst_ros_bridge/mtsROSToCISST.h>
 
-#include "irk_teleop/mtsTeleop.h"
+#include "dvrk_teleop/mtsTeleop.h"
 
 
 CMN_IMPLEMENT_SERVICES_DERIVED(mtsTeleop, mtsTaskPeriodic);
@@ -22,19 +22,19 @@ mtsTeleop::mtsTeleop(const std::string &name, const double &period):
 {
     // subscriber
     // NOTE: queue size is set to 1 to make sure data is fresh
-    sub_teleop_enable_ = nh_.subscribe("/irk_teleop/enable", 1,
+    sub_teleop_enable_ = nh_.subscribe("/dvrk_teleop/enable", 1,
                                   &mtsTeleop::teleop_enable_cb, this);
-    sub_mtm_pose_ = nh_.subscribe("/irk_mtm/cartesian_pose_current", 1,
+    sub_mtm_pose_ = nh_.subscribe("/dvrk_mtm/cartesian_pose_current", 1,
                                   &mtsTeleop::master_pose_cb, this);
-    sub_psm_pose_ = nh_.subscribe("/irk_psm/cartesian_pose_current", 1,
+    sub_psm_pose_ = nh_.subscribe("/dvrk_psm/cartesian_pose_current", 1,
                                   &mtsTeleop::slave_pose_cb, this);
-    sub_foodpedal_clutch_ = nh_.subscribe("/irk_footpedal/clutch_state", 1,
+    sub_foodpedal_clutch_ = nh_.subscribe("/dvrk_footpedal/clutch_state", 1,
                                           &mtsTeleop::footpedal_clutch_cb, this);
 
 
     // publisher
-    pub_mtm_pose_ = nh_.advertise<geometry_msgs::Pose>("/irk_mtm/cartesian_pose_command", 1);
-    pub_psm_pose_ = nh_.advertise<geometry_msgs::Pose>("/irk_psm/cartesian_pose_command", 1);
+    pub_mtm_pose_ = nh_.advertise<geometry_msgs::Pose>("/dvrk_mtm/cartesian_pose_command", 1);
+    pub_psm_pose_ = nh_.advertise<geometry_msgs::Pose>("/dvrk_psm/cartesian_pose_command", 1);
 }
 
 void mtsTeleop::Configure(const std::string &)

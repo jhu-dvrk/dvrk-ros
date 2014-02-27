@@ -1,0 +1,15 @@
+<launch>
+
+  <group ns="/dvrk_mtm">
+    <!-- mtm kinematics node -->
+    <node name="mtm_kinematics"
+          pkg="dvrk_kinematics"
+          type="dvrk_mtm_logic"/>
+    
+    <!-- mtm rviz  -->
+    <include file="$(find dvrk_model)/launch/mtm_right_rviz.launch"/>
+  </group>
+
+</launch>
+
+

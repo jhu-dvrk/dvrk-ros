@@ -5,7 +5,7 @@
 # Brief: this nodes takes master position and computes desired psm position
 
 # ros import
-import roslib; roslib.load_manifest('irk_teleop')
+import roslib; roslib.load_manifest('dvrk_teleop')
 import rospy
 from conversion import *
 

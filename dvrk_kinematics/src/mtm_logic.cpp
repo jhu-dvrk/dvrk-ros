@@ -19,7 +19,7 @@
 #include <cisst_ros_bridge/mtsROSToCISST.h>
 
 
-#include "irk_kinematics/mtm_logic.h"
+#include "dvrk_kinematics/mtm_logic.h"
 
 // set up joint state variables
 vctDoubleVec mtm_joint_current;
@@ -56,29 +56,29 @@ void mtm_mode_cb(const std_msgs::Int8 &msg)
 int main(int argc, char** argv)
 {
     // ros initialization
-    ros::init(argc, argv, "irk_mtm_logic");
+    ros::init(argc, argv, "dvrk_mtm_logic");
     ros::NodeHandle nh;
     ros::Rate rate(200);  // 100 hz rate
 
     // subscriber
     ros::Subscriber sub_mtm_cmd =
-            nh.subscribe("/irk_mtm/cartesian_pose_command", 1, mtm_cmd_pose_cb);
+            nh.subscribe("/dvrk_mtm/cartesian_pose_command", 1, mtm_cmd_pose_cb);
     ros::Subscriber sub_mtm_fb =
-            nh.subscribe("/irk_mtm/joint_states", 1, mtm_joint_feedback_cb);
+            nh.subscribe("/dvrk_mtm/joint_states", 1, mtm_joint_feedback_cb);
     ros::Subscriber sub_mode =
-            nh.subscribe("/irk_mtm/control_mode", 1, mtm_mode_cb);
+            nh.subscribe("/dvrk_mtm/control_mode", 1, mtm_mode_cb);
 
     // publisher
     ros::Publisher pub_mtm_joint_state =
-            nh.advertise<sensor_msgs::JointState>("/irk_mtm/joint_states_command", 1);
+            nh.advertise<sensor_msgs::JointState>("/dvrk_mtm/joint_states_command", 1);
     ros::Publisher pub_mtm_pose =
-            nh.advertise<geometry_msgs::Pose>("/irk_mtm/cartesian_pose_current", 1);
+            nh.advertise<geometry_msgs::Pose>("/dvrk_mtm/cartesian_pose_current", 1);
     ros::Publisher pub_mtm_enable_slider =
-            nh.advertise<sensor_msgs::JointState>("/irk_mtm/joint_state_publisher/enable_slider", 100);
+            nh.advertise<sensor_msgs::JointState>("/dvrk_mtm/joint_state_publisher/enable_slider", 100);
 
 
     // cisst robManipulator
-    std::string filename = ros::package::getPath("irk_kinematics");
+    std::string filename = ros::package::getPath("dvrk_kinematics");
     filename.append("/config/dvmtm.rob");
     robManipulator mtm_manip;
     robManipulator::Errno result;

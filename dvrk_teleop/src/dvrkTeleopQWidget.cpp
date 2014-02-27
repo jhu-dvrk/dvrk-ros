@@ -1,12 +1,12 @@
 #include <ros/package.h>
 
-#include "irk_teleop/irkTeleopQWidget.h"
-#include "irk_kinematics/mtm_logic.h"
-#include "irk_kinematics/psm_logic.h"
+#include "dvrk_teleop/dvrkTeleopQWidget.h"
+#include "dvrk_kinematics/mtm_logic.h"
+#include "dvrk_kinematics/psm_logic.h"
 
 // set up joint state variables
 
-irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period):
+dvrkTeleopQWidget::dvrkTeleopQWidget(const std::string &name, const double &period):
     QWidget(), counter_(0)
 {
     is_head_in_ = false;
@@ -15,16 +15,16 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
 
     // subscriber
     // NOTE: queue size is set to 1 to make sure data is fresh
-    sub_mtm_pose_ = nh_.subscribe("/irk_mtm/cartesian_pose_current", 1,
-                                    &irkTeleopQWidget::master_pose_cb, this);
-    sub_psm_pose_ = nh_.subscribe("/irk_psm/cartesian_pose_current", 1,
-                                   &irkTeleopQWidget::slave_pose_cb, this);
+    sub_mtm_pose_ = nh_.subscribe("/dvrk_mtm/cartesian_pose_current", 1,
+                                    &dvrkTeleopQWidget::master_pose_cb, this);
+    sub_psm_pose_ = nh_.subscribe("/dvrk_psm/cartesian_pose_current", 1,
+                                   &dvrkTeleopQWidget::slave_pose_cb, this);
 
     // publisher
-    pub_teleop_enable_ = nh_.advertise<std_msgs::Bool>("/irk_teleop/enable", 100);
-    pub_mtm_control_mode_ = nh_.advertise<std_msgs::Int8>("/irk_mtm/control_mode", 100);
-    pub_psm_control_mode_ = nh_.advertise<std_msgs::Int8>("/irk_psm/control_mode", 100);
-    pub_enable_slider_ = nh_.advertise<sensor_msgs::JointState>("/irk_mtm/joint_state_publisher/enable_slider", 100);
+    pub_teleop_enable_ = nh_.advertise<std_msgs::Bool>("/dvrk_teleop/enable", 100);
+    pub_mtm_control_mode_ = nh_.advertise<std_msgs::Int8>("/dvrk_mtm/control_mode", 100);
+    pub_psm_control_mode_ = nh_.advertise<std_msgs::Int8>("/dvrk_psm/control_mode", 100);
+    pub_enable_slider_ = nh_.advertise<sensor_msgs::JointState>("/dvrk_mtm/joint_state_publisher/enable_slider", 100);
 
     // pose display
     mtm_pose_qt_ = new vctQtWidgetFrame4x4DoubleRead;
@@ -102,7 +102,7 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
     this->setWindowTitle("Teleopo GUI");
 
     // set stylesheet
-    std::string filename = ros::package::getPath("irk_teleop");
+    std::string filename = ros::package::getPath("dvrk_teleop");
     filename.append("/src/default.css");
     QFile defaultStyleFile(filename.c_str());
     defaultStyleFile.open(QFile::ReadOnly);
@@ -125,7 +125,7 @@ irkTeleopQWidget::irkTeleopQWidget(const std::string &name, const double &period
 }
 
 
-void irkTeleopQWidget::timerEvent(QTimerEvent *)
+void dvrkTeleopQWidget::timerEvent(QTimerEvent *)
 {
     // check ros::ok()
     if (!ros::ok()) {
@@ -180,19 +180,19 @@ void irkTeleopQWidget::timerEvent(QTimerEvent *)
 }
 
 
-void irkTeleopQWidget::master_pose_cb(const geometry_msgs::PoseConstPtr &msg)
+void dvrkTeleopQWidget::master_pose_cb(const geometry_msgs::PoseConstPtr &msg)
 {
     mtsROSToCISST((*msg), mtm_pose_cur_);
 }
 
-void irkTeleopQWidget::slave_pose_cb(const geometry_msgs::PoseConstPtr &msg)
+void dvrkTeleopQWidget::slave_pose_cb(const geometry_msgs::PoseConstPtr &msg)
 {
     mtsROSToCISST((*msg), psm_pose_cur_);
 }
 
 
 // -------- slot -----------
-void irkTeleopQWidget::slot_homeButton_pressed(void)
+void dvrkTeleopQWidget::slot_homeButton_pressed(void)
 {
     msg_mtm_mode_.data = MTM::MODE_RESET;
     msg_psm_mode_.data = PSM::MODE_RESET;
@@ -200,7 +200,7 @@ void irkTeleopQWidget::slot_homeButton_pressed(void)
     pub_psm_control_mode_.publish(msg_psm_mode_);
 }
 
-void irkTeleopQWidget::slot_manualButton_pressed(void)
+void dvrkTeleopQWidget::slot_manualButton_pressed(void)
 {
     msg_mtm_mode_.data = MTM::MODE_MANUAL;
     msg_psm_mode_.data = PSM::MODE_MANUAL;
@@ -208,7 +208,7 @@ void irkTeleopQWidget::slot_manualButton_pressed(void)
     pub_psm_control_mode_.publish(msg_psm_mode_);
 }
 
-void irkTeleopQWidget::slot_teleopTestButton_pressed(void)
+void dvrkTeleopQWidget::slot_teleopTestButton_pressed(void)
 {
     msg_mtm_mode_.data = MTM::MODE_TELEOP;
     msg_psm_mode_.data = PSM::MODE_TELEOP;
@@ -216,7 +216,7 @@ void irkTeleopQWidget::slot_teleopTestButton_pressed(void)
     pub_psm_control_mode_.publish(msg_psm_mode_);
 }
 
-void irkTeleopQWidget::slot_teleopButton_toggled(bool state)
+void dvrkTeleopQWidget::slot_teleopButton_toggled(bool state)
 {
     if (state) {
         msg_mtm_mode_.data = MTM::MODE_HOLD;
@@ -233,18 +233,18 @@ void irkTeleopQWidget::slot_teleopButton_toggled(bool state)
     }
 }
 
-void irkTeleopQWidget::slot_clutchButton_pressed(bool state)
+void dvrkTeleopQWidget::slot_clutchButton_pressed(bool state)
 {
     is_clutched_ = state;
 }
 
-void irkTeleopQWidget::slot_headButton_pressed(bool state)
+void dvrkTeleopQWidget::slot_headButton_pressed(bool state)
 {
     is_head_in_ = state;
 }
 
 
-void irkTeleopQWidget::slot_moveToolButton_pressed(bool state)
+void dvrkTeleopQWidget::slot_moveToolButton_pressed(bool state)
 {
     is_move_psm_ = state;
 }

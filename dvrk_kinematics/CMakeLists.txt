@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(irk_kinematics)
+project(dvrk_kinematics)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -53,7 +53,7 @@ link_directories (${sawRobotIO1394_LIBRARY_DIR})
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-#  LIBRARIES irk_kinematics
+#  LIBRARIES dvrk_kinematics
   CATKIN_DEPENDS cisst_ros_bridge geometry_msgs roscpp sensor_msgs std_msgs
 #  DEPENDS system_lib
 )
@@ -70,15 +70,15 @@ include_directories(
 )
 
 # psm
-add_executable(irk_psm_logic
-  include/irk_kinematics/psm_logic.h
+add_executable(dvrk_psm_logic
+  include/dvrk_kinematics/psm_logic.h
   src/psm_logic.cpp)
-target_link_libraries (irk_psm_logic ${sawRobotIO1394_LIBRARIES} ${catkin_LIBRARIES})
-cisst_target_link_libraries (irk_psm_logic ${REQUIRED_CISST_LIBRARIES})
+target_link_libraries (dvrk_psm_logic ${sawRobotIO1394_LIBRARIES} ${catkin_LIBRARIES})
+cisst_target_link_libraries (dvrk_psm_logic ${REQUIRED_CISST_LIBRARIES})
 
 # mtm
-add_executable(irk_mtm_logic
-  include/irk_kinematics/mtm_logic.h
+add_executable(dvrk_mtm_logic
+  include/dvrk_kinematics/mtm_logic.h
   src/mtm_logic.cpp)
-target_link_libraries (irk_mtm_logic ${sawRobotIO1394_LIBRARIES} ${catkin_LIBRARIES})
-cisst_target_link_libraries (irk_mtm_logic ${REQUIRED_CISST_LIBRARIES})
+target_link_libraries (dvrk_mtm_logic ${sawRobotIO1394_LIBRARIES} ${catkin_LIBRARIES})
+cisst_target_link_libraries (dvrk_mtm_logic ${REQUIRED_CISST_LIBRARIES})

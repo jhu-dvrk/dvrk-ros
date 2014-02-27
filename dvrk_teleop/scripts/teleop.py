@@ -5,7 +5,7 @@
 # Brief: this nodes takes master position and computes desired psm position
 
 # ros import
-import roslib; roslib.load_manifest('irk_teleop')
+import roslib; roslib.load_manifest('dvrk_teleop')
 import rospy
 from std_msgs.msg import Float64
 from std_msgs.msg import Bool
@@ -22,20 +22,20 @@ class Teleoperation():
         rospy.init_node(name)
 
         # ros subscriber
-        sub_master_pose = rospy.Subscriber('/irk_mtm/cartesian_pose_current',
+        sub_master_pose = rospy.Subscriber('/dvrk_mtm/cartesian_pose_current',
                                            Pose,
                                            self.master_pose_cb)
 
-        sub_slave_pose = rospy.Subscriber('/irk_psm/cartesian_pose_current',
+        sub_slave_pose = rospy.Subscriber('/dvrk_psm/cartesian_pose_current',
                                           Pose,
                                           self.slave_pose_cb)
 
-        sub_footpedal_clutch = rospy.Subscriber('/irk_footpedal/clutch_state',
+        sub_footpedal_clutch = rospy.Subscriber('/dvrk_footpedal/clutch_state',
                                                 Bool,
                                                 self.footpedal_clutch_cb)
 
         # ros publisher
-        self.pub_pose_ = rospy.Publisher('/irk_psm/cartesian_pose_command', Pose)
+        self.pub_pose_ = rospy.Publisher('/dvrk_psm/cartesian_pose_command', Pose)
         self.rate_ = rospy.Rate(50)  # 50 hz
 
         # variable
@@ -116,7 +116,7 @@ class Teleoperation():
 
 if __name__ == '__main__':
     try:
-        print "... Starting irk_teleop ..."
+        print "... Starting dvrk_teleop ..."
         teleop = Teleoperation("teleop_zihan")
         teleop.run()
     except rospy.ROSInterruptException:
