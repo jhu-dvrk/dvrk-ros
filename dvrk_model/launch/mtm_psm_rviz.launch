@@ -1,8 +1,8 @@
 <!-- one mtmr + one psm1  -->
 
 <launch>
-  <group ns="/irk_mtm">
-    <arg name="model" default="$(find irk_model)/model/mtm_right.urdf.xacro" />
+  <group ns="/dvrk_mtm">
+    <arg name="model" default="$(find dvrk_model)/model/mtm_right.urdf.xacro" />
     <arg name="gui" default="true" />
     <arg name="rate" default="200" />
     
@@ -12,20 +12,20 @@
     <param name="rate" value="$(arg rate)"/>
 
     <rosparam>
-      source_list: [/irk_mtm/joint_states_command]
+      source_list: [/dvrk_mtm/joint_states_command]
     </rosparam>
     
     <node name="joint_state_publisher"
           pkg="joint_state_publisher"
           type="joint_state_publisher">
       <remap from="/joint_state_publisher/enable_slider"
-             to="/irk_mtm/joint_state_publisher/enable_slider"/>
+             to="/dvrk_mtm/joint_state_publisher/enable_slider"/>
     </node>
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
   </group>
 
-  <group ns="/irk_psm">
-    <arg name="model" default="$(find irk_model)/model/psm_one.urdf.xacro" />
+  <group ns="/dvrk_psm">
+    <arg name="model" default="$(find dvrk_model)/model/psm_one.urdf.xacro" />
     <arg name="gui" default="true" />
     <arg name="rate" default="200" />
 
@@ -34,18 +34,18 @@
     <param name="rate" value="$(arg rate)"/>
 
     <rosparam>
-      source_list: [/irk_psm/joint_states_command]
+      source_list: [/dvrk_psm/joint_states_command]
     </rosparam>
 
     <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
       <remap from="/joint_state_publisher/enable_slider"
-             to="/irk_psm/joint_state_publisher/enable_slider"/>
+             to="/dvrk_psm/joint_state_publisher/enable_slider"/>
     </node>
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
   </group>
   
   <node name="rviz" pkg="rviz" type="rviz"
-    args="-d $(find irk_model)/launch/urdf_view.rviz" />
+    args="-d $(find dvrk_model)/launch/urdf_view.rviz" />
   
 </launch>
 

@@ -1,6 +1,6 @@
 
 <launch>
-  <arg name="model" default="$(find irk_model)/model/master.urdf.xacro" />
+  <arg name="model" default="$(find dvrk_model)/model/master.urdf.xacro" />
   <arg name="gui" default="true" />
 
   <param name="robot_description"
@@ -12,7 +12,7 @@
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
 
   <node name="rviz" pkg="rviz" type="rviz"
-    args="-d $(find irk_model)/launch/urdf_view.rviz" />
+    args="-d $(find dvrk_model)/launch/urdf_view.rviz" />
   
 </launch>
 

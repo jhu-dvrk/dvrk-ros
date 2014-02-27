@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>irk_model</name>
+  <name>dvrk_model</name>
   <version>0.0.1</version>
-  <description>The irk_model package</description>
+  <description>The dvrk_model package</description>
 
   <maintainer email="zihan@jhu.edu">Zihan Chen</maintainer>
   <license>CISST</license>

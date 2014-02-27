@@ -117,7 +117,7 @@ Visualization Manager:
           Show Trail: false
           Value: true
       Name: RobotModel
-      Robot Description: irk_mtm/robot_description
+      Robot Description: dvrk_mtm/robot_description
       TF Prefix: ""
       Update Interval: 0
       Value: true
@@ -198,7 +198,7 @@ Visualization Manager:
           Show Trail: false
           Value: true
       Name: RobotModel
-      Robot Description: irk_psm/robot_description
+      Robot Description: dvrk_psm/robot_description
       TF Prefix: ""
       Update Interval: 0
       Value: true
