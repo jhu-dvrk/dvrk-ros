@@ -46,7 +46,7 @@ if (cisst_FOUND)
   set (SOURCE_FILES
     src/main.cpp)
   
-  rosbuild_add_executable(dv_jsp src/main.cpp)
-  cisst_target_link_libraries(dv_jsp ${REQUIRED_CISST_LIBRARIES} )
+  # rosbuild_add_executable(dv_jsp src/main.cpp)
+  # cisst_target_link_libraries(dv_jsp ${REQUIRED_CISST_LIBRARIES} )
 
 endif (cisst_FOUND)

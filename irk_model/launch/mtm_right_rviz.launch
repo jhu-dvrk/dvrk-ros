@@ -10,6 +10,10 @@
     <param name="use_gui" value="$(arg gui)"/>
     <param name="rate" value="$(arg rate)"/>
     
+    <rosparam>
+      source_list: [/irk_mtm/joint_states_robot]
+    </rosparam>
+    
     <node name="joint_state_publisher"
           pkg="joint_state_publisher"
           type="joint_state_publisher" />
@@ -21,10 +25,6 @@
     <node name="rviz" pkg="rviz" type="rviz"
           args="-d $(find irk_model)/rviz_config/mtm_rviz.rviz" />
   </group>
-  
-  <!-- <rosparam> -->
-  <!--   source_list: [/irk_psm/joint_states] -->
-  <!-- </rosparam> -->
   
 </launch>
 
