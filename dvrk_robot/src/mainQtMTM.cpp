@@ -41,7 +41,13 @@ int main(int argc, char** argv)
   cmnLogger::SetMaskFunction(CMN_LOG_ALLOW_ALL);
   cmnLogger::AddChannel(std::cerr, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
 
-  // parse options
+  // ---- WARNING: hack to remove ros args ----
+  ros::V_string argout;
+  ros::removeROSArgs(argc, argv, argout);
+  argc = argout.size();
+  // ------------------------------------------
+
+  // parse options  
   int firewirePort = 0;
   std::string config_io;
   std::string config_pid;
@@ -57,7 +63,7 @@ int main(int argc, char** argv)
   options.AddOptionOneValue("n", "name-master", "config file for master robot name",
                             cmnCommandLineOptions::REQUIRED_OPTION, &config_name);
   options.AddOptionOneValue("f", "firewire", "firewire port number(s)",
-                            cmnCommandLineOptions::OPTIONAL_OPTION, &firewirePort);
+                            cmnCommandLineOptions::OPTIONAL_OPTION, &firewirePort);  
 
   std::string errorMessage;
   if (!options.Parse(argc, argv, errorMessage)) {

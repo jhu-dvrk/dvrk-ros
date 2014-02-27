@@ -6,18 +6,23 @@ from sensor_msgs.msg import JointState
 jnt_msg = JointState()
 
 def jnt_pos_cb(msg):
-    # print msg.position
-    if len(msg.position) == len(jnt_msg.name):
-        jnt_msg.position = msg.position
+    if len(msg.position) != 8:
+        print "len = ", len(msg.position)
+        pass
     else:
-        rospy.logerr('jnt_pos_cb: size mismatch')
+        jnt_msg.position = []
+        for i in range(0,7):
+            jnt_msg.position.append(msg.position[i])
+        pass
 
 def jnt_vel_cb(msg):
-    # print 'jnt_vel_cb'
-    if len(msg.velocity) == len(jnt_msg.name):
-        jnt_msg.velocity = msg.velocity
+    if len(msg.velocity) != 8:
+        pass
     else:
-        rospy.logerr('jnt_vel_cb: size mismatch')
+        jnt_msg.velocity = []
+        for i in range(0,7):
+            jnt_msg.velocity.append(msg.velocity[i])
+        pass
 
 def main():
     # initialize ROS node
@@ -41,7 +46,6 @@ def main():
     # initialize jnt_msg
     jnt_msg.name = ['right_outer_yaw_joint',
                     'right_shoulder_pitch_joint',
-                    'right_shoulder_pitch_parallel_joint',
                     'right_elbow_pitch_joint', 
                     'right_wrist_platform_joint',
                     'right_wrist_pitch_joint',
