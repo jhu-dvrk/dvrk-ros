@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(irk_joint_publisher)
+project(dvrk_joint_publisher)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES irk_joint_publisher
+#  LIBRARIES dvrk_joint_publisher
 #  CATKIN_DEPENDS roscpp rospy sensor_msgs
 #  DEPENDS system_lib
 )

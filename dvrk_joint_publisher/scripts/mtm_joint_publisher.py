@@ -29,17 +29,17 @@ def main():
     rospy.init_node('mtm_joint_publisher')
 
     # create a mtm publisher
-    jnt_pub = rospy.Publisher('/irk_mtm/joint_states_robot', JointState)
+    jnt_pub = rospy.Publisher('/dvrk_mtm/joint_states_robot', JointState)
 
     # create mtm joint position subscriber
     jnt_pos_sub = rospy.Subscriber(
-        'irk_mtm/joint_position_current',
+        'dvrk_mtm/joint_position_current',
         JointState,
         jnt_pos_cb)
 
     # create mtm joint velocity subscriber
     jnt_vel_sub = rospy.Subscriber(
-        'irk_mtm/joint_velocity_current',
+        'dvrk_mtm/joint_velocity_current',
         JointState,
         jnt_vel_cb)
 

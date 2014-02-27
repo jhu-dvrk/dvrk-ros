@@ -1,4 +1,4 @@
-irk_joint_publisher
+dvrk_joint_publisher
 ==========
 This package converts raw joint position and velocity values to JointStates with
 name, position and velocity properly populated.
