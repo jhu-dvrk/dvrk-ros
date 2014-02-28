@@ -4,9 +4,9 @@
   $Id: mainQtMTM.cpp 4588 2013-12-04 22:53:51Z adeguet1 $
 
   Author(s):  Zihan Chen
-  Created on: 2013-07-15
+  Created on: 2014-02-27
 
-  (C) Copyright 2013 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2014 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -142,12 +142,12 @@ int main(int argc, char** argv)
         config_name, "GetGripperPosition", "/dvrk_mtm/gripper_position");
 
   // clutch pedal
-//  robotBridge.AddPublisherFromReadCommand<bool, std_msgs::Bool>(
-//        "Clutch", "Button", "/dvrk_footpedal/clutch_state");
+  robotBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
+        "Clutch", "Button", "/dvrk_footpedal/clutch_state");
 
   componentManager->AddComponent(&robotBridge);
   componentManager->Connect(robotBridge.GetName(), config_name, mtm->GetName(), "Robot");
-//  componentManager->Connect(robotBridge.GetName(), "Clutch", "io", "CLUTCH");
+  componentManager->Connect(robotBridge.GetName(), "Clutch", "io", "CLUTCH");
 
   //-------------------------------------------------------
   // End ROS Bridge
