@@ -131,7 +131,7 @@ int main(int argc, char** argv)
 
   // joint position
   robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
-        config_name, "GetPositionJoint", "/dvrk_mtm/joint_position_current");
+        config_name+"PID", "GetPositionJoint", "/dvrk_mtm/joint_position_current");
 
   // cartesian position
   robotBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
@@ -147,6 +147,7 @@ int main(int argc, char** argv)
 
   componentManager->AddComponent(&robotBridge);
   componentManager->Connect(robotBridge.GetName(), config_name, mtm->GetName(), "Robot");
+  componentManager->Connect(robotBridge.GetName(), config_name+"PID", pid->GetName(), "Controller");
   componentManager->Connect(robotBridge.GetName(), "Clutch", "io", "CLUTCH");
 
   //-------------------------------------------------------
