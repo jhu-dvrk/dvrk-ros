@@ -13,18 +13,19 @@ This repository has code realted to daVinci\_research\_kit ROS packages.
 # cd to catkin ws src dir
 cd /PATH/TO/CATKIN_WS/src
 # clone repo
-git clone git@github.com:zchen24/cisst_ros_integration.git 
+git clone git@github.com:jhu-cisst/cisst-ros.git
+
 # build 
 cd ..
 catkin_make
 ```
-* download & compile dvrk\_research\_kit\_ros
+* download & compile dvrk-ros
 
 ```sh
 # cd to catkin ws src dir
 cd /PATH/TO/CATKIN_WS/src
 # clone repo
-git clone git@github.com:zchen24/dvrk_research_kit_ros.git 
+git clone git@github.com:jhu-dvrk/dvrk-ros.git
 # build 
 cd ..
 catkin_make
