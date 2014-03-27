@@ -1,13 +1,10 @@
-daVinci Research Kit ROS
+da Vinci Research Kit ROS
 ====================
-This repository has code realted to daVinci\_research\_kit ROS packages. 
-
-# Todo
-* move to github 
+This repository has code related to daVinci\_research\_kit ROS packages. 
 
 # Install 
 * download & build cisst, see dvrk tutorial wiki for detail 
-* download & compile cisst\_ros\_integration
+* download & compile cisst-ros
 
 ```sh
 # cd to catkin ws src dir
@@ -32,7 +29,7 @@ catkin_make
 ```
 
 # How to run the code
-* **simulation:** see dvrk_teleop/README.md details
+* **simulation:** see dvrk_teleop/README.md for details
 * **robot:** see dvrk_robot/README.md for details 
 
 # List of Branches
@@ -46,13 +43,12 @@ catkin_make
 * dvrk_kinematics:
   * kinematics model of MTM/PSM
 * dvrk_model:
-  * MTM + PSM cat model & meshes
-  * rviz config
-  * lauch files
+  * MTM + PSM CAD models & meshes
+  * rviz configs
+  * launch files
 * dvrk_teleop:
   * dummy teleop component with a Qt GUI
 * dvrk_robot: 
-  * main file to fire robot, publish & subscribe ros topics 
+  * main file to start robot, publish & subscribe ros topics 
 * dvrk\_joint\_publisher:
-  * puslish named joint states (position + velocity)
-  
+  * publish named joint states (position + velocity)
