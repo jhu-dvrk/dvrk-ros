@@ -69,14 +69,17 @@ if (cisst_FOUND_AS_REQUIRED)
     ${sawIntuitiveResearchKit_LIBRARY_DIR}
     )
 
-  add_executable (dvrk_mtm_ros src/mainQtMTM.cpp)
-  target_link_libraries (dvrk_mtm_ros
-    ${sawRobotIO1394_LIBRARIES}
-    ${sawControllers_LIBRARIES}
-    ${sawIntuitiveResearchKit_LIBRARIES}
-    ${catkin_LIBRARIES}
+  set(ROBOTSRC dvrk_mtm_ros dvrk_psm_ros dvrk_full_ros)
+  foreach(_robot ${ROBOTSRC})
+    add_executable (${_robot} src/${_robot}.cpp)
+    target_link_libraries (${_robot}
+      ${sawRobotIO1394_LIBRARIES}
+      ${sawIntuitiveResearchKit_LIBRARIES}
+      ${sawControllers_LIBRARIES}
+      ${catkin_LIBRARIES}
     )
-  cisst_target_link_libraries (dvrk_mtm_ros ${REQUIRED_CISST_LIBRARIES})
+    cisst_target_link_libraries (${_robot} ${REQUIRED_CISST_LIBRARIES})
+  endforeach(_robot)
 
 endif(cisst_FOUND_AS_REQUIRED)
 

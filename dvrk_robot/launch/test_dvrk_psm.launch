@@ -1,0 +1,22 @@
+<launch>
+
+  <!-- dvrk psm -->
+  <node name="dvrk_psm_ros_node"
+        pkg="dvrk_robot"
+        type="dvrk_psm_ros"
+        args="-i $(find dvrk_robot)/config/sawRobotIO1394-PSM1-28007.xml
+              -p $(find dvrk_robot)/config/sawControllersPID-PSM.xml
+              -k $(find dvrk_robot)/config/dvpsm.rob
+              -n PSM1"/>
+  
+  <!-- dvrk -->
+  <node name="dvrk_jnt_pub_node"
+        pkg="dvrk_joint_publisher"
+        type="psm_joint_publisher.py"/>
+
+  <!-- psm rviz  -->
+  <include file="$(find dvrk_model)/launch/psm_rviz.launch">
+    <!-- <arg name="gui" default="false" /> -->
+  </include>
+  
+</launch>
