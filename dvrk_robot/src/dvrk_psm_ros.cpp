@@ -1,12 +1,12 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-    */
 /* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
 /*
-  $Id: mainQtMTM.cpp 4588 2013-12-04 22:53:51Z adeguet1 $
+  $Id: mainQtPSM.cpp 4588 2013-12-04 22:53:51Z adeguet1 $
 
-  Author(s):  Zihan Chen
-  Created on: 2014-02-27
+  Author(s):  Adnan Munawar (WPI), Modified from original file from Zihan Chen
+  Created on: 2014-03-07
 
-  (C) Copyright 2014 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2013 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -27,7 +27,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <sawControllers/mtsPIDQtWidget.h>
 #include <sawRobotIO1394/mtsRobotIO1394.h>
 #include <sawRobotIO1394/mtsRobotIO1394QtWidgetFactory.h>
-#include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitMTM.h>
+#include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitPSM.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitArmQtWidget.h>
 
 #include <cisst_ros_bridge/mtsROSBridge.h>
@@ -63,7 +63,7 @@ int main(int argc, char** argv)
   options.AddOptionOneValue("n", "name-master", "config file for master robot name",
                             cmnCommandLineOptions::REQUIRED_OPTION, &config_name);
   options.AddOptionOneValue("f", "firewire", "firewire port number(s)",
-                            cmnCommandLineOptions::OPTIONAL_OPTION, &firewirePort);  
+                            cmnCommandLineOptions::OPTIONAL_OPTION, &firewirePort);
 
   std::string errorMessage;
   if (!options.Parse(argc, argv, errorMessage)) {
@@ -99,56 +99,59 @@ int main(int argc, char** argv)
   componentManager->Connect(pid->GetName(), "ExecIn", "io", "ExecOut");
 
   // PID Master GUI
-  mtsPIDQtWidget * pidMasterGUI = new mtsPIDQtWidget("pid master", 8);
+  mtsPIDQtWidget * pidMasterGUI = new mtsPIDQtWidget("pid master",7);
   pidMasterGUI->Configure();
   componentManager->AddComponent(pidMasterGUI);
   componentManager->Connect(pidMasterGUI->GetName(), "Controller", pid->GetName(), "Controller");
 
-  // mtm
-  mtsIntuitiveResearchKitMTM* mtm = new mtsIntuitiveResearchKitMTM(config_name, 5 * cmn_ms);
-  mtm->Configure(config_kinematics);
-  componentManager->AddComponent(mtm);
-  componentManager->Connect(mtm->GetName(), "PID", pid->GetName(), "Controller");
-  componentManager->Connect(mtm->GetName(), "RobotIO", "io", config_name);
+  // psm
+  mtsIntuitiveResearchKitPSM* psm = new mtsIntuitiveResearchKitPSM(config_name, 5 * cmn_ms);
+  psm->Configure(config_kinematics);
+  componentManager->AddComponent(psm);
+  componentManager->Connect(psm->GetName(), "PID", pid->GetName(), "Controller");
+  componentManager->Connect(psm->GetName(), "RobotIO", "io", config_name);
 
-  // mtm GUI
-  mtsIntuitiveResearchKitArmQtWidget* mtmGUI = new mtsIntuitiveResearchKitArmQtWidget(config_name+"GUI");
-  componentManager->AddComponent(mtmGUI);
-  componentManager->Connect(mtmGUI->GetName(), "Manipulator", mtm->GetName(), "Robot");
+  // psm GUI
+  mtsIntuitiveResearchKitArmQtWidget* psmGUI = new mtsIntuitiveResearchKitArmQtWidget(config_name+"GUI");
+  componentManager->AddComponent(psmGUI);
+  componentManager->Connect(psmGUI->GetName(), "Manipulator", psm->GetName(), "Robot");
 
 
   //-------------------------------------------------------
   // Start ROS Bridge
   // ------------------------------------------------------
-
+  ROS_INFO("\n Name is :%s \n :%s \n :%s \n :%s \n ",config_name.c_str(),config_pid.c_str(),config_io.c_str()
+           ,config_kinematics.c_str());
   // ros wrapper
   mtsROSBridge robotBridge("RobotBridge", 20 * cmn_ms, true);
+  // connect to psm
 
-  // connect to mtm
-  // set robot state
-  robotBridge.AddSubscriberToWriteCommand<std::string, std_msgs::String>(
-        config_name, "SetRobotControlState", "/dvrk_mtm/set_robot_state");
-
-  // joint position
-  robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
-        config_name+"PID", "GetPositionJoint", "/dvrk_mtm/joint_position_current");
-
-  // cartesian position
   robotBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
-        config_name, "GetPositionCartesian", "/dvrk_mtm/cartesian_pose_current");
+        config_name, "GetPositionCartesian", "/dvrk_psm/cartesian_pose_current");
+  robotBridge.AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>(
+        pid->GetName(), "GetEffortJoint", "/dvrk_psm/joint_effort_current");
+  robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
+        pid->GetName(), "GetPositionJoint", "/dvrk_psm/joint_position_current");
 
-  // gripper position
-  robotBridge.AddPublisherFromReadCommand<double, std_msgs::Float32>  (
-        config_name, "GetGripperPosition", "/dvrk_mtm/gripper_position");
 
-  // clutch pedal
-  robotBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
-        "Clutch", "Button", "/dvrk_footpedal/clutch_state");
+  // Finally Working Form; However it is still unsafe since there is no safety check.
+  // Use with caution and with your hand on the E-Stop.
+  robotBridge.AddSubscriberToWriteCommand<prmForceTorqueJointSet , sensor_msgs::JointState>(
+        pid->GetName(), "SetTorqueJoint", "/dvrk_psm/set_joint_effort");
+  robotBridge.AddSubscriberToWriteCommand<std::string, std_msgs::String>(
+        config_name, "SetRobotControlState", "/dvrk_psm/set_robot_state");
+  robotBridge.AddSubscriberToWriteCommand<bool, std_msgs::Bool>(
+        pid->GetName(),"Enable","/dvrk_psm/enable_pid");
+  robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
+        pid->GetName(),"SetPositionJoint","/dvrk_psm/set_position_joint");
+  robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
+        config_name, "SetPositionCartesian", "/dvrk_psm/set_position_cartesian");
 
   componentManager->AddComponent(&robotBridge);
-  componentManager->Connect(robotBridge.GetName(), config_name, mtm->GetName(), "Robot");
-  componentManager->Connect(robotBridge.GetName(), config_name+"PID", pid->GetName(), "Controller");
-  componentManager->Connect(robotBridge.GetName(), "Clutch", "io", "CLUTCH");
+  componentManager->Connect(robotBridge.GetName(), config_name, psm->GetName(), "Robot");
+  componentManager->Connect(robotBridge.GetName(), pid->GetName(), pid->GetName(),"Controller");
+
+//  componentManager->Connect(robotBridge.GetName(), "Clutch", "io", "CLUTCH");
 
   //-------------------------------------------------------
   // End ROS Bridge
@@ -167,8 +170,8 @@ int main(int argc, char** argv)
   }
   // pid gui
   tabWidget->addTab(pidMasterGUI, (config_name + "PID").c_str());
-  // mtm gui
-  tabWidget->addTab(mtmGUI, mtm->GetName().c_str());
+  // psm gui
+  tabWidget->addTab(psmGUI, psm->GetName().c_str());
   // button gui
   tabWidget->addTab(robotWidgetFactory->ButtonsWidget(), "Buttons");
   // show widget
@@ -192,8 +195,8 @@ int main(int argc, char** argv)
   // delete dvgc robot
   delete pid;
   delete pidMasterGUI;
-  delete mtm;
-  delete mtmGUI;
+  delete psm;
+  delete psmGUI;
 
   // stop all logs
   cmnLogger::Kill();

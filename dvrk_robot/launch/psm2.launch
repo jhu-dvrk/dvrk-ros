@@ -1,0 +1,13 @@
+<launch>
+
+  <!-- dvrk psm -->
+  <node name="dvrk_psm_ros_node"
+        pkg="dvrk_robot"
+        type="dvrk_psm_ros"
+        args="-i $(find dvrk_robot)/config/sawRobotIO1394-PSM2-27374.xml
+              -p $(find dvrk_robot)/config/sawControllersPID-PSM.xml
+              -k $(find dvrk_robot)/config/dvpsm.rob
+              -n PSM2"/>
+  
+  
+</launch>
