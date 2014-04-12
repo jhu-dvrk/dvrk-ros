@@ -33,8 +33,8 @@ rosrun dvrk_robot dvrk_full_ros -j {path to config folder}/two-arms.json
 
 # create config folder
 as explained above
-roscd dvrk_robot
-mkdir config
+*roscd dvrk_robot
+*mkdir config
 
 # copy config fils (io/pid/kinematics)
 cp /PATH/TO/sawIntuitiveResearchKit/share/*.* config 
@@ -47,27 +47,36 @@ rostopic pub -1 /dvrk_mtm/set_robot_state std_msgs/String Home
 rostopic pub -1 /dvrk_mtm/set_robot_state std_msgs/String Gravity
 
 # Topics for setting robot joint positions/end-effector cartesian pose
-(sensor_msgs/JointState:positions)
-/dvrk_psm/set_position_joint
-/dvrk_mtm/set_position_joint
-/dvrk_psm/set_position_joint
-/dvrk_mtm/set_position_joint
+**(sensor_msgs/JointState:positions)
+*/dvrk_psm/set_position_joint
+*/dvrk_mtm/set_position_joint
+*/dvrk_psm/set_position_joint
+*/dvrk_mtm/set_position_joint
 
 # Topics for getting robot joint positions/end-effector cartesian pose
 
-/dvrk_psm/joint_position_current
-/dvrk_mtm/joint_position_current
-/dvrk_psm/joint_cartesian_current
-/dvrk_mtm/joint_cartesian_current
+*/dvrk_psm/joint_position_current
+*/dvrk_mtm/joint_position_current
+*/dvrk_psm/joint_cartesian_current
+*/dvrk_mtm/joint_cartesian_current
 
 # Topics for setting robot joint efforts
-(sensor_msgs/JointState:efforts)
-/dvrk_psm/set_joint_effort
-/dvrk_mtm/set_joint_effort
+**(sensor_msgs/JointState:efforts)
+*/dvrk_psm/set_joint_effort
+*/dvrk_mtm/set_joint_effort
 
 # Topics for getting robot joint efforts
 
-/dvrk_psm/joint_effort_current
-/dvrk_mtm/joint_effort_current
+*/dvrk_psm/joint_effort_current
+*/dvrk_mtm/joint_effort_current
+
+# Note
+With this package, you no longer need the programs such as
+#sawIntuitiveResearchKitQtPID -i ... -a ... -n ....
+#sawIntuitiveResearchKitQtTeleOperationJSON -j two-arms.json
+
+to run the arm pids or the entire teleop programs. The programs compiled with this 
+package provide the same core functionality as the programs listed above and add
+ros interface directly in the source code.
 
 
