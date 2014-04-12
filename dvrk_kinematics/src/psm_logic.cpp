@@ -113,13 +113,13 @@ int main(int argc, char** argv)
 
     sensor_msgs::JointState msg_js;
     msg_js.name.clear();
-    msg_js.name.push_back("outer_yaw_joint");
-    msg_js.name.push_back("outer_pitch_joint_1");
-    msg_js.name.push_back("outer_insertion_joint");
-    msg_js.name.push_back("outer_roll_joint");
-    msg_js.name.push_back("outer_wrist_pitch_joint");
-    msg_js.name.push_back("outer_wrist_yaw_joint");
-    msg_js.name.push_back("outer_wrist_open_angle_joint_1");
+    msg_js.name.push_back("one_outer_yaw_joint");
+    msg_js.name.push_back("one_outer_pitch_joint_1");
+    msg_js.name.push_back("one_outer_insertion_joint");
+    msg_js.name.push_back("one_outer_roll_joint");
+    msg_js.name.push_back("one_outer_wrist_pitch_joint");
+    msg_js.name.push_back("one_outer_wrist_yaw_joint");
+    msg_js.name.push_back("one_outer_wrist_open_angle_joint_1");
 
     geometry_msgs::Pose msg_pose;
 
