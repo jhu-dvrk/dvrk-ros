@@ -20,15 +20,26 @@
     <param name="use_gui" value="$(arg gui)"/>
     <param name="rate" value="$(arg rate)"/>
     <param name="use_mimic_tags" value="$(arg mimic_tags)" />
-
+    
+    <!-- joint state publisher -->
     <remap from="/joint_states" to="/joint_states/joint_position_current" />
     <node name="joint_state_publisher"
           pkg="joint_state_publisher"
           type="joint_state_publisher" />
 
+    <!-- robot state publisher -->
+    <node name="robot_state_publisher"
+        pkg="robot_state_publisher"
+        type="state_publisher" />
+
     <node name="actual_psm_jp" 
           pkg="dvrk_joint_publisher"
           type="actual_psm_control.py"/>
+
+    <node name="rviz" 
+	  pkg="rviz" 
+	  type="rviz"
+	  args="-d $(find dvrk_model)/rviz_config/psm1_rviz.rviz" />
   
   
 </launch>
