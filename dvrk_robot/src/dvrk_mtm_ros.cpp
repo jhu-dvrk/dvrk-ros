@@ -134,7 +134,9 @@ int main(int argc, char** argv)
   robotBridge.AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>(
         pid->GetName(), "GetEffortJoint", "/dvrk_mtm/joint_effort_current");
   robotBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
-              "Clutch","Button","/dvrk_footpedal/clutch_state");
+        "Clutch","Button","/dvrk_footpedal/clutch_state");
+  robotBridge.AddPublisherFromEventVoid(
+         config_name,"GripperPinchEvent","/dvrk_mtm/gripper_pinch_state");
 
 
   // Finally Working Form; However it is still unsafe since there is no safety check.
