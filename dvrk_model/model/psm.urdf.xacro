@@ -10,11 +10,7 @@
     </joint>
 
     <!-- link rc: remote centre link -->
-    <link name="${prefix}remote_center_link">
-      <visual>
-        <origin rpy="0 0 0" xyz="0 0 0"/>
-      </visual>
-    </link>    
+    <link name="${prefix}remote_center_link" />   
 
     <!-- fixed joint -->
     <joint name="${prefix}rc_fixed_joint" type="fixed">
