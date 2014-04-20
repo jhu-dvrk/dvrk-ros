@@ -19,9 +19,10 @@
     <param name="rate" value="$(arg rate)"/>
     <param name="use_mimic_tags" value="$(arg mimic_tags)" />
 
-    <rosparam>
+    <!-- rosparam>
       source_list: [/dvrk_mtm/joint_states_robot]
-    </rosparam>
+    </rosparam -->
+
     <remap from="/joint_states" to="/joint_states/joint_position_current" />
     <node name="joint_state_publisher"
           pkg="joint_state_publisher"
