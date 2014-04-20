@@ -19,6 +19,9 @@
     <param name="rate" value="$(arg rate)"/>
     <param name="use_mimic_tags" value="$(arg mimic_tags)" />
 
+    <rosparam>
+      source_list: [/dvrk_mtm/joint_states_robot]
+    </rosparam>
     <remap from="/joint_states" to="/joint_states/joint_position_current" />
     <node name="joint_state_publisher"
           pkg="joint_state_publisher"
@@ -29,6 +32,10 @@
         pkg="robot_state_publisher"
         type="state_publisher" />
 
+    <node name="feedback_mtm_jp" 
+          pkg="dvrk_joint_publisher"
+          type="mtm_joint_publisher.py"/>
+  
     <node name="actual_mtm_jp" 
           pkg="dvrk_joint_publisher"
           type="actual_mtm_control.py"/>
