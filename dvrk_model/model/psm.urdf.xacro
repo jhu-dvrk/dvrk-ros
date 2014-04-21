@@ -132,7 +132,7 @@
       <parent link="${prefix}outer_pitch_bottom_link"/>
       <child link="${prefix}outer_insertion_link"/>
       <axis xyz="0 0 1"/>
-      <origin rpy="0 0 0" xyz="-0.520 0 -0.0175"/>
+      <origin rpy="0 0 0" xyz="-0.520 0 -0.0155"/>
       <mimic joint="${prefix}outer_pitch_joint_1" multiplier="1"/>
     </joint>
 
