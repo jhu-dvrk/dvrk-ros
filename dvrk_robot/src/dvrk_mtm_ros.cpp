@@ -133,6 +133,12 @@ int main(int argc, char** argv)
         config_name, "GetGripperPosition", "/dvrk_mtm/gripper_position_current");
   robotBridge.AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>(
         pid->GetName(), "GetEffortJoint", "/dvrk_mtm/joint_effort_current");
+  robotBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
+              "Clutch","Button","/dvrk_footpedal/clutch_state");
+  robotBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
+              "Coag","Button","/dvrk_footpedal/coag_state");
+  robotBridge.AddPublisherFromEventVoid(
+              config_name,"GripperPinchEvent","/dvrk_mtm/gripper_pinch_event");
 
 
   // Finally Working Form; However it is still unsafe since there is no safety check.
@@ -150,7 +156,8 @@ int main(int argc, char** argv)
   componentManager->AddComponent(&robotBridge);
   componentManager->Connect(robotBridge.GetName(), config_name, mtm->GetName(), "Robot");
   componentManager->Connect(robotBridge.GetName(), pid->GetName(), pid->GetName(), "Controller");
-//  componentManager->Connect(robotBridge.GetName(), "Clutch", "io", "CLUTCH");
+  componentManager->Connect(robotBridge.GetName(),"Clutch","io","CLUTCH");
+  componentManager->Connect(robotBridge.GetName(),"Coag","io","COAG");
 
   //-------------------------------------------------------
   // End ROS Bridge
