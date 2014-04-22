@@ -54,7 +54,7 @@ def main():
                     'one_outer_roll_joint',
                     'one_outer_wrist_pitch_joint',
                     'one_outer_wrist_yaw_joint',
-		    'one_outer_wrist_open_angle_joint_1']
+                    'one_outer_wrist_open_angle_joint_1']
 
     # loop until ctrl-c
     rate = rospy.Rate(50);     # 50 hz
