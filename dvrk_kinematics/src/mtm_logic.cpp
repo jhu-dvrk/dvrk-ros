@@ -86,7 +86,7 @@ int main(int argc, char** argv)
     if (result == robManipulator::EFAILURE) {
         ROS_ERROR("failed to load manipulator config file: %s", filename.c_str());
     } else {
-        ROS_INFO("loaded psm manipulator");
+        ROS_INFO("loaded mtm manipulator");
     }
 
     // initialize joint current/command/msg_js

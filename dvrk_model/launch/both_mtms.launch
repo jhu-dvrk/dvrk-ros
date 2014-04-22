@@ -1,0 +1,54 @@
+<!-- Both MTMs  -->
+<launch>
+  <group ns="/dvrk_mtmr">
+  
+    <arg name="model" default="$(find dvrk_model)/model/mtm_right.urdf.xacro" />
+    <arg name="gui" default="true" />
+    <arg name="rate" default="20" />
+    
+    <param name="robot_description"
+           command="rosrun xacro xacro.py $(arg model)"/>
+    <param name="use_gui" value="$(arg gui)"/>
+    <param name="rate" value="$(arg rate)"/>
+    
+    <rosparam>
+      source_list: [/dvrk_mtm/joint_states_robot]
+    </rosparam>
+    
+    <node name="joint_state_publisher"
+          pkg="joint_state_publisher"
+          type="joint_state_publisher" />
+    
+    <node name="robot_state_publisher"
+          pkg="robot_state_publisher"
+          type="state_publisher" />
+
+  </group>
+  <group ns="/dvrk_mtml">
+  
+    <arg name="model" default="$(find dvrk_model)/model/mtm_left.urdf.xacro" />
+    <arg name="gui" default="true" />
+    <arg name="rate" default="20" />
+    
+    <param name="robot_description"
+           command="rosrun xacro xacro.py $(arg model)"/>
+    <param name="use_gui" value="$(arg gui)"/>
+    <param name="rate" value="$(arg rate)"/>
+    
+    <rosparam>
+      source_list: [/dvrk_mtm/joint_states_robot]
+    </rosparam>
+    
+    <node name="joint_state_publisher"
+          pkg="joint_state_publisher"
+          type="joint_state_publisher" />
+    
+    <node name="robot_state_publisher"
+          pkg="robot_state_publisher"
+          type="state_publisher" />
+  </group>
+    
+    <node name="rviz" pkg="rviz" type="rviz"/>  
+</launch>
+
+

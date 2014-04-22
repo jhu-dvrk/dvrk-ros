@@ -1,3 +1,4 @@
+<!-- Both MTMs  -->
 <launch>
   <group ns="/dvrk_mtm">
   
@@ -23,9 +24,10 @@
           type="state_publisher" />
     
     <node name="rviz" pkg="rviz" type="rviz"
-          args="-d $(find dvrk_model)/rviz_config/mtm_rviz.rviz" />
+				args = "-d ${find dvrk_model}/rviz_config/mtm_rviz.rviz"/>
   </group>
-  
+
+    
 </launch>
 
 
