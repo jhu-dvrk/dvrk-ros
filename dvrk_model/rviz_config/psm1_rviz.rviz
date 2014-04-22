@@ -30,6 +30,20 @@ Panels:
 Visualization Manager:
   Class: ""
   Displays:
+    - Class: rviz/TF
+      Enabled: false
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+      Marker Scale: 0.2
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        {}
+      Update Interval: 0
+      Value: false
     - Alpha: 0.5
       Cell Size: 1
       Class: rviz/Grid
@@ -58,47 +72,76 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        right_back_parallel_link:
+        one_outer_insertion_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        right_bottom_parallel_link:
+        one_outer_pitch_back_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        right_outer_yaw_link:
+        one_outer_pitch_bottom_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        right_top_panel:
+        one_outer_pitch_front_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        right_top_parallel_link:
+        one_outer_pitch_top_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        right_wrist_pitch_link:
+        one_outer_yaw_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        right_wrist_platform_link:
+        one_psm_base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        right_wrist_roll_link:
+        one_remote_center_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        one_tool_main_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        right_wrist_yaw_link:
+        one_tool_wrist_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        one_tool_wrist_sca_ee_link_1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        one_tool_wrist_sca_ee_link_2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        one_tool_wrist_sca_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        one_tool_wrist_sca_shaft_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        one_tool_wrist_shaft_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -137,17 +180,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.08676
+      Distance: 1.78608
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.06
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: -0.301139
+        Y: 0.445479
+        Z: 0.593442
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.990398
+      Pitch: 0.405398
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.325398
+      Yaw: 5.25858
     Saved: ~
 Window Geometry:
   Displays:
@@ -165,5 +213,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 58
-  Y: 25
+  X: 65
+  Y: 60

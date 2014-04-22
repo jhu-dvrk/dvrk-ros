@@ -30,6 +30,20 @@ Panels:
 Visualization Manager:
   Class: ""
   Displays:
+    - Class: rviz/TF
+      Enabled: false
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+      Marker Scale: 0.2
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        {}
+      Update Interval: 0
+      Value: false
     - Alpha: 0.5
       Cell Size: 1
       Class: rviz/Grid
@@ -137,17 +151,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.08676
+      Distance: 2.66642
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.06
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
       Focal Point:
         X: 0
         Y: 0
         Z: 0
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.990398
+      Pitch: 0.815398
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.325398
+      Yaw: 5.43858
     Saved: ~
 Window Geometry:
   Displays:
@@ -165,5 +184,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 58
-  Y: 25
+  X: 664
+  Y: 89

@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<robot name="dvrk_psm" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Macros -->
+  <xacro:include filename="$(find dvrk_model)/model/psm.urdf.xacro"/>
+
+  <link name="world">
+      <origin xyz="0.0 0.0 0.0"/>  
+  </link>
+
+  <joint name="world_joint" type="fixed">
+      <parent link="world"/>
+      <child link="camera"/>
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+  </joint>
+
+  <link name="camera">
+  <origin rpy="0.0 0.0 0.0" xyz="0.0 0.2 0.8"/>
+  </link>
+
+  <xacro:psm 
+      prefix="one_"
+      parent_link="camera"
+      xyz="-0.25 0.0 0.5" rpy="0.0 0.0 3.1415926"/>
+  <xacro:psm 
+      prefix="two_"
+      parent_link="camera"
+      xyz="0.25 0.0 0.5" rpy="0.0 0.0 3.1415926"/>
+  
+</robot>
