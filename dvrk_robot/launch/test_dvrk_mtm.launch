@@ -33,6 +33,10 @@
         pkg="robot_state_publisher"
         type="state_publisher" />
 
+    <node name="mtm_frame_correction"
+        pkg="dvrk_kinematics"
+        type="sim_mtm_node" />
+
     <node name="feedback_mtm_jp" 
           pkg="dvrk_joint_publisher"
           type="mtm_joint_publisher.py"/>
