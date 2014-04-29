@@ -72,7 +72,7 @@ include_directories(
 
 #simulated_pose_correction_mtm
 add_executable(sim_mtm_node src/sim_mtm_pose_correction.cpp)
-target_link_libraries(sim_mtm_node ${catkin_LIBRARIES} 
+target_link_libraries(sim_mtm_node ${catkin_LIBRARIES})
 
 # psm
 add_executable(dvrk_psm_logic
