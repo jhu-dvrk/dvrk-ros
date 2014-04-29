@@ -34,7 +34,7 @@
         type="state_publisher" />
 
     <node name="mtm_frame_correction"
-        pkg="sim_mtm"
+        pkg="dvrk_kinematics"
         type="sim_mtm_node" />
 
     <node name="feedback_mtm_jp" 

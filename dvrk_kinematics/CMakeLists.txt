@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roslib
   sensor_msgs
   std_msgs
+  tf
 )
 
 # create a list of required cisst libraries
@@ -68,6 +69,10 @@ include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
+
+#simulated_pose_correction_mtm
+add_executable(sim_mtm_node src/sim_mtm_pose_correction.cpp)
+target_link_libraries(sim_mtm_node ${catkin_LIBRARIES} 
 
 # psm
 add_executable(dvrk_psm_logic
