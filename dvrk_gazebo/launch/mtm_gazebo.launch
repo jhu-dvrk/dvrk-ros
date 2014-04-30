@@ -15,4 +15,5 @@
         args="-param robot_description -urdf -model mtm"/>
 
   <include file="$(find dvrk_gazebo)/launch/mtm_control.launch" />
+  
 </launch>

@@ -1,4 +1,4 @@
-<!-- Example -->
+<!-- Loading and Launching Controllers -->
 <launch>
   <!-- Load joint controller configurations from YAML file to parameter server -->
   <rosparam file="$(find dvrk_gazebo)/config/mtm_control.yaml" command="load"/>
@@ -13,4 +13,7 @@
                                  joint6_position_controller
                                  joint7_position_controller
                                  "/>
+  <!-- RQT_GUI for setting joints positions  -->
+  <node name="mtm_rqt" pkg="rqt_gui" type="rqt_gui" respawn="false"
+	       output="screen" args="--perspective-file $(find dvrk_gazebo)/launch/mtm_control.perspective"/>
 </launch>
