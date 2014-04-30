@@ -123,22 +123,22 @@
       </inertial>
     </link>
 
-    <!-- <link name="${prefix}front_parallel_link"> -->
-    <!--   <visual> -->
-    <!--     <geometry> -->
-    <!--       <mesh filename="package://dvrk_model/meshes/mtm/Link.dae"/> -->
-    <!--     </geometry> -->
-    <!--   </visual> -->
-    <!--   <collision> -->
-    <!--     <geometry> -->
-    <!--       <mesh filename="package://dvrk_model/meshes/mtm/Link.STL"/> -->
-    <!--     </geometry> -->
-    <!--   </collision> -->
-    <!--   <inertial> -->
-    <!--     <mass value="0.8"/> -->
-    <!--     <inertia ixx="8.0" ixy="0.0" ixz="0.0" iyy="8.0" iyz="0.0" izz="8.0"/> -->
-    <!--   </inertial>  -->
-    <!-- </link> -->
+     <!--link name="${prefix}front_parallel_link"> 
+       <visual> 
+         <geometry> 
+           <mesh filename="package://dvrk_model/meshes/mtm/Link.dae"/> 
+         </geometry> 
+       </visual> 
+       <collision> 
+         <geometry> 
+           <mesh filename="package://dvrk_model/meshes/mtm/Link.STL"/> 
+         </geometry> 
+       </collision> 
+       <inertial> 
+         <mass value="0.8"/> 
+         <inertia ixx="8.0" ixy="0.0" ixz="0.0" iyy="8.0" iyz="0.0" izz="8.0"/>
+       </inertial>  
+     </link--> 
 
     <joint name="${prefix}shoulder_pitch_joint" type="revolute">
       <parent link="${prefix}outer_yaw_link"/>
@@ -152,25 +152,26 @@
     </joint>
 
     <joint name="${prefix}shoulder_pitch_parallel_joint" type="revolute">
-      <parent link="${prefix}outer_yaw_link"/>
+      <parent link="${prefix}back_parallel_link"/>
       <child link="${prefix}top_parallel_link"/>
-      <origin rpy="${-PI/2} ${PI} 0" xyz="0 .065 -.19037"/>
+      <origin rpy="0 0 ${-PI/2}" xyz="0 0 0.065"/>
       <axis xyz="0 0 1"/>
       <!--rotates about  x axis-->
       <!--limit effort and velocity picked arbitrarily check-->
       <limit effort="100.0" lower="${-PI/2}" upper="${PI/2}" velocity="10"/>
       <joint_properties damping="1.0" friction="0.0"/>
-      <mimic joint="${prefix}shoulder_pitch_joint" multiplier="1"/>
+      <mimic joint="${prefix}elbow_pitch_joint" multiplier="1"/>
     </joint>
 
-    <!-- <joint name="${prefix}elbow_pitch_parallel_joint" type="revolute"> -->
-    <!--   <parent link="${prefix}top_parallel_link"/> -->
-    <!--   <child link="${prefix}front_parallel_link"/> -->
-    <!--   <origin rpy="0 0 0" xyz=".1011 0 -0.03"/> -->
-    <!--   <axis xyz="0 0 1"/> -->
-    <!--   <limit effort="100.0" lower="${-PI/4}" upper="${PI/4}" velocity="10"/> -->
-    <!--   <joint_properties damping="1.0" friction="0.0"/> -->
-    <!-- </joint> -->
+    <!--joint name="${prefix}elbow_pitch_parallel_joint" type="revolute"> 
+       <parent link="${prefix}top_parallel_link"/> 
+       <child link="${prefix}front_parallel_link"/> 
+       <origin rpy="0 0 0" xyz=".1011 0 -0.03"/> 
+       <axis xyz="0 0 1"/> 
+       <limit effort="100.0" lower="${-PI/4}" upper="${PI/4}" velocity="10"/> 
+       <joint_properties damping="1.0" friction="0.0"/> 
+       <mimic joint="${prefix}elbow_pitch_joint" multiplier="-1"/>
+     </joint--> 
 
     <joint name="${prefix}elbow_pitch_joint" type="revolute">
       <parent link="${prefix}back_parallel_link"/>
@@ -321,7 +322,72 @@
                                      izz="0.1"/>
       </inertial>
     </link>
+  
+  <transmission name="tran1">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="${prefix}outer_yaw_joint"/>
+    <actuator name="motor1">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="tran2">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="${prefix}shoulder_pitch_joint"/>
+    <actuator name="motor2">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="tran3">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="${prefix}elbow_pitch_joint"/>
+    <actuator name="motor3">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="tran4">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="${prefix}wrist_platform_joint"/>
+    <actuator name="motor4">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="tran5">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="${prefix}wrist_pitch_joint"/>
+    <actuator name="motor5">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="tran6">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="${prefix}wrist_yaw_joint"/>
+    <actuator name="motor6">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="tran7">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="${prefix}wrist_roll_joint"/>
+    <actuator name="motor7">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/mtm</robotNamespace>
+    </plugin>
+  </gazebo>
+
   </xacro:macro>
+
 </robot>
 
 
