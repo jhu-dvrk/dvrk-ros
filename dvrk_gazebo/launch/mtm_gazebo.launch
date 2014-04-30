@@ -1,0 +1,18 @@
+<!-- Launch Gazebo Model for MTM with ROS Joint State Publisher -->
+<launch>
+
+  <arg name="gui" default="true" />
+  <arg name="rate" default="20" />
+  <arg name="mimic_tags" default="false" />
+  <arg name="model" default="$(find dvrk_model)/model/mtm_right.urdf.xacro" />
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch" />
+
+  <param name="robot_description" 
+         command="rosrun xacro xacro.py $(arg model)"/>
+
+  <node name="spawn_model" pkg="gazebo_ros" type="spawn_model" 
+        args="-param robot_description -urdf -model mtm"/>
+
+  <include file="$(find dvrk_gazebo)/launch/mtm_control.launch" />
+</launch>

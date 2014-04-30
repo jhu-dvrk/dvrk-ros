@@ -1,0 +1,116 @@
+{
+  "keys": {}, 
+  "groups": {
+    "pluginmanager": {
+      "keys": {
+        "running-plugins": {
+          "type": "repr", 
+          "repr": "{u'rqt_publisher/Publisher': [1]}"
+        }
+      }, 
+      "groups": {
+        "plugin__rqt_publisher__Publisher__2": {
+          "keys": {}, 
+          "groups": {
+            "plugin": {
+              "keys": {
+                "publishers": {
+                  "type": "repr", 
+                  "repr": "u'[]'"
+                }
+              }, 
+              "groups": {}
+            }
+          }
+        }, 
+        "plugin__rqt_plot__Plot__1": {
+          "keys": {}, 
+          "groups": {
+            "dock_widget__DataPlotWidget": {
+              "keys": {
+                "dockable": {
+                  "type": "repr", 
+                  "repr": "u'true'"
+                }, 
+                "parent": {
+                  "type": "repr", 
+                  "repr": "None"
+                }
+              }, 
+              "groups": {}
+            }, 
+            "plugin": {
+              "keys": {
+                "autoscroll": {
+                  "type": "repr", 
+                  "repr": "u'false'"
+                }, 
+                "plot_type": {
+                  "type": "repr", 
+                  "repr": "u'1'"
+                }, 
+                "topics": {
+                  "type": "repr", 
+                  "repr": "[u'/mtm/joint1_position_controller/command/data', u'/mtm/joint1_position_controller/state/error']"
+                }
+              }, 
+              "groups": {}
+            }
+          }
+        }, 
+        "plugin__rqt_publisher__Publisher__1": {
+          "keys": {}, 
+          "groups": {
+            "dock_widget__PublisherWidget": {
+              "keys": {
+                "dockable": {
+                  "type": "repr", 
+                  "repr": "True"
+                }, 
+                "parent": {
+                  "type": "repr", 
+                  "repr": "None"
+                }
+              }, 
+              "groups": {}
+            }, 
+            "plugin": {
+              "keys": {
+                "publishers": {
+                  "type": "repr", 
+                  "repr": "u\"[{'type_name': 'std_msgs/Float64', 'topic_name': '/mtm/joint1_position_controller/command', 'enabled': False, 'rate': 100.0, 'expressions': {u'/mtm/joint1_position_controller/command/data': '0'}, 'publisher_id': 1, 'counter': 33507}, {'type_name': 'std_msgs/Float64', 'topic_name': '/mtm/joint2_position_controller/command', 'enabled': False, 'rate': 100.0, 'expressions': {u'/mtm/joint2_position_controller/command/data': '0'}, 'publisher_id': 2, 'counter': 29157}, {'type_name': 'std_msgs/Float64', 'topic_name': '/mtm/joint3_position_controller/command', 'enabled': False, 'rate': 100.0, 'expressions': {u'/mtm/joint3_position_controller/command/data': '0'}, 'publisher_id': 3, 'counter': 28109}, {'type_name': 'std_msgs/Float64', 'topic_name': '/mtm/joint4_position_controller/command', 'enabled': False, 'rate': 100.0, 'expressions': {u'/mtm/joint4_position_controller/command/data': '0'}, 'publisher_id': 4, 'counter': 27535}, {'type_name': 'std_msgs/Float64', 'topic_name': '/mtm/joint5_position_controller/command', 'enabled': False, 'rate': 100.0, 'expressions': {u'/mtm/joint5_position_controller/command/data': '0'}, 'publisher_id': 5, 'counter': 17421}, {'type_name': 'std_msgs/Float64', 'topic_name': '/mtm/joint6_position_controller/command', 'enabled': False, 'rate': 100.0, 'expressions': {u'/mtm/joint6_position_controller/command/data': '0'}, 'publisher_id': 6, 'counter': 17210}, {'type_name': 'std_msgs/Float64', 'topic_name': '/mtm/joint7_position_controller/command', 'enabled': False, 'rate': 100.0, 'expressions': {u'/mtm/joint7_position_controller/command/data': '2'}, 'publisher_id': 7, 'counter': 16974}]\""
+                }
+              }, 
+              "groups": {}
+            }
+          }
+        }
+      }
+    }, 
+    "mainwindow": {
+      "keys": {
+        "geometry": {
+          "type": "repr(QByteArray.hex)", 
+          "repr(QByteArray.hex)": "QtCore.QByteArray('01d9d0cb00010000000000a200000065000003c30000030a000000aa00000081000003bb00000302000000000000')", 
+          "pretty-print": "       e               "
+        }, 
+        "state": {
+          "type": "repr(QByteArray.hex)", 
+          "repr(QByteArray.hex)": "QtCore.QByteArray('000000ff00000000fd00000002000000020000031200000253fc0100000001fb00000058007200710074005f007000750062006c00690073006800650072005f005f005000750062006c00690073006800650072005f005f0031005f005f005000750062006c006900730068006500720057006900640067006500740100000000000003120000026600ffffff000000030000031200000096fc0100000002fb00000042007200710074005f0070006c006f0074005f005f0050006c006f0074005f005f0031005f005f00440061007400610050006c006f00740057006900640067006500740100000000000003120000000000000000fb00000058007200710074005f007000750062006c00690073006800650072005f005f005000750062006c00690073006800650072005f005f0032005f005f005000750062006c006900730068006500720057006900640067006500740100000000000003120000000000000000000003120000000000000004000000040000000800000008fc00000001000000030000000100000036004d0069006e0069006d0069007a006500640044006f0063006b00570069006400670065007400730054006f006f006c0062006100720000000000ffffffff0000000000000000')", 
+          "pretty-print": "                 Xrqt_publisher__Publisher__1__PublisherWidget                   Brqt_plot__Plot__1__DataPlotWidget          Xrqt_publisher__Publisher__2__PublisherWidget                            6MinimizedDockWidgetsToolbar        "
+        }
+      }, 
+      "groups": {
+        "toolbar_areas": {
+          "keys": {
+            "MinimizedDockWidgetsToolbar": {
+              "type": "repr", 
+              "repr": "8"
+            }
+          }, 
+          "groups": {}
+        }
+      }
+    }
+  }
+}
