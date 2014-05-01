@@ -321,6 +321,23 @@
                                      izz="0.1"/>
       </inertial>
     </link>
+
+    <!-- add base link to match DVRK manual -->
+    <joint name="${prefix}base" type="fixed">
+      <parent link="${prefix}top_panel"/>
+      <child link="${prefix}base"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.190"/>
+    </joint>
+    <link name="${prefix}base"/>
+
+    <!-- add ee link to match DVRK manual -->
+    <joint name="${prefix}end_effector" type="fixed">
+      <parent link="${prefix}wrist_roll_link"/>
+      <child link="${prefix}ee_link"/>
+      <origin rpy="0 ${PI} 0" xyz="0 0 0.039"/>
+    </joint>
+    <link name="${prefix}ee_link"/>
+    
   </xacro:macro>
 </robot>
 
