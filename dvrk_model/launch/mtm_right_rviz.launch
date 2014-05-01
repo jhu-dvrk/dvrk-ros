@@ -1,8 +1,8 @@
 <launch>
+
+  <arg name="gui" default="true" />
   <group ns="/dvrk_mtm">
-  
     <arg name="model" default="$(find dvrk_model)/model/mtm_right.urdf.xacro" />
-    <arg name="gui" default="true" />
     <arg name="rate" default="20" />
     
     <param name="robot_description"
