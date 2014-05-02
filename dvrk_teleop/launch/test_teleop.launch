@@ -18,7 +18,9 @@
   <!-- psm kinematics node -->
   <node name="psm_kinematics"
         pkg="dvrk_kinematics"
-        type="dvrk_psm_logic"/>
+        type="dvrk_psm_logic">
+    <param name="robot_name" value="one"/>
+  </node>
   
   <!-- mtm rviz  -->
   <include file="$(find dvrk_model)/launch/mtm_psm_rviz.launch"/>

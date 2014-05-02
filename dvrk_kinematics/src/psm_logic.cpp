@@ -59,6 +59,7 @@ void psm_mode_cb(const std_msgs::Int8 &msg)
 {
     if (msg.data >= 0 && msg.data <=PSM::MODE_TELEOP) {
         control_mode = msg.data;
+        std::cout << "control_mode = " << control_mode << std::endl;
     }
 
     // mode = TELEOP
@@ -71,8 +72,12 @@ int main(int argc, char** argv)
 {
     // ros initialization
     ros::init(argc, argv, "dvrk_psm_kinematics");
-    ros::NodeHandle nh;
-    ros::Rate rate(200);  // 100 hz rate
+    ros::NodeHandle nh, nh_private("~");
+    ros::Rate rate(200);  // 200 hz rate
+
+    // parameter
+    std::string robot_name;
+    nh_private.getParam("robot_name", robot_name);
 
     // subscriber
     ros::Subscriber sub_psm_cmd =
@@ -92,7 +97,7 @@ int main(int argc, char** argv)
     ros::Publisher pub_psm_pose_current =
             nh.advertise<geometry_msgs::Pose>("/dvrk_psm/cartesian_pose_current", 1);
     ros::Publisher pub_psm_enable_slider =
-            nh.advertise<sensor_msgs::JointState>("/dvrk_psm/joint_state_publisher/enable_slider", 100);
+            nh.advertise<sensor_msgs::JointState>("/dvrk_psm/joint_state_publisher/enable_slider", 100);    
 
     // --- cisst robManipulator ---
     std::string filename = ros::package::getPath("dvrk_kinematics");
@@ -113,13 +118,13 @@ int main(int argc, char** argv)
 
     sensor_msgs::JointState msg_js;
     msg_js.name.clear();
-    msg_js.name.push_back("outer_yaw_joint");
-    msg_js.name.push_back("outer_pitch_joint_1");
-    msg_js.name.push_back("outer_insertion_joint");
-    msg_js.name.push_back("outer_roll_joint");
-    msg_js.name.push_back("outer_wrist_pitch_joint");
-    msg_js.name.push_back("outer_wrist_yaw_joint");
-    msg_js.name.push_back("outer_wrist_open_angle_joint_1");
+    msg_js.name.push_back(robot_name + "_outer_yaw_joint");
+    msg_js.name.push_back(robot_name + "_outer_pitch_joint_1");
+    msg_js.name.push_back(robot_name + "_outer_insertion_joint");
+    msg_js.name.push_back(robot_name + "_outer_roll_joint");
+    msg_js.name.push_back(robot_name + "_outer_wrist_pitch_joint");
+    msg_js.name.push_back(robot_name + "_outer_wrist_yaw_joint");
+    msg_js.name.push_back(robot_name + "_outer_wrist_open_angle_joint_1");
 
     geometry_msgs::Pose msg_pose;
 
