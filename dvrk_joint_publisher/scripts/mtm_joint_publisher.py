@@ -33,13 +33,13 @@ def main():
 
     # create mtm joint position subscriber
     jnt_pos_sub = rospy.Subscriber(
-        'dvrk_mtm/joint_position_current',
+        '/dvrk_mtm/joint_position_current',
         JointState,
         jnt_pos_cb)
 
     # create mtm joint velocity subscriber
     jnt_vel_sub = rospy.Subscriber(
-        'dvrk_mtm/joint_velocity_current',
+        '/dvrk_mtm/joint_velocity_current',
         JointState,
         jnt_vel_cb)
 
