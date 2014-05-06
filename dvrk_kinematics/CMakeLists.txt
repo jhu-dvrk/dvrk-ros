@@ -70,10 +70,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-#simulated_pose_correction_mtm
-add_executable(sim_mtm_node src/sim_mtm_pose_correction.cpp)
-target_link_libraries(sim_mtm_node ${catkin_LIBRARIES})
-
 # psm
 add_executable(dvrk_psm_logic
   include/dvrk_kinematics/psm_logic.h
