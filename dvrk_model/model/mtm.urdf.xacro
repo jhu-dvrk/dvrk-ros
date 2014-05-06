@@ -337,7 +337,78 @@
       <origin rpy="0 ${PI} 0" xyz="0 0 0.039"/>
     </joint>
     <link name="${prefix}ee_link"/>
-    
+
+    <transmission name="tran1">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${prefix}outer_yaw_joint"/>
+      <actuator name="motor1">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+    <transmission name="tran2">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${prefix}shoulder_pitch_joint"/>
+      <actuator name="motor2">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+    <transmission name="tran3">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${prefix}elbow_pitch_joint"/>
+      <actuator name="motor3">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+    <transmission name="tran4">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${prefix}wrist_platform_joint"/>
+      <actuator name="motor4">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+    <transmission name="tran5">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${prefix}wrist_pitch_joint"/>
+      <actuator name="motor5">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+    <transmission name="tran6">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${prefix}wrist_yaw_joint"/>
+      <actuator name="motor6">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+    <transmission name="tran7">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${prefix}wrist_roll_joint"/>
+      <actuator name="motor7">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+    <gazebo>
+      <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+        <robotNamespace>/mtm</robotNamespace>
+      </plugin>
+    </gazebo>
+
+    <gazebo>
+      <plugin name="force_torque_sensor" filename="libgazebo_ros_f3d.so" >
+        <bodyName>${prefix}bottom_parallel_link</bodyName>
+        <frameName>${prefix}bottom_parallel_link</frameName>
+        <topicName>/force_torque_feedback</topicName>
+        <alwaysOn>true</alwaysOn>
+        <updateRate>100.0</updateRate>
+      </plugin>
+    </gazebo>
   </xacro:macro>
 </robot>
 
