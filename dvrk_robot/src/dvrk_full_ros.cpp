@@ -1,10 +1,10 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-    */
 /* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
 /*
-  $Id: mainQtTeleOperationJSON.cpp 4692 2014-02-14 06:27:55Z pkazanz1 $
+
   Modified From Original File By Adnan Munawar (WPI)
-  Original Author(s):  Zihan Chen, Anton Deguet
-  Created on: 2014-03-07
+  Author(s):  Zihan Chen, Anton Deguet
+  Created on: 2013-02-07
 
   (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights Reserved.
 
@@ -29,7 +29,6 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstMultiTask/mtsQtApplication.h>
 #include <sawRobotIO1394/mtsRobotIO1394.h>
 #include <sawRobotIO1394/mtsRobotIO1394QtWidgetFactory.h>
-#include<sawControllers/mtsPID.h>
 #include <sawControllers/mtsPIDQtWidget.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsoleQtWidget.h>
@@ -37,11 +36,22 @@ http://www.cisst.org/cisst/license.txt.
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitUDPStreamer.h>
 #include <sawControllers/mtsTeleOperation.h>
 #include <sawControllers/mtsTeleOperationQtWidget.h>
+
+#include <cisstMultiTask/mtsCollectorFactory.h>
+#include <cisstMultiTask/mtsCollectorQtFactory.h>
+#include <cisstMultiTask/mtsCollectorQtWidget.h>
+
 #include <cisst_ros_bridge/mtsROSBridge.h>
 
 #include <QTabWidget>
 
 #include <json/json.h>
+#include <signal.h>
+
+void mySigintHandler(int sig)
+{
+  QCoreApplication::exit(0);
+}
 
 void fileExists(const std::string & description, const std::string & filename)
 {
@@ -63,7 +73,7 @@ int main(int argc, char ** argv)
     const double periodKinematics = 2.0 * cmn_ms;
     const double periodTeleop = 2.0 * cmn_ms;
     const double periodUDP = 20.0 * cmn_ms;
- 
+
     // log configuration
     cmnLogger::SetMask(CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskDefaultLog(CMN_LOG_ALLOW_ALL);
@@ -71,10 +81,8 @@ int main(int argc, char ** argv)
     cmnLogger::SetMaskClass("mtsIntuitiveResearchKit", CMN_LOG_ALLOW_VERBOSE);
     cmnLogger::AddChannel(std::cerr, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
 
-    // ---- WARNING: hack to remove ros args ----
-    ros::V_string argout;
-    ros::removeROSArgs(argc, argv, argout);
-    argc = argout.size();
+    // -------------- Some ROS Hack ------------
+    signal(SIGINT, mySigintHandler);
     // ------------------------------------------
 
     // parse options
@@ -82,6 +90,7 @@ int main(int argc, char ** argv)
     int firewirePort = 0;
     std::string gcmip = "-1";
     std::string jsonMainConfigFile;
+    std::string jsonCollectionConfigFile;
     typedef std::map<std::string, std::string> ConfigFilesType;
     ConfigFilesType configFiles;
     std::string masterName, slaveName;
@@ -97,6 +106,10 @@ int main(int argc, char ** argv)
                               "global component manager IP address",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &gcmip);
 
+    options.AddOptionOneValue("c", "collection-config",
+                              "json configuration file for data collection",
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &jsonCollectionConfigFile);
+
     // check that all required options have been provided
     std::string errorMessage;
     if (!options.Parse(argc, argv, errorMessage)) {
@@ -104,6 +117,9 @@ int main(int argc, char ** argv)
         options.PrintUsage(std::cerr);
         return -1;
     }
+    std::string arguments;
+    options.PrintParsedArguments(arguments);
+    std::cout << "Options provided:" << std::endl << arguments << std::endl;
 
     // make sure the json config file exists and can be parsed
     fileExists("JSON configuration", jsonMainConfigFile);
@@ -135,7 +151,7 @@ int main(int argc, char ** argv)
     }
 
     // create a Qt application and tab to hold all widgets
-    mtsQtApplication *qtAppTask = new mtsQtApplication("QtApplication", argc, argv);
+    mtsQtApplication * qtAppTask = new mtsQtApplication("QtApplication", argc, argv);
     qtAppTask->Configure();
     componentManager->AddComponent(qtAppTask);
 
@@ -154,10 +170,21 @@ int main(int argc, char ** argv)
     // IO is shared accross components
     mtsRobotIO1394 * io = new mtsRobotIO1394("io", periodIO, firewirePort);
 
+    // find name of button event used to detect if operator is present
+    std::string operatorPresentComponent = jsonConfig["operator-present"]["component"].asString();
+    std::string operatorPresentInterface = jsonConfig["operator-present"]["interface"].asString();
+    //set defaults
+    if (operatorPresentComponent == "") {
+        operatorPresentComponent = "io";
+    }
+    if (operatorPresentInterface == "") {
+        operatorPresentInterface = "COAG";
+    }
+    std::cout << "Using \"" << operatorPresentComponent << "::" << operatorPresentInterface
+              << "\" to detect if operator is present" << std::endl;
+
     // setup io defined in the json configuration file
     const Json::Value pairs = jsonConfig["pairs"];
-
-
     for (unsigned int index = 0; index < pairs.size(); ++index) {
         // master
         Json::Value jsonMaster = pairs[index]["master"];
@@ -248,21 +275,6 @@ int main(int argc, char ** argv)
         componentManager->Connect(pidMasterGUI->GetName(), "Controller", mtm->PIDComponentName(), "Controller");
         tabWidget->addTab(pidMasterGUI, masterPIDName.c_str());
 
-
-//        ROS_INFO("\n\n\n Name of :%s\n PID component :%s\n IO component :%s \\n\n",mtm->Name().c_str(), mtm->PIDComponentName().c_str()
-//                 , mtm->IOComponentName().c_str());
-
-//        std::vector<std::string> io_interface_provided = io->GetNamesOfInterfacesProvided();
-//        for (int i=0;i<io_interface_provided.size();i++)
-//        {
-//            ROS_INFO("Provided IO Interface %d is %s",i,io_interface_provided[i].c_str());
-//        }
-//        std::vector<std::string> io_interface_required = io->GetNamesOfInterfacesRequired();
-//        for (int i=0;i<io_interface_required.size();i++)
-//        {
-//            ROS_INFO("Required IO Interface %d is %s",i,io_interface_required[i].c_str());
-//        }
-
         // PID Slave GUI
         std::string slavePIDName = slaveName + " PID";
         mtsPIDQtWidget * pidSlaveGUI = new mtsPIDQtWidget(slavePIDName, 7);
@@ -294,18 +306,47 @@ int main(int argc, char ** argv)
         componentManager->AddComponent(teleGUI);
         tabWidget->addTab(teleGUI, teleName.c_str());
         mtsTeleOperation * tele = new mtsTeleOperation(teleName, periodTeleop);
+        // Default orientation between master and slave
+        vctMatRot3 master2slave;
+        master2slave.Assign(-1.0, 0.0, 0.0,
+                             0.0,-1.0, 0.0,
+                             0.0, 0.0, 1.0);
+        tele->SetRegistrationRotation(master2slave);
         componentManager->AddComponent(tele);
         // connect teleGUI to tele
         componentManager->Connect(teleGUI->GetName(), "TeleOperation", tele->GetName(), "Setting");
 
         componentManager->Connect(tele->GetName(), "Master", mtm->Name(), "Robot");
         componentManager->Connect(tele->GetName(), "Slave", psm->Name(), "Robot");
-        componentManager->Connect(tele->GetName(), "CLUTCH", "io", "CLUTCH");
-        componentManager->Connect(tele->GetName(), "COAG", "io", "COAG");
+        componentManager->Connect(tele->GetName(), "Clutch", "io", "CLUTCH");
+        componentManager->Connect(tele->GetName(), "OperatorPresent", operatorPresentComponent, operatorPresentInterface);
     }
 
+    // configure data collection if needed
+    if (options.IsSet("collection-config")) {
+        // make sure the json config file exists
+        fileExists("JSON data collection configuration", jsonCollectionConfigFile);
+
+        mtsCollectorFactory * collectorFactory = new mtsCollectorFactory("collectors");
+        collectorFactory->Configure(jsonCollectionConfigFile);
+        componentManager->AddComponent(collectorFactory);
+        collectorFactory->Connect();
+
+        mtsCollectorQtWidget * collectorQtWidget = new mtsCollectorQtWidget();
+        tabWidget->addTab(collectorQtWidget, "Collection");
+
+        mtsCollectorQtFactory * collectorQtFactory = new mtsCollectorQtFactory("collectorsQt");
+        collectorQtFactory->SetFactory("collectors");
+        componentManager->AddComponent(collectorQtFactory);
+        collectorQtFactory->Connect();
+        collectorQtFactory->ConnectToWidget(collectorQtWidget);
+    }
+
+
+    ///////////////////////  ROS Bridge   ////////////////////////////////////////////
+
     // Starting ROS-Bridge Here
-    mtsROSBridge rosBridge("RobotBridge", 20 * cmn_ms, true);
+    mtsROSBridge rosBridge("RobotBridge", 20 * cmn_ms, true, false);
     rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
                 "MTML", "GetPositionJoint", "/dvrk_mtml/joint_position_current");
     rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
@@ -327,6 +368,7 @@ int main(int argc, char ** argv)
                 "PSM1", "SetRobotControlState", "/dvrk_psm1/set_robot_state");
     rosBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
                 "PSM1", "SetPositionCartesian", "/dvrk_psm1/set_cartesian_pose");
+
     rosBridge.AddSubscriberToWriteCommand<std::string , std_msgs::String>(
                 "PSM2", "SetRobotControlState", "/dvrk_psm2/set_robot_state");
     rosBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
@@ -347,6 +389,7 @@ int main(int argc, char ** argv)
     componentManager->Connect(rosBridge.GetName(), "PSM2", "PSM2", "Robot");
 
     ///////////////////////////////////////////////////////////////////
+
 
     // show all widgets
     tabWidget->show();
@@ -374,3 +417,12 @@ int main(int argc, char ** argv)
 
     return 0;
 }
+
+
+
+
+
+
+
+
+
