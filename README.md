@@ -10,7 +10,7 @@ This repository has code related to daVinci\_research\_kit ROS packages.
 # cd to catkin ws src dir
 cd /PATH/TO/CATKIN_WS/src
 # clone repo
-git clone git@github.com:jhu-cisst/cisst-ros.git
+git clone http://github.com/jhu-cisst/cisst-ros.git
 
 # build 
 cd ..
@@ -22,7 +22,7 @@ catkin_make
 # cd to catkin ws src dir
 cd /PATH/TO/CATKIN_WS/src
 # clone repo
-git clone git@github.com:jhu-dvrk/dvrk-ros.git
+git clone http://github.com/jhu-dvrk/dvrk-ros.git
 # build 
 cd ..
 catkin_make
