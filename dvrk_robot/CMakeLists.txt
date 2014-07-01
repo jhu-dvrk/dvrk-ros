@@ -79,6 +79,11 @@ if (cisst_FOUND_AS_REQUIRED)
       ${catkin_LIBRARIES}
     )
     cisst_target_link_libraries (${_robot} ${REQUIRED_CISST_LIBRARIES})
+
+    if (CISST_HAS_QT5)
+      qt5_use_modules (${_robot} Core Widgets OpenGL)
+    endif (CISST_HAS_QT5)
+
   endforeach(_robot)
 
 endif(cisst_FOUND_AS_REQUIRED)

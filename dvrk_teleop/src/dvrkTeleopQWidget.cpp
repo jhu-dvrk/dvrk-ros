@@ -1,8 +1,15 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-    */
+/* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
+
 #include <ros/package.h>
 
 #include "dvrk_teleop/dvrkTeleopQWidget.h"
 #include "dvrk_kinematics/mtm_logic.h"
 #include "dvrk_kinematics/psm_logic.h"
+
+#include <QVBoxLayout>
+#include <QButtonGroup>
+#include <QApplication>
 
 // set up joint state variables
 
@@ -248,18 +255,3 @@ void dvrkTeleopQWidget::slot_moveToolButton_pressed(bool state)
 {
     is_move_psm_ = state;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

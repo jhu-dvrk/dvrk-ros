@@ -11,6 +11,7 @@
 
 #include "dvrk_teleop/dvrkTeleopQWidget.h"
 
+#include <QApplication>
 
 int main(int argc, char** argv)
 {

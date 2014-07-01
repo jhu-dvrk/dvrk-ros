@@ -16,6 +16,8 @@
 
 #include <QtGui>
 #include <QObject>
+#include <QPushButton>
+#include <QGroupBox>
 
 // set up joint state variables
 
