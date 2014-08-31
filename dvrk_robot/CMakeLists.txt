@@ -53,6 +53,7 @@ if (cisst_FOUND_AS_REQUIRED)
   cisst_find_saw_component (sawRobotIO1394 REQUIRED)
   cisst_find_saw_component (sawIntuitiveResearchKit REQUIRED)
   cisst_find_saw_component (sawControllers REQUIRED)
+  cisst_find_saw_component (sawConstraintController REQUIRED)
 
   message(STATUS "sawControllers: " ${sawControllers_LIBRARY_DIR})
   message(STATUS "sawControllers_LIBRARIES: " ${sawControllers_LIBRARIES})
@@ -60,12 +61,14 @@ if (cisst_FOUND_AS_REQUIRED)
   include_directories (
     ${sawRobotIO1394_INCLUDE_DIR}  
     ${sawControllers_INCLUDE_DIR}
+    ${sawConstraintController_INCLUDE_DIR}
     ${sawIntuitiveResearchKit_INCLUDE_DIR}
     )
 
   link_directories (
     ${sawRobotIO1394_LIBRARY_DIR}
     ${sawControllers_LIBRARY_DIR}
+    ${sawConstraintController_LIBRARY_DIR}
     ${sawIntuitiveResearchKit_LIBRARY_DIR}
     )
 
@@ -76,6 +79,7 @@ if (cisst_FOUND_AS_REQUIRED)
       ${sawRobotIO1394_LIBRARIES}
       ${sawIntuitiveResearchKit_LIBRARIES}
       ${sawControllers_LIBRARIES}
+      ${sawConstraintController_LIBRARIES}
       ${catkin_LIBRARIES}
     )
     cisst_target_link_libraries (${_robot} ${REQUIRED_CISST_LIBRARIES})
