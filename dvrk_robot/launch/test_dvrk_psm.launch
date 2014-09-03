@@ -32,9 +32,9 @@
         pkg="robot_state_publisher"
         type="state_publisher" />
 
-    <node name="actual_psm_jp" 
-          pkg="dvrk_joint_publisher"
-          type="actual_psm_control.py"/>
+    <!-- <node name="actual_psm_jp"  -->
+    <!--       pkg="dvrk_joint_publisher" -->
+    <!--       type="actual_psm_control.py"/> -->
 
     <node name="rviz" 
 	  pkg="rviz" 
