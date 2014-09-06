@@ -81,7 +81,7 @@ int main(int argc, char** argv)
   componentManager->AddComponent(qtAppTask);
 
   // IO
-  mtsRobotIO1394 * io = new mtsRobotIO1394("io", 1.0 * cmn_ms, firewirePort);
+  mtsRobotIO1394 * io = new mtsRobotIO1394("io", 0.5 * cmn_ms, firewirePort);
   io->Configure(config_io);
   componentManager->AddComponent(io);
 
@@ -92,7 +92,7 @@ int main(int argc, char** argv)
   robotWidgetFactory->Configure();
 
   // mtsPID
-  mtsPID* pid = new mtsPID("pid", 5 * cmn_ms);
+  mtsPID* pid = new mtsPID("pid", 0.5 * cmn_ms);
   pid->Configure(config_pid);
   componentManager->AddComponent(pid);
   componentManager->Connect(pid->GetName(), "RobotJointTorqueInterface", "io", config_name);
@@ -105,11 +105,15 @@ int main(int argc, char** argv)
   componentManager->Connect(pidMasterGUI->GetName(), "Controller", pid->GetName(), "Controller");
 
   // psm
-  mtsIntuitiveResearchKitPSM* psm = new mtsIntuitiveResearchKitPSM(config_name, 5 * cmn_ms);
+  mtsIntuitiveResearchKitPSM* psm = new mtsIntuitiveResearchKitPSM(config_name, 2 * cmn_ms);
   psm->Configure(config_kinematics);
   componentManager->AddComponent(psm);
   componentManager->Connect(psm->GetName(), "PID", pid->GetName(), "Controller");
   componentManager->Connect(psm->GetName(), "RobotIO", "io", config_name);
+  componentManager->Connect(psm->GetName(), "Adapter", "io", psm->GetName() + "-Adapter");
+  componentManager->Connect(psm->GetName(), "Tool", "io", psm->GetName() + "-Tool");
+  componentManager->Connect(psm->GetName(), "ManipClutch", "io", psm->GetName() + "-ManipClutch");
+  componentManager->Connect(psm->GetName(), "SUJClutch", "io", psm->GetName() + "-SUJClutch");
 
   // psm GUI
   mtsIntuitiveResearchKitArmQtWidget* psmGUI = new mtsIntuitiveResearchKitArmQtWidget(config_name+"GUI");
