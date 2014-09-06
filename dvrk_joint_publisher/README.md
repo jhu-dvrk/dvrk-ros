@@ -5,4 +5,17 @@ name, position and velocity properly populated.
 
 # File 
 * scripts/mtm\_joint\_publisher.py
-* todo: psm version or maybe just modify mtm version
+* scripts/psm\_joint\_publisher.py
+  * credit Adnan Munawar
+  
+# Usage 
+
+```sh
+# NOTE robot_prefix should be consistant with 
+# your robot urdf prefix defined in xacro file 
+# For example 
+#  dvrk_model/model/psm_one.urdf.xacro should use "one_"
+rosrun dvrk_robot mtm_joint_publisher robot_prefix
+```
+
+See also dvrk\_robot/launch/test\_mtm\_ros.launch

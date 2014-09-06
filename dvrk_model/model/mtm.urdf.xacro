@@ -5,7 +5,6 @@
 
   <!-- Macro for the da Vinci Master Console -->
   <xacro:macro name="master_console" params="prefix parent_link xyz rpy">
-    <!-- Left MTM -->
     <joint name="${prefix}base_fixed_joint" type="fixed">
       <parent link="${parent_link}"/>
       <child link="${prefix}master_base_link"/>
@@ -234,7 +233,7 @@
 
     <joint name="${prefix}wrist_pitch_joint" type="revolute">
       <parent link="${prefix}wrist_platform_link"/>
-      <child link="${prefix}wrist_pitch_link"/>   <!--rpy="1.57 0 3.14159 " the num .072 & .123 are defined from CAD file -->
+      <child link="${prefix}wrist_pitch_link"/>   
       <origin rpy="${-PI/2} 0 0" xyz="0 0 0"/>
       <axis xyz="0 0 1"/>
       <!--rotates about x axis-->
