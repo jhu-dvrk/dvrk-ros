@@ -22,11 +22,6 @@
   <!-- rviz node -->
   <node name="rviz" pkg="rviz" type="rviz"
         args="-d $(arg rviz)" />
-  
-  <rosparam>
-    <!-- if connect to dv hardware, update this source list  -->
-    <!-- source_list: [/adjutant/device/merlin/joint_states] -->
-  </rosparam>
 </launch>
 
 
