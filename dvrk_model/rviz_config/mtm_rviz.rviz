@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /RobotModel1
       Splitter Ratio: 0.5
     Tree Height: 565
   - Class: rviz/Selection
@@ -63,11 +64,19 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        right_base:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         right_bottom_parallel_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
+        right_ee_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         right_outer_yaw_link:
           Alpha: 1
           Show Axes: false
@@ -108,7 +117,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
       Name: RobotModel
-      Robot Description: robot_description
+      Robot Description: /dvrk_mtm/robot_description
       TF Prefix: ""
       Update Interval: 0
       Value: true
@@ -138,16 +147,21 @@ Visualization Manager:
     Current:
       Class: rviz/Orbit
       Distance: 4.08676
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.06
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
       Focal Point:
         X: 0
         Y: 0
         Z: 0
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.990398
+      Pitch: 0.560398
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.325398
+      Yaw: 4.66858
     Saved: ~
 Window Geometry:
   Displays:
@@ -165,5 +179,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 58
+  X: 51
   Y: 25
