@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import rospy
 from sensor_msgs.msg import JointState
 
@@ -33,28 +34,31 @@ def main():
     rospy.init_node('psm_joint_publisher')
 
     # create a psm publisher
-    jnt_pub = rospy.Publisher('/dvrk_psm/joint_states_robot', JointState)
+    jnt_pub = rospy.Publisher('joint_states_robot', JointState)
 
     # create psm joint position subscriber
     jnt_pos_sub = rospy.Subscriber(
-        'dvrk_psm/joint_position_current',
+        'joint_position_current',
         JointState,
         jnt_pos_cb)
 
     # create psm joint velocity subscriber
     jnt_vel_sub = rospy.Subscriber(
-        'dvrk_psm/joint_velocity_current',
+        'joint_velocity_current',
         JointState,
         jnt_vel_cb)
 
     # initialize jnt_msg
-    jnt_msg.name = ['one_outer_yaw_joint',
-                    'one_outer_pitch_joint_1',
-                    'one_outer_insertion_joint', 
-                    'one_outer_roll_joint',
-                    'one_outer_wrist_pitch_joint',
-                    'one_outer_wrist_yaw_joint',
-                    'one_outer_wrist_open_angle_joint_1']
+    prefix = 'psm_'
+    if len(sys.argv) == 2:
+        prefix = sys.argv[1]
+    jnt_msg.name = [prefix + 'outer_yaw_joint',
+                    prefix + 'outer_pitch_joint_1',
+                    prefix + 'outer_insertion_joint', 
+                    prefix + 'outer_roll_joint',
+                    prefix + 'outer_wrist_pitch_joint',
+                    prefix + 'outer_wrist_yaw_joint',
+                    prefix + 'outer_wrist_open_angle_joint_1']
 
     # loop until ctrl-c
     rate = rospy.Rate(50);     # 50 hz
