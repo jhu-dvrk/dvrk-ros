@@ -12,34 +12,36 @@
     <arg name="gui" default="true" />
     <arg name="rate" default="20" />
     <arg name="mimic_tags" default="false" />
-    
-    <param name="robot_description"
-           command="rosrun xacro xacro.py $(arg model)"/>
-    <param name="use_gui" value="$(arg gui)"/>
-    <param name="rate" value="$(arg rate)"/>
-    <param name="use_mimic_tags" value="$(arg mimic_tags)" />
+    <arg name="namespace" default="/dvrk_mtm" />
 
-    <!-- rosparam>
-      source_list: [/dvrk_mtm/joint_states_robot]
-    </rosparam -->
+    <group ns="$(arg namespace)">
+      <param name="robot_description"
+             command="rosrun xacro xacro.py $(arg model)"/>
+      <param name="use_gui" value="$(arg gui)"/>
+      <param name="rate" value="$(arg rate)"/>
+      <param name="use_mimic_tags" value="$(arg mimic_tags)" />
 
-    <remap from="/joint_states" to="/joint_states/joint_position_current" />
-    <node name="joint_state_publisher"
-          pkg="joint_state_publisher"
-          type="joint_state_publisher" />
+      <rosparam param="source_list" subst_value="True">
+        [$(arg namespace)/joint_states_robot]
+      </rosparam>
 
-    <!-- robot state publisher -->
-    <node name="robot_state_publisher"
-        pkg="robot_state_publisher"
-        type="state_publisher" />
+      <!-- standard joint state publisher -->
+      <node name="joint_state_publisher"
+            pkg="joint_state_publisher"
+            type="joint_state_publisher" />
 
-    <node name="feedback_mtm_jp" 
-          pkg="dvrk_joint_publisher"
-          type="mtm_joint_publisher.py"/>
-  
-    <node name="actual_mtm_jp" 
-          pkg="dvrk_joint_publisher"
-          type="actual_mtm_control.py"/>
+      <!-- robot state publisher -->
+      <node name="robot_state_publisher"
+            pkg="robot_state_publisher"
+            type="state_publisher" />
+
+      <!-- dvrk joint publisher -->
+      <node name="feedback_mtm_jp" 
+            pkg="dvrk_joint_publisher"
+            type="mtm_joint_publisher.py"
+            args="right_"/>
+      
+    </group>
 
     <node name="rviz" 
 	  pkg="rviz" 

@@ -3,43 +3,51 @@
 
     <!-- dvrk psm -->
     <node name="dvrk_psm_ros_node"
-        pkg="dvrk_robot"
-        type="dvrk_psm_ros"
-        args="-i $(find dvrk_robot)/config/sawRobotIO1394-PSM1-28007.xml
-              -p $(find dvrk_robot)/config/sawControllersPID-PSM.xml
-              -k $(find dvrk_robot)/config/dvpsm.rob
-              -n PSM1"/>
+          pkg="dvrk_robot"
+          type="dvrk_psm_ros"
+          args="-i $(find dvrk_robot)/config/sawRobotIO1394-PSM1-28007.xml
+                -p $(find dvrk_robot)/config/sawControllersPID-PSM.xml
+                -k $(find dvrk_robot)/config/dvpsm.rob
+                -n PSM1"/>
 
     <arg name="model" default="$(find dvrk_model)/model/psm_one.urdf.xacro" />
     <arg name="gui" default="true" />
     <arg name="rate" default="20" />
     <arg name="mimic_tags" default="true" />
-    
-    <param name="robot_description"
-           command="rosrun xacro xacro.py $(arg model)"/>
-    <param name="use_gui" value="$(arg gui)"/>
-    <param name="rate" value="$(arg rate)"/>
-    <param name="use_mimic_tags" value="$(arg mimic_tags)" />
-    
-    <!-- joint state publisher -->
-    <remap from="/joint_states" to="/joint_states/joint_position_current" />
-    <node name="joint_state_publisher"
-          pkg="joint_state_publisher"
-          type="joint_state_publisher" />
+    <arg name="namespace" default="/dvrk_psm" />
 
-    <!-- robot state publisher -->
-    <node name="robot_state_publisher"
-        pkg="robot_state_publisher"
-        type="state_publisher" />
+    <group ns="$(arg namespace)">
+      <param name="robot_description"
+             command="rosrun xacro xacro.py $(arg model)"/>
+      <param name="use_gui" value="$(arg gui)"/>
+      <param name="rate" value="$(arg rate)"/>
+      <param name="use_mimic_tags" value="$(arg mimic_tags)" />
 
-    <!-- <node name="actual_psm_jp"  -->
-    <!--       pkg="dvrk_joint_publisher" -->
-    <!--       type="actual_psm_control.py"/> -->
+      <rosparam param="source_list" subst_value="True">
+        [$(arg namespace)/joint_states_robot]
+      </rosparam>
 
-    <node name="rviz" 
-	  pkg="rviz" 
-	  type="rviz"
-	  args="-d $(find dvrk_model)/rviz_config/psm1_rviz.rviz" />
-  
+      <!-- joint state publisher -->
+      <node name="joint_state_publisher"
+            pkg="joint_state_publisher"
+            type="joint_state_publisher" />
+
+      <!-- robot state publisher -->
+      <node name="robot_state_publisher"
+            pkg="robot_state_publisher"
+            type="state_publisher" />
+
+      <!-- dvrk joint publisher -->
+      <node name="feedback_psm_jp"
+            pkg="dvrk_joint_publisher"
+            type="psm_joint_publisher.py"
+            args="one_"/>
+    </group>
+
+
+    <node name="rviz"
+          pkg="rviz"
+          type="rviz"
+          args="-d $(find dvrk_model)/rviz_config/psm1_rviz.rviz" />
   
 </launch>
