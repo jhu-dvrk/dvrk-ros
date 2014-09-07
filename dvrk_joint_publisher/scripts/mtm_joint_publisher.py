@@ -25,7 +25,7 @@ def jnt_vel_cb(msg):
             jnt_msg.velocity.append(msg.velocity[i])
         pass
 
-def main(argv):
+def main():
     
     # initialize ROS node
     rospy.init_node('mtm_joint_publisher')
@@ -45,13 +45,9 @@ def main(argv):
         JointState,
         jnt_vel_cb)
 
-    # initialize jnt_msg
-    print "argc = ", len(argv)
-    print str(argv)
-
     prefix = 'mtm_'
-    if len(argv) == 2:
-        prefix = argv[1]
+    if len(sys.argv) >= 2:
+        prefix = sys.argv[1]
 
     jnt_msg.name = [prefix + 'outer_yaw_joint',
                     prefix + 'shoulder_pitch_joint',
@@ -75,5 +71,5 @@ def main(argv):
         
 # entry point
 if __name__ == '__main__':
-    main(sys.argv)
+    main()
 

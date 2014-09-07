@@ -50,7 +50,7 @@ def main():
 
     # initialize jnt_msg
     prefix = 'psm_'
-    if len(sys.argv) == 2:
+    if len(sys.argv) >= 2:
         prefix = sys.argv[1]
     jnt_msg.name = [prefix + 'outer_yaw_joint',
                     prefix + 'outer_pitch_joint_1',
