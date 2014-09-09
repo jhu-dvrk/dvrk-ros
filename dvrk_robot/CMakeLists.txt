@@ -34,6 +34,11 @@ find_package (cisst REQUIRED ${REQUIRED_CISST_LIBRARIES})
 include (${CISST_USE_FILE})
 
 
+# KDL
+find_package(orocos_kdl REQUIRED)
+include_directories(${orocos_kdl_INCLUDE_DIRS})
+link_directories(${orocos_kdl_LIBRARY_DIRS})
+
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES dvrk_robot
@@ -72,7 +77,8 @@ if (cisst_FOUND_AS_REQUIRED)
     ${sawIntuitiveResearchKit_LIBRARY_DIR}
     )
 
-  set(ROBOTSRC dvrk_mtm_ros dvrk_psm_ros dvrk_full_ros)
+  # set(ROBOTSRC dvrk_mtm_ros dvrk_psm_ros dvrk_full_ros)
+  set(ROBOTSRC dvrk_mtm_ros dvrk_psm_ros)
   foreach(_robot ${ROBOTSRC})
     add_executable (${_robot} src/${_robot}.cpp)
     target_link_libraries (${_robot}
@@ -80,6 +86,7 @@ if (cisst_FOUND_AS_REQUIRED)
       ${sawIntuitiveResearchKit_LIBRARIES}
       ${sawControllers_LIBRARIES}
       ${sawConstraintController_LIBRARIES}
+      ${orocos_kdl_LIBRARIES}
       ${catkin_LIBRARIES}
     )
     cisst_target_link_libraries (${_robot} ${REQUIRED_CISST_LIBRARIES})
