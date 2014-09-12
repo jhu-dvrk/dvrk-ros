@@ -1,6 +1,23 @@
-// Zihan Chen
-// 2013-07-14
-// Brief: da Vinci psm kinematics
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-    */
+/* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
+
+/*
+  Author(s):  Zihan Chen
+  Created on: 2013-07-14
+
+  (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights
+  Reserved.
+
+--- begin cisst license - do not edit ---
+
+This software is provided "as is" under an open source license, with
+no warranty.  The complete license can be found in license.txt and
+http://www.cisst.org/cisst/license.txt.
+
+--- end cisst license ---
+*/
+
+// Brief: da Vinci PSM kinematics
 
 #include <iostream>
 
@@ -20,13 +37,13 @@
 #include "dvrk_kinematics/psm_logic.h"
 
 // set up joint state variables
-vctDoubleVec psm_joint_current;
-vctDoubleVec psm_joint_command;
-vctDoubleVec psm_joint_command_prev;
-vctFrm4x4 psm_pose_current;
-vctFrm4x4 psm_pose_command;
-double mtm_gripper;
-int control_mode;
+static vctDoubleVec psm_joint_current;
+static vctDoubleVec psm_joint_command;
+static vctDoubleVec psm_joint_command_prev;
+static vctFrm4x4 psm_pose_current;
+static vctFrm4x4 psm_pose_command;
+static double mtm_gripper;
+static int control_mode;
 
 
 // command psm pose from teleop
@@ -201,8 +218,6 @@ int main(int argc, char** argv)
             // disable slider
             std::fill(msg_js.position.begin(), msg_js.position.end(), -1);
             pub_psm_enable_slider.publish(msg_js);
-
-            //            std::cerr << "PSM_teleop" << std::endl;
             break;
         default:
             ROS_ERROR_STREAM("Should not come here !");

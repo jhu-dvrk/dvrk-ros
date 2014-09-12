@@ -1,6 +1,24 @@
-// Zihan Chen
-// 2013-07-14
-// Brief: da Vinci psm kinematics
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-    */
+/* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
+
+/*
+  Author(s):  Zihan Chen
+  Created on: 2013-07-14
+
+  (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights
+  Reserved.
+
+--- begin cisst license - do not edit ---
+
+This software is provided "as is" under an open source license, with
+no warranty.  The complete license can be found in license.txt and
+http://www.cisst.org/cisst/license.txt.
+
+--- end cisst license ---
+*/
+
+
+// Brief: da Vinci MTM kinematics logic
 
 
 #include <iostream>
@@ -22,11 +40,11 @@
 #include "dvrk_kinematics/mtm_logic.h"
 
 // set up joint state variables
-vctDoubleVec mtm_joint_current;
-vctDoubleVec mtm_joint_command;
-vctFrm4x4 mtm_pose_current;
-vctFrm4x4 mtm_pose_command;
-int control_mode;
+static vctDoubleVec mtm_joint_current;
+static vctDoubleVec mtm_joint_command;
+static vctFrm4x4 mtm_pose_current;
+static vctFrm4x4 mtm_pose_command;
+static int control_mode;
 
 // command psm pose from teleop
 void mtm_cmd_pose_cb(const geometry_msgs::Pose &msg)
@@ -57,8 +75,12 @@ int main(int argc, char** argv)
 {
     // ros initialization
     ros::init(argc, argv, "dvrk_mtm_logic");
-    ros::NodeHandle nh;
+    ros::NodeHandle nh, nh_private("~");
     ros::Rate rate(200);  // 100 hz rate
+
+    // parameter
+    std::string robot_name;
+    nh_private.getParam("robot_name", robot_name);
 
     // subscriber
     ros::Subscriber sub_mtm_cmd =
@@ -96,13 +118,13 @@ int main(int argc, char** argv)
     mtm_joint_command.ForceAssign(mtm_joint_current);
     sensor_msgs::JointState msg_full_js;
     msg_full_js.name.clear();
-    msg_full_js.name.push_back("right_outer_yaw_joint");
-    msg_full_js.name.push_back("right_shoulder_pitch_joint");
-    msg_full_js.name.push_back("right_elbow_pitch_joint");
-    msg_full_js.name.push_back("right_wrist_platform_joint");
-    msg_full_js.name.push_back("right_wrist_pitch_joint");
-    msg_full_js.name.push_back("right_wrist_yaw_joint");
-    msg_full_js.name.push_back("right_wrist_roll_joint");
+    msg_full_js.name.push_back(robot_name + "_yaw_joint");
+    msg_full_js.name.push_back(robot_name + "_shoulder_pitch_joint");
+    msg_full_js.name.push_back(robot_name + "_elbow_pitch_joint");
+    msg_full_js.name.push_back(robot_name + "_wrist_platform_joint");
+    msg_full_js.name.push_back(robot_name + "_wrist_pitch_joint");
+    msg_full_js.name.push_back(robot_name + "_wrist_yaw_joint");
+    msg_full_js.name.push_back(robot_name + "_wrist_roll_joint");
 
     geometry_msgs::Pose msg_pose;
 
@@ -113,11 +135,7 @@ int main(int argc, char** argv)
         // --------- Compute current pose & publish ----------
         // psm forward kinematics
         mtm_pose_current = mtm_manip.ForwardKinematics(mtm_joint_current);
-
         mtsCISSTToROS(mtm_pose_current, msg_pose);
-//        if (count % 10 == 0) {
-//            std::cerr << mtm_pose_current << std::endl << std::endl;
-//        }
 
         // publish current pose
         pub_mtm_pose.publish(msg_pose);
@@ -178,10 +196,10 @@ int main(int argc, char** argv)
             // now copy to msg_rot_js rotation only
             sensor_msgs::JointState msg_rot_js;
             msg_rot_js.name.clear();
-            msg_rot_js.name.push_back("right_wrist_platform_joint");
-            msg_rot_js.name.push_back("right_wrist_pitch_joint");
-            msg_rot_js.name.push_back("right_wrist_yaw_joint");
-            msg_rot_js.name.push_back("right_wrist_roll_joint");
+            msg_rot_js.name.push_back(robot_name + "_wrist_platform_joint");
+            msg_rot_js.name.push_back(robot_name + "_wrist_pitch_joint");
+            msg_rot_js.name.push_back(robot_name + "_wrist_yaw_joint");
+            msg_rot_js.name.push_back(robot_name + "_wrist_roll_joint");
             msg_rot_js.position.resize(4); // only last 4 joints
             std::copy(mtm_joint_command.begin()+3, mtm_joint_command.end(), msg_rot_js.position.begin());
             pub_mtm_joint_state.publish(msg_rot_js);

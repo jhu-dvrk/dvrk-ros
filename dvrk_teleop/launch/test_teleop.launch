@@ -13,7 +13,9 @@
   <!-- mtm kinematics node -->
   <node name="mtm_kinematics"
         pkg="dvrk_kinematics"
-        type="dvrk_mtm_logic"/>
+        type="dvrk_mtm_logic">
+    <param name="robot_name" value="right"/>
+  </node>
 
   <!-- psm kinematics node -->
   <node name="psm_kinematics"
