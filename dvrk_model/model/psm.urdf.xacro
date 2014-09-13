@@ -170,29 +170,28 @@
       <parent link="${prefix}tool_main_link"/>
       <child link="${prefix}tool_wrist_link"/>
       <axis xyz="0 0 1"/>
-      <origin rpy="0 0 0" xyz="0 0 0.36680"/>
+      <!-- 0.36680 + 0.0091 = 0.3759 -->
+      <origin rpy="0 0 0" xyz="0 0 0.3759"/>
       <limit lower="-2.2689" upper="2.2689" velocity=".4" effort="1000"/>
     </joint>
 
     <!-- link 4-1: tool_main_link -->
     <link name="${prefix}tool_wrist_link">
       <visual>
-        <origin rpy="0 0 1.5708" xyz="0 0 0"/>
+        <origin rpy="0 0 1.5708" xyz="0 0 -0.0091"/>
         <geometry>
           <mesh filename="package://dvrk_model/meshes/psm/tool_wrist_link.dae"/>      
         </geometry>
       </visual>
     </link>
 
-    <!-- joint 4-1: Outer Roll shaft -->
     <joint name="${prefix}outer_roll_shaft_joint" type="fixed">
       <parent link="${prefix}tool_wrist_link"/>
       <child link="${prefix}tool_wrist_shaft_link"/>
       <axis xyz="0 0 1"/>
-      <origin rpy="0 0 0" xyz="0 0 0.0091"/>
+      <origin rpy="0 0 0" xyz="0 0 0.0"/>
     </joint>
 
-    <!-- link 4-1: tool_wrist_shaft_link -->
     <link name="${prefix}tool_wrist_shaft_link">
       <visual>
         <origin rpy="1.5708 0 0" xyz="0 0.00401 0"/>
@@ -222,37 +221,36 @@
       </visual>
     </link>
 
-    <!-- joint 5-2: Outer wristyaw joint -->
+    <!-- joint 6: Outer wrist yaw joint -->
     <joint name="${prefix}outer_wrist_yaw_joint" type="revolute">
       <parent link="${prefix}tool_wrist_sca_link"/>
       <child link="${prefix}tool_wrist_sca_shaft_link"/>
       <axis xyz="0 0 1"/>
-      <origin rpy="-1.5708 -1.5708 0" xyz="0.0089 0 0"/>
+      <origin rpy="-1.5708 -1.5708 0" xyz="0.0091 0 0"/>
       <!-- +/- 80 deg -->
       <limit lower="-1.3963" upper="1.3963" velocity=".4" effort="1000"/>
     </joint>
 
-    <!-- link 5-2: tool_wrist_sca_shaft_link -->
+    <!-- link 6: tool_wrist_sca_shaft_link -->
     <link name="${prefix}tool_wrist_sca_shaft_link">
       <visual>
-        <origin rpy="0 0 0" xyz="0 0 -0.0025"/>
+        <origin rpy="0 0 0" xyz="0 -0.0002 -0.0025"/>
         <geometry>
           <mesh filename="package://dvrk_model/meshes/psm/tool_wrist_sca_shaft_link.dae"/> 
         </geometry>
       </visual>
     </link>
     
-    <!-- joint 6-1: Outer open angle 1  -->
+    <!-- joint 7-1: Outer open angle 1  -->
     <joint name="${prefix}outer_wrist_open_angle_joint_1" type="revolute">
       <parent link="${prefix}tool_wrist_sca_shaft_link"/>
       <child link="${prefix}tool_wrist_sca_ee_link_1"/>
       <axis xyz="0 0 1"/>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <!-- <origin rpy="-1.5708 -1.5708 0" xyz="0 0 0"/> -->
       <limit lower="0" upper="1.5707" velocity=".4" effort="1000"/>
     </joint>
 
-    <!-- link 6-1: Outer open angle link 1 -->
+    <!-- link 7-1: Outer open angle link 1 -->
     <link name="${prefix}tool_wrist_sca_ee_link_1">
       <visual>
         <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -262,7 +260,7 @@
       </visual>
     </link>
 
-    <!-- joint 6-2: Outer open angle 2   -->
+    <!-- joint 7-2: Outer open angle 2   -->
     <joint name="${prefix}outer_wrist_open_angle_joint_2" type="revolute">
       <parent link="${prefix}tool_wrist_sca_shaft_link"/>
       <child link="${prefix}tool_wrist_sca_ee_link_2"/>
@@ -272,7 +270,7 @@
       <mimic joint="${prefix}outer_wrist_open_angle_joint_1" multiplier="-1"/>
     </joint>
 
-    <!-- link 6-2: Outer open angle link 2 -->
+    <!-- link 7-2: Outer open angle link 2 -->
     <link name="${prefix}tool_wrist_sca_ee_link_2">
       <visual>
         <origin rpy="0 3.1516 0" xyz="0 0 0"/>
