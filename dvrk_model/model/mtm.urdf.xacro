@@ -34,6 +34,7 @@
   <!-- Macro for da Vinci Master Tool Manipulator (MTM) -->
   <xacro:macro name="mtm" params="prefix parent_link xyz rpy">
 
+    <!-- Joint 0: Fixed to World-->
     <joint name="${prefix}fixed_joint" type="fixed">
       <parent link="${parent_link}"/>
       <child link="${prefix}top_panel"/>
@@ -42,11 +43,13 @@
 
     <link name="${prefix}top_panel">
       <visual>
+        <origin rpy="0 0 0" xyz="0 0 0.19037"/>
         <geometry>
           <mesh filename="package://dvrk_model/meshes/mtm/Top Panel.dae"/>
         </geometry>
       </visual>
       <collision>
+        <origin rpy="0 0 0" xyz="0 0 0.19037"/>
         <geometry>
           <mesh filename="package://dvrk_model/meshes/mtm/Top Panel.STL"/>
         </geometry>
@@ -60,6 +63,7 @@
       </inertial> 
     </link>
 
+    <!-- Joint 1: Outer Yaw -->
     <joint name="${prefix}outer_yaw_joint" type="revolute">
       <parent link="${prefix}top_panel"/>
       <child link="${prefix}outer_yaw_link"/>
@@ -73,11 +77,13 @@
 
     <link name="${prefix}outer_yaw_link">
       <visual>
+        <origin rpy="0 0 0" xyz="0 0 0.19037"/>
         <geometry>
           <mesh filename="package://dvrk_model/meshes/mtm/OutPitch_Shoulder.dae"/>
         </geometry>
       </visual>
       <collision>
+        <origin rpy="0 0 0" xyz="0 0 0.19037"/>
         <geometry>
           <mesh filename="package://dvrk_model/meshes/mtm/OutPitch_Shoulder.STL"/>
         </geometry>
@@ -87,6 +93,18 @@
         <inertia ixx="10.0" ixy="0.0" ixz="0.0" iyy="10.0" iyz="0.0" izz="10.0"/>
       </inertial>
     </link>
+
+
+    <!-- Joint 2: Shoulder Pitch -->
+    <joint name="${prefix}shoulder_pitch_joint" type="revolute">
+      <parent link="${prefix}outer_yaw_link"/>
+      <child link="${prefix}back_parallel_link"/>  <!-- xyz= 0 0 -.19037-->
+      <origin rpy="${-PI/2} ${-PI/2} 0" xyz="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <!--limit effort and velocity picked arbitrarily check-->
+      <limit effort="100.0" lower="${-PI/4}" upper="${PI/4}" velocity="10"/>
+      <joint_properties damping="1.0" friction="0.0"/>
+    </joint>
 
     <link name="${prefix}back_parallel_link">
       <visual>
@@ -105,13 +123,27 @@
       </inertial>
     </link>
 
+    <joint name="${prefix}shoulder_pitch_parallel_joint" type="revolute">
+      <parent link="${prefix}outer_yaw_link"/>
+      <child link="${prefix}top_parallel_link"/>
+      <origin rpy="${-PI/2} ${-PI/2} 0" xyz="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <!--rotates about  x axis-->
+      <!--limit effort and velocity picked arbitrarily check-->
+      <limit effort="100.0" lower="${-PI/2}" upper="${PI/2}" velocity="10"/>
+      <joint_properties damping="1.0" friction="0.0"/>
+      <mimic joint="${prefix}shoulder_pitch_joint" multiplier="1"/>
+    </joint>
+
     <link name="${prefix}top_parallel_link">
       <visual>
+        <origin rpy="${-PI/2} ${PI} 0" xyz="0 .065 0"/>
         <geometry>
           <mesh filename="package://dvrk_model/meshes/mtm/ArmParallel1.dae"/>
         </geometry>
       </visual>
       <collision>
+        <origin rpy="${-PI/2} ${PI} 0" xyz="0 .065 0"/>
         <geometry>
           <mesh filename="package://dvrk_model/meshes/mtm/ArmParallel1.STL"/>
         </geometry>
@@ -122,53 +154,43 @@
       </inertial>
     </link>
 
-    <joint name="${prefix}shoulder_pitch_joint" type="revolute">
-      <parent link="${prefix}outer_yaw_link"/>
-      <child link="${prefix}back_parallel_link"/>  <!-- xyz= 0 0 -.19037-->
-      <origin rpy="${-PI/2} ${-PI/2} 0" xyz="0 0 -0.19037"/>
-      <axis xyz="0 0 1"/>
-      <!--rotates about  x axis-->
-      <!--limit effort and velocity picked arbitrarily check-->
-      <limit effort="100.0" lower="${-PI/4}" upper="${PI/4}" velocity="10"/>
-      <joint_properties damping="1.0" friction="0.0"/>
-    </joint>
-
-    <joint name="${prefix}shoulder_pitch_parallel_joint" type="revolute">
-      <parent link="${prefix}outer_yaw_link"/>
-      <child link="${prefix}top_parallel_link"/>
-      <origin rpy="${-PI/2} ${PI} 0" xyz="0 .065 -.19037"/>
-      <axis xyz="0 0 1"/>
-      <!--rotates about  x axis-->
-      <!--limit effort and velocity picked arbitrarily check-->
-      <limit effort="100.0" lower="${-PI/2}" upper="${PI/2}" velocity="10"/>
-      <joint_properties damping="1.0" friction="0.0"/>
-      <mimic joint="${prefix}shoulder_pitch_joint" multiplier="1"/>
-    </joint>
-
-    <!-- <joint name="${prefix}elbow_pitch_parallel_joint" type="revolute"> -->
-    <!--   <parent link="${prefix}top_parallel_link"/> -->
-    <!--   <child link="${prefix}front_parallel_link"/> -->
-    <!--   <origin rpy="0 0 0" xyz=".1011 0 -0.03"/> -->
-    <!--   <axis xyz="0 0 1"/> -->
-    <!--   <limit effort="100.0" lower="${-PI/4}" upper="${PI/4}" velocity="10"/> -->
-    <!--   <joint_properties damping="1.0" friction="0.0"/> -->
-    <!-- </joint> -->
-
+    
+    <!-- Joint 3: Elbow Pitch -->
     <joint name="${prefix}elbow_pitch_joint" type="revolute">
       <parent link="${prefix}back_parallel_link"/>
       <child link="${prefix}bottom_parallel_link"/>  <!-- xyz= -->
-      <origin rpy="0 0 ${PI/2}" xyz="-.2794 0 0"/>
+      <origin rpy="0 0 ${PI/2}" xyz="-0.2794 0 0"/>
       <axis xyz="0 0 1"/>
-      <!--rotates about x axis-->
       <!--limit effort and velocity picked arbitrarily check-->
       <limit effort="100.0" lower="${-PI/4}" upper="${PI/4}" velocity="10"/>
       <joint_properties damping="1.0" friction="0.0"/>
     </joint>
 
+    <link name="${prefix}bottom_parallel_link">
+      <visual>
+        <geometry>
+          <mesh filename="package://dvrk_model/meshes/mtm/BottomArm.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="package://dvrk_model/meshes/mtm/BottomArm.STL"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.8"/>
+        <inertia ixx="0.1" ixy="0.0" ixz="0.0" 
+                 iyy="0.1" iyz="0.0"
+                 izz="0.1"/>
+      </inertial>
+    </link>
+
+    
+    <!-- Joint 4: Platform -->
     <joint name="${prefix}wrist_platform_joint" type="revolute">
       <parent link="${prefix}bottom_parallel_link"/>
-      <child link="${prefix}wrist_platform_link"/>  <!-- -.348 & -.02746 defined from MTMDaVinci paper and  added -.01 from original to align, -0.02746 defined from CAD file-->
-      <origin rpy="${PI/2} 0 0" xyz="-0.3645 -0.156 0.0"/>
+      <child link="${prefix}wrist_platform_link"/>
+      <origin rpy="${PI/2} 0 0" xyz="-0.3645 -0.1506 0.0"/>
       <axis xyz="0 0 1"/>
       <!--rotates about z axis-->
       <!--limit effort and velocity picked arbitrarily check-->
@@ -195,31 +217,12 @@
       </inertial>
     </link>
 
-    <link name="${prefix}bottom_parallel_link">
-      <visual>
-        <geometry>
-          <mesh filename="package://dvrk_model/meshes/mtm/BottomArm.dae"/>
-        </geometry>
-      </visual>
-      <collision>
-        <geometry>
-          <mesh filename="package://dvrk_model/meshes/mtm/BottomArm.STL"/>
-        </geometry>
-      </collision>
-      <inertial>
-        <mass value="0.8"/>
-        <inertia ixx="0.1" ixy="0.0" ixz="0.0" 
-                           iyy="0.1" iyz="0.0"
-                                     izz="0.1"/>
-      </inertial>
-    </link>
-
+    <!-- Joint 5: Wrist Pitch -->
     <joint name="${prefix}wrist_pitch_joint" type="revolute">
       <parent link="${prefix}wrist_platform_link"/>
       <child link="${prefix}wrist_pitch_link"/>   
       <origin rpy="${-PI/2} 0 0" xyz="0 0 0"/>
       <axis xyz="0 0 1"/>
-      <!--rotates about x axis-->
       <!--limit effort and velocity picked arbitrarily check-->
       <limit effort="100.0" lower="${-PI/2}" upper="${PI}" velocity="10"/>
       <joint_properties damping="1.0" friction="0.0"/>
@@ -244,6 +247,7 @@
       </inertial>
     </link> 
 
+    <!-- Joint 6: Wrist Yaw-->
     <joint name="${prefix}wrist_yaw_joint" type="revolute">
       <parent link="${prefix}wrist_pitch_link"/>
       <child link="${prefix}wrist_yaw_link"/>    <!--  defined from CAD file-->
@@ -274,6 +278,8 @@
       </inertial>
     </link>
 
+
+    <!-- Joint 7: Wrist Roll -->
     <joint name="${prefix}wrist_roll_joint" type="revolute">
       <parent link="${prefix}wrist_yaw_link"/>
       <child link="${prefix}wrist_roll_link"/>  <!-- -.039 & .055 defined from CAD file-->
@@ -305,14 +311,6 @@
                                      izz="0.1"/>
       </inertial>
     </link>
-
-    <!-- add base link to match DVRK manual -->
-    <joint name="${prefix}base" type="fixed">
-      <parent link="${prefix}top_panel"/>
-      <child link="${prefix}base"/>
-      <origin rpy="0 0 0" xyz="0 0 -0.190"/>
-    </joint>
-    <link name="${prefix}base"/>
 
     <transmission name="tran1">
       <type>transmission_interface/SimpleTransmission</type>
