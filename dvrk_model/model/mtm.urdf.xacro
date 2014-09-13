@@ -77,13 +77,13 @@
 
     <link name="${prefix}outer_yaw_link">
       <visual>
-        <origin rpy="0 0 0" xyz="0 0 0.19037"/>
+        <origin rpy="0 0 0" xyz="0.025 0 0.19037"/>
         <geometry>
           <mesh filename="package://dvrk_model/meshes/mtm/OutPitch_Shoulder.dae"/>
         </geometry>
       </visual>
       <collision>
-        <origin rpy="0 0 0" xyz="0 0 0.19037"/>
+        <origin rpy="0 0 0" xyz="0.025 0 0.19037"/>
         <geometry>
           <mesh filename="package://dvrk_model/meshes/mtm/OutPitch_Shoulder.STL"/>
         </geometry>
@@ -137,13 +137,13 @@
 
     <link name="${prefix}top_parallel_link">
       <visual>
-        <origin rpy="${-PI/2} ${PI} 0" xyz="0 .065 0"/>
+        <origin rpy="0 0 ${-PI/2}" xyz="0 0 0.065"/>
         <geometry>
           <mesh filename="package://dvrk_model/meshes/mtm/ArmParallel1.dae"/>
         </geometry>
       </visual>
       <collision>
-        <origin rpy="${-PI/2} ${PI} 0" xyz="0 .065 0"/>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
           <mesh filename="package://dvrk_model/meshes/mtm/ArmParallel1.STL"/>
         </geometry>
