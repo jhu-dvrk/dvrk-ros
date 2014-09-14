@@ -56,7 +56,7 @@
     </link>
     
     <!-- joint 6-1: Outer open angle 1 -->
-    <joint name="${prefix}outer_wrist_open_angle_joint_left" type="revolute">
+    <joint name="${prefix}outer_wrist_open_angle_joint" type="revolute">
       <parent link="${prefix}tool_wrist_caudier_link_shaft"/>
       <child link="${prefix}tool_wrist_caudier_link_2_left"/>
       <axis xyz="0 0 1"/>
@@ -81,13 +81,13 @@
     </link>
 
     <!-- joint 6-2: Outer open angle 2  -->
-    <joint name="${prefix}outer_wrist_open_angle_joint_right" type="revolute">
+    <joint name="${prefix}outer_wrist_open_angle_joint_mimic" type="revolute">
       <parent link="${prefix}tool_wrist_caudier_link_shaft"/>
       <child link="${prefix}tool_wrist_caudier_link_2_right"/>
       <axis xyz="0 0 1"/>
       <origin rpy="3.1415926 0 0" xyz="0 0 0"/>
       <limit lower="0" upper="1.5707" velocity=".4" effort="1000"/>
-      <mimic joint="${prefix}outer_wrist_open_angle_joint_left" multiplier="1"/>
+      <mimic joint="${prefix}outer_wrist_open_angle_joint" multiplier="1"/>
     </joint>
 
     <!-- link 6-2: Outer open angle link 2 -->

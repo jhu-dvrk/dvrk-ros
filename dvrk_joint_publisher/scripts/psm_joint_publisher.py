@@ -53,12 +53,12 @@ def main():
     if len(sys.argv) >= 2:
         prefix = sys.argv[1]
     jnt_msg.name = [prefix + 'outer_yaw_joint',
-                    prefix + 'outer_pitch_joint_1',
+                    prefix + 'outer_pitch_joint',
                     prefix + 'outer_insertion_joint', 
                     prefix + 'outer_roll_joint',
                     prefix + 'outer_wrist_pitch_joint',
                     prefix + 'outer_wrist_yaw_joint',
-                    prefix + 'outer_wrist_open_angle_joint_1']
+                    prefix + 'outer_wrist_open_angle_joint']
 
     # loop until ctrl-c
     rate = rospy.Rate(50);     # 50 hz
