@@ -3,26 +3,33 @@
 
   <xacro:macro name="psm" params="prefix parent_link xyz rpy">
     <!-- fixed joint -->
-    <joint name="${prefix}fixed_joint" type="fixed">
-      <parent link="${parent_link}"/>
-      <child link="${prefix}remote_center_link"/>
-      <origin rpy="${rpy}" xyz="${xyz}"/>
-    </joint>
+    <!-- <joint name="${prefix}fixed_joint" type="fixed"> -->
+    <!--   <parent link="${parent_link}"/> -->
+    <!--   <child link="${prefix}remote_center_link"/> -->
+    <!--   <origin rpy="${rpy}" xyz="${xyz}"/> -->
+    <!-- </joint> -->
 
     <!-- link rc: remote centre link -->
-    <link name="${prefix}remote_center_link" />   
+    <!-- <link name="${prefix}remote_center_link" />    -->
 
     <!-- fixed joint -->
-    <joint name="${prefix}rc_fixed_joint" type="fixed">
-      <parent link="${prefix}remote_center_link"/>
+    <!-- <joint name="${prefix}rc_fixed_joint" type="fixed"> -->
+    <!--   <parent link="${prefix}remote_center_link"/> -->
+    <!--   <child link="${prefix}psm_base_link"/> -->
+    <!--   <origin rpy="0 0 0" xyz="0 0 0"/> -->
+    <!-- </joint> -->
+
+    <!-- fixed joint -->
+    <joint name="${prefix}fixed_joint" type="fixed">
+      <parent link="${parent_link}"/>
       <child link="${prefix}psm_base_link"/>
-      <origin rpy="0 0 0" xyz="0 -0.369 0"/>
+      <origin rpy="${rpy}" xyz="${xyz}"/>
     </joint>
 
     <!-- link 0: psm base link -->
     <link name="${prefix}psm_base_link">
       <visual>
-        <origin rpy="1.5708 0 3.1416" xyz="0.039 -0.03888 -0.07879"/>
+        <origin rpy="1.5708 0 3.1416" xyz="0.039 -0.40788 -0.07879"/>
         <geometry>
           <mesh filename="package://dvrk_model/meshes/psm/psm_base.dae"/>      
         </geometry>
@@ -34,37 +41,52 @@
       <parent link="${prefix}psm_base_link"/>
       <child link="${prefix}outer_yaw_link"/>
       <axis xyz="0 0 1"/>
-      <origin rpy="1.5708 -1.5708 0" xyz="0.0 0.0 0.0"/>
+      <!-- <origin rpy="1.5708 -1.5708 0" xyz="0.0 -0.369 0.0"/> -->
+      <origin rpy="0 -1.5708 1.5708" xyz="0.0 0.0 0.0"/>
       <limit lower="-1.5707" upper="1.5707" velocity=".4" effort="1000"/>
-    </joint> 
-    
-    
+    </joint>
+
     <!-- link 1: outer_yaw -->
     <link name="${prefix}outer_yaw_link">
-      <visual>
-        <!-- <origin rpy="0 0 -1.5708" xyz="0.0125 0 0.1575"/> -->
-        <origin rpy="3.1416 0 1.5708" xyz="0.0125 0 0.1575"/>
+      <visual>        <!-- <origin rpy="0 0 -1.5708" xyz="0.0125 0 0.1575"/> -->
+        <origin rpy="3.1416 0 1.5708" xyz="0.0125 0 0.5265"/>
         <geometry>
           <mesh filename="package://dvrk_model/meshes/psm/outer_yaw.dae"/>      
         </geometry>
       </visual>
     </link>
 
+    <!-- Note: I can not put visual link here as it's parallel -->
+    <!-- mechanism, so the outer_pitch_link does not have visual -->
+    <!-- link, all visual links mimic outer_pitch_joint value -->
+    
+    <!-- joint 2: outer_pitch -->
+    <joint name="${prefix}outer_pitch_joint" type="revolute">
+      <parent link="${prefix}outer_yaw_link"/>
+      <child link="${prefix}outer_pitch_link"/>
+      <axis xyz="0 0 1"/>
+      <origin rpy="-1.5708 -1.5708 0" xyz="0 0 0"/>
+      <limit lower="-0.7854" upper="0.7854" velocity=".4" effort="1000"/>
+    </joint>
+    <!-- link 2: outer_pitch_link -->
+    <link name="${prefix}outer_pitch_link"/>
+
     <!-- joint 2-1: outer_pitch_1 -->
-    <joint name="${prefix}outer_pitch_joint_1" type="revolute">
+    <joint name="${prefix}outer_pitch_joint_1" type="continuous">
       <parent link="${prefix}outer_yaw_link"/>
       <child link="${prefix}outer_pitch_back_link"/>
       <axis xyz="0 0 1"/>
-      <origin rpy="-1.5708 -1.5708 0" xyz="0 0.0295 0.1495"/>
-      <limit lower="-0.7854" upper="0.7854" velocity=".4" effort="1000"/>
+      <!-- <origin rpy="-1.5708 -1.5708 0" xyz="0 0.0295 0.1495"/> -->
+      <origin rpy="-1.5708 -1.5708 0" xyz="0 0.0295 0.5185"/>
+      <mimic joint="${prefix}outer_pitch_joint" multiplier="1"/>
     </joint> 
     
-    <!-- link 2: outer_pitch_back -->
+    <!-- link 2-1: outer_pitch_back -->
     <link name="${prefix}outer_pitch_back_link">
       <visual>
         <origin rpy="0 0 -0.27129" xyz="0 0 0"/>
         <geometry>
-          <mesh filename="package://dvrk_model/meshes/psm/outer_pitch_back.dae"/>      
+          <mesh filename="package://dvrk_model/meshes/psm/outer_pitch_back.dae"/>
         </geometry>
       </visual>
     </link>
@@ -74,17 +96,16 @@
       <parent link="${prefix}outer_yaw_link"/>
       <child link="${prefix}outer_pitch_front_link"/>
       <axis xyz="0 0 1"/>
-      <origin rpy="-1.5708 -1.5708 0" xyz="0 0.0295 0.0595"/>
-      <mimic joint="${prefix}outer_pitch_joint_1" multiplier="1"/>
+      <origin rpy="-1.5708 -1.5708 0" xyz="0 0.0295 0.4285"/>
+      <mimic joint="${prefix}outer_pitch_joint" multiplier="1"/>
     </joint>
 
     <!-- link 2-2: outer_pitch_front -->
     <link name="${prefix}outer_pitch_front_link">
       <visual>
         <origin rpy="0 0 -0.27129" xyz="0 0 0"/>
-        <!-- <origin rpy="0 0 0" xyz="0 0 0"/> -->
         <geometry>
-          <mesh filename="package://dvrk_model/meshes/psm/outer_pitch_front.dae"/>      
+          <mesh filename="package://dvrk_model/meshes/psm/outer_pitch_front.dae"/>
         </geometry>
       </visual>
     </link>
@@ -95,7 +116,7 @@
       <child link="${prefix}outer_pitch_bottom_link"/>
       <axis xyz="0 0 1"/>
       <origin rpy="0 0 0" xyz="0.04178 0.15007 -0.0137"/>
-      <mimic joint="${prefix}outer_pitch_joint_1" multiplier="-1"/>
+      <mimic joint="${prefix}outer_pitch_joint" multiplier="-1"/>
     </joint>
 
     <!-- link 2-3: outer_pitch_bottom -->
@@ -103,7 +124,7 @@
       <visual>
         <origin rpy="0 -1.5708 0" xyz="0.009 0 0"/>
         <geometry>
-          <mesh filename="package://dvrk_model/meshes/psm/outer_pitch_bottom.dae"/>      
+          <mesh filename="package://dvrk_model/meshes/psm/outer_pitch_bottom.dae"/>
         </geometry>
       </visual>
     </link>
@@ -114,7 +135,7 @@
       <child link="${prefix}outer_pitch_top_link"/>
       <axis xyz="0 0 1"/>
       <origin rpy="0 0 0" xyz="0.04209 0.18695 -0.02412"/>
-      <mimic joint="${prefix}outer_pitch_joint_1" multiplier="-1"/>
+      <mimic joint="${prefix}outer_pitch_joint" multiplier="-1"/>
     </joint>
 
     <!-- link 2-4: outer_pitch_top -->
@@ -122,7 +143,7 @@
       <visual>
         <origin rpy="0 -1.5708 0" xyz="0.009 0 0"/>
         <geometry>
-          <mesh filename="package://dvrk_model/meshes/psm/outer_pitch_top.dae"/>      
+          <mesh filename="package://dvrk_model/meshes/psm/outer_pitch_top.dae"/>
         </geometry>
       </visual>
     </link>
@@ -133,7 +154,7 @@
       <child link="${prefix}outer_insertion_link"/>
       <axis xyz="0 0 1"/>
       <origin rpy="0 0 0" xyz="-0.520 0 -0.0155"/>
-      <mimic joint="${prefix}outer_pitch_joint_1" multiplier="1"/>
+      <mimic joint="${prefix}outer_pitch_joint" multiplier="1"/>
     </joint>
 
     <!-- link 2-5: outer_insertion -->
@@ -141,24 +162,26 @@
       <visual>
         <origin rpy="0 -1.5708 1.5708" xyz="0.02528 0.429 0"/>
         <geometry>
-          <mesh filename="package://dvrk_model/meshes/psm/outer_insertion.dae"/>      
+          <mesh filename="package://dvrk_model/meshes/psm/outer_insertion.dae"/>
         </geometry>
       </visual>
     </link>
 
     <!-- joint 3: insertion -->
     <joint name="${prefix}outer_insertion_joint" type="prismatic">
-      <parent link="${prefix}outer_insertion_link"/>
+      <!-- <parent link="${prefix}outer_insertion_link"/> -->
+      <parent link="${prefix}psm_base_link"/>
       <child link="${prefix}tool_main_link"/>
       <axis xyz="0 0 1"/>
-      <origin rpy="1.5708 0 0" xyz="-0.0403 0.23622 0"/>
+      <!-- <origin rpy="1.5708 0 0" xyz="-0.0403 0.23622 0"/> -->
+      <origin rpy="0 3.1415926 1.5708" xyz="0 0 0"/>
       <limit lower="0" upper="0.240" velocity=".4" effort="1000"/>
     </joint>
 
     <!-- link 3: tool_main_link -->
     <link name="${prefix}tool_main_link">
       <visual>
-        <origin rpy="0 0 1.5708" xyz="0 0 0"/>
+        <!-- <origin rpy="0 0 1.5708" xyz="0 0 0"/> -->
         <geometry>
           <mesh filename="package://dvrk_model/meshes/psm/tool_main.dae"/>      
         </geometry>
@@ -171,7 +194,8 @@
       <child link="${prefix}tool_wrist_link"/>
       <axis xyz="0 0 1"/>
       <!-- 0.36680 + 0.0091 = 0.3759 -->
-      <origin rpy="0 0 0" xyz="0 0 0.3759"/>
+      <!-- <origin rpy="0 0 0" xyz="0 0 0.3759"/> -->
+      <origin rpy="0 0 0" xyz="0 0 0.4162"/>
       <limit lower="-2.2689" upper="2.2689" velocity=".4" effort="1000"/>
     </joint>
 
