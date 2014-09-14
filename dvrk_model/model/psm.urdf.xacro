@@ -2,22 +2,6 @@
 <robot name="dvrk_psm" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <xacro:macro name="psm" params="prefix parent_link xyz rpy">
-    <!-- fixed joint -->
-    <!-- <joint name="${prefix}fixed_joint" type="fixed"> -->
-    <!--   <parent link="${parent_link}"/> -->
-    <!--   <child link="${prefix}remote_center_link"/> -->
-    <!--   <origin rpy="${rpy}" xyz="${xyz}"/> -->
-    <!-- </joint> -->
-
-    <!-- link rc: remote centre link -->
-    <!-- <link name="${prefix}remote_center_link" />    -->
-
-    <!-- fixed joint -->
-    <!-- <joint name="${prefix}rc_fixed_joint" type="fixed"> -->
-    <!--   <parent link="${prefix}remote_center_link"/> -->
-    <!--   <child link="${prefix}psm_base_link"/> -->
-    <!--   <origin rpy="0 0 0" xyz="0 0 0"/> -->
-    <!-- </joint> -->
 
     <!-- fixed joint -->
     <joint name="${prefix}fixed_joint" type="fixed">
@@ -170,36 +154,34 @@
     <!-- joint 3: insertion -->
     <joint name="${prefix}outer_insertion_joint" type="prismatic">
       <!-- <parent link="${prefix}outer_insertion_link"/> -->
-      <parent link="${prefix}psm_base_link"/>
+      <!-- <parent link="${prefix}psm_base_link"/> -->
+      <parent link="${prefix}outer_pitch_link"/>
       <child link="${prefix}tool_main_link"/>
       <axis xyz="0 0 1"/>
-      <!-- <origin rpy="1.5708 0 0" xyz="-0.0403 0.23622 0"/> -->
-      <origin rpy="0 3.1415926 1.5708" xyz="0 0 0"/>
+      <origin rpy="1.5708 0 0" xyz="0 0.4318 0"/>
       <limit lower="0" upper="0.240" velocity=".4" effort="1000"/>
     </joint>
 
     <!-- link 3: tool_main_link -->
     <link name="${prefix}tool_main_link">
       <visual>
-        <!-- <origin rpy="0 0 1.5708" xyz="0 0 0"/> -->
+        <origin rpy="0 0 1.5708" xyz="0 0 0.041"/>
         <geometry>
           <mesh filename="package://dvrk_model/meshes/psm/tool_main.dae"/>      
         </geometry>
       </visual>
     </link>
     
-    <!-- joint 4-1: Outer Roll -->
+    <!-- joint 4: Outer Roll -->
     <joint name="${prefix}outer_roll_joint" type="revolute">
       <parent link="${prefix}tool_main_link"/>
       <child link="${prefix}tool_wrist_link"/>
       <axis xyz="0 0 1"/>
-      <!-- 0.36680 + 0.0091 = 0.3759 -->
-      <!-- <origin rpy="0 0 0" xyz="0 0 0.3759"/> -->
       <origin rpy="0 0 0" xyz="0 0 0.4162"/>
       <limit lower="-2.2689" upper="2.2689" velocity=".4" effort="1000"/>
     </joint>
 
-    <!-- link 4-1: tool_main_link -->
+    <!-- link 4: tool_wrist_link -->
     <link name="${prefix}tool_wrist_link">
       <visual>
         <origin rpy="0 0 1.5708" xyz="0 0 -0.0091"/>
@@ -209,6 +191,7 @@
       </visual>
     </link>
 
+    <!-- joint 4-1: outer roll shaft joint FIXED-->
     <joint name="${prefix}outer_roll_shaft_joint" type="fixed">
       <parent link="${prefix}tool_wrist_link"/>
       <child link="${prefix}tool_wrist_shaft_link"/>
@@ -216,6 +199,7 @@
       <origin rpy="0 0 0" xyz="0 0 0.0"/>
     </joint>
 
+    <!-- link 4-1: tool_wrist_shaft_link -->
     <link name="${prefix}tool_wrist_shaft_link">
       <visual>
         <origin rpy="1.5708 0 0" xyz="0 0.00401 0"/>
