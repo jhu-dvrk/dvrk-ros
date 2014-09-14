@@ -17,14 +17,14 @@
       <visual>
         <origin rpy="0.00 -1.5708 0.0" xyz="-0.0024 0.00 0.000"/>
         <geometry>
-          <mesh filename="package://dvrk_nri_model/meshes/tool_wrist_caudier_link_1.stl"/>
+          <mesh filename="package://dvrk_model/meshes/psm/tool_wrist_caudier_link_1.stl"/>
         </geometry>
         <material name="gray"><color rgba="0.5 0.5 0.9 1.0"/></material>
       </visual>
       <collision>
         <origin rpy="0.00 -1.5708 0.0" xyz="-0.0024 0.00 0.000"/>
         <geometry>
-          <mesh filename="package://dvrk_nri_model/meshes/tool_wrist_caudier_link_1.stl"/>
+          <mesh filename="package://dvrk_model/meshes/psm/tool_wrist_caudier_link_1.stl"/>
         </geometry>
       </collision>
     </link>
@@ -43,14 +43,14 @@
       <visual>
         <origin rpy="0.00 1.5708 0.0" xyz="0.0 -0.0002 0.000"/>
         <geometry>
-          <mesh filename="package://dvrk_nri_model/meshes/tool_wrist_caudier_link_1_shaft.stl"/>
+          <mesh filename="package://dvrk_model/meshes/psm/tool_wrist_caudier_link_1_shaft.stl"/>
         </geometry>
         <material name="gray"><color rgba="0.5 0.5 0.9 1.0"/></material>
       </visual>
       <collision>
         <origin rpy="0.00 1.5708 0.0" xyz="0.0 0.00 0.000"/>
         <geometry>
-          <mesh filename="package://dvrk_nri_model/meshes/tool_wrist_caudier_link_1_shaft.stl"/>
+          <mesh filename="package://dvrk_model/meshes/psm/tool_wrist_caudier_link_1_shaft.stl"/>
         </geometry>
       </collision>
     </link>
@@ -69,13 +69,13 @@
       <visual>
         <origin rpy="0.0 0 0.0" xyz="0 0 0.00195"/>
         <geometry>
-          <mesh filename="package://dvrk_nri_model/meshes/tool_wrist_caudier_link_2_left.stl"/>
+          <mesh filename="package://dvrk_model/meshes/psm/tool_wrist_caudier_link_2_left.stl"/>
         </geometry>
       </visual>
       <collision>
         <origin rpy="0.0 0 0.0" xyz="0 0 0.00195"/>
         <geometry>
-          <mesh filename="package://dvrk_nri_model/meshes/tool_wrist_caudier_link_2_left.stl"/>
+          <mesh filename="package://dvrk_model/meshes/psm/tool_wrist_caudier_link_2_left.stl"/>
         </geometry>
       </collision>
     </link>
@@ -95,13 +95,13 @@
       <visual>
         <origin rpy="0 0 -3.1415926" xyz="0 0 0.00195"/>
         <geometry>
-          <mesh filename="package://dvrk_nri_model/meshes/tool_wrist_caudier_link_2_right.stl"/>
+          <mesh filename="package://dvrk_model/meshes/psm/tool_wrist_caudier_link_2_right.stl"/>
         </geometry>
       </visual>
       <collision>
         <origin rpy="0 0 -3.1415926" xyz="0 0 0.00195"/>
         <geometry>
-          <mesh filename="package://dvrk_nri_model/meshes/tool_wrist_caudier_link_2_right.stl"/>
+          <mesh filename="package://dvrk_model/meshes/psm/tool_wrist_caudier_link_2_right.stl"/>
         </geometry>
       </collision>
     </link>
