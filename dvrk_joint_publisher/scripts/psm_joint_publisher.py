@@ -7,29 +7,35 @@ from sensor_msgs.msg import JointState
 jnt_msg = JointState()
 
 def jnt_pos_cb(msg):
+    global jnt_msg
     if len(msg.position) != 7:
-        print "Error msg.position len was supposed to be 7 but is = ", len(msg.position)
+        rospy.logerr("Error msg.position len was supposed to be 7 but is = " +
+                     str(len(msg.position)))
         pass
     else:
         jnt_msg.position = []
-        for i in range(0,len(msg.position)-1):
-		if i == 2:
-			val = ((msg.position[i] + 22)*0.242)/244
-	    		jnt_msg.position.append(val)
-		else:
-            		jnt_msg.position.append(msg.position[i])
+        jnt_msg.position.append(msg.position[0])
+        jnt_msg.position.append(msg.position[1])
+        jnt_msg.position.append(msg.position[2] / 1000.0)
+        jnt_msg.position.append(msg.position[3])
+        jnt_msg.position.append(msg.position[4])
+        jnt_msg.position.append(msg.position[5])
+        jnt_msg.position.append(msg.position[6])
         pass
 
 def jnt_vel_cb(msg):
+    global jnt_msg
     if len(msg.velocity) != 7:
         pass
     else:
         jnt_msg.velocity = []
-        for i in range(0,len(msg.velocity)-1):
+        for i in range(0,len(msg.velocity)):
             jnt_msg.velocity.append(msg.velocity[i])
         pass
 
 def main():
+    global jnt_msg
+    
     # initialize ROS node
     rospy.init_node('psm_joint_publisher')
 
@@ -59,6 +65,8 @@ def main():
                     prefix + 'outer_wrist_pitch_joint',
                     prefix + 'outer_wrist_yaw_joint',
                     prefix + 'outer_wrist_open_angle_joint']
+    jnt_msg.position = [0, 0, 0, 0, 0, 0, 0]
+    
 
     # loop until ctrl-c
     rate = rospy.Rate(50);     # 50 hz
@@ -66,12 +74,17 @@ def main():
         # update header
         jnt_msg.header.stamp = rospy.Time.now()
 
+        if len(jnt_msg.name) != len(jnt_msg.position):
+            rospy.logerr("ERROR Size mismatch")
+            rospy.logerr("len.name = " + str(len(jnt_msg.name)))
+            rospy.logerr("len.pos = " + str(len(jnt_msg.position)))
+
         # publish jointstate
         jnt_pub.publish(jnt_msg)
 
         # sleep
         rate.sleep()
-        
+
 # entry point
 if __name__ == '__main__':
     main()
