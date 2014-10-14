@@ -26,19 +26,19 @@
       </rosparam>
 
       <!-- standard joint state publisher -->
-      <node name="joint_state_publisher"
-            pkg="joint_state_publisher"
-            type="joint_state_publisher" />
+      <!-- <node name="joint_state_publisher" -->
+      <!--       pkg="joint_state_publisher" -->
+      <!--       type="joint_state_publisher" /> -->
 
       <!-- robot state publisher -->
-      <node name="robot_state_publisher"
-            pkg="robot_state_publisher"
-            type="state_publisher" />
+      <!-- <node name="robot_state_publisher" -->
+      <!--       pkg="robot_state_publisher" -->
+      <!--       type="state_publisher" /> -->
 
       <!-- dvrk joint publisher -->
-      <node name="feedback_ecm_jp" 
-            pkg="dvrk_joint_publisher"
-            type="ecm_joint_publisher.py"/>
+      <!-- <node name="feedback_ecm_jp"  -->
+      <!--       pkg="dvrk_joint_publisher" -->
+      <!--       type="ecm_joint_publisher.py"/> -->
     </group>
 
     <node name="rviz" 
