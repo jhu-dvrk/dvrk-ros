@@ -8,42 +8,41 @@
               -p $(find dvrk_robot)/config/sawControllersPID-ECM.xml
               -k $(find dvrk_robot)/config/dvecm.rob
               -n ECM"/>
+
     <arg name="model" default="$(find dvrk_model)/model/ecm.xacro" />
     <arg name="gui" default="true" />
     <arg name="rate" default="20" />
-    <arg name="mimic_tags" default="false" />
     <arg name="namespace" default="/dvrk_ecm" />
 
-    <group ns="$(arg namespace)">
+    <group ns="/dvrk_ecm">
       <param name="robot_description"
              command="rosrun xacro xacro.py $(arg model)"/>
       <param name="use_gui" value="$(arg gui)"/>
       <param name="rate" value="$(arg rate)"/>
-      <param name="use_mimic_tags" value="$(arg mimic_tags)" />
 
       <rosparam param="source_list" subst_value="True">
-        [$(arg namespace)/joint_states_robot]
+        [joint_states_robot]
       </rosparam>
 
       <!-- standard joint state publisher -->
-      <!-- <node name="joint_state_publisher" -->
-      <!--       pkg="joint_state_publisher" -->
-      <!--       type="joint_state_publisher" /> -->
+      <node name="joint_state_publisher"
+            pkg="joint_state_publisher"
+            type="joint_state_publisher" />
 
       <!-- robot state publisher -->
-      <!-- <node name="robot_state_publisher" -->
-      <!--       pkg="robot_state_publisher" -->
-      <!--       type="state_publisher" /> -->
+      <node name="robot_state_publisher"
+            pkg="robot_state_publisher"
+            type="state_publisher" />
 
       <!-- dvrk joint publisher -->
-      <!-- <node name="feedback_ecm_jp"  -->
-      <!--       pkg="dvrk_joint_publisher" -->
-      <!--       type="ecm_joint_publisher.py"/> -->
+      <node name="feedback_ecm_jp"
+            pkg="dvrk_joint_publisher"
+            type="ecm_joint_publisher.py"/>
     </group>
 
     <node name="rviz" 
 	  pkg="rviz" 
 	  type="rviz"
-	  args="-d $(find dvrk_model)/rviz_config/mtmr_rviz.rviz" />
+	  args="-d $(find dvrk_model)/rviz_config/ecm.rviz" />
   
 </launch>

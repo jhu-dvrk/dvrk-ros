@@ -9,7 +9,6 @@ Panels:
         - /TF1
         - /TF1/Frames1
         - /RobotModel1
-        - /RobotModel1/Links1
       Splitter Ratio: 0.715415
     Tree Height: 562
   - Class: rviz/Selection
@@ -162,7 +161,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
       Name: RobotModel
-      Robot Description: robot_description
+      Robot Description: /dvrk_ecm/robot_description
       TF Prefix: ""
       Update Interval: 0
       Value: true
@@ -203,10 +202,10 @@ Visualization Manager:
         Z: -0.156497
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.150398
+      Pitch: 0.210398
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.02358
+      Yaw: 5.11858
     Saved: ~
 Window Geometry:
   Displays:
@@ -224,5 +223,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1516
-  X: 49
+  X: 42
   Y: 25
