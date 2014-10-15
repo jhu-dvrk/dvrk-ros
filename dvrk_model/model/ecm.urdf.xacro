@@ -46,14 +46,14 @@
   <joint name="ecm_yaw_joint" type="revolute">
     <parent link="ecm_base_link"/>
     <child link="ecm_yaw_link"/>
-    <origin rpy="1.5707963267948966 -1.5707963267948966 0" xyz="0 0 0"/>
+    <origin rpy="${PI/2} ${-PI/2} 0" xyz="0 0 0"/>
     <axis xyz="0 0 1"/>
-    <limit effort="50.0" lower="-1.5707963267948966" upper="1.5707963267948966" velocity="2"/>
+    <limit effort="50.0" lower="${-PI/2}" upper="${PI/2}" velocity="2"/>
     <joint_properties damping="1.0" friction="0.0"/>
   </joint>
   <link name="ecm_yaw_link">
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://dvrk_model/meshes/ecm/ecm_yaw_link.STL"/>
       </geometry>
@@ -62,13 +62,13 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://dvrk_model/meshes/ecm/ecm_yaw_link.STL"/>
       </geometry>
     </collision>
     <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0"/>
       <mass value=".9"/>
       <inertia ixx="9.0" ixy="0.0" ixz="0.0" iyy="9.0" iyz="0.0" izz="9.0"/>
     </inertial>
@@ -77,9 +77,9 @@
   <joint name="ecm_pitch_joint_1" type="revolute">
     <parent link="ecm_yaw_link"/>
     <child link="ecm_pitch_link_1"/>
-    <origin rpy="1.570796326794896 0 -1.570796326794896" xyz="0 0.225 0"/>
+    <origin rpy="-1.570796326794896 -1.570796326794896 0" xyz="0 0 -0.225"/>
     <axis xyz="0 0 1"/>
-    <limit effort="50.0" lower="-0.785398163397" upper="0.785398163397" velocity="2"/>
+    <limit effort="50.0" lower="${-PI/4}" upper="${PI*65/180}" velocity="2"/>
     <joint_properties damping="1.0" friction="0.0"/>
   </joint>
   <link name="ecm_pitch_link_1">
@@ -179,7 +179,7 @@
     <child link="ecm_insertion_link"/>
     <origin rpy="1.5707963267948966 0 0" xyz="-0.08805 0.14212563 0"/>
     <axis xyz="0 0 1"/>
-    <limit effort="1000.0" lower="0" upper="0.3020714143" velocity="2"/>
+    <limit effort="1000.0" lower="0" upper="0.235" velocity="2"/>
     <joint_properties damping="1.0" friction="0.0"/>
   </joint>
   <link name="ecm_insertion_link">
@@ -213,7 +213,7 @@
     <!--fix z value-->
     <origin rpy="0 0 0" xyz="0 0 0.383"/>
     <axis xyz="0 0 1"/>
-    <limit effort="50.0" lower="-1.57079632" upper="1.57079632" velocity="2"/>
+    <limit effort="50.0" lower="${-PI/2}" upper="${PI/2}" velocity="2"/>
     <joint_properties damping="1.0" friction="0.0"/>
   </joint>
   <link name="ecm_roll_link">
