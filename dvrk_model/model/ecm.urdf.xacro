@@ -5,12 +5,12 @@
   <xacro:include filename="$(find dvrk_model)/model/common.urdf.xacro"/>
 
   <link name="world"/>
-  <joint name="base_joint" type="fixed">
+  <joint name="setup_joint" type="fixed">
     <parent link="world"/>
-    <child link="ecm_base_link"/>
+    <child link="ecm_setup_link"/>
     <origin rpy="0 0 0" xyz="0 0 1"/>
   </joint>
-  <link name="ecm_base_link">
+  <link name="ecm_setup_link">
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
@@ -35,12 +35,19 @@
 
 
 
+  <joint name="ecm_base_joint" type="fixed">
+    <parent link="ecm_setup_link"/>
+    <child link="ecm_base_link"/>
+    <origin rpy="-0.870463703366 0 -1.5707963267948966" xyz="0.92717 0 -0.12728"/>
+  </joint>
+  <link name="ecm_base_link"></link>
+
+
   <joint name="ecm_yaw_joint" type="revolute">
     <parent link="ecm_base_link"/>
     <child link="ecm_yaw_link"/>
-    <!--fix xyz value-->
-    <origin rpy="-0.870463703366 0 -1.5707963267948966" xyz="0.92717 0 -0.12728"/>
-    <axis xyz="0 1 0"/>
+    <origin rpy="1.5707963267948966 -1.5707963267948966 0" xyz="0 0 0"/>
+    <axis xyz="0 0 1"/>
     <limit effort="50.0" lower="-1.5707963267948966" upper="1.5707963267948966" velocity="2"/>
     <joint_properties damping="1.0" friction="0.0"/>
   </joint>
