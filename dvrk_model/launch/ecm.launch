@@ -11,8 +11,12 @@
 	   command="rosrun xacro xacro.py $(arg model)"/>
     <param name="use_gui" value="$(arg gui)"/>
     <param name="rate" value="$(arg rate)"/>
+    <rosparam param="source_list" subst_value="True">
+      [joint_states_robot]
+    </rosparam>
     
-    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+    <node name="joint_state_publisher" pkg="joint_state_publisher"
+          type="joint_state_publisher" />
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
 
   </group>
