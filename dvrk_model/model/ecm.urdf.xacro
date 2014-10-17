@@ -46,14 +46,14 @@
   <joint name="ecm_yaw_joint" type="revolute">
     <parent link="ecm_base_link"/>
     <child link="ecm_yaw_link"/>
-    <origin rpy="${PI/2} ${-PI/2} 0" xyz="0 0 0"/>
+    <origin rpy="${PI/2} ${-PI/2} 0" xyz="0 0.565 0"/>
     <axis xyz="0 0 1"/>
     <limit effort="50.0" lower="${-PI/2}" upper="${PI/2}" velocity="2"/>
     <joint_properties damping="1.0" friction="0.0"/>
   </joint>
   <link name="ecm_yaw_link">
     <visual>
-      <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0"/>
+      <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0.565"/>
       <geometry>
         <mesh filename="package://dvrk_model/meshes/ecm/ecm_yaw_link.STL"/>
       </geometry>
@@ -62,29 +62,40 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0"/>
+      <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0.565"/>
       <geometry>
         <mesh filename="package://dvrk_model/meshes/ecm/ecm_yaw_link.STL"/>
       </geometry>
     </collision>
     <inertial>
-      <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0"/>
+      <origin rpy="-1.5707963267948966 0 -1.5707963267948966" xyz="0 0 0.565"/>
       <mass value=".9"/>
       <inertia ixx="9.0" ixy="0.0" ixz="0.0" iyy="9.0" iyz="0.0" izz="9.0"/>
     </inertial>
   </link>
 
-  <joint name="ecm_pitch_joint_1" type="revolute">
+  <joint name="ecm_pitch_joint" type="revolute">
     <parent link="ecm_yaw_link"/>
-    <child link="ecm_pitch_link_1"/>
-    <origin rpy="-1.570796326794896 -1.570796326794896 0" xyz="0 0 -0.225"/>
+    <child link="ecm_pitch_link"/>
+    <origin rpy="-1.570796326794896 -1.570796326794896 0" xyz="0 0 0"/>
     <axis xyz="0 0 1"/>
     <limit effort="50.0" lower="${-PI/4}" upper="${PI*65/180}" velocity="2"/>
     <joint_properties damping="1.0" friction="0.0"/>
   </joint>
+  <link name="ecm_pitch_link"></link>
+
+  <joint name="ecm_pitch_joint_1" type="revolute">
+    <parent link="ecm_yaw_link"/>
+    <child link="ecm_pitch_link_1"/>
+    <origin rpy="-1.570796326794896 -1.570796326794896 0" xyz="0 0 0.34"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="50.0" lower="${-PI/4}" upper="${PI*65/180}" velocity="2"/>
+    <joint_properties damping="1.0" friction="0.0"/>
+    <mimic joint="ecm_pitch_joint" multiplier="1"/>
+  </joint>
   <link name="ecm_pitch_link_1">
     <visual>
-      <origin rpy="0 0 -0.198187435043" xyz="0 0 0"/>
+      <origin rpy="0 0 -0.3198923" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://dvrk_model/meshes/ecm/ecm_pitch_link_1.STL"/>
       </geometry>
@@ -93,13 +104,13 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 -0.198187435043" xyz="0 0 0"/>
+      <origin rpy="0 0 -0.3198923" xyz="0 0 0"/>
       <geometry>
         <mesh filename="package://dvrk_model/meshes/ecm/ecm_pitch_link_1.STL"/>
       </geometry>
     </collision>
     <inertial>
-      <origin rpy="0 0 -0.198187435043" xyz="0 0 0"/>
+      <origin rpy="0 0 -0.3198923" xyz="0 0 0"/>
       <mass value=".9"/>
       <inertia ixx="9.0" ixy="0.0" ixz="0.0" iyy="9.0" iyz="0.0" izz="9.0"/>
     </inertial>
@@ -109,11 +120,11 @@
   <joint name="ecm_pitch_joint_2" type="revolute">
     <parent link="ecm_pitch_link_1"/>
     <child link="ecm_pitch_link_2"/>
-    <origin rpy="0 0 0" xyz="0.05512992 0.274519 0"/>
+    <origin rpy="0 0 0" xyz="0.08805 0.2657954 0"/>
     <axis xyz="0 0 1"/>
     <limit effort="50.0" lower="-0.785398163397" upper="0.785398163397" velocity="2"/>
     <joint_properties damping="1.0" friction="0.0"/>
-    <mimic joint="ecm_pitch_joint_1" multiplier="-1"/>
+    <mimic joint="ecm_pitch_joint" multiplier="-1"/>
   </joint>
   <link name="ecm_pitch_link_2">
     <visual>
@@ -145,7 +156,7 @@
     <axis xyz="0 0 1"/>
     <limit effort="50.0" lower="-0.785398163397" upper="0.785398163397" velocity="2"/>
     <joint_properties damping="1.0" friction="0.0"/>
-    <mimic joint="ecm_pitch_joint_1" multiplier="1"/>
+    <mimic joint="ecm_pitch_joint" multiplier="1"/>
   </joint>
   <link name="ecm_pitch_link_3">
     <visual>
@@ -173,16 +184,60 @@
 
 
 
+  <joint name="ecm_roll_joint" type="revolute">
+    <parent link="ecm_pitch_link"/>
+    <child link="ecm_roll_link"/>
+    <!--fix z value-->
+    <origin rpy="${PI/2} 0 0" xyz="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="50.0" lower="${-PI/2}" upper="${PI/2}" velocity="2"/>
+    <joint_properties damping="1.0" friction="0.0"/>
+  </joint>
+  <link name="ecm_roll_link"></link>
 
   <joint name="ecm_insertion_joint" type="prismatic">
-    <parent link="ecm_pitch_link_3"/>
+    <parent link="ecm_roll_link"/>
     <child link="ecm_insertion_link"/>
-    <origin rpy="1.5707963267948966 0 0" xyz="-0.08805 0.14212563 0"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
     <axis xyz="0 0 1"/>
-    <limit effort="1000.0" lower="0" upper="0.235" velocity="2"/>
+    <limit effort="1000.0" lower="-0.02492103" upper="0.210078977" velocity="2"/>
     <joint_properties damping="1.0" friction="0.0"/>
   </joint>
   <link name="ecm_insertion_link">
+    <visual>
+      <origin rpy="0 0 ${PI}" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://dvrk_model/meshes/ecm/ecm_roll_link.STL"/>
+      </geometry>
+      <material name="DaVinciDarkGray">
+        <color rgba="${DaVinciDarkGray}"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 ${PI}" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://dvrk_model/meshes/ecm/ecm_roll_link.STL"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 ${PI}" xyz="0 0 0"/>
+      <mass value=".9"/>
+      <inertia ixx="9.0" ixy="0.0" ixz="0.0" iyy="9.0" iyz="0.0" izz="9.0"/>
+    </inertial>
+  </link>
+
+
+  <!--This part is for the attached link on the endoscope, only for visualization purpose-->
+  <joint name="ecm_insertion_joint_attach" type="revolute">
+    <parent link="ecm_insertion_link"/>
+    <child link="ecm_insertion_link_attach"/>
+    <origin rpy="0 0 0" xyz="0 0 -0.383"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="50.0" lower="${-PI/2}" upper="${PI/2}" velocity="2"/>
+    <joint_properties damping="1.0" friction="0.0"/>
+    <mimic joint="ecm_roll_joint" multiplier="-1"/>    
+  </joint>
+  <link name="ecm_insertion_link_attach">
     <visual>
       <origin rpy="3.1415926 0 0" xyz="0 0 0"/>
       <geometry>
@@ -200,40 +255,6 @@
     </collision>
     <inertial>
       <origin rpy="3.1415926 0 0" xyz="0 0 0"/>
-      <mass value=".9"/>
-      <inertia ixx="9.0" ixy="0.0" ixz="0.0" iyy="9.0" iyz="0.0" izz="9.0"/>
-    </inertial>
-  </link>
-
-
-
-  <joint name="ecm_roll_joint" type="revolute">
-    <parent link="ecm_insertion_link"/>
-    <child link="ecm_roll_link"/>
-    <!--fix z value-->
-    <origin rpy="0 0 0" xyz="0 0 0.383"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="50.0" lower="${-PI/2}" upper="${PI/2}" velocity="2"/>
-    <joint_properties damping="1.0" friction="0.0"/>
-  </joint>
-  <link name="ecm_roll_link">
-    <visual>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://dvrk_model/meshes/ecm/ecm_roll_link.STL"/>
-      </geometry>
-      <material name="DaVinciDarkGray">
-        <color rgba="${DaVinciDarkGray}"/>
-      </material>
-    </visual>
-    <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <geometry>
-        <mesh filename="package://dvrk_model/meshes/ecm/ecm_roll_link.STL"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
       <mass value=".9"/>
       <inertia ixx="9.0" ixy="0.0" ixz="0.0" iyy="9.0" iyz="0.0" izz="9.0"/>
     </inertial>
