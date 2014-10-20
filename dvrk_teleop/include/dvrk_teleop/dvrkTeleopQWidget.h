@@ -1,6 +1,11 @@
 #include <iostream>
 
+#ifndef Q_MOC_RUN
 #include <ros/ros.h>
+#include <cisst_ros_bridge/mtsCISSTToROS.h>
+#include <cisst_ros_bridge/mtsROSToCISST.h>
+#endif
+
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Pose.h>
 #include <std_msgs/Float32.h>
@@ -11,8 +16,7 @@
 #include <cisstVector/vctQtWidgetFrame4x4.h>
 #include <cisstMultiTask/mtsTaskPeriodic.h>
 
-#include <cisst_ros_bridge/mtsCISSTToROS.h>
-#include <cisst_ros_bridge/mtsROSToCISST.h>
+
 
 #include <QtGui>
 #include <QObject>
