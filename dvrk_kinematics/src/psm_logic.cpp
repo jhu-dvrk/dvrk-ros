@@ -63,12 +63,12 @@ void psm_joint_feedback_cb(const sensor_msgs::JointState &msg)
 {
     if (control_mode != 2) {
         psm_joint_current[0] = msg.position[0];  // outer_yaw_joint
-        psm_joint_current[1] = msg.position[1];  // outer_pitch_joint_1
-        psm_joint_current[2] = msg.position[6];  // outer_insertion_joint
-        psm_joint_current[3] = msg.position[7];  // outer_roll_joint
-        psm_joint_current[4] = msg.position[8];  // outer_wrist_pitch_joint
-        psm_joint_current[5] = msg.position[9];  // outer_wrist_yaw_joint
-        //    psm_joint_current[6] = msg.position[10]; // outer_wrist_open_angle_joint_1
+        psm_joint_current[1] = msg.position[1];  // outer_pitch_joint
+        psm_joint_current[2] = msg.position[7];  // outer_insertion_joint
+        psm_joint_current[3] = msg.position[8];  // outer_roll_joint
+        psm_joint_current[4] = msg.position[9];  // outer_wrist_pitch_joint
+        psm_joint_current[5] = msg.position[10];  // outer_wrist_yaw_joint
+        //    psm_joint_current[6] = msg.position[11]; // outer_wrist_open_angle_joint
     }
 }
 
@@ -82,6 +82,9 @@ void psm_mode_cb(const std_msgs::Int8 &msg)
     // mode = TELEOP
     if (msg.data == PSM::MODE_TELEOP) {
         psm_joint_command.Assign(psm_joint_current);
+        psm_pose_command.Assign(psm_pose_current);
+
+        std::cout << "psm_pose_command = " << psm_pose_command << std::endl;
     }
 }
 
@@ -136,21 +139,27 @@ int main(int argc, char** argv)
     sensor_msgs::JointState msg_js;
     msg_js.name.clear();
     msg_js.name.push_back(robot_name + "_outer_yaw_joint");
-    msg_js.name.push_back(robot_name + "_outer_pitch_joint_1");
+    msg_js.name.push_back(robot_name + "_outer_pitch_joint");
     msg_js.name.push_back(robot_name + "_outer_insertion_joint");
     msg_js.name.push_back(robot_name + "_outer_roll_joint");
     msg_js.name.push_back(robot_name + "_outer_wrist_pitch_joint");
     msg_js.name.push_back(robot_name + "_outer_wrist_yaw_joint");
-    msg_js.name.push_back(robot_name + "_outer_wrist_open_angle_joint_1");
+    msg_js.name.push_back(robot_name + "_outer_wrist_open_angle_joint");
 
     geometry_msgs::Pose msg_pose;
 
     int count = 0;
     control_mode = PSM::MODE_RESET;  // start with reset_mode
     vctFrm4x4 frame6to7;
-    frame6to7.Assign(0.0, -1.0, 0.0, 0.0,
-                     0.0,  0.0, 1.0, 0.0102,
-                     -1.0, 0.0, 0.0, 0.0,
+//    frame6to7.Assign(0.0, -1.0, 0.0, 0.0,
+//                     0.0,  0.0, 1.0, 0.0102,
+//                     -1.0, 0.0, 0.0, 0.0,
+//                     0.0,  0.0, 0.0, 1.0);
+
+    // ZC: For Force Finger
+    frame6to7.Assign(0.0, 1.0, 0.0, 0.0,
+                     0.0, 0.0, 1.0, 0.06001,
+                     1.0, 0.0, 0.0, 0.0,
                      0.0,  0.0, 0.0, 1.0);
 
     // used to compensate joint 4
@@ -163,7 +172,7 @@ int main(int argc, char** argv)
         // psm forward kinematics
         psm_pose_current = psm_manip.ForwardKinematics(psm_joint_current);
         psm_pose_current = psm_pose_current * frame6to7;
-        psm_pose_current.Rotation().NormalizedSelf();
+//        psm_pose_current.Rotation().NormalizedSelf();
         mtsCISSTToROS(psm_pose_current, msg_pose);
 
         // publish current pose

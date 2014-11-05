@@ -9,7 +9,6 @@ Panels:
         - /TF1
         - /TF1/Frames1
         - /RobotModel1
-        - /RobotModel1/Links1
       Splitter Ratio: 0.715415
     Tree Height: 562
   - Class: rviz/Selection
@@ -56,16 +55,26 @@ Visualization Manager:
       Enabled: true
       Frame Timeout: 15
       Frames:
-        All Enabled: false
+        All Enabled: true
+        ecm_base_link:
+          Value: true
+        ecm_insertion_link:
+          Value: true
+        ecm_pitch_link:
+          Value: true
         ecm_pitch_link_1:
           Value: true
         ecm_pitch_link_2:
           Value: true
         ecm_pitch_link_3:
           Value: true
-        ecm_yaw_link:
+        ecm_roll_link:
           Value: true
-        ecmsetup_link:
+        ecm_setup_base_link:
+          Value: true
+        ecm_setup_link:
+          Value: true
+        ecm_yaw_link:
           Value: true
         world:
           Value: true
@@ -76,12 +85,18 @@ Visualization Manager:
       Show Names: false
       Tree:
         world:
-          ecmsetup_link:
-            ecm_yaw_link:
-              ecm_pitch_link_1:
-                ecm_pitch_link_2:
-                  ecm_pitch_link_3:
-                    {}
+          ecm_setup_base_link:
+            ecm_setup_link:
+              ecm_base_link:
+                ecm_yaw_link:
+                  ecm_pitch_link:
+                    ecm_insertion_link:
+                      ecm_roll_link:
+                        {}
+                  ecm_pitch_link_1:
+                    ecm_pitch_link_2:
+                      ecm_pitch_link_3:
+                        {}
       Update Interval: 0
       Value: true
     - Alpha: 0.7
@@ -94,6 +109,19 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        ecm_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        ecm_insertion_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        ecm_pitch_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         ecm_pitch_link_1:
           Alpha: 1
           Show Axes: false
@@ -109,12 +137,21 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        ecm_yaw_link:
+        ecm_roll_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        ecmsetup_link:
+        ecm_setup_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        ecm_setup_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        ecm_yaw_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -124,7 +161,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
       Name: RobotModel
-      Robot Description: robot_description
+      Robot Description: /dvrk_ecm/robot_description
       TF Prefix: ""
       Update Interval: 0
       Value: true
@@ -153,7 +190,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.967693
+      Distance: 2.30075
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -165,10 +202,10 @@ Visualization Manager:
         Z: -0.156497
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.240398
+      Pitch: 0.210398
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.65858
+      Yaw: 5.11858
     Saved: ~
 Window Geometry:
   Displays:
@@ -186,5 +223,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1516
-  X: 56
-  Y: 131
+  X: 42
+  Y: 25
