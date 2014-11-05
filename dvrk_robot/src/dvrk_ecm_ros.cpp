@@ -214,7 +214,7 @@ int main(int argc, char ** argv)
     robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
                 "PID", "GetPositionJoint", "/dvrk_ecm/joint_position_current");
     robotBridge.AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>(
-                "PID", "GetEffortJoint", "/dvrk_ecm/joint_effort_current");
+                "PID", "GetEffortJointDesired", "/dvrk_ecm/joint_effort_current");
     robotBridge.AddSubscriberToWriteCommand<prmForceTorqueJointSet , sensor_msgs::JointState>(
                 "PID", "SetTorqueJoint", "/dvrk_ecm/set_joint_effort");
     robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(

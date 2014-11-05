@@ -133,7 +133,7 @@ int main(int argc, char** argv)
   robotBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
         config_name, "GetPositionCartesian", "/dvrk_psm/cartesian_pose_current");
   robotBridge.AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>(
-        pid->GetName(), "GetEffortJoint", "/dvrk_psm/joint_effort_current");
+        pid->GetName(), "GetEffortJointDesired", "/dvrk_psm/joint_effort_current");
   robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
         pid->GetName(), "GetPositionJoint", "/dvrk_psm/joint_position_current");
 
