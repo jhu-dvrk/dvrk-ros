@@ -122,17 +122,18 @@ int main(int argc, char** argv)
   // ------------------------------------------------------
 
   // ros wrapper
-  mtsROSBridge robotBridge("RobotBridge", 20 * cmn_ms, true);
+  mtsROSBridge robotBridge("RobotBridge", 10 * cmn_ms, true);
 
   // connect to mtm
-  robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
-        config_name, "GetPositionJoint", "/dvrk_mtm/joint_position_current");
   robotBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
         config_name, "GetPositionCartesian", "/dvrk_mtm/cartesian_pose_current");
   robotBridge.AddPublisherFromReadCommand<double, std_msgs::Float32>  (
         config_name, "GetGripperPosition", "/dvrk_mtm/gripper_position_current");
+
+  robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
+        pid->GetName(), "GetPositionJoint", "/dvrk_mtm/joint_position_current");
   robotBridge.AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>(
-        pid->GetName(), "GetEffortJoint", "/dvrk_mtm/joint_effort_current");
+        pid->GetName(), "GetTorqueJoint", "/dvrk_mtm/joint_effort_current");
   robotBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
               "Clutch","Button","/dvrk_footpedal/clutch_state");
   robotBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(

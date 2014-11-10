@@ -200,7 +200,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
       Name: RobotModel
-      Robot Description: robot_description
+      Robot Description: /dvrk_psm/robot_description
       TF Prefix: ""
       Update Interval: 0
       Value: true
@@ -260,5 +260,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1600
-  X: -8
-  Y: -4
+  X: -7
+  Y: 24
