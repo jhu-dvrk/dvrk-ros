@@ -136,26 +136,30 @@ int main(int argc, char** argv)
         pid->GetName(), "GetEffortJointDesired", "/dvrk_psm/joint_effort_current");
   robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
         pid->GetName(), "GetPositionJoint", "/dvrk_psm/joint_position_current");
+  robotBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
+        "ManipClutch","Button","/dvrk_psm/manip_clutch_state");
 
 
   // Finally Working Form; However it is still unsafe since there is no safety check.
   // Use with caution and with your hand on the E-Stop.
   robotBridge.AddSubscriberToWriteCommand<prmForceTorqueJointSet , sensor_msgs::JointState>(
         pid->GetName(), "SetTorqueJoint", "/dvrk_psm/set_joint_effort");
-  robotBridge.AddSubscriberToWriteCommand<std::string, std_msgs::String>(
-        config_name, "SetRobotControlState", "/dvrk_psm/set_robot_state");
   robotBridge.AddSubscriberToWriteCommand<bool, std_msgs::Bool>(
         pid->GetName(),"Enable","/dvrk_psm/enable_pid");
   robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
         pid->GetName(),"SetPositionJoint","/dvrk_psm/set_position_joint");
+
+  robotBridge.AddSubscriberToWriteCommand<std::string, std_msgs::String>(
+        config_name, "SetRobotControlState", "/dvrk_psm/set_robot_state");
   robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
         config_name, "SetPositionCartesian", "/dvrk_psm/set_position_cartesian");
+  robotBridge.AddSubscriberToWriteCommand<double, std_msgs::Float32>(
+        config_name, "SetOpenAngle", "/dvrk_psm/set_open_angle");
 
   componentManager->AddComponent(&robotBridge);
   componentManager->Connect(robotBridge.GetName(), config_name, psm->GetName(), "Robot");
   componentManager->Connect(robotBridge.GetName(), pid->GetName(), pid->GetName(),"Controller");
-
-//  componentManager->Connect(robotBridge.GetName(), "Clutch", "io", "CLUTCH");
+  componentManager->Connect(robotBridge.GetName(), "ManipClutch", "io", config_name + "-ManipClutch");
 
   //-------------------------------------------------------
   // End ROS Bridge

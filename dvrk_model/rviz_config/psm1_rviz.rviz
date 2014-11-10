@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /RobotModel1
       Splitter Ratio: 0.5
     Tree Height: 565
   - Class: rviz/Selection
@@ -92,6 +93,10 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        one_outer_pitch_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         one_outer_pitch_top_link:
           Alpha: 1
           Show Axes: false
@@ -107,10 +112,6 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        one_remote_center_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
         one_tool_main_link:
           Alpha: 1
           Show Axes: false
@@ -151,7 +152,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
       Name: RobotModel
-      Robot Description: robot_description
+      Robot Description: /dvrk_psm/robot_description
       TF Prefix: ""
       Update Interval: 0
       Value: true
@@ -195,7 +196,7 @@ Visualization Manager:
       Pitch: 0.405398
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.25858
+      Yaw: 5.25358
     Saved: ~
 Window Geometry:
   Displays:
@@ -213,5 +214,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 65
-  Y: 60
+  X: 58
+  Y: 25
