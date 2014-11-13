@@ -83,6 +83,11 @@ int main(int argc, char ** argv)
 
     // -------------- Some ROS Hack ------------
     signal(SIGINT, mySigintHandler);
+    
+    // ---- WARNING: hack to remove ros args ----
+    ros::V_string argout;
+    ros::removeROSArgs(argc, argv, argout);
+    argc = argout.size();
     // ------------------------------------------
 
     // parse options
