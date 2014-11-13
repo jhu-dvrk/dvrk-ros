@@ -387,9 +387,9 @@ int main(int argc, char ** argv)
     rosBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
                 "MTMR", "SetPositionCartesian", "/dvrk_mtmr/set_position_cartesian");
 
-    robotBridge.AddSubscriberToWriteCommand<double, std_msgs::Float32>(
+    rosBridge.AddSubscriberToWriteCommand<double, std_msgs::Float32>(
                 "PSM1", "SetOpenAngle", "/dvrk_psm1/set_open_angle");
-    robotBridge.AddSubscriberToWriteCommand<double, std_msgs::Float32>(
+    rosBridge.AddSubscriberToWriteCommand<double, std_msgs::Float32>(
                 "PSM2", "SetOpenAngle", "/dvrk_psm2/set_open_angle");
     
 
