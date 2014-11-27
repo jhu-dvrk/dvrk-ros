@@ -1,6 +1,7 @@
 da Vinci Research Kit ROS
 ====================
-This repository has code related to daVinci\_research\_kit ROS packages. 
+This repository has code related to daVinci\_research\_kit ROS packages.
+See https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki
 
 # Install 
 * download & build cisst, see dvrk tutorial wiki for detail 
