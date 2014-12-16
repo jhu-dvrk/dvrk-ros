@@ -1,27 +1,16 @@
 da Vinci Research Kit ROS
 ====================
-This repository has code related to daVinci\_research\_kit ROS packages.
+This repository has code related to daVinci Research Kit (dVRK) ROS packages.
 See https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki
 
 # Install 
-* download & build cisst, see dvrk tutorial wiki for detail 
-* download & compile cisst-ros
+* download and build cisst, see dVRK tutorial wiki for detail: https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki/Build
+* download and build cisst-ros, see: https://github.com/jhu-cisst/cisst-ros
+* download and compile dvrk-ros
 
 ```sh
 # cd to catkin ws src dir
-cd /PATH/TO/CATKIN_WS/src
-# clone repo
-git clone http://github.com/jhu-cisst/cisst-ros.git
-
-# build 
-cd ..
-catkin_make
-```
-* download & compile dvrk-ros
-
-```sh
-# cd to catkin ws src dir
-cd /PATH/TO/CATKIN_WS/src
+cd ~/catkin_ws/src
 # clone repo
 git clone http://github.com/jhu-dvrk/dvrk-ros.git
 # build 
