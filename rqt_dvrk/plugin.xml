@@ -1,0 +1,17 @@
+<library path="src">
+  <class name="dvrkDashboard"
+         type="rqt_dvrk.dvrk_dashboard.dvrkDashboard"
+         base_class_type="rqt_gui_py::Plugin">
+    <description>
+      An RQT plugin for controlling a DVRK arm 
+    </description>
+    <qtgui>
+      <group>
+        <label>DVRK</label>
+      </group>
+      <label>DVRK Dashboard</label>
+      <icon type="theme">system-help</icon>
+      <statustip>Use to control a DVRK arm.</statustip>
+    </qtgui>
+  </class>
+</library>

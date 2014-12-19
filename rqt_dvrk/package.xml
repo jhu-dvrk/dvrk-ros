@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package>
+  <name>rqt_dvrk</name>
+  <version>0.0.1</version>
+  <description>This is a simple rqt based GUI for displaying
+  and controlling the state of dvrk arm </description>
+
+  <maintainer email="zihan.chen@jhu.edu">Zihan Chen</maintainer>
+  <license>BSD</license>
+  <author email="zihan.chen@jhu.edu">Zihan Chen</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>rospy</run_depend>
+  <run_depend>rqt_gui</run_depend>
+  <run_depend>rqt_gui_py</run_depend>
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+    <rqt_gui plugin="${prefix}/plugin.xml"/>
+  </export>
+</package>
