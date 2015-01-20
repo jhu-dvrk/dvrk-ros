@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.8.3)
-project (dvrk_robot)
+project (dvrk_arm)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -13,6 +13,9 @@ find_package (catkin REQUIRED
               roscpp
               std_msgs
 )
+
+# catkin magic
+catkin_package ()
 
 set (REQUIRED_CISST_LIBRARIES
      cisstCommon

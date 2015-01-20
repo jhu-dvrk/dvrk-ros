@@ -18,7 +18,8 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <iostream>
 
-#include <cisstCommon/cmnLogger.h>
+// cisst/saw
+#include <cisstCommon/cmnPath.h>
 #include <cisstCommon/cmnCommandLineOptions.h>
 
 #include <cisstMultiTask/mtsManagerLocal.h>
@@ -28,10 +29,12 @@ http://www.cisst.org/cisst/license.txt.
 #include <sawControllers/mtsPIDQtWidget.h>
 #include <sawRobotIO1394/mtsRobotIO1394.h>
 #include <sawRobotIO1394/mtsRobotIO1394QtWidgetFactory.h>
-#include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitMTM.h>
-#include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitECM.h>
-#include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitPSM.h>
+#include <sawControllers/mtsPIDQtWidget.h>
+#include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
+#include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsoleQtWidget.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitArmQtWidget.h>
+
+#include <QTabWidget>
 
 #include <dvrk_bridges/dvrk_arm_bridge.h>
 
@@ -42,6 +45,7 @@ int main(int argc, char** argv)
     cmnLogger::SetMask(CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskDefaultLog(CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskFunction(CMN_LOG_ALLOW_ALL);
+    cmnLogger::SetMaskClassMatching("mtsIntuitiveResearchKitECM", CMN_LOG_ALLOW_ALL);
     cmnLogger::AddChannel(std::cerr, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
 
     // ---- remove ros args ----
@@ -50,21 +54,26 @@ int main(int argc, char** argv)
     argc = argout.size();
 
     // parse options
-    int firewirePort = 0;
-    std::string config_io;
-    std::string config_pid;
-    std::string config_kinematics;
-    std::string config_type;
     cmnCommandLineOptions options;
-    options.AddOptionOneValue("i", "io", "config file for robot IO",
-                              cmnCommandLineOptions::REQUIRED_OPTION, &config_io);
-    options.AddOptionOneValue("p", "pid", "config file for PID controller",
-                              cmnCommandLineOptions::REQUIRED_OPTION, &config_pid);
-    options.AddOptionOneValue("k", "kinematic", "config file for robot kinematic",
-                              cmnCommandLineOptions::REQUIRED_OPTION, &config_kinematics);
-    options.AddOptionOneValue("t", "type", "robot type (must be either ECM, MTM or PSM",
-                              cmnCommandLineOptions::REQUIRED_OPTION, &config_type);
-    options.AddOptionOneValue("f", "firewire", "firewire port number(s)",
+    int firewirePort = 0;
+    typedef std::map<std::string, std::string> ConfigFilesType;
+    ConfigFilesType configFiles;
+    std::string armName;
+
+    options.AddOptionOneValue("i", "io",
+                              "configuration file for robot IO (see sawRobotIO1394)",
+                              cmnCommandLineOptions::REQUIRED_OPTION, &configFiles["io"]);
+    options.AddOptionOneValue("p", "pid",
+                              "configuration file for PID controller (see sawControllers, mtsPID)",
+                              cmnCommandLineOptions::REQUIRED_OPTION, &configFiles["pid"]);
+    options.AddOptionOneValue("k", "kinematic",
+                              "configuration file for kinematic (see cisstRobot, robManipulator)",
+                              cmnCommandLineOptions::REQUIRED_OPTION, &configFiles["kinematic"]);
+    options.AddOptionOneValue("n", "arm-name",
+                              "arm name, i.e. PSM1, ... as found in sawRobotIO configuration file",
+                              cmnCommandLineOptions::REQUIRED_OPTION, &armName);
+    options.AddOptionOneValue("f", "firewire",
+                              "firewire port number(s)",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &firewirePort);
 
     std::string errorMessage;
@@ -74,19 +83,20 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    // type of arm
-    mtsComponent * arm = 0;
-    std::string arm_name = config_type;
-    if (config_type == "ECM") {
-        arm = new mtsIntuitiveResearchKitECM(arm_name, 5.0 * cmn_ms);
-    } else if (config_type == "MTM") {
-        arm = new mtsIntuitiveResearchKitMTM(arm_name, 5.0 * cmn_ms);
-    } else if (config_type == "PSM") {
-        arm = new mtsIntuitiveResearchKitPSM(arm_name, 5.0 * cmn_ms);
-    } else {
-        std::cerr << "Error: arm type must be either ECM, MTM or PSM, not \"" << config_type << "\"" << std::endl;
-        return -1;
+    for (ConfigFilesType::const_iterator iter = configFiles.begin();
+         iter != configFiles.end();
+         ++iter) {
+        if (!cmnPath::Exists(iter->second)) {
+            std::cerr << "File not found for " << iter->first
+                      << ": " << iter->second << std::endl;
+            return -1;
+        } else {
+            std::cout << "Configuration file for " << iter->first
+                      << ": " << iter->second << std::endl;
+        }
     }
+
+    std::cout << "FirewirePort: " << firewirePort << std::endl;
 
     // now components
     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
@@ -96,10 +106,43 @@ int main(int argc, char** argv)
     qtAppTask->Configure();
     componentManager->AddComponent(qtAppTask);
 
+
+    // console
+    mtsIntuitiveResearchKitConsole * console = new mtsIntuitiveResearchKitConsole("console");
+    componentManager->AddComponent(console);
+    mtsIntuitiveResearchKitConsoleQtWidget * consoleGUI = new mtsIntuitiveResearchKitConsoleQtWidget("consoleGUI");
+    componentManager->AddComponent(consoleGUI);
+    // connect console GUI to console
+    componentManager->Connect("console", "Main", "consoleGUI", "Main");
+
     // IO
     mtsRobotIO1394 * io = new mtsRobotIO1394("io", 1.0 * cmn_ms, firewirePort);
-    io->Configure(config_io);
+    io->Configure(configFiles["io"]);
     componentManager->AddComponent(io);
+
+    // Create the arm
+    unsigned int numberOfAxis = 0;
+    mtsIntuitiveResearchKitConsole::Arm * arm
+        = new mtsIntuitiveResearchKitConsole::Arm(armName, io->GetName());
+    arm->ConfigurePID(configFiles["pid"]);
+    // Configure based on arm type assuming name
+    if ((armName == "PSM1") || (armName == "PSM2") || (armName == "PSM3")) {
+        arm->ConfigureArm(mtsIntuitiveResearchKitConsole::Arm::ARM_PSM,
+                          configFiles["kinematic"], 3.0 * cmn_ms);
+        numberOfAxis = 7;
+    } else if ((armName == "MTML") || (armName == "MTMR")) {
+        arm->ConfigureArm(mtsIntuitiveResearchKitConsole::Arm::ARM_MTM,
+                          configFiles["kinematic"], 3.0 * cmn_ms);
+        numberOfAxis = 8;
+    } else if (armName == "ECM") {
+        arm->ConfigureArm(mtsIntuitiveResearchKitConsole::Arm::ARM_ECM,
+                          configFiles["kinematic"], 3.0 * cmn_ms);
+        numberOfAxis = 4;
+    } else {
+        std::cerr << "Arm name should be either PSM1, PSM2, PSM3, MTML, MTMR or ECM, not " << armName << std::endl;
+        return -1;
+    }
+    console->AddArm(arm);
 
     // connect ioGUI to io
     mtsRobotIO1394QtWidgetFactory * robotWidgetFactory = new mtsRobotIO1394QtWidgetFactory("robotWidgetFactory");
@@ -107,61 +150,44 @@ int main(int argc, char** argv)
     componentManager->Connect("robotWidgetFactory", "RobotConfiguration", "io", "Configuration");
     robotWidgetFactory->Configure();
 
-    // mtsPID
-    mtsPID * pid = new mtsPID("pid", 5 * cmn_ms);
-    pid->Configure(config_pid);
-    componentManager->AddComponent(pid);
-    componentManager->Connect(pid->GetName(), "RobotJointTorqueInterface", "io", arm_name);
-    componentManager->Connect(pid->GetName(), "ExecIn", "io", "ExecOut"); // PID will run in IO thread
-
-    // PID  GUI
-    mtsPIDQtWidget * pidGUI = new mtsPIDQtWidget("pid master",8);
+    // PID GUI
+    mtsPIDQtWidget * pidGUI = new mtsPIDQtWidget("PID", numberOfAxis);
     pidGUI->Configure();
     componentManager->AddComponent(pidGUI);
-    componentManager->Connect(pidGUI->GetName(), "Controller", pid->GetName(), "Controller");
-
-    // arm
-    arm->Configure(config_kinematics);
-    componentManager->AddComponent(arm);
-    componentManager->Connect(arm->GetName(), "PID", pid->GetName(), "Controller");
-    componentManager->Connect(arm->GetName(), "RobotIO", "io", arm_name);
+    componentManager->Connect(pidGUI->GetName(), "Controller", arm->PIDComponentName(), "Controller");
 
     // arm GUI
-    mtsIntuitiveResearchKitArmQtWidget* armGUI = new mtsIntuitiveResearchKitArmQtWidget(arm_name + "GUI");
+    mtsIntuitiveResearchKitArmQtWidget* armGUI = new mtsIntuitiveResearchKitArmQtWidget(armName + "GUI");
+    armGUI->Configure();
     componentManager->AddComponent(armGUI);
-    componentManager->Connect(armGUI->GetName(), "Manipulator", arm->GetName(), "Robot");
+    componentManager->Connect(armGUI->GetName(), "Manipulator", arm->Name(), "Robot");
 
     // add ROS bridge
-    dvrk_arm_bridge * armROS = new dvrk_arm_bridge(arm_name + "ROS", // mts component name
-                                                   "/dvrk/" + arm_name, // ROS namespace
+    dvrk_arm_bridge * armROS = new dvrk_arm_bridge(armName + "ROS", // mts component name
+                                                   "/dvrk/" + armName, // ROS namespace
                                                    10.0 * cmn_ms,
                                                    true); // this component performs ros::spin
     componentManager->AddComponent(armROS);
-    componentManager->Connect(armROS->GetName(), "Robot", arm->GetName(), "Robot");
+    componentManager->Connect(armROS->GetName(), "Robot", arm->Name(), "Robot");
 
     // organize all widgets in a tab widget
     QTabWidget * tabWidget = new QTabWidget;
-    // io gui
+    tabWidget->addTab(consoleGUI, "Main");
+    tabWidget->addTab(armGUI, "Arm");
+    tabWidget->addTab(pidGUI, "PID");
     mtsRobotIO1394QtWidgetFactory::WidgetListType::const_iterator iterator;
     for (iterator = robotWidgetFactory->Widgets().begin();
          iterator != robotWidgetFactory->Widgets().end();
          ++iterator) {
-            tabWidget->addTab(*iterator, (*iterator)->GetName().c_str());
-        }
-    // pid gui
-    tabWidget->addTab(pidGUI, (arm_name + "PID").c_str());
-    // arm gui
-    tabWidget->addTab(armGUI, arm->GetName().c_str());
-    // button gui
+        tabWidget->addTab(*iterator, (*iterator)->GetName().c_str());
+    }
     tabWidget->addTab(robotWidgetFactory->ButtonsWidget(), "Buttons");
-    // show widget
     tabWidget->show();
 
 
     //-------------- create the components ------------------
     io->CreateAndWait(2.0 * cmn_s); // this will also create the pids as they are in same thread
     io->StartAndWait(2.0 * cmn_s);
-    pid->StartAndWait(2.0 * cmn_s);
 
     // start all other components
     componentManager->CreateAllAndWait(2.0 * cmn_s);
@@ -173,7 +199,6 @@ int main(int argc, char** argv)
 
     // delete dvgc robot
     delete io;
-    delete pid;
     delete pidGUI;
     delete arm;
     delete armGUI;

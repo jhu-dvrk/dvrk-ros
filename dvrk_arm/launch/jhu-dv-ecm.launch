@@ -1,0 +1,12 @@
+<!-- JHU full system ECM  -->
+<launch>
+
+    <node name="jhu_dv_ecm"
+        pkg="dvrk_arm"
+        type="dvrk_arm"
+        args="-i $(find dvrk_arm)/config/sawRobotIO1394-ECM-29738.xml
+              -p $(find dvrk_arm)/config/sawControllersPID-ECM.xml
+              -k $(find dvrk_arm)/config/dvecm.rob
+              -n ECM"/>
+
+</launch>
