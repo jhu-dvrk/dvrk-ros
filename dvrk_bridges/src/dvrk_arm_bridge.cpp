@@ -17,7 +17,7 @@ http://www.cisst.org/cisst/license.txt.
 
 */
 
-#include <dvrk_arm_bridge.h>
+#include <dvrk_bridges/dvrk_arm_bridge.h>
 
 dvrk_arm_bridge::dvrk_arm_bridge(const std::string & componentName,
                                  const std::string & rosNamespace,

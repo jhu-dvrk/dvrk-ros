@@ -32,11 +32,14 @@ include (${CISST_USE_FILE})
 if (cisst_FOUND_AS_REQUIRED)
 
   catkin_package (INCLUDE_DIRS include
-                  LIBRARIES dvrk_ros_bridges
+                  LIBRARIES dvrk_bridges
                   CATKIN_DEPENDS cisst_msgs cisst_ros_bridge geometry_msgs roscpp std_msgs
                   DEPENDS ${REQUIRED_CISST_LIBRARIES})
 
-  add_library (dvrk_ros_bridges src/dvrk_arm_bridge.cpp)
-  cisst_target_link_libraries (dvrk_ros_bridges ${REQUIRED_CISST_LIBRARIES})
+  add_library (dvrk_bridges
+               include/dvrk_bridges/dvrk_arm_bridge.h
+               src/dvrk_arm_bridge.cpp)
+
+  cisst_target_link_libraries (dvrk_bridges ${REQUIRED_CISST_LIBRARIES})
 
 endif(cisst_FOUND_AS_REQUIRED)
