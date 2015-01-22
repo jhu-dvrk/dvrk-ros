@@ -141,7 +141,7 @@ int main(int argc, char** argv)
   robotBridge.AddPublisherFromEventVoid(
               config_name,"GripperPinchEvent","/dvrk_mtm/gripper_pinch_event");
   robotBridge.AddPublisherFromReadCommand<std::string, std_msgs::String>(
-              config_name,"GetRobotControlState", "/dvrk_mtm/get_robot_state");
+              config_name,"GetRobotControlState", "/dvrk_mtm/robot_state_current");
 
 
   // Finally Working Form; However it is still unsafe since there is no safety check.
