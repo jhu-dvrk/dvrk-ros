@@ -2,6 +2,7 @@
 <robot name="dvrk_psm" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- This file contains different tool urdf -->
+  <xacro:include filename="$(find dvrk_model)/model/common.urdf.xacro"/>
 
   <!-- sca  -->
   <xacro:macro name="psm_tool_sca" params="prefix">
@@ -84,6 +85,15 @@
         </geometry>
       </visual>
     </link>
+
+    <!-- tool tip -->
+    <joint name="${prefix}tool_tip_joint_" type="fixed">
+      <parent link="${prefix}tool_wrist_sca_shaft_link"/>
+      <child link="${prefix}tool_tip_link"/>
+      <origin rpy="0 ${PI/2} ${PI/2}" xyz="0 0.0102 0"/>
+    </joint>
+    <link name="${prefix}tool_tip_link"/>
+    
   </xacro:macro>
   
 </robot>
