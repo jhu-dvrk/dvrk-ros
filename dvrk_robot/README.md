@@ -40,35 +40,15 @@ as explained above
 cp /PATH/TO/sawIntuitiveResearchKit/share/*.* config 
 
 
-# set robot state to HOME
+**set robot state to HOME**  
 rostopic pub -1 /dvrk_mtm/set_robot_state std_msgs/String Home
 
-# set robot state to Gravity Compensation
+**set robot state to Gravity Compensation**  
 rostopic pub -1 /dvrk_mtm/set_robot_state std_msgs/String Gravity
 
-# Topics for setting robot joint positions/end-effector cartesian pose
-* **(sensor_msgs/JointState:positions)**
-* /dvrk_psm/set_position_joint
-* /dvrk_mtm/set_position_joint
-* /dvrk_psm/set_position_joint
-* /dvrk_mtm/set_position_joint
+### Topic Names: 
+https://github.com/jhu-dvrk/dvrk-ros/wiki/ROS-Topic-Interface
 
-# Topics for getting robot joint positions/end-effector cartesian pose
-
-* /dvrk_psm/joint_position_current
-* /dvrk_mtm/joint_position_current
-* /dvrk_psm/joint_cartesian_current
-* /dvrk_mtm/joint_cartesian_current
-
-# Topics for setting robot joint efforts
-* **(sensor_msgs/JointState:efforts)**
-* /dvrk_psm/set_joint_effort
-* /dvrk_mtm/set_joint_effort
-
-# Topics for getting robot joint efforts
-
-* /dvrk_psm/joint_effort_current
-* /dvrk_mtm/joint_effort_current
 
 # Note
 With this package, you no longer need the programs such as
