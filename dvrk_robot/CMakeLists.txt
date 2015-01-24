@@ -1,15 +1,16 @@
-cmake_minimum_required(VERSION 2.8.3)
-project(dvrk_robot)
+cmake_minimum_required (VERSION 2.8.3)
+project (dvrk_robot)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-  cisst_msgs
-  cisst_ros_bridge
-  geometry_msgs
-  roscpp
-  std_msgs
+find_package (catkin REQUIRED
+              COMPONENTS
+              cisst_msgs
+              cisst_ros_bridge
+              geometry_msgs
+              roscpp
+              std_msgs
 )
 
 set (REQUIRED_CISST_LIBRARIES
@@ -64,7 +65,7 @@ if (cisst_FOUND_AS_REQUIRED)
   message(STATUS "sawControllers_LIBRARIES: " ${sawControllers_LIBRARIES})
 
   include_directories (
-    ${sawRobotIO1394_INCLUDE_DIR}  
+    ${sawRobotIO1394_INCLUDE_DIR}
     ${sawControllers_INCLUDE_DIR}
     ${sawConstraintController_INCLUDE_DIR}
     ${sawIntuitiveResearchKit_INCLUDE_DIR}
@@ -90,10 +91,6 @@ if (cisst_FOUND_AS_REQUIRED)
       ${catkin_LIBRARIES}
     )
     cisst_target_link_libraries (${_robot} ${REQUIRED_CISST_LIBRARIES})
-
-    if (CISST_HAS_QT5)
-      qt5_use_modules (${_robot} Core Widgets OpenGL)
-    endif (CISST_HAS_QT5)
 
   endforeach(_robot)
 
