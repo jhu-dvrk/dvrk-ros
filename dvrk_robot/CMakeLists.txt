@@ -5,12 +5,13 @@ project (dvrk_robot)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package (catkin REQUIRED
-              COMPONENTS
-              cisst_msgs
-              cisst_ros_bridge
-              geometry_msgs
-              roscpp
-              std_msgs
+  COMPONENTS
+  cisst_msgs
+  cisst_ros_bridge
+  geometry_msgs
+  roscpp
+  std_msgs
+  roslib
 )
 
 set (REQUIRED_CISST_LIBRARIES

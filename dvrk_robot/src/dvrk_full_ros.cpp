@@ -41,7 +41,9 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstMultiTask/mtsCollectorQtFactory.h>
 #include <cisstMultiTask/mtsCollectorQtWidget.h>
 
+// ros
 #include <cisst_ros_bridge/mtsROSBridge.h>
+#include <ros/package.h>
 
 #include <QTabWidget>
 
@@ -71,7 +73,7 @@ int main(int argc, char ** argv)
     // configuration
     const double periodIO = 0.5 * cmn_ms;
     const double periodKinematics = 2.0 * cmn_ms;
-    const double periodTeleop = 2.0 * cmn_ms;
+//    const double periodTeleop = 2.0 * cmn_ms;
     const double periodUDP = 20.0 * cmn_ms;
 
     // log configuration
@@ -116,6 +118,8 @@ int main(int argc, char ** argv)
                               cmnCommandLineOptions::OPTIONAL_OPTION, &jsonCollectionConfigFile);
 
     // check that all required options have been provided
+    std::string configFilePath = ros::package::getPath("dvrk_robot");
+    configFilePath.append("/config/");
     std::string errorMessage;
     if (!options.Parse(argc, argv, errorMessage)) {
         std::cerr << "Error: " << errorMessage << std::endl;
@@ -194,13 +198,13 @@ int main(int argc, char ** argv)
         // master
         Json::Value jsonMaster = pairs[index]["master"];
         std::string armName = jsonMaster["name"].asString();
-        std::string ioFile = jsonMaster["io"].asString();
+        std::string ioFile = configFilePath + jsonMaster["io"].asString();
         fileExists(armName + " IO", ioFile);
         io->Configure(ioFile);
         // slave
         Json::Value jsonSlave = pairs[index]["slave"];
         armName = jsonSlave["name"].asString();
-        ioFile = jsonSlave["io"].asString();
+        ioFile = configFilePath + jsonSlave["io"].asString();
         fileExists(armName + " IO", ioFile);
         io->Configure(ioFile);
     }
@@ -226,10 +230,8 @@ int main(int argc, char ** argv)
     for (unsigned int index = 0; index < pairs.size(); ++index) {
         Json::Value jsonMaster = pairs[index]["master"];
         std::string masterName =  jsonMaster["name"].asString();
-        std::string masterPIDFile = jsonMaster["pid"].asString();
-        std::string masterKinematicFile = jsonMaster["kinematic"].asString();
-        std::string masterUDPIP = jsonMaster["UDP-IP"].asString();
-        short masterUDPPort = jsonMaster["UDP-port"].asInt();
+        std::string masterPIDFile = configFilePath + jsonMaster["pid"].asString();
+        std::string masterKinematicFile = configFilePath + jsonMaster["kinematic"].asString();
 
         fileExists(masterName + " PID", masterPIDFile);
         fileExists(masterName + " kinematic", masterKinematicFile);
@@ -240,28 +242,10 @@ int main(int argc, char ** argv)
                           masterKinematicFile, periodKinematics);
         console->AddArm(mtm);
 
-        if (masterUDPIP != "" || masterUDPPort != 0) {
-            if (masterUDPIP != "" && masterUDPPort != 0) {
-                std::cout << "Adding UDPStream component for master " << masterName << " to " << masterUDPIP << ":" << masterUDPPort << std::endl;
-                mtsIntuitiveResearchKitUDPStreamer * streamer =
-                    new mtsIntuitiveResearchKitUDPStreamer(masterName + "UDP", periodUDP, masterUDPIP, masterUDPPort);
-                componentManager->AddComponent(streamer);
-                // connect to mtm interface to get cartesian position
-                componentManager->Connect(streamer->GetName(), "Robot", mtm->Name(), "Robot");
-                // connect to io to get clutch events
-                componentManager->Connect(streamer->GetName(), "Clutch", "io", "CLUTCH");
-                // connect to io to get coag events
-                componentManager->Connect(streamer->GetName(), "Coag", "io", "COAG");
-            } else {
-                std::cerr << "Error for master arm " << masterName << ", you can provided UDP-IP w/o UDP-port" << std::endl;
-                exit(-1);
-            }
-        }
-
         Json::Value jsonSlave = pairs[index]["slave"];
-        std::string slaveName =  jsonSlave["name"].asString();
-        std::string slavePIDFile = jsonSlave["pid"].asString();
-        std::string slaveKinematicFile = jsonSlave["kinematic"].asString();
+        std::string slaveName = jsonSlave["name"].asString();
+        std::string slavePIDFile = configFilePath + jsonSlave["pid"].asString();
+        std::string slaveKinematicFile = configFilePath + jsonSlave["kinematic"].asString();
 
         fileExists(slaveName + " PID", slavePIDFile);
         fileExists(slaveName + " kinematic", slaveKinematicFile);
@@ -304,6 +288,7 @@ int main(int argc, char ** argv)
         // connect slaveGUI to slave
         componentManager->Connect(slaveGUI->GetName(), "Manipulator", psm->Name(), "Robot");
 
+#if 0
         // Teleoperation
         std::string teleName = masterName + "-" + slaveName;
         mtsTeleOperationQtWidget * teleGUI = new mtsTeleOperationQtWidget(teleName + "GUI");
@@ -325,6 +310,7 @@ int main(int argc, char ** argv)
         componentManager->Connect(tele->GetName(), "Slave", psm->Name(), "Robot");
         componentManager->Connect(tele->GetName(), "Clutch", "io", "CLUTCH");
         componentManager->Connect(tele->GetName(), "OperatorPresent", operatorPresentComponent, operatorPresentInterface);
+#endif
     }
 
     // configure data collection if needed
@@ -373,7 +359,25 @@ int main(int argc, char ** argv)
                 "PSM1", "SetRobotControlState", "/dvrk_psm1/set_robot_state");
     rosBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
                 "PSM1", "SetPositionCartesian", "/dvrk_psm1/set_position_cartesian");
+    // configure data collection if needed
+    if (options.IsSet("collection-config")) {
+        // make sure the json config file exists
+        fileExists("JSON data collection configuration", jsonCollectionConfigFile);
 
+        mtsCollectorFactory * collectorFactory = new mtsCollectorFactory("collectors");
+        collectorFactory->Configure(jsonCollectionConfigFile);
+        componentManager->AddComponent(collectorFactory);
+        collectorFactory->Connect();
+
+        mtsCollectorQtWidget * collectorQtWidget = new mtsCollectorQtWidget();
+        tabWidget->addTab(collectorQtWidget, "Collection");
+
+        mtsCollectorQtFactory * collectorQtFactory = new mtsCollectorQtFactory("collectorsQt");
+        collectorQtFactory->SetFactory("collectors");
+        componentManager->AddComponent(collectorQtFactory);
+        collectorQtFactory->Connect();
+        collectorQtFactory->ConnectToWidget(collectorQtWidget);
+    }
     rosBridge.AddSubscriberToWriteCommand<std::string , std_msgs::String>(
                 "PSM2", "SetRobotControlState", "/dvrk_psm2/set_robot_state");
     rosBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
