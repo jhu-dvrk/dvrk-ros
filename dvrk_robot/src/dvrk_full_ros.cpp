@@ -73,7 +73,7 @@ int main(int argc, char ** argv)
     // configuration
     const double periodIO = 0.5 * cmn_ms;
     const double periodKinematics = 2.0 * cmn_ms;
-//    const double periodTeleop = 2.0 * cmn_ms;
+    const double periodTeleop = 2.0 * cmn_ms;
     const double periodUDP = 20.0 * cmn_ms;
 
     // log configuration
@@ -98,6 +98,7 @@ int main(int argc, char ** argv)
     std::string gcmip = "-1";
     std::string jsonMainConfigFile;
     std::string jsonCollectionConfigFile;
+    bool useCisstTeleop = true;
     typedef std::map<std::string, std::string> ConfigFilesType;
     ConfigFilesType configFiles;
     std::string masterName, slaveName;
@@ -116,6 +117,10 @@ int main(int argc, char ** argv)
     options.AddOptionOneValue("c", "collection-config",
                               "json configuration file for data collection",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &jsonCollectionConfigFile);
+
+    options.AddOptionOneValue("t", "teleop",
+                              "1 to use cisst teleop, 0 not",
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &useCisstTeleop);
 
     // check that all required options have been provided
     std::string configFilePath = ros::package::getPath("dvrk_robot");
@@ -145,6 +150,7 @@ int main(int argc, char ** argv)
 
     // start initializing the cisstMultiTask manager
     std::cout << "FirewirePort: " << firewirePort << std::endl;
+    std::cout << "Use Cisst Teleop: " << useCisstTeleop << std::endl;
 
     std::string processname = "dvTeleop";
     mtsManagerLocal * componentManager = 0;
@@ -158,6 +164,8 @@ int main(int argc, char ** argv)
     } else {
         componentManager = mtsManagerLocal::GetInstance();
     }
+
+
 
     // create a Qt application and tab to hold all widgets
     mtsQtApplication * qtAppTask = new mtsQtApplication("QtApplication", argc, argv);
@@ -288,29 +296,29 @@ int main(int argc, char ** argv)
         // connect slaveGUI to slave
         componentManager->Connect(slaveGUI->GetName(), "Manipulator", psm->Name(), "Robot");
 
-#if 0
         // Teleoperation
-        std::string teleName = masterName + "-" + slaveName;
-        mtsTeleOperationQtWidget * teleGUI = new mtsTeleOperationQtWidget(teleName + "GUI");
-        teleGUI->Configure();
-        componentManager->AddComponent(teleGUI);
-        tabWidget->addTab(teleGUI, teleName.c_str());
-        mtsTeleOperation * tele = new mtsTeleOperation(teleName, periodTeleop);
-        // Default orientation between master and slave
-        vctMatRot3 master2slave;
-        master2slave.Assign(-1.0, 0.0, 0.0,
-                             0.0,-1.0, 0.0,
-                             0.0, 0.0, 1.0);
-        tele->SetRegistrationRotation(master2slave);
-        componentManager->AddComponent(tele);
-        // connect teleGUI to tele
-        componentManager->Connect(teleGUI->GetName(), "TeleOperation", tele->GetName(), "Setting");
+        if (useCisstTeleop) {
+            std::string teleName = masterName + "-" + slaveName;
+            mtsTeleOperationQtWidget * teleGUI = new mtsTeleOperationQtWidget(teleName + "GUI");
+            teleGUI->Configure();
+            componentManager->AddComponent(teleGUI);
+            tabWidget->addTab(teleGUI, teleName.c_str());
+            mtsTeleOperation * tele = new mtsTeleOperation(teleName, periodTeleop);
+            // Default orientation between master and slave
+            vctMatRot3 master2slave;
+            master2slave.Assign(-1.0, 0.0, 0.0,
+                                 0.0,-1.0, 0.0,
+                                 0.0, 0.0, 1.0);
+            tele->SetRegistrationRotation(master2slave);
+            componentManager->AddComponent(tele);
+            // connect teleGUI to tele
+            componentManager->Connect(teleGUI->GetName(), "TeleOperation", tele->GetName(), "Setting");
 
-        componentManager->Connect(tele->GetName(), "Master", mtm->Name(), "Robot");
-        componentManager->Connect(tele->GetName(), "Slave", psm->Name(), "Robot");
-        componentManager->Connect(tele->GetName(), "Clutch", "io", "CLUTCH");
-        componentManager->Connect(tele->GetName(), "OperatorPresent", operatorPresentComponent, operatorPresentInterface);
-#endif
+            componentManager->Connect(tele->GetName(), "Master", mtm->Name(), "Robot");
+            componentManager->Connect(tele->GetName(), "Slave", psm->Name(), "Robot");
+            componentManager->Connect(tele->GetName(), "Clutch", "io", "CLUTCH");
+            componentManager->Connect(tele->GetName(), "OperatorPresent", operatorPresentComponent, operatorPresentInterface);
+        }
     }
 
     // configure data collection if needed
@@ -332,7 +340,6 @@ int main(int argc, char ** argv)
         collectorQtFactory->Connect();
         collectorQtFactory->ConnectToWidget(collectorQtWidget);
     }
-
 
     ///////////////////////  ROS Bridge   ////////////////////////////////////////////
 
@@ -355,29 +362,15 @@ int main(int argc, char ** argv)
     rosBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
                 "MTMR", "GetPositionCartesian", "/dvrk_mtmr/cartesian_pose_current");
 
+    rosBridge.AddPublisherFromReadCommand<double, std_msgs::Float32>  (
+                "MTML", "GetGripperPosition", "/dvrk_mtml/gripper_position_current");
+    rosBridge.AddPublisherFromReadCommand<double, std_msgs::Float32>  (
+                "MTMR", "GetGripperPosition", "/dvrk_mtmr/gripper_position_current");
+
     rosBridge.AddSubscriberToWriteCommand<std::string , std_msgs::String>(
                 "PSM1", "SetRobotControlState", "/dvrk_psm1/set_robot_state");
     rosBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
                 "PSM1", "SetPositionCartesian", "/dvrk_psm1/set_position_cartesian");
-    // configure data collection if needed
-    if (options.IsSet("collection-config")) {
-        // make sure the json config file exists
-        fileExists("JSON data collection configuration", jsonCollectionConfigFile);
-
-        mtsCollectorFactory * collectorFactory = new mtsCollectorFactory("collectors");
-        collectorFactory->Configure(jsonCollectionConfigFile);
-        componentManager->AddComponent(collectorFactory);
-        collectorFactory->Connect();
-
-        mtsCollectorQtWidget * collectorQtWidget = new mtsCollectorQtWidget();
-        tabWidget->addTab(collectorQtWidget, "Collection");
-
-        mtsCollectorQtFactory * collectorQtFactory = new mtsCollectorQtFactory("collectorsQt");
-        collectorQtFactory->SetFactory("collectors");
-        componentManager->AddComponent(collectorQtFactory);
-        collectorQtFactory->Connect();
-        collectorQtFactory->ConnectToWidget(collectorQtWidget);
-    }
     rosBridge.AddSubscriberToWriteCommand<std::string , std_msgs::String>(
                 "PSM2", "SetRobotControlState", "/dvrk_psm2/set_robot_state");
     rosBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
@@ -402,6 +395,27 @@ int main(int argc, char ** argv)
     componentManager->Connect(rosBridge.GetName(), "MTMR", "MTMR", "Robot");
     componentManager->Connect(rosBridge.GetName(), "PSM1", "PSM1", "Robot");
     componentManager->Connect(rosBridge.GetName(), "PSM2", "PSM2", "Robot");
+
+
+    // ----- Footpedal ------
+    rosBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
+                "Clutch","Button","/dvrk_footpedal/clutch");
+    rosBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
+                "Coag","Button","/dvrk_footpedal/coag");
+    rosBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
+                "Camera","Button","/dvrk_footpedal/camera");
+    rosBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
+                "Cam+","Button","/dvrk_footpedal/camplus");
+    rosBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
+                "Cam-","Button","/dvrk_footpedal/camminus");
+
+    componentManager->Connect(rosBridge.GetName(), "Clutch", "io", "CLUTCH");
+    componentManager->Connect(rosBridge.GetName(), "Coag", "io", "COAG");
+    componentManager->Connect(rosBridge.GetName(), "Camera", "io", "CAMERA");
+    componentManager->Connect(rosBridge.GetName(), "Cam+", "io", "CAM+");
+    componentManager->Connect(rosBridge.GetName(), "Cam-", "io", "CAM-");
+
+
 
     ///////////////////////////////////////////////////////////////////
 

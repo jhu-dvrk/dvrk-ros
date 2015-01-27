@@ -1,0 +1,103 @@
+<launch>
+  
+  <arg name="gui" default="false" />  <!-- jsp gui -->
+  <arg name="rate" default="20" />  <!-- jsp rate -->
+  
+  <arg name="mtmr_model" default="$(find dvrk_model)/model/mtm_right.urdf.xacro" />
+  <arg name="mtml_model" default="$(find dvrk_model)/model/mtm_left.urdf.xacro" />
+  <arg name="psm1_model" default="$(find dvrk_model)/model/psm_one.urdf.xacro" />
+  <arg name="psm2_model" default="$(find dvrk_model)/model/psm_two.urdf.xacro" />
+
+  <!-- dvrk mtm + psm -->
+  <node name="dvrk_full_node"
+        pkg="dvrk_robot"
+        type="dvrk_full_ros"
+        args="-j $(find dvrk_robot)/config/two-arms.json"
+        output="screen"/>
+              
+  <group ns="/dvrk_mtmr">
+    <param name="robot_description"
+           command="rosrun xacro xacro.py $(arg mtmr_model)"/>
+    <param name="use_gui" value="$(arg gui)"/>
+    <param name="rate" value="$(arg rate)"/>
+
+    <rosparam>
+      source_list: [joint_states_robot]
+    </rosparam>
+
+    <!-- sub current robot jnt pos and add names -->
+    <node name="feedback_mtm_jp"
+          pkg="dvrk_joint_publisher"
+          type="mtm_joint_publisher.py"
+          args="right_"/>
+    
+    <node name="joint_state_publisher_mtm" pkg="joint_state_publisher" type="joint_state_publisher" />
+    <node name="robot_state_publisher_mtm" pkg="robot_state_publisher" type="state_publisher" />
+  </group>
+
+
+  <group ns="/dvrk_mtml">
+    <param name="robot_description"
+           command="rosrun xacro xacro.py $(arg mtml_model)"/>
+    <param name="use_gui" value="$(arg gui)"/>
+    <param name="rate" value="$(arg rate)"/>
+
+    <rosparam>
+      source_list: [/dvrk_mtml/joint_states_robot]
+    </rosparam>
+
+    <!-- sub current robot jnt pos and add names -->
+    <node name="feedback_mtm_jp"
+          pkg="dvrk_joint_publisher"
+          type="mtm_joint_publisher.py"
+          args="left_"/>
+    
+    <node name="joint_state_publisher_mtm" pkg="joint_state_publisher" type="joint_state_publisher" />
+    <node name="robot_state_publisher_mtm" pkg="robot_state_publisher" type="state_publisher" />
+  </group>
+
+  <group ns="/dvrk_psm1">
+    <param name="robot_description"
+           command="rosrun xacro xacro.py $(arg psm1_model)"/>
+    <param name="use_gui" value="$(arg gui)"/>
+    <param name="rate" value="$(arg rate)"/>
+
+    <rosparam>
+      source_list: [/dvrk_psm1/joint_states_robot]
+    </rosparam>
+
+    <!-- sub current robot jnt pos and add names -->
+    <node name="feedback_mtm_jp"
+          pkg="dvrk_joint_publisher"
+          type="psm_joint_publisher.py"
+          args="one_"/>
+    
+    <node name="joint_state_publisher_mtm" pkg="joint_state_publisher" type="joint_state_publisher" />
+    <node name="robot_state_publisher_mtm" pkg="robot_state_publisher" type="state_publisher" />
+  </group>
+
+  <group ns="/dvrk_psm2">
+    <param name="robot_description"
+           command="rosrun xacro xacro.py $(arg psm2_model)"/>
+    <param name="use_gui" value="$(arg gui)"/>
+    <param name="rate" value="$(arg rate)"/>
+    
+    <rosparam>
+      source_list: [/dvrk_psm2/joint_states_robot]
+    </rosparam>
+    
+    <!-- sub current robot jnt pos and add names -->
+    <node name="feedback_mtm_jp"
+          pkg="dvrk_joint_publisher"
+          type="psm_joint_publisher.py"
+          args="two_"/>
+    
+    <node name="joint_state_publisher_mtm" pkg="joint_state_publisher" type="joint_state_publisher" />
+    <node name="robot_state_publisher_mtm" pkg="robot_state_publisher" type="state_publisher" />
+  </group>
+  
+  <!-- <node name="rviz" pkg="rviz" type="rviz" -->
+  <!--       args="-d $(find dvrk_robot)/rviz_config/mtm_psm_rviz.rviz" /> -->
+  <node name="rviz" pkg="rviz" type="rviz"/>
+  
+</launch>
