@@ -1,3 +1,17 @@
+#
+# Author(s):  Anton Deguet
+# Created on: 2015-02-16
+#
+# (C) Copyright 2015 Johns Hopkins University (JHU), All Rights Reserved.
+#
+# --- begin cisst license - do not edit ---
+#
+# This software is provided "as is" under an open source license, with
+# no warranty.  The complete license can be found in license.txt and
+# http://www.cisst.org/cisst/license.txt.
+#
+# --- end cisst license ---
+
 cmake_minimum_required (VERSION 2.8.3)
 project (dvrk_arm)
 
@@ -12,7 +26,8 @@ find_package (catkin REQUIRED
               geometry_msgs
               roscpp
               std_msgs
-)
+              roslaunch
+              )
 
 # catkin magic
 catkin_package ()
@@ -46,7 +61,7 @@ if (cisst_FOUND_AS_REQUIRED)
   cisst_find_saw_component (sawConstraintController REQUIRED)
 
   include_directories (${catkin_INCLUDE_DIRS}
-                       ${sawRobotIO1394_INCLUDE_DIR}  
+                       ${sawRobotIO1394_INCLUDE_DIR}
                        ${sawControllers_INCLUDE_DIR}
                        ${sawConstraintController_INCLUDE_DIR}
                        ${sawIntuitiveResearchKit_INCLUDE_DIR}
@@ -67,6 +82,9 @@ if (cisst_FOUND_AS_REQUIRED)
                          ${catkin_LIBRARIES}
                          )
   cisst_target_link_libraries (dvrk_arm ${REQUIRED_CISST_LIBRARIES})
+
+  # check simple errors in scripts
+  roslaunch_add_file_check(launch)
 
 endif (cisst_FOUND_AS_REQUIRED)
 

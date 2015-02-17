@@ -44,10 +44,12 @@ void dvrk_arm_bridge::setup(void)
         ("Robot", "SetPositionCartesian", ros_namespace + "/set_position_cartesian");
 
     // events
+    this->AddPublisherFromEventWrite<std::string, std_msgs::String>
+        ("Robot","RobotState", ros_namespace + "/robot_state");
     this->AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        ("Robot","ManipClutchBtn", ros_namespace + "/manip_clutch");
+        ("Robot","ManipClutch", ros_namespace + "/manip_clutch");
     this->AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        ("Robot","SUJClutchBtn", ros_namespace + "/suj_clutch");
+        ("Robot","SUJClutch", ros_namespace + "/suj_clutch");
 
     // // PID
     // this->AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
