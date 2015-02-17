@@ -138,6 +138,8 @@ int main(int argc, char** argv)
         pid->GetName(), "GetPositionJoint", "/dvrk_psm/joint_position_current");
   robotBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
         "ManipClutch","Button","/dvrk_psm/manip_clutch_state");
+  robotBridge.AddPublisherFromReadCommand<std::string, std_msgs::String>(
+        config_name,"GetRobotControlState","/dvrk_psm/robot_state_current");
 
 
   // Finally Working Form; However it is still unsafe since there is no safety check.
