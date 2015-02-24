@@ -54,6 +54,8 @@ void dvrk_arm_bridge::setup(void)
         ("Robot", "SetPositionCartesian", ros_namespace + "/set_position_cartesian");
 
     // events
+    this->AddPublisherFromEventWrite<bool, std_msgs::Bool>
+        ("Robot","GoalReached", ros_namespace + "/goal_reached");
     this->AddPublisherFromEventWrite<std::string, std_msgs::String>
         ("Robot","RobotState", ros_namespace + "/robot_state");
     this->AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>

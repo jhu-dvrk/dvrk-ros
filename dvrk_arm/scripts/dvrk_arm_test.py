@@ -7,22 +7,31 @@ import rospy
 import threading
 import math
 
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
 from cisst_msgs.msg import vctDoubleVec
 
 # example of application with callbacks for robot events
 class example_application:
 
-    # data members
+    # data members, event based
     _robot_state = 'uninitialized'
-    _state_event = threading.Event()
+    _robot_state_event = threading.Event()
+    _goal_reached = False
+    _goal_reached_event = threading.Event()
+
+    # continuous publish from dvrk_bridge
     _position_joint_desired = vctDoubleVec()
 
     # callbacks
     def robot_state_callback(self, data):
         # rospy.logdebug(rospy.get_caller_id() + " -> current state is %s", data.data)
         self._robot_state = data.data
-        self._state_event.set()
+        self._robot_state_event.set()
+
+    def goal_reached_callback(self, data):
+        rospy.loginfo(rospy.get_caller_id() + " -> goal reached is %s", data.data)
+        self._goal_reached = data.data
+        self._goal_reached_event.set()
 
     def position_joint_desired_callback(self, data):
         # rospy.logdebug(rospy.get_caller_id() + " -> current joint position: %s", data.data)
@@ -38,6 +47,7 @@ class example_application:
 
         # subscribers
         rospy.Subscriber("/dvrk/ECM/robot_state", String, self.robot_state_callback)
+        rospy.Subscriber("/dvrk/ECM/goal_reached", Bool, self.goal_reached_callback)
         rospy.Subscriber("/dvrk/ECM/position_joint_desired", vctDoubleVec, self.position_joint_desired_callback)
 
         # create node
@@ -48,13 +58,13 @@ class example_application:
     def home(self):
         rospy.loginfo(rospy.get_caller_id() + ' -> requesting homing')
 
-        self._state_event.clear()
+        self._robot_state_event.clear()
         self.set_robot_state.publish('Home')
         counter = 10 # up to 10 transitions to get ready
         while (counter > 0):
-            self._state_event.wait(120) # give up to 2 minutes for each transition
+            self._robot_state_event.wait(120) # give up to 2 minutes for each transition
             if (self._robot_state != 'DVRK_READY'):
-                self._state_event.clear()
+                self._robot_state_event.clear()
                 counter = counter - 1
                 rospy.loginfo(rospy.get_caller_id() + ' -> waiting for state to be DVRK_READY')
             else:
@@ -105,17 +115,26 @@ class example_application:
         # first motion
         goal.data[0] = initial_position[0] + amplitude
         goal.data[1] = initial_position[1] + amplitude
+        self._goal_reached_event.clear()
         self.set_position_goal_joint.publish(goal)
-        rospy.sleep(5.0)
+        self._goal_reached_event.wait(120) # 2 minutes at most
+        if not self._goal_reached:
+            rospy.signal_shutdown('failed to reach goal')
         # second motion
         goal.data[0] = initial_position[0] - amplitude
         goal.data[1] = initial_position[1] - amplitude
+        self._goal_reached_event.clear()
         self.set_position_goal_joint.publish(goal)
-        rospy.sleep(5.0)
+        self._goal_reached_event.wait(120) # 2 minutes at most
+        if not self._goal_reached:
+            rospy.signal_shutdown('failed to reach goal')
         # back to initial position
         goal.data[:] = initial_position
+        self._goal_reached_event.clear()
         self.set_position_goal_joint.publish(goal)
-        rospy.sleep(5.0)
+        self._goal_reached_event.wait(120) # 2 minutes at most
+        if not self._goal_reached:
+            rospy.signal_shutdown('failed to reach goal')
 
         rospy.loginfo(rospy.get_caller_id() + ' -> joint goal complete')
 
