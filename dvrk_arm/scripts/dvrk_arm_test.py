@@ -34,6 +34,7 @@ class example_application:
         # publishers
         self.set_robot_state = rospy.Publisher('/dvrk/ECM/set_robot_state', String, latch=True)
         self.set_position_joint = rospy.Publisher('/dvrk/ECM/set_position_joint', vctDoubleVec, latch=True)
+        self.set_position_goal_joint = rospy.Publisher('/dvrk/ECM/set_position_goal_joint', vctDoubleVec, latch=True)
 
         # subscribers
         rospy.Subscriber("/dvrk/ECM/robot_state", String, self.robot_state_callback)
@@ -67,30 +68,62 @@ class example_application:
 
     # direct joint control example
     def joint_direct(self):
+        rospy.loginfo(rospy.get_caller_id() + ' -> starting joint direct')
+
         # set in position joint mode
         self.set_robot_state.publish('DVRK_POSITION_JOINT')
         # get current position
         initial_position = self._position_joint_desired
         rospy.logdebug(rospy.get_caller_id() + " -> testing direct joint position for 2 joints of %i", len(initial_position))
-        amplitude = math.radians(5.0) # +/- 5 degrees
+        amplitude = math.radians(10.0) # +/- 10 degrees
         duration = 5  # seconds
-        rate = 1 # aiming for 200 Hz
+        rate = 200 # aiming for 200 Hz
         samples = duration * rate
         # create a new goal starting with current position
         goal = vctDoubleVec()
-        goal.data[:] = initial_position[:]
+        goal.data[:] = initial_position
         for i in xrange(samples):
             goal.data[0] = initial_position[0] + amplitude *  math.sin(i * math.radians(360.0) / samples)
+            goal.data[1] = initial_position[1] + amplitude *  math.sin(i * math.radians(360.0) / samples)
             self.set_position_joint.publish(goal)
-            rospy.sleep(1.0 / rate) 
+            rospy.sleep(1.0 / rate)
+        rospy.loginfo(rospy.get_caller_id() + ' -> joint direct complete')
 
+    # goal joint control example
+    def joint_goal(self):
+        rospy.loginfo(rospy.get_caller_id() + ' -> starting joint goal')
+
+        # set in position joint mode
+        self.set_robot_state.publish('DVRK_POSITION_GOAL_JOINT')
+        # get current position
+        initial_position = self._position_joint_desired
+        rospy.logdebug(rospy.get_caller_id() + " -> testing goal joint position for 2 joints of %i", len(initial_position))
+        amplitude = math.radians(10.0)
+        # create a new goal starting with current position
+        goal = vctDoubleVec()
+        goal.data[:] = initial_position
+        # first motion
+        goal.data[0] = initial_position[0] + amplitude
+        goal.data[1] = initial_position[1] + amplitude
+        self.set_position_goal_joint.publish(goal)
+        rospy.sleep(5.0)
+        # second motion
+        goal.data[0] = initial_position[0] - amplitude
+        goal.data[1] = initial_position[1] - amplitude
+        self.set_position_goal_joint.publish(goal)
+        rospy.sleep(5.0)
+        # back to initial position
+        goal.data[:] = initial_position
+        self.set_position_goal_joint.publish(goal)
+        rospy.sleep(5.0)
+
+        rospy.loginfo(rospy.get_caller_id() + ' -> joint goal complete')
 
     # main method
     def run(self):
         self.home()
         self.joint_direct()
-        rospy.sleep(20)
-
+        self.joint_goal()
 
 
 if __name__ == '__main__':

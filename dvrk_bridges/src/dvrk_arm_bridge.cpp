@@ -48,6 +48,8 @@ void dvrk_arm_bridge::setup(void)
         ("Robot", "SetRobotControlState", ros_namespace + "/set_robot_state");
     this->AddSubscriberToWriteCommand<prmPositionJointSet, cisst_msgs::vctDoubleVec>
         ("Robot", "SetPositionJoint", ros_namespace + "/set_position_joint");
+    this->AddSubscriberToWriteCommand<prmPositionJointSet, cisst_msgs::vctDoubleVec>
+        ("Robot", "SetPositionGoalJoint", ros_namespace + "/set_position_goal_joint");
     this->AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>
         ("Robot", "SetPositionCartesian", ros_namespace + "/set_position_cartesian");
 
