@@ -35,7 +35,7 @@ void dvrk_arm_bridge::setup(void)
 {
     // read
     this->AddPublisherFromReadCommand<prmPositionJointGet, cisst_msgs::vctDoubleVec>
-        ("Robot", "GetPositionJoint", ros_namespace +"/joint_position_current");
+        ("Robot", "GetPositionJoint", ros_namespace +"/position_joint_current");
     this->AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>
         ("Robot", "GetPositionJointDesired", ros_namespace +"/position_joint_desired");
     this->AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>
