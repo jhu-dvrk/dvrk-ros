@@ -52,6 +52,8 @@ void dvrk_arm_bridge::setup(void)
         ("Robot", "SetPositionGoalJoint", ros_namespace + "/set_position_goal_joint");
     this->AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>
         ("Robot", "SetPositionCartesian", ros_namespace + "/set_position_cartesian");
+    this->AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>
+        ("Robot", "SetPositionGoalCartesian", ros_namespace + "/set_position_goal_cartesian");
 
     // events
     this->AddPublisherFromEventWrite<bool, std_msgs::Bool>
