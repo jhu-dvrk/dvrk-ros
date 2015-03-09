@@ -34,28 +34,34 @@ dvrk_arm_bridge::dvrk_arm_bridge(const std::string & componentName,
 void dvrk_arm_bridge::setup(void)
 {
     // read
+    this->AddPublisherFromReadCommand<prmPositionJointGet, cisst_msgs::vctDoubleVec>
+        ("Robot", "GetPositionJoint", ros_namespace +"/position_joint_current");
+    this->AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>
+        ("Robot", "GetPositionJointDesired", ros_namespace +"/position_joint_desired");
     this->AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>
-        ("Robot", "GetPositionCartesian", ros_namespace +"/cartesian_pose_current");
+        ("Robot", "GetPositionCartesian", ros_namespace +"/position_cartesian_current");
+    this->AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>
+        ("Robot", "GetPositionCartesianDesired", ros_namespace +"/position_cartesian_desired");
 
     // write
     this->AddSubscriberToWriteCommand<std::string, std_msgs::String>
         ("Robot", "SetRobotControlState", ros_namespace + "/set_robot_state");
+    this->AddSubscriberToWriteCommand<prmPositionJointSet, cisst_msgs::vctDoubleVec>
+        ("Robot", "SetPositionJoint", ros_namespace + "/set_position_joint");
+    this->AddSubscriberToWriteCommand<prmPositionJointSet, cisst_msgs::vctDoubleVec>
+        ("Robot", "SetPositionGoalJoint", ros_namespace + "/set_position_goal_joint");
     this->AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>
         ("Robot", "SetPositionCartesian", ros_namespace + "/set_position_cartesian");
+    this->AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>
+        ("Robot", "SetPositionGoalCartesian", ros_namespace + "/set_position_goal_cartesian");
 
     // events
+    this->AddPublisherFromEventWrite<bool, std_msgs::Bool>
+        ("Robot","GoalReached", ros_namespace + "/goal_reached");
+    this->AddPublisherFromEventWrite<std::string, std_msgs::String>
+        ("Robot","RobotState", ros_namespace + "/robot_state");
     this->AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        ("Robot","ManipClutchBtn", ros_namespace + "/manip_clutch");
+        ("Robot","ManipClutch", ros_namespace + "/manip_clutch");
     this->AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        ("Robot","SUJClutchBtn", ros_namespace + "/suj_clutch");
-
-    // // PID
-    // this->AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
-    //             "PID", "GetPositionJoint", "/dvrk_ecm/joint_position_current");
-    // this->AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>(
-    //             "PID", "GetEffortJointDesired", "/dvrk_ecm/joint_effort_current");
-    // this->AddSubscriberToWriteCommand<prmForceTorqueJointSet , sensor_msgs::JointState>(
-    //             "PID", "SetTorqueJoint", "/dvrk_ecm/set_joint_effort");
-    // this->AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
-    //             "PID", "SetPositionJoint","/dvrk_ecm/set_position_joint");
+        ("Robot","SUJClutch", ros_namespace + "/suj_clutch");
 }
