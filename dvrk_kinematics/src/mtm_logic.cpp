@@ -100,7 +100,7 @@ int main(int argc, char** argv)
 
 
     // cisst robManipulator
-    std::string filename = ros::package::getPath("dvrk_kinematics");
+    std::string filename = ros::package::getPath("dvrk_robot");
     filename.append("/config/dvmtm.rob");
     robManipulator mtm_manip;
     robManipulator::Errno result;

@@ -120,7 +120,7 @@ int main(int argc, char** argv)
             nh.advertise<sensor_msgs::JointState>("/dvrk_psm/joint_state_publisher/enable_slider", 100);    
 
     // --- cisst robManipulator ---
-    std::string filename = ros::package::getPath("dvrk_kinematics");
+    std::string filename = ros::package::getPath("dvrk_robot");
     filename.append("/config/dvpsm.rob");
     robManipulator psm_manip;
     robManipulator::Errno result;
@@ -151,15 +151,9 @@ int main(int argc, char** argv)
     int count = 0;
     control_mode = PSM::MODE_RESET;  // start with reset_mode
     vctFrm4x4 frame6to7;
-//    frame6to7.Assign(0.0, -1.0, 0.0, 0.0,
-//                     0.0,  0.0, 1.0, 0.0102,
-//                     -1.0, 0.0, 0.0, 0.0,
-//                     0.0,  0.0, 0.0, 1.0);
-
-    // ZC: For Force Finger
-    frame6to7.Assign(0.0, 1.0, 0.0, 0.0,
-                     0.0, 0.0, 1.0, 0.06001,
-                     1.0, 0.0, 0.0, 0.0,
+    frame6to7.Assign(0.0, -1.0, 0.0, 0.0,
+                     0.0,  0.0, 1.0, 0.0102,
+                     -1.0, 0.0, 0.0, 0.0,
                      0.0,  0.0, 0.0, 1.0);
 
     // used to compensate joint 4
@@ -171,8 +165,6 @@ int main(int argc, char** argv)
         // --------- Compute current pose & publish ----------
         // psm forward kinematics
         psm_pose_current = psm_manip.ForwardKinematics(psm_joint_current);
-        psm_pose_current = psm_pose_current * frame6to7;
-//        psm_pose_current.Rotation().NormalizedSelf();
         mtsCISSTToROS(psm_pose_current, msg_pose);
 
         // publish current pose
@@ -210,7 +202,7 @@ int main(int argc, char** argv)
             break;
         case PSM::MODE_TELEOP:
             // psm_pose_command updated in callback!
-            pose6 = psm_pose_command * frame6to7.Inverse();
+            pose6 = psm_pose_command;
             psm_manip.InverseKinematics(psm_joint_command, pose6);
 
             // joint 4 is a special case

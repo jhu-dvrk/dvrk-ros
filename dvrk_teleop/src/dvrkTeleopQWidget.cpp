@@ -145,6 +145,22 @@ void dvrkTeleopQWidget::timerEvent(QTimerEvent *)
     mtm_pose_qt_->SetValue(mtm_pose_cur_);
     psm_pose_qt_->SetValue(psm_pose_cur_);
 
+    counter_++;
+}
+
+
+void dvrkTeleopQWidget::master_pose_cb(const geometry_msgs::PoseConstPtr &msg)
+{
+    mtsROSToCISST((*msg), mtm_pose_cur_);
+}
+
+void dvrkTeleopQWidget::slave_pose_cb(const geometry_msgs::PoseConstPtr &msg)
+{
+    mtsROSToCISST((*msg), psm_pose_cur_);
+}
+
+void dvrkTeleopQWidget::set_master_slave_state()
+{
     if (consoleTeleopButton->isChecked()) {
         // check teleop enable status
         if (is_head_in_) {
@@ -182,19 +198,6 @@ void dvrkTeleopQWidget::timerEvent(QTimerEvent *)
         pub_mtm_control_mode_.publish(msg_mtm_mode_);
         pub_psm_control_mode_.publish(msg_psm_mode_);
     }
-
-    counter_++;
-}
-
-
-void dvrkTeleopQWidget::master_pose_cb(const geometry_msgs::PoseConstPtr &msg)
-{
-    mtsROSToCISST((*msg), mtm_pose_cur_);
-}
-
-void dvrkTeleopQWidget::slave_pose_cb(const geometry_msgs::PoseConstPtr &msg)
-{
-    mtsROSToCISST((*msg), psm_pose_cur_);
 }
 
 
@@ -243,15 +246,18 @@ void dvrkTeleopQWidget::slot_teleopButton_toggled(bool state)
 void dvrkTeleopQWidget::slot_clutchButton_pressed(bool state)
 {
     is_clutched_ = state;
+    set_master_slave_state();
 }
 
 void dvrkTeleopQWidget::slot_headButton_pressed(bool state)
 {
     is_head_in_ = state;
+    set_master_slave_state();
 }
 
 
 void dvrkTeleopQWidget::slot_moveToolButton_pressed(bool state)
 {
     is_move_psm_ = state;
+    set_master_slave_state();
 }

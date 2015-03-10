@@ -50,6 +50,7 @@ protected slots:
 protected:
     void master_pose_cb(const geometry_msgs::PoseConstPtr &msg);
     void slave_pose_cb(const geometry_msgs::PoseConstPtr &msg);
+    void set_master_slave_state();
 
     vctFrm4x4 mtm_pose_cur_;
     vctFrm4x4 psm_pose_cur_;
