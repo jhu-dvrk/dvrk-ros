@@ -43,7 +43,6 @@ class example_application:
     def position_cartesian_desired_callback(self, data):
         self._position_cartesian_desired = data
 
-
     # configuration
     def configure(self, robot_name):
         self._robot_name = robot_name
@@ -54,13 +53,11 @@ class example_application:
         self.set_position_goal_joint = rospy.Publisher(ros_namespace + '/set_position_goal_joint', vctDoubleVec, latch=True)
         self.set_position_cartesian = rospy.Publisher(ros_namespace + '/set_position_cartesian', Pose, latch=True)
         self.set_position_goal_cartesian = rospy.Publisher(ros_namespace + '/set_position_goal_cartesian', Pose, latch=True)
-
         # subscribers
         rospy.Subscriber(ros_namespace + '/robot_state', String, self.robot_state_callback)
         rospy.Subscriber(ros_namespace + '/goal_reached', Bool, self.goal_reached_callback)
         rospy.Subscriber(ros_namespace + '/position_joint_desired', vctDoubleVec, self.position_joint_desired_callback)
         rospy.Subscriber(ros_namespace + '/position_cartesian_desired', Pose, self.position_cartesian_desired_callback)
-
         # create node
         rospy.init_node('dvrk_arm_test', anonymous=True)
         rospy.loginfo(rospy.get_caller_id() + ' -> started dvrk_arm_test')
@@ -78,7 +75,6 @@ class example_application:
     # homing example
     def home(self):
         rospy.loginfo(rospy.get_caller_id() + ' -> requesting homing')
-
         self._robot_state_event.clear()
         self.set_robot_state.publish('Home')
         counter = 10 # up to 10 transitions to get ready
@@ -90,18 +86,15 @@ class example_application:
                 rospy.loginfo(rospy.get_caller_id() + ' -> waiting for state to be DVRK_READY')
             else:
                 counter = -1
-
         if (self._robot_state != 'DVRK_READY'):
             rospy.logfatal(rospy.get_caller_id() + ' -> failed to reach state DVRK_READY')
             rospy.signal_shutdown('failed to reach state DVRK_READY')
             sys.exit(-1)
-
         rospy.loginfo(rospy.get_caller_id() + ' <- homing complete')
 
     # direct joint control example
     def joint_direct(self):
         rospy.loginfo(rospy.get_caller_id() + ' -> starting joint direct')
-
         # set in position joint mode
         self.set_state_block('DVRK_POSITION_JOINT')
         # get current position
@@ -121,7 +114,6 @@ class example_application:
             rospy.sleep(1.0 / rate)
         rospy.loginfo(rospy.get_caller_id() + ' <- joint direct complete')
 
-        
     # wrapper around publisher/subscriber to manage events
     def set_position_goal_joint_publish_and_wait(self, goal):
         self._goal_reached_event.clear()
@@ -135,7 +127,6 @@ class example_application:
     # goal joint control example
     def joint_goal(self):
         rospy.loginfo(rospy.get_caller_id() + ' -> starting joint goal')
-
         # set in position joint mode
         self.set_state_block('DVRK_POSITION_GOAL_JOINT')
         # get current position
@@ -182,13 +173,11 @@ class example_application:
     def cartesian_direct(self):
         rospy.loginfo(rospy.get_caller_id() + ' -> starting cartesian direct')
         self.prepare_cartesian()
-
         # set in position cartesian mode
         self.set_robot_state.publish('DVRK_POSITION_CARTESIAN')
         # get current position
         initial_cartesian_position = self._position_cartesian_desired
         goal = Pose()
-
         # create a new goal starting with current position
         goal.position.x = initial_cartesian_position.position.x
         goal.position.y = initial_cartesian_position.position.y
@@ -197,19 +186,23 @@ class example_application:
         goal.orientation.y = initial_cartesian_position.orientation.y
         goal.orientation.z = initial_cartesian_position.orientation.z
         goal.orientation.w = initial_cartesian_position.orientation.w
-
+        # motion parameters
         amplitude = 0.05 # 5 cm
-        duration = 5  # seconds
+        duration = 5  # 5 seconds
         rate = 200 # aiming for 200 Hz
         samples = duration * rate
-
         for i in xrange(samples):
             goal.position.x =  initial_cartesian_position.position.x + amplitude *  math.sin(i * math.radians(360.0) / samples)
             goal.position.y =  initial_cartesian_position.position.y + amplitude *  math.sin(i * math.radians(360.0) / samples)
             self.set_position_cartesian.publish(goal)
+            errorX = goal.position.x - self._position_cartesian_desired.position.x
+            errorY = goal.position.y - self._position_cartesian_desired.position.y
+            errorZ = goal.position.z - self._position_cartesian_desired.position.z
+            error = math.sqrt(errorX * errorX + errorY * errorY + errorZ * errorZ)
+            if error > 0.0015: # 1.5mm, the desired position might be old!
+                print 'Inverse kinematic error in position [', i, ']: ', error
             rospy.sleep(1.0 / rate)
         rospy.loginfo(rospy.get_caller_id() + ' <- cartesian direct complete')
-
 
     # wrapper around publisher/subscriber to manage events
     def set_position_goal_cartesian_publish_and_wait(self, goal):
@@ -225,13 +218,11 @@ class example_application:
     def cartesian_goal(self):
         rospy.loginfo(rospy.get_caller_id() + ' -> starting cartesian goal')
         self.prepare_cartesian()
-
         # set in position cartesian mode
         self.set_robot_state.publish('DVRK_POSITION_GOAL_CARTESIAN')
         # get current position
         initial_cartesian_position = self._position_cartesian_desired
         goal = Pose()
-
         # create a new goal starting with current position
         goal.position.x = initial_cartesian_position.position.x
         goal.position.y = initial_cartesian_position.position.y
@@ -240,9 +231,8 @@ class example_application:
         goal.orientation.y = initial_cartesian_position.orientation.y
         goal.orientation.z = initial_cartesian_position.orientation.z
         goal.orientation.w = initial_cartesian_position.orientation.w
-
+        # motion parameters
         amplitude = 0.05 # 5 cm
-
         # first motion
         goal.position.x =  initial_cartesian_position.position.x - amplitude
         goal.position.y =  initial_cartesian_position.position.y + amplitude
@@ -256,7 +246,6 @@ class example_application:
         goal.position.y =  initial_cartesian_position.position.y
         self.set_position_goal_cartesian_publish_and_wait(goal)
         rospy.loginfo(rospy.get_caller_id() + ' <- cartesian goal complete')
-
 
     # main method
     def run(self):
