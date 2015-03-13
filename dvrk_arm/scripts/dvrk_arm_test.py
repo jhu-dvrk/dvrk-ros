@@ -73,6 +73,7 @@ class example_application:
         if (self._robot_state != state):
             rospy.logfatal(rospy.get_caller_id() + ' -> failed to reach state ' + state)
             rospy.signal_shutdown('failed to reach desired state')
+            sys.exit(-1)
 
     # homing example
     def home(self):
@@ -93,6 +94,7 @@ class example_application:
         if (self._robot_state != 'DVRK_READY'):
             rospy.logfatal(rospy.get_caller_id() + ' -> failed to reach state DVRK_READY')
             rospy.signal_shutdown('failed to reach state DVRK_READY')
+            sys.exit(-1)
 
         rospy.loginfo(rospy.get_caller_id() + ' <- homing complete')
 
@@ -128,6 +130,7 @@ class example_application:
         self._goal_reached_event.wait(60) # 1 minute at most
         if not self._goal_reached:
             rospy.signal_shutdown('failed to reach goal')
+            sys.exit(-1)
 
     # goal joint control example
     def joint_goal(self):
@@ -173,6 +176,7 @@ class example_application:
             self._goal_reached_event.wait(60) # 1 minute at most
             if not self._goal_reached:
                 rospy.signal_shutdown('failed to reach goal')
+                sys.exit(-1)
 
     # direct cartesian control example
     def cartesian_direct(self):
@@ -215,6 +219,7 @@ class example_application:
         self._goal_reached_event.wait(60) # 1 minute at most
         if not self._goal_reached:
             rospy.signal_shutdown('failed to reach goal')
+            sys.exit(-1)
 
     # direct cartesian control example
     def cartesian_goal(self):
