@@ -15,16 +15,17 @@ from cisst_msgs.msg import vctDoubleVec
 # example of application with callbacks for robot events
 class example_application:
 
-    # data members, event based
-    _robot_name = 'undefined'
-    _robot_state = 'uninitialized'
-    _robot_state_event = threading.Event()
-    _goal_reached = False
-    _goal_reached_event = threading.Event()
+    def __init__(self):
+        # data members, event based
+        self._robot_name = 'undefined'
+        self._robot_state = 'uninitialized'
+        self._robot_state_event = threading.Event()
+        self._goal_reached = False
+        self._goal_reached_event = threading.Event()
 
-    # continuous publish from dvrk_bridge
-    _position_joint_desired = vctDoubleVec()
-    _position_cartesian_desired = Pose()
+        # continuous publish from dvrk_bridge
+        self._position_joint_desired = vctDoubleVec()
+        self._position_cartesian_desired = Pose()
 
     # callbacks
     def robot_state_callback(self, data):
@@ -199,7 +200,7 @@ class example_application:
             errorY = goal.position.y - self._position_cartesian_desired.position.y
             errorZ = goal.position.z - self._position_cartesian_desired.position.z
             error = math.sqrt(errorX * errorX + errorY * errorY + errorZ * errorZ)
-            if error > 0.0015: # 1.5mm, the desired position might be old!
+            if error > 0.002: # 2 mm
                 print 'Inverse kinematic error in position [', i, ']: ', error
             rospy.sleep(1.0 / rate)
         rospy.loginfo(rospy.get_caller_id() + ' <- cartesian direct complete')
