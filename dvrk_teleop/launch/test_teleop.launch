@@ -3,7 +3,8 @@
   <!-- dvrk_teleop gui node -->
   <node name="dvrk_teleop"
         pkg="dvrk_teleop"
-        type="dvrk_teleop"/>
+        type="dvrk_teleop"
+        output="screen"/>
   
   <!-- dvrk_teleop gui node -->
   <node name="dvrk_teleop_gui"

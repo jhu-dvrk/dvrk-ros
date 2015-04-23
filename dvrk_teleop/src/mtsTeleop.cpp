@@ -56,18 +56,15 @@ void mtsTeleop::Run(void)
     ros::spinOnce();
 
     // publish
-#if 1
-    if (counter_%10 == 0) {
-        //            std::cerr << "clutch = " << is_clutch_pressed_ << std::endl;
-        //            std::cerr << " mtm = " << std::endl
-        //                      << mtm_pose_cur_ << std::endl;
-    }
-#endif
-
     vctMatRot3 mtm2psm;
     mtm2psm.Assign(-1.0, 0.0, 0.0,
                    0.0,-1.0, 0.0,
                    0.0, 0.0, 1.0);
+
+    vctMatRot3 psm6tomtm7;
+    psm6tomtm7.Assign(0.0, 0.0, 1.0,
+                      1.0, 0.0, 0.0,
+                      0.0, 1.0, 0.0);
 
     if (is_enabled_) {
 
@@ -83,10 +80,8 @@ void mtsTeleop::Run(void)
 
         // rotation
         vctMatRot3 psm_motion_rot;
-        psm_motion_rot = mtm2psm * mtm_pose_cur_.Rotation();
+        psm_motion_rot = mtm2psm * mtm_pose_cur_.Rotation() * psm6tomtm7;
         psm_pose_cmd_.Rotation().FromNormalized(psm_motion_rot);
-
-//        std::cerr << " teleop enabled " << counter_ << std::endl;
 
     } else {
         // In this mode, MTM orientation follows PSM orientation
@@ -97,27 +92,18 @@ void mtsTeleop::Run(void)
         // mtm needs to follow psm orientation
         mtm_pose_cmd_.Assign(mtm_pose_cur_);
         vctMatRot3 mtm_rot_cmd;
-        mtm_rot_cmd = mtm2psm.Inverse() * psm_pose_cur_.Rotation();
+        mtm_rot_cmd = mtm2psm.Inverse() * psm_pose_cur_.Rotation() * psm6tomtm7.Inverse();
         mtm_pose_cmd_.Rotation().FromNormalized(mtm_rot_cmd);
     }
 
     mtsCISSTToROS(psm_pose_cmd_, msg_psm_pose_);
     pub_psm_pose_.publish(msg_psm_pose_);
+
     mtsCISSTToROS(mtm_pose_cmd_, msg_mtm_pose_);
     pub_mtm_pose_.publish(msg_mtm_pose_);
 
     // save current pose as previous
     mtm_pose_pre_.Assign(mtm_pose_cur_);
-
-#if 0
-    if (counter_%10 == 0) {
-        std::cerr << " mtm = " << std::endl
-                  << mtm_pose_cur_ << std::endl;
-        std::cerr << "psm = " << std::endl
-                  << psm_pose_cur_ << std::endl << std::endl;
-    }
-#endif
-
 }
 
 void mtsTeleop::Cleanup(void) {
