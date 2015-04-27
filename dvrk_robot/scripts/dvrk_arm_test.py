@@ -3,6 +3,12 @@
 # Author: Anton Deguet
 # Date: 2015-02-22
 
+# Start a single arm using 
+# > rosrun dvrk_robot dvrk_mtm_ros   // or dvrk_psm_ros or dvrk_mtm_ros
+
+# To communicate with the arm using ROS topics, see the python based example dvrk_arm_test.py:
+# > rosrun dvrk_robot dvrk_arm_test.py
+
 import rospy
 import threading
 import math
@@ -29,12 +35,12 @@ class example_application:
 
     # callbacks
     def robot_state_callback(self, data):
-        rospy.logdebug(rospy.get_caller_id() + " -> current state is %s", data.data)
+        rospy.loginfo(rospy.get_caller_id() + " -> current state is %s", data.data)
         self._robot_state = data.data
         self._robot_state_event.set()
-
+        
     def goal_reached_callback(self, data):
-        rospy.logdebug(rospy.get_caller_id() + " -> goal reached is %s", data.data)
+        rospy.loginfo(rospy.get_caller_id() + " -> goal reached is %s", data.data)
         self._goal_reached = data.data
         self._goal_reached_event.set()
 
@@ -100,7 +106,7 @@ class example_application:
         self.set_state_block('DVRK_POSITION_JOINT')
         # get current position
         initial_joint_position = self._position_joint_desired
-        rospy.logdebug(rospy.get_caller_id() + " -> testing direct joint position for 2 joints of %i", len(initial_joint_position))
+        rospy.loginfo(rospy.get_caller_id() + " -> testing direct joint position for 2 joints of %i", len(initial_joint_position))
         amplitude = math.radians(10.0) # +/- 10 degrees
         duration = 5  # seconds
         rate = 200 # aiming for 200 Hz
@@ -132,7 +138,7 @@ class example_application:
         self.set_state_block('DVRK_POSITION_GOAL_JOINT')
         # get current position
         initial_joint_position = self._position_joint_desired
-        rospy.logdebug(rospy.get_caller_id() + " -> testing goal joint position for 2 joints of %i", len(initial_joint_position))
+        rospy.loginfo(rospy.get_caller_id() + " -> testing goal joint position for 2 joints of %i", len(initial_joint_position))
         amplitude = math.radians(10.0)
         # create a new goal starting with current position
         goal = vctDoubleVec()
@@ -175,7 +181,7 @@ class example_application:
         rospy.loginfo(rospy.get_caller_id() + ' -> starting cartesian direct')
         self.prepare_cartesian()
         # set in position cartesian mode
-        self.set_robot_state.publish('DVRK_POSITION_CARTESIAN')
+        self.set_state_block('DVRK_POSITION_CARTESIAN')
         # get current position
         initial_cartesian_position = self._position_cartesian_desired
         goal = Pose()
@@ -220,7 +226,7 @@ class example_application:
         rospy.loginfo(rospy.get_caller_id() + ' -> starting cartesian goal')
         self.prepare_cartesian()
         # set in position cartesian mode
-        self.set_robot_state.publish('DVRK_POSITION_GOAL_CARTESIAN')
+        self.set_state_block('DVRK_POSITION_GOAL_CARTESIAN')
         # get current position
         initial_cartesian_position = self._position_cartesian_desired
         goal = Pose()

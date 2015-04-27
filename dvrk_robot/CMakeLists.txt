@@ -1,60 +1,60 @@
+#
+# (C) Copyright 2015 Johns Hopkins University (JHU), All Rights Reserved.
+#
+# --- begin cisst license - do not edit ---
+#
+# This software is provided "as is" under an open source license, with
+# no warranty.  The complete license can be found in license.txt and
+# http://www.cisst.org/cisst/license.txt.
+#
+# --- end cisst license ---
+
 cmake_minimum_required (VERSION 2.8.3)
 project (dvrk_robot)
 
-## Find catkin macros and libraries
+## find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package (catkin REQUIRED
-  COMPONENTS
-  cisst_msgs
-  cisst_ros_bridge
-  geometry_msgs
-  roscpp
-  std_msgs
-  roslib
-)
-
-set (REQUIRED_CISST_LIBRARIES
-  cisstCommon
-  cisstCommonXML
-  cisstVector
-  cisstVectorQt
-  cisstOSAbstraction
-  cisstMultiTask
-  cisstMultiTaskQt
-  cisstParameterTypes
-  cisstParameterTypesQt
-  cisstRobot
-  cisstNumerical
-  cisstQt
-  )
-
-
+              COMPONENTS
+              cisst_msgs
+              cisst_ros_bridge
+              geometry_msgs
+              roscpp
+              std_msgs
+              roslib
+              )
 
 # find cisst and make sure the required libraries have been compiled
+set (REQUIRED_CISST_LIBRARIES
+     cisstCommon
+     cisstCommonXML
+     cisstVector
+     cisstVectorQt
+     cisstOSAbstraction
+     cisstMultiTask
+     cisstMultiTaskQt
+     cisstParameterTypes
+     cisstParameterTypesQt
+     cisstRobot
+     cisstNumerical
+     cisstQt
+     )
+
 find_package (cisst REQUIRED ${REQUIRED_CISST_LIBRARIES})
-include (${CISST_USE_FILE})
-
-
-# KDL
-find_package(orocos_kdl REQUIRED)
-include_directories(${orocos_kdl_INCLUDE_DIRS})
-link_directories(${orocos_kdl_LIBRARY_DIRS})
-
-catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES dvrk_robot
-#  CATKIN_DEPENDS cisst_msgs cisst_ros_bridge geometry_msgs
-#                 roscpp std_msgs
-#  DEPENDS system_lib
-)
-
-# include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
 
 if (cisst_FOUND_AS_REQUIRED)
+
+  include (${CISST_USE_FILE})
+
+
+  # include_directories(include)
+  include_directories (${catkin_INCLUDE_DIRS})
+
+  catkin_package (INCLUDE_DIRS include
+                  LIBRARIES dvrk_utilities
+                  CATKIN_DEPENDS cisst_msgs cisst_ros_bridge geometry_msgs roscpp std_msgs
+                  DEPENDS ${REQUIRED_CISST_LIBRARIES})
 
   # sawRobotIO1394 has been compiled within cisst, we should find it automatically
   cisst_find_saw_component (sawRobotIO1394 REQUIRED)
@@ -62,10 +62,8 @@ if (cisst_FOUND_AS_REQUIRED)
   cisst_find_saw_component (sawControllers REQUIRED)
   cisst_find_saw_component (sawConstraintController REQUIRED)
 
-  message(STATUS "sawControllers: " ${sawControllers_LIBRARY_DIR})
-  message(STATUS "sawControllers_LIBRARIES: " ${sawControllers_LIBRARIES})
-
   include_directories (
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${sawRobotIO1394_INCLUDE_DIR}
     ${sawControllers_INCLUDE_DIR}
     ${sawConstraintController_INCLUDE_DIR}
@@ -79,22 +77,23 @@ if (cisst_FOUND_AS_REQUIRED)
     ${sawIntuitiveResearchKit_LIBRARY_DIR}
     )
 
-  # set(ROBOTSRC dvrk_mtm_ros dvrk_psm_ros dvrk_full_ros)
-  set(ROBOTSRC dvrk_mtm_ros dvrk_psm_ros dvrk_ecm_ros dvrk_full_ros)
-  foreach(_robot ${ROBOTSRC})
-    add_executable (${_robot} src/${_robot}.cpp)
-    target_link_libraries (${_robot}
+  add_library (dvrk_utilities
+               include/dvrk_utilities/dvrk_add_topics_functions.h
+               src/dvrk_add_topics_functions.cpp)
+
+  set (_EXECUTABLES dvrk_mtm_ros dvrk_psm_ros dvrk_ecm_ros dvrk_full_ros)
+  foreach (_executable ${_EXECUTABLES})
+    add_executable (${_executable} src/${_executable}.cpp)
+    target_link_libraries (
+      ${_executable}
       ${sawRobotIO1394_LIBRARIES}
       ${sawIntuitiveResearchKit_LIBRARIES}
       ${sawControllers_LIBRARIES}
       ${sawConstraintController_LIBRARIES}
-      ${orocos_kdl_LIBRARIES}
       ${catkin_LIBRARIES}
     )
-    cisst_target_link_libraries (${_robot} ${REQUIRED_CISST_LIBRARIES})
+    cisst_target_link_libraries (${_executable} ${REQUIRED_CISST_LIBRARIES})
+    target_link_libraries (${_executable} dvrk_utilities)
+  endforeach (_executable)
 
-  endforeach(_robot)
-
-endif(cisst_FOUND_AS_REQUIRED)
-
-
+endif (cisst_FOUND_AS_REQUIRED)
