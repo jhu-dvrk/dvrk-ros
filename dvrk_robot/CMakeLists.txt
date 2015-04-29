@@ -57,9 +57,9 @@ if (cisst_FOUND_AS_REQUIRED)
                   DEPENDS ${REQUIRED_CISST_LIBRARIES})
 
   # sawRobotIO1394 has been compiled within cisst, we should find it automatically
-  cisst_find_saw_component (sawRobotIO1394 REQUIRED)
-  cisst_find_saw_component (sawIntuitiveResearchKit REQUIRED)
-  cisst_find_saw_component (sawControllers REQUIRED)
+  cisst_find_saw_component (sawRobotIO1394 1.1.0 REQUIRED)
+  cisst_find_saw_component (sawIntuitiveResearchKit 1.1.0 REQUIRED)
+  cisst_find_saw_component (sawControllers 1.1.0 REQUIRED)
   cisst_find_saw_component (sawConstraintController REQUIRED)
 
   include_directories (
