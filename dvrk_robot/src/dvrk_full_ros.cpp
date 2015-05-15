@@ -1,12 +1,12 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-    */
 /* ex: set filetype=cpp softtabstop=4 shiftwidth=4 tabstop=4 cindent expandtab: */
-/*
 
+/*
   Modified From Original File By Adnan Munawar (WPI)
   Author(s):  Zihan Chen, Anton Deguet
   Created on: 2013-02-07
 
-  (C) Copyright 2013-2014 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2013-2015 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -43,6 +43,7 @@ http://www.cisst.org/cisst/license.txt.
 
 // ros
 #include <cisst_ros_bridge/mtsROSBridge.h>
+#include <dvrk_utilities/dvrk_add_topics_functions.h>
 #include <ros/package.h>
 
 #include <QTabWidget>
@@ -52,7 +53,7 @@ http://www.cisst.org/cisst/license.txt.
 
 void mySigintHandler(int sig)
 {
-  QCoreApplication::exit(0);
+    QCoreApplication::exit(0);
 }
 
 void fileExists(const std::string & description, const std::string & filename)
@@ -85,7 +86,7 @@ int main(int argc, char ** argv)
 
     // -------------- Some ROS Hack ------------
     signal(SIGINT, mySigintHandler);
-    
+
     // ---- WARNING: hack to remove ros args ----
     ros::V_string argout;
     ros::removeROSArgs(argc, argv, argout);
@@ -244,7 +245,7 @@ int main(int argc, char ** argv)
         fileExists(masterName + " PID", masterPIDFile);
         fileExists(masterName + " kinematic", masterKinematicFile);
         mtsIntuitiveResearchKitConsole::Arm * mtm
-                = new mtsIntuitiveResearchKitConsole::Arm(masterName, io->GetName());
+            = new mtsIntuitiveResearchKitConsole::Arm(masterName, io->GetName());
         mtm->ConfigurePID(masterPIDFile);
         mtm->ConfigureArm(mtsIntuitiveResearchKitConsole::Arm::ARM_MTM,
                           masterKinematicFile, periodKinematics);
@@ -258,7 +259,7 @@ int main(int argc, char ** argv)
         fileExists(slaveName + " PID", slavePIDFile);
         fileExists(slaveName + " kinematic", slaveKinematicFile);
         mtsIntuitiveResearchKitConsole::Arm * psm
-                = new mtsIntuitiveResearchKitConsole::Arm(slaveName, io->GetName());
+            = new mtsIntuitiveResearchKitConsole::Arm(slaveName, io->GetName());
         psm->ConfigurePID(slavePIDFile);
         psm->ConfigureArm(mtsIntuitiveResearchKitConsole::Arm::ARM_PSM,
                           slaveKinematicFile, periodKinematics);
@@ -307,8 +308,8 @@ int main(int argc, char ** argv)
             // Default orientation between master and slave
             vctMatRot3 master2slave;
             master2slave.Assign(-1.0, 0.0, 0.0,
-                                 0.0,-1.0, 0.0,
-                                 0.0, 0.0, 1.0);
+                                0.0,-1.0, 0.0,
+                                0.0, 0.0, 1.0);
             tele->SetRegistrationRotation(master2slave);
             componentManager->AddComponent(tele);
             // connect teleGUI to tele
@@ -345,77 +346,22 @@ int main(int argc, char ** argv)
 
     // Starting ROS-Bridge Here
     mtsROSBridge rosBridge("RobotBridge", 20 * cmn_ms, true, false);
-    rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
-                "MTML", "GetPositionJoint", "/dvrk_mtml/joint_position_current");
-    rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
-                "MTMR", "GetPositionJoint", "/dvrk_mtmr/joint_position_current");
-    rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
-                "PSM1", "GetPositionJoint", "/dvrk_psm1/joint_position_current");
-    rosBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
-                "PSM2", "GetPositionJoint", "/dvrk_psm2/joint_position_current");
-    rosBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
-                "PSM1", "GetPositionCartesian", "/dvrk_psm1/cartesian_pose_current");
-    rosBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
-                "PSM2", "GetPositionCartesian", "/dvrk_psm2/cartesian_pose_current");
-    rosBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
-                "MTML", "GetPositionCartesian", "/dvrk_mtml/cartesian_pose_current");
-    rosBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
-                "MTMR", "GetPositionCartesian", "/dvrk_mtmr/cartesian_pose_current");
 
-    rosBridge.AddPublisherFromReadCommand<double, std_msgs::Float32>  (
-                "MTML", "GetGripperPosition", "/dvrk_mtml/gripper_position_current");
-    rosBridge.AddPublisherFromReadCommand<double, std_msgs::Float32>  (
-                "MTMR", "GetGripperPosition", "/dvrk_mtmr/gripper_position_current");
-
-    rosBridge.AddSubscriberToWriteCommand<std::string , std_msgs::String>(
-                "PSM1", "SetRobotControlState", "/dvrk_psm1/set_robot_state");
-    rosBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
-                "PSM1", "SetPositionCartesian", "/dvrk_psm1/set_position_cartesian");
-    rosBridge.AddSubscriberToWriteCommand<std::string , std_msgs::String>(
-                "PSM2", "SetRobotControlState", "/dvrk_psm2/set_robot_state");
-    rosBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
-                "PSM2", "SetPositionCartesian", "/dvrk_psm2/set_position_cartesian");
-    rosBridge.AddSubscriberToWriteCommand<std::string , std_msgs::String>(
-                "MTML", "SetRobotControlState", "/dvrk_mtml/set_robot_state");
-    rosBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
-                "MTML", "SetPositionCartesian", "/dvrk_mtml/set_position_cartesian");
-    rosBridge.AddSubscriberToWriteCommand<std::string , std_msgs::String>(
-                "MTMR", "SetRobotControlState", "/dvrk_mtmr/set_robot_state");
-    rosBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
-                "MTMR", "SetPositionCartesian", "/dvrk_mtmr/set_position_cartesian");
-
-    rosBridge.AddSubscriberToWriteCommand<double, std_msgs::Float32>(
-                "PSM1", "SetOpenAngle", "/dvrk_psm1/set_open_angle");
-    rosBridge.AddSubscriberToWriteCommand<double, std_msgs::Float32>(
-                "PSM2", "SetOpenAngle", "/dvrk_psm2/set_open_angle");
-    
+    // populate interfaces
+    dvrk::add_topics_mtm(rosBridge, "/dvrk_mtmr", "MTMR");
+    dvrk::add_topics_mtm(rosBridge, "/dvrk_mtml", "MTML");
+    dvrk::add_topics_psm(rosBridge, "/dvrk_psm1", "PSM1");
+    dvrk::add_topics_psm(rosBridge, "/dvrk_psm2", "PSM2");
+    dvrk::add_topics_footpedal(rosBridge, "/dvrk_footpedal");
 
     componentManager->AddComponent(&rosBridge);
+
+    // connect all ros bridge interfaces
     componentManager->Connect(rosBridge.GetName(), "MTML", "MTML", "Robot");
     componentManager->Connect(rosBridge.GetName(), "MTMR", "MTMR", "Robot");
     componentManager->Connect(rosBridge.GetName(), "PSM1", "PSM1", "Robot");
     componentManager->Connect(rosBridge.GetName(), "PSM2", "PSM2", "Robot");
-
-
-    // ----- Footpedal ------
-    rosBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
-                "Clutch","Button","/dvrk_footpedal/clutch");
-    rosBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
-                "Coag","Button","/dvrk_footpedal/coag");
-    rosBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
-                "Camera","Button","/dvrk_footpedal/camera");
-    rosBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
-                "Cam+","Button","/dvrk_footpedal/camplus");
-    rosBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
-                "Cam-","Button","/dvrk_footpedal/camminus");
-
-    componentManager->Connect(rosBridge.GetName(), "Clutch", "io", "CLUTCH");
-    componentManager->Connect(rosBridge.GetName(), "Coag", "io", "COAG");
-    componentManager->Connect(rosBridge.GetName(), "Camera", "io", "CAMERA");
-    componentManager->Connect(rosBridge.GetName(), "Cam+", "io", "CAM+");
-    componentManager->Connect(rosBridge.GetName(), "Cam-", "io", "CAM-");
-
-
+    dvrk::connect_bridge_footpedal(rosBridge, "io");
 
     ///////////////////////////////////////////////////////////////////
 
@@ -446,12 +392,4 @@ int main(int argc, char ** argv)
 
     return 0;
 }
-
-
-
-
-
-
-
-
 
