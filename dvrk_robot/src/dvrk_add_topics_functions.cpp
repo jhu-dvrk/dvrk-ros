@@ -22,15 +22,15 @@ void dvrk::add_topics_footpedal(mtsROSBridge & bridge,
                                 const std::string & ros_namespace)
 {
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        ("Clutch", "Button", ros_namespace + "/clutch_state");
+        ("Clutch", "Button", ros_namespace + "/clutch");
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        ("Coag", "Button", ros_namespace + "/coag_state");
+        ("Coag", "Button", ros_namespace + "/coag");
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        ("Camera", "Button", ros_namespace + "/camera_state");
+        ("Camera", "Button", ros_namespace + "/camera");
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        ("Cam+", "Button", ros_namespace + "/cam_plus_state");
+        ("Cam+", "Button", ros_namespace + "/camplus");
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        ("Cam-", "Button", ros_namespace + "/cam_minus_state");
+        ("Cam-", "Button", ros_namespace + "/camminus");
 
 }
 
