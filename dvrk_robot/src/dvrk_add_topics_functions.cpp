@@ -50,26 +50,25 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
                           const std::string & arm_component_name)
 {
     // read
-    bridge.AddPublisherFromReadCommand<prmPositionJointGet, cisst_msgs::vctDoubleVec>
+    bridge.AddPublisherFromCommandRead<prmPositionJointGet, cisst_msgs::vctDoubleVec>
         (arm_component_name, "GetPositionJoint", ros_namespace +"/position_joint_current");
-    bridge.AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>
+    bridge.AddPublisherFromCommandRead<vctDoubleVec, cisst_msgs::vctDoubleVec>
         (arm_component_name, "GetPositionJointDesired", ros_namespace +"/position_joint_desired");
-    bridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>
+    bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::Pose>
         (arm_component_name, "GetPositionCartesian", ros_namespace +"/position_cartesian_current");
-    bridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>
+    bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::Pose>
         (arm_component_name, "GetPositionCartesianDesired", ros_namespace +"/position_cartesian_desired");
 
-
     // write
-    bridge.AddSubscriberToWriteCommand<std::string, std_msgs::String>
+    bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
         (arm_component_name, "SetRobotControlState", ros_namespace + "/set_robot_state");
-    bridge.AddSubscriberToWriteCommand<prmPositionJointSet, cisst_msgs::vctDoubleVec>
+    bridge.AddSubscriberToCommandWrite<prmPositionJointSet, cisst_msgs::vctDoubleVec>
         (arm_component_name, "SetPositionJoint", ros_namespace + "/set_position_joint");
-    bridge.AddSubscriberToWriteCommand<prmPositionJointSet, cisst_msgs::vctDoubleVec>
+    bridge.AddSubscriberToCommandWrite<prmPositionJointSet, cisst_msgs::vctDoubleVec>
         (arm_component_name, "SetPositionGoalJoint", ros_namespace + "/set_position_goal_joint");
-    bridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>
+    bridge.AddSubscriberToCommandWrite<prmPositionCartesianSet, geometry_msgs::Pose>
         (arm_component_name, "SetPositionCartesian", ros_namespace + "/set_position_cartesian");
-    bridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>
+    bridge.AddSubscriberToCommandWrite<prmPositionCartesianSet, geometry_msgs::Pose>
         (arm_component_name, "SetPositionGoalCartesian", ros_namespace + "/set_position_goal_cartesian");
 
     // events
@@ -84,6 +83,9 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
         (arm_component_name, "RobotState", ros_namespace + "/robot_state");
     bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
         (arm_component_name, "GoalReached", ros_namespace + "/goal_reached");
+
+    // messages
+    bridge.AddLogErrorFromEventWrite(arm_component_name + "-log", "Error");
 }
 
 void dvrk::add_topics_mtm(mtsROSBridge & bridge,
@@ -94,7 +96,7 @@ void dvrk::add_topics_mtm(mtsROSBridge & bridge,
     dvrk::add_topics_arm(bridge, ros_namespace, mtm_component_name);
 
     // mtm specific API
-    bridge.AddPublisherFromReadCommand<double, std_msgs::Float32>
+    bridge.AddPublisherFromCommandRead<double, std_msgs::Float32>
         (mtm_component_name, "GetGripperPosition", ros_namespace + "/gripper_position_current");
     bridge.AddPublisherFromEventVoid
         (mtm_component_name, "GripperPinchEvent", ros_namespace + "/gripper_pinch_event");
@@ -105,9 +107,9 @@ void dvrk::add_topics_mtm(mtsROSBridge & bridge,
     // 2015-04-23 Not Supported Yet.
     // TODO: add separate mode in MTM to support this feature,
     // use at your own risk
-    bridge.AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>
+    bridge.AddPublisherFromCommandRead<vctDoubleVec, cisst_msgs::vctDoubleVec>
         (pid->GetName(), "GetTorqueJoint", "/dvrk_mtm/joint_effort_current");
-    bridge.AddSubscriberToWriteCommand<prmForceTorqueJointSet , sensor_msgs::JointState>
+    bridge.AddSubscriberToCommandWrite<prmForceTorqueJointSet , sensor_msgs::JointState>
         (pid->GetName(), "SetTorqueJoint", "/dvrk_mtm/set_joint_effort");
 #endif
 }
@@ -120,7 +122,7 @@ void dvrk::add_topics_psm(mtsROSBridge & bridge,
     dvrk::add_topics_arm(bridge, ros_namespace, psm_component_name);
 
     // psm specific API
-    bridge.AddSubscriberToWriteCommand<double, std_msgs::Float32>
+    bridge.AddSubscriberToCommandWrite<double, std_msgs::Float32>
         (psm_component_name, "SetJawPosition", ros_namespace + "/set_jaw_position");
 
     // events
@@ -144,4 +146,12 @@ void dvrk::add_topics_ecm(mtsROSBridge & bridge,
         (ecm_component_name, "ManipClutch", ros_namespace + "/manip_clutch");
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
         (ecm_component_name, "SUJClutch", ros_namespace + "/suj_clutch");
+}
+
+void dvrk::connect_bridge_ecm(mtsROSBridge & bridge,
+                              const std::string & ecm_component_name)
+{
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
+    componentManager->Connect(bridge.GetName(), ecm_component_name, ecm_component_name, "Robot");
+    componentManager->Connect(bridge.GetName(), ecm_component_name + "-log", ecm_component_name, "Robot");
 }

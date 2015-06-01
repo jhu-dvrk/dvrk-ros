@@ -44,6 +44,9 @@ namespace dvrk {
     void add_topics_ecm(mtsROSBridge & bridge,
                         const std::string & ros_namespace,
                         const std::string & ecm_component_name);
+
+    void connect_bridge_ecm(mtsROSBridge & bridge,
+                            const std::string & ecm_component_name);
 }
 
 #endif // _dvrk_add_topics_functions_h
