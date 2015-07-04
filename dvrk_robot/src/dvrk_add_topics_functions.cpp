@@ -85,7 +85,9 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
         (arm_component_name, "GoalReached", ros_namespace + "/goal_reached");
 
     // messages
-    bridge.AddLogErrorFromEventWrite(arm_component_name + "-log", "Error");
+    bridge.AddLogFromEventWrite(arm_component_name + "-log", "Error", mtsROSEventWriteLog::ROS_LOG_ERROR);
+    bridge.AddLogFromEventWrite(arm_component_name + "-log", "Warning", mtsROSEventWriteLog::ROS_LOG_WARN);
+    bridge.AddLogFromEventWrite(arm_component_name + "-log", "Status", mtsROSEventWriteLog::ROS_LOG_INFO);
 }
 
 void dvrk::add_topics_mtm(mtsROSBridge & bridge,
@@ -146,6 +148,22 @@ void dvrk::add_topics_ecm(mtsROSBridge & bridge,
         (ecm_component_name, "ManipClutch", ros_namespace + "/manip_clutch");
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
         (ecm_component_name, "SUJClutch", ros_namespace + "/suj_clutch");
+}
+
+void dvrk::connect_bridge_mtm(mtsROSBridge & bridge,
+                              const std::string & mtm_component_name)
+{
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
+    componentManager->Connect(bridge.GetName(), mtm_component_name, mtm_component_name, "Robot");
+    componentManager->Connect(bridge.GetName(), mtm_component_name + "-log", mtm_component_name, "Robot");
+}
+
+void dvrk::connect_bridge_psm(mtsROSBridge & bridge,
+                              const std::string & psm_component_name)
+{
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
+    componentManager->Connect(bridge.GetName(), psm_component_name, psm_component_name, "Robot");
+    componentManager->Connect(bridge.GetName(), psm_component_name + "-log", psm_component_name, "Robot");
 }
 
 void dvrk::connect_bridge_ecm(mtsROSBridge & bridge,

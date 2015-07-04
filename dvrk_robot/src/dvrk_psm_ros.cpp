@@ -135,7 +135,7 @@ int main(int argc, char** argv)
     componentManager->AddComponent(&robotBridge);
 
     // connect interfaces on cisst/SAW side
-    componentManager->Connect(robotBridge.GetName(), psm->GetName(), psm->GetName(), "Robot");
+    dvrk::connect_bridge_psm(robotBridge, psm->GetName());
 
     // organize all widgets in a tab widget
     QTabWidget * tabWidget = new QTabWidget;

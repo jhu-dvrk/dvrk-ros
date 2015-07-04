@@ -45,6 +45,12 @@ namespace dvrk {
                         const std::string & ros_namespace,
                         const std::string & ecm_component_name);
 
+    void connect_bridge_mtm(mtsROSBridge & bridge,
+                            const std::string & mtm_component_name);
+
+    void connect_bridge_psm(mtsROSBridge & bridge,
+                            const std::string & psm_component_name);
+
     void connect_bridge_ecm(mtsROSBridge & bridge,
                             const std::string & ecm_component_name);
 }
