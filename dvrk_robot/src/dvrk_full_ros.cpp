@@ -33,7 +33,6 @@ http://www.cisst.org/cisst/license.txt.
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsoleQtWidget.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitArmQtWidget.h>
-#include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitUDPStreamer.h>
 #include <sawControllers/mtsTeleOperation.h>
 #include <sawControllers/mtsTeleOperationQtWidget.h>
 
@@ -75,7 +74,6 @@ int main(int argc, char ** argv)
     const double periodIO = 0.5 * cmn_ms;
     const double periodKinematics = 2.0 * cmn_ms;
     const double periodTeleop = 2.0 * cmn_ms;
-    const double periodUDP = 20.0 * cmn_ms;
 
     // log configuration
     cmnLogger::SetMask(CMN_LOG_ALLOW_ALL);

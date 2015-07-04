@@ -51,13 +51,15 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
 {
     // read
     bridge.AddPublisherFromCommandRead<prmPositionJointGet, cisst_msgs::vctDoubleVec>
-        (arm_component_name, "GetPositionJoint", ros_namespace +"/position_joint_current");
+        (arm_component_name, "GetPositionJoint", ros_namespace + "/position_joint_current");
     bridge.AddPublisherFromCommandRead<vctDoubleVec, cisst_msgs::vctDoubleVec>
-        (arm_component_name, "GetPositionJointDesired", ros_namespace +"/position_joint_desired");
+        (arm_component_name, "GetPositionJointDesired", ros_namespace + "/position_joint_desired");
+    bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
+        (arm_component_name, "GetStateJoint", ros_namespace + "/state_joint_current");
     bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::Pose>
-        (arm_component_name, "GetPositionCartesian", ros_namespace +"/position_cartesian_current");
+        (arm_component_name, "GetPositionCartesian", ros_namespace + "/position_cartesian_current");
     bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::Pose>
-        (arm_component_name, "GetPositionCartesianDesired", ros_namespace +"/position_cartesian_desired");
+        (arm_component_name, "GetPositionCartesianDesired", ros_namespace + "/position_cartesian_desired");
 
     // write
     bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
@@ -104,16 +106,14 @@ void dvrk::add_topics_mtm(mtsROSBridge & bridge,
         (mtm_component_name, "GripperPinchEvent", ros_namespace + "/gripper_pinch_event");
     bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
         (mtm_component_name, "GripperClosedEvent", ros_namespace + "/gripper_closed_event");
+}
 
-#if 0
-    // 2015-04-23 Not Supported Yet.
-    // TODO: add separate mode in MTM to support this feature,
-    // use at your own risk
-    bridge.AddPublisherFromCommandRead<vctDoubleVec, cisst_msgs::vctDoubleVec>
-        (pid->GetName(), "GetTorqueJoint", "/dvrk_mtm/joint_effort_current");
-    bridge.AddSubscriberToCommandWrite<prmForceTorqueJointSet , sensor_msgs::JointState>
-        (pid->GetName(), "SetTorqueJoint", "/dvrk_mtm/set_joint_effort");
-#endif
+void dvrk::connect_bridge_mtm(mtsROSBridge & bridge,
+                              const std::string & mtm_component_name)
+{
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
+    componentManager->Connect(bridge.GetName(), mtm_component_name, mtm_component_name, "Robot");
+    componentManager->Connect(bridge.GetName(), mtm_component_name + "-log", mtm_component_name, "Robot");
 }
 
 void dvrk::add_topics_psm(mtsROSBridge & bridge,
@@ -134,6 +134,14 @@ void dvrk::add_topics_psm(mtsROSBridge & bridge,
         (psm_component_name, "SUJClutch", ros_namespace + "/suj_clutch");
 }
 
+void dvrk::connect_bridge_psm(mtsROSBridge & bridge,
+                              const std::string & psm_component_name)
+{
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
+    componentManager->Connect(bridge.GetName(), psm_component_name, psm_component_name, "Robot");
+    componentManager->Connect(bridge.GetName(), psm_component_name + "-log", psm_component_name, "Robot");
+}
+
 void dvrk::add_topics_ecm(mtsROSBridge & bridge,
                           const std::string & ros_namespace,
                           const std::string & ecm_component_name)
@@ -150,26 +158,29 @@ void dvrk::add_topics_ecm(mtsROSBridge & bridge,
         (ecm_component_name, "SUJClutch", ros_namespace + "/suj_clutch");
 }
 
-void dvrk::connect_bridge_mtm(mtsROSBridge & bridge,
-                              const std::string & mtm_component_name)
-{
-    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
-    componentManager->Connect(bridge.GetName(), mtm_component_name, mtm_component_name, "Robot");
-    componentManager->Connect(bridge.GetName(), mtm_component_name + "-log", mtm_component_name, "Robot");
-}
-
-void dvrk::connect_bridge_psm(mtsROSBridge & bridge,
-                              const std::string & psm_component_name)
-{
-    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
-    componentManager->Connect(bridge.GetName(), psm_component_name, psm_component_name, "Robot");
-    componentManager->Connect(bridge.GetName(), psm_component_name + "-log", psm_component_name, "Robot");
-}
-
 void dvrk::connect_bridge_ecm(mtsROSBridge & bridge,
                               const std::string & ecm_component_name)
 {
     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
     componentManager->Connect(bridge.GetName(), ecm_component_name, ecm_component_name, "Robot");
     componentManager->Connect(bridge.GetName(), ecm_component_name + "-log", ecm_component_name, "Robot");
+}
+
+void dvrk::add_topics_io(mtsROSBridge & bridge,
+                         const std::string & ros_namespace,
+                         const std::string & arm_name)
+{
+    bridge.AddPublisherFromCommandRead<vctDoubleVec, cisst_msgs::vctDoubleVec>
+        (arm_name + "-io", "GetAnalogInputPosSI", ros_namespace + "/analog_input_pos_si");
+    bridge.AddPublisherFromCommandRead<vctDoubleVec, cisst_msgs::vctDoubleVec>
+        (arm_name + "-io", "GetPosition", ros_namespace + "/joint_position");
+
+}
+
+void dvrk::connect_bridge_io(mtsROSBridge & bridge,
+                             const std::string & io_component_name,
+                             const std::string & arm_name)
+{
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
+    componentManager->Connect(bridge.GetName(), arm_name + "-io", io_component_name, arm_name);
 }
