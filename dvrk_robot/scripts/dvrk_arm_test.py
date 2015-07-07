@@ -16,7 +16,7 @@ import sys
 
 from std_msgs.msg import String, Bool
 from geometry_msgs.msg import Pose
-from cisst_msgs.msg import vctDoubleVec
+from sensor_msgs.msg import JointState
 
 # example of application with callbacks for robot events
 class example_application:
@@ -30,7 +30,7 @@ class example_application:
         self._goal_reached_event = threading.Event()
 
         # continuous publish from dvrk_bridge
-        self._position_joint_desired = vctDoubleVec()
+        self._position_joint_desired = []
         self._position_cartesian_desired = Pose()
 
     # callbacks
@@ -45,7 +45,7 @@ class example_application:
         self._goal_reached_event.set()
 
     def position_joint_desired_callback(self, data):
-        self._position_joint_desired = data.data
+        self._position_joint_desired[:] = data.position
 
     def position_cartesian_desired_callback(self, data):
         self._position_cartesian_desired = data
@@ -56,14 +56,14 @@ class example_application:
         # publishers
         ros_namespace = '/dvrk/' + self._robot_name
         self.set_robot_state = rospy.Publisher(ros_namespace + '/set_robot_state', String, latch=True)
-        self.set_position_joint = rospy.Publisher(ros_namespace + '/set_position_joint', vctDoubleVec, latch=True)
-        self.set_position_goal_joint = rospy.Publisher(ros_namespace + '/set_position_goal_joint', vctDoubleVec, latch=True)
+        self.set_position_joint = rospy.Publisher(ros_namespace + '/set_position_joint', JointState, latch=True)
+        self.set_position_goal_joint = rospy.Publisher(ros_namespace + '/set_position_goal_joint', JointState, latch=True)
         self.set_position_cartesian = rospy.Publisher(ros_namespace + '/set_position_cartesian', Pose, latch=True)
         self.set_position_goal_cartesian = rospy.Publisher(ros_namespace + '/set_position_goal_cartesian', Pose, latch=True)
         # subscribers
         rospy.Subscriber(ros_namespace + '/robot_state', String, self.robot_state_callback)
         rospy.Subscriber(ros_namespace + '/goal_reached', Bool, self.goal_reached_callback)
-        rospy.Subscriber(ros_namespace + '/position_joint_desired', vctDoubleVec, self.position_joint_desired_callback)
+        rospy.Subscriber(ros_namespace + '/position_joint_desired', JointState, self.position_joint_desired_callback)
         rospy.Subscriber(ros_namespace + '/position_cartesian_desired', Pose, self.position_cartesian_desired_callback)
         # create node
         rospy.init_node('dvrk_arm_test', anonymous=True)
@@ -112,11 +112,14 @@ class example_application:
         rate = 200 # aiming for 200 Hz
         samples = duration * rate
         # create a new goal starting with current position
-        goal = vctDoubleVec()
-        goal.data[:] = initial_joint_position
+        goal = JointState()
+        goal.position[:] = initial_joint_position
+        print "--------------- debug ---- "
+        print initial_joint_position
+        print goal
         for i in xrange(samples):
-            goal.data[0] = initial_joint_position[0] + amplitude *  math.sin(i * math.radians(360.0) / samples)
-            goal.data[1] = initial_joint_position[1] + amplitude *  math.sin(i * math.radians(360.0) / samples)
+            goal.position[0] = initial_joint_position[0] + amplitude *  math.sin(i * math.radians(360.0) / samples)
+            goal.position[1] = initial_joint_position[1] + amplitude *  math.sin(i * math.radians(360.0) / samples)
             self.set_position_joint.publish(goal)
             rospy.sleep(1.0 / rate)
         rospy.loginfo(rospy.get_caller_id() + ' <- joint direct complete')
@@ -141,18 +144,18 @@ class example_application:
         rospy.loginfo(rospy.get_caller_id() + " -> testing goal joint position for 2 joints of %i", len(initial_joint_position))
         amplitude = math.radians(10.0)
         # create a new goal starting with current position
-        goal = vctDoubleVec()
-        goal.data[:] = initial_joint_position
+        goal = JointState()
+        goal.position[:] = initial_joint_position
         # first motion
-        goal.data[0] = initial_joint_position[0] + amplitude
-        goal.data[1] = initial_joint_position[1] - amplitude
+        goal.position[0] = initial_joint_position[0] + amplitude
+        goal.position[1] = initial_joint_position[1] - amplitude
         self.set_position_goal_joint_publish_and_wait(goal)
         # second motion
-        goal.data[0] = initial_joint_position[0] - amplitude
-        goal.data[1] = initial_joint_position[1] + amplitude
+        goal.position[0] = initial_joint_position[0] - amplitude
+        goal.position[1] = initial_joint_position[1] + amplitude
         self.set_position_goal_joint_publish_and_wait(goal)
         # back to initial position
-        goal.data[:] = initial_joint_position
+        goal.position[:] = initial_joint_position
         self.set_position_goal_joint_publish_and_wait(goal)
         rospy.loginfo(rospy.get_caller_id() + ' <- joint goal complete')
 
@@ -164,11 +167,11 @@ class example_application:
             # set in position joint mode
             self.set_state_block(state = 'DVRK_POSITION_GOAL_JOINT')
                 # create a new goal starting with current position
-            goal = vctDoubleVec()
-            goal.data[:] = initial_joint_position
-            goal.data[0] = 0.0
-            goal.data[1] = 0.0
-            goal.data[2] = 0.12
+            goal = JointState()
+            goal.position[:] = initial_joint_position
+            goal.position[0] = 0.0
+            goal.position[1] = 0.0
+            goal.position[2] = 0.12
             self._goal_reached_event.clear()
             self.set_position_goal_joint.publish(goal)
             self._goal_reached_event.wait(60) # 1 minute at most
@@ -258,9 +261,9 @@ class example_application:
     def run(self):
         self.home()
         self.joint_direct()
-        self.joint_goal()
-        self.cartesian_direct()
-        self.cartesian_goal()
+#        self.joint_goal()
+#        self.cartesian_direct()
+#        self.cartesian_goal()
 
 if __name__ == '__main__':
     try:

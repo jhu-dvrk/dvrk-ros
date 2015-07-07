@@ -92,7 +92,6 @@ namespace dvrk {
     void connect_bridge_io(mtsROSBridge & bridge,
                            const std::string & io_component_name,
                            const std::string & arm_name);
-
 }
 
 #endif // _dvrk_add_topics_functions_h
