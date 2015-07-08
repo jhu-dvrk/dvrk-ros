@@ -3,7 +3,7 @@
 # Author: Anton Deguet
 # Date: 2015-02-22
 
-# Start a single arm using 
+# Start a single arm using
 # > rosrun dvrk_robot dvrk_mtm_ros   // or dvrk_psm_ros or dvrk_mtm_ros
 
 # To communicate with the arm using ROS topics, see the python based example dvrk_arm_test.py:
@@ -38,7 +38,7 @@ class example_application:
         rospy.loginfo(rospy.get_caller_id() + " -> current state is %s", data.data)
         self._robot_state = data.data
         self._robot_state_event.set()
-        
+
     def goal_reached_callback(self, data):
         rospy.loginfo(rospy.get_caller_id() + " -> goal reached is %s", data.data)
         self._goal_reached = data.data
@@ -105,7 +105,8 @@ class example_application:
         # set in position joint mode
         self.set_state_block('DVRK_POSITION_JOINT')
         # get current position
-        initial_joint_position = self._position_joint_desired
+        initial_joint_position = []
+        initial_joint_position[:] = self._position_joint_desired
         rospy.loginfo(rospy.get_caller_id() + " -> testing direct joint position for 2 joints of %i", len(initial_joint_position))
         amplitude = math.radians(10.0) # +/- 10 degrees
         duration = 5  # seconds
@@ -114,9 +115,6 @@ class example_application:
         # create a new goal starting with current position
         goal = JointState()
         goal.position[:] = initial_joint_position
-        print "--------------- debug ---- "
-        print initial_joint_position
-        print goal
         for i in xrange(samples):
             goal.position[0] = initial_joint_position[0] + amplitude *  math.sin(i * math.radians(360.0) / samples)
             goal.position[1] = initial_joint_position[1] + amplitude *  math.sin(i * math.radians(360.0) / samples)
@@ -140,7 +138,8 @@ class example_application:
         # set in position joint mode
         self.set_state_block('DVRK_POSITION_GOAL_JOINT')
         # get current position
-        initial_joint_position = self._position_joint_desired
+        initial_joint_position = []
+        initial_joint_position[:] = self._position_joint_desired
         rospy.loginfo(rospy.get_caller_id() + " -> testing goal joint position for 2 joints of %i", len(initial_joint_position))
         amplitude = math.radians(10.0)
         # create a new goal starting with current position
@@ -261,9 +260,9 @@ class example_application:
     def run(self):
         self.home()
         self.joint_direct()
-#        self.joint_goal()
-#        self.cartesian_direct()
-#        self.cartesian_goal()
+        self.joint_goal()
+        self.cartesian_direct()
+        self.cartesian_goal()
 
 if __name__ == '__main__':
     try:
