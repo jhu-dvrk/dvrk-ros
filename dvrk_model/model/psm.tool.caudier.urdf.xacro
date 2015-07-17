@@ -106,6 +106,18 @@
       </collision>
     </link>
 
+    <!-- joint 6-3:   -->
+    <joint name="${prefix}tool_wrist_caudier_ee_joint" type="revolute">
+      <parent link="${prefix}tool_wrist_caudier_link_shaft"/>
+      <child link="${prefix}tool_wrist_caudier_ee_link"/>
+      <axis xyz="0 0 1"/>
+      <origin rpy="0.0 1.5708 1.5708" xyz="0 0 0"/>
+      <limit lower="-1.5707" upper="1.5707" velocity=".4" effort="1000"/>
+    </joint>
+
+    <!-- link 6-3:  -->
+    <link name="${prefix}tool_wrist_caudier_ee_link" />    
+
   </xacro:macro>
 
 </robot>

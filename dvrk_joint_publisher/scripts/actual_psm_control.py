@@ -13,7 +13,7 @@ def jnt_pos_cb(msg):
         jnt_msg.position = []
         jnt_msg.position.append(msg.position[0])
         jnt_msg.position.append(msg.position[1])
-        jnt_msg.position.append(msg.position[6]*1000)
+        jnt_msg.position.append(msg.position[6])
         jnt_msg.position.append(msg.position[7])
         jnt_msg.position.append(msg.position[8])
         jnt_msg.position.append(msg.position[9])
