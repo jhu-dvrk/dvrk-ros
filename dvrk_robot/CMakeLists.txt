@@ -79,9 +79,18 @@ if (cisst_FOUND_AS_REQUIRED)
 
   add_library (dvrk_utilities
                include/dvrk_utilities/dvrk_add_topics_functions.h
-               src/dvrk_add_topics_functions.cpp)
+               src/dvrk_add_topics_functions.cpp
+               include/dvrk_utilities/dvrk_console.h
+               src/dvrk_console.cpp)
+    target_link_libraries (
+      dvrk_utilities
+      ${sawRobotIO1394_LIBRARIES}
+      ${sawIntuitiveResearchKit_LIBRARIES}
+      ${sawControllers_LIBRARIES}
+      ${sawConstraintController_LIBRARIES}
+    )
 
-  set (_EXECUTABLES dvrk_mtm_ros dvrk_psm_ros dvrk_ecm_ros dvrk_full_ros)
+  set (_EXECUTABLES dvrk_mtm_ros dvrk_psm_ros dvrk_ecm_ros dvrk_full_ros dvrk_console_json)
   foreach (_executable ${_EXECUTABLES})
     add_executable (${_executable} src/${_executable}.cpp)
     target_link_libraries (
