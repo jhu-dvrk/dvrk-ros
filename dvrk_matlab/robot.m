@@ -56,19 +56,28 @@ classdef robot < handle
             self.position_goal_joint_publisher = rospublisher(topic, rostype.sensor_msgs_JointState);
         end
         
+        function delete(self)
+           % hack to disable callbacks from subscribers
+           % there might be a better way to remove the subscriber itself
+           self.robot_state_subscriber.NewMessageFcn = @(a, b, c)[];
+           self.position_cartesian_desired_subscriber.NewMessageFcn = @(a, b, c)[];
+           self.position_joint_desired_subscriber.NewMessageFcn = @(a, b, c)[];
+        end
+        
         function robot_state_callback(self, subscriber, data)
             self.robot_state = data.Data;
         end
         
         function position_cartesian_desired_callback(self, subscriber, pose)
-            quat = [pose.Orientation.W, pose.Orientation.X, pose.Orientation.Y, pose.Orientation.Z];
-            self.position_cartesian_desired = quat2rotm(quat);
-            % disp(pose)
+            % convert idiotic ROS message type to homogeneous transforms
+            position = trvec2tform([pose.Position.X, pose.Position.Y, pose.Position.Z]);
+            orientation = quat2tform([pose.Orientation.W, pose.Orientation.X, pose.Orientation.Y, pose.Orientation.Z]);
+            % combine position and orientation
+            self.position_cartesian_desired = position * orientation;
         end
         
         function position_joint_desired_callback(self, subscriber, jointState)
             self.position_joint_desired = jointState.Position;
-            % disp(pose)
         end
         
         function set_state(self, state_as_string)
@@ -89,8 +98,6 @@ classdef robot < handle
             jointState = rosmessage(self.position_goal_joint_publisher);
             jointState.Position = self.position_joint_desired;
             jointState.Position(index) = jointState.Position(index) + value;
-            jointState.Position
-            self.position_joint_desired
             send(self.position_goal_joint_publisher, jointState);
         end
     end
