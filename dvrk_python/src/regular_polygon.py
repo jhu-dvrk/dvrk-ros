@@ -1,42 +1,25 @@
 from robot import *
 import math
 
-def polygon(robotName):
-    sides = 3
-    length = 0.1
+def polygon(robotName, sides, length):
     r = robot(robotName)
 
-    if type(sides) is int:
-        r.move_cartesian_translation([0.0,0.0,0.15])
-        print 'start',r.get_desired_cartesian_position()
-        
-        sum_interior = sides-2
-        sum_interior_angle = sum_interior*180
-        interior_degree = sum_interior_angle/sides
-        interior_radian = interior_angle.radians(interior_degree)
-
-        print 'in ', interior_radian
-        #exterior_angle = 180 - interior_angle
-        #print 'ex ', exterior_angle
-        
-        r.delta_move_cartesian_translation([length, 0.0, 0.15])
-        
-        i = 1
-        while(i < sides):
-            rot_1 = Rotation()
-            rot_1.DoRotX()
-            print 'step', i
-            x_position = math.cos(exterior_angle) * length
-            y_position = math.sin(exterior_angle) * length
-            r.delta_move_cartesian_translation([x_position,y_position,0.15])
-            print 'go', r.get_desired_cartesian_position()
-            exterior_angle += exterior_angle
-            i+=1
-
-        print 'end', r.get_desired_cartesian_position()
+    interior_degrees = 360/sides
+    interior_radians = math.radians(interior_degrees)
+    
+    interior_div2 = interior_radians/2
+    distance_from_center = length/math.sin(interior_div2)
+    
+    current_angle = 0
+    while(current_angle <= (2*math.pi)):
+        x_position = distance_from_center*math.cos(current_angle)
+        y_position = distance_from_center*math.sin(current_angle)
+        vec_1 = Vector(x_position,y_position, -0.15)
+        r.move_cartesian_translation(vec_1,True)
+        current_angle+=interior_radians
 
 if __name__ == '__main__':
-    if (len(sys.argv) != 2):
+    if (len(sys.argv) != 4):
         print sys.argv[0] + ' requires one argument, i.e. name of dVRK arm'
     else:
-        polygon(sys.argv[1])
+        polygon(sys.argv[1], int(sys.argv[2]), float(sys.argv[3]))
