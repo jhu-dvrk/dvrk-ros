@@ -226,7 +226,7 @@ class example_application:
     # direct cartesian control example
     def cartesian_goal(self):
         rospy.loginfo(rospy.get_caller_id() + ' -> starting cartesian goal')
-#        self.prepare_cartesian()
+        self.prepare_cartesian()
         # set in position cartesian mode
         self.set_state_block('DVRK_POSITION_GOAL_CARTESIAN')
         # get current position
@@ -270,11 +270,11 @@ class example_application:
 
     # main method
     def run(self):
-#        self.home()
-#        self.joint_direct()
-#        self.joint_goal()
-#        self.cartesian_direct()
-        self.cartesian_goal()
+#       self.home()
+#       self.joint_direct()
+#       self.joint_goal()
+#       self.cartesian_direct()
+       self.cartesian_goal()
 
 if __name__ == '__main__':
     try:
