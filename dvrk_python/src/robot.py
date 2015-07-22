@@ -97,9 +97,6 @@ from imp import new_module
 #    def preprocess(source):
 #        return source
 
-"""
-"""
-
 class robot:
     """Simple robot API wrapping around ROS messages
     """
@@ -338,14 +335,12 @@ class robot:
     def close_gripper(self):
         "Close the arm gripper"
         last_joint_value = self.get_joint_number()-1
-        if(self.__position_joint_desired[last_joint_value] != 0):
-            self.move_joint_list([0.0],[last_joint_value])
+        self.move_joint_list([0.0,0.0],[last_joint_value-1,last_joint_value])
 
     def open_gripper(self):
         "Open the arm gripper"
         last_joint_value = self.get_joint_number()-1
-        if(self.__position_joint_desired[last_joint_value] != (math.pi/4)):
-            self.move_joint_list([math.pi/4],[last_joint_value])
+        self.move_joint_list([0.0, math.pi/4],[last_joint_value-1, last_joint_value])
 
     def delta_move_cartesian(self, delta_input, interpolate=True):
         """Incremental translation in cartesian space.

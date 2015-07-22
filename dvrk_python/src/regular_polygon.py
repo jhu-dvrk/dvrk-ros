@@ -3,15 +3,19 @@ import math
 
 def polygon(robotName, sides, length):
     r = robot(robotName)
-
+    
+    #get the interior degree of the polygon, in terms of radians
     interior_degrees = 360/sides
     interior_radians = math.radians(interior_degrees)
     
+    #find the distance of one point from the center
     interior_div2 = interior_radians/2
     distance_from_center = length/math.sin(interior_div2)
     
+    #calcuate where the next position should be, based on the previous position
     current_angle = 0
     while(current_angle <= (2*math.pi)):
+        #we made this program, based on a unit circle
         x_position = distance_from_center*math.cos(current_angle)
         y_position = distance_from_center*math.sin(current_angle)
         vec_1 = Vector(x_position,y_position, -0.15)
