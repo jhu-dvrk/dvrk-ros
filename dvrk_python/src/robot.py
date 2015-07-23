@@ -487,7 +487,7 @@ class robot:
         :rtype: Bool"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting move cartesian direct')
         #prepare the robot to move
-        self.__dvrk_insert_tool(0.15)
+        self.__dvrk_insert_tool()
         #set in position cartesian mode
         end_position = posemath.toMsg(end_frame)
         if (not self.__dvrk_set_state('DVRK_POSITION_CARTESIAN')):
@@ -505,7 +505,7 @@ class robot:
         :rtype: Bool"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting move cartesian goal')
         #prepare the robot
-        self.__dvrk_insert_tool(0.15)
+        self.__dvrk_insert_tool()
         #set in position cartesian mode
         end_position= posemath.toMsg(end_frame)
         if (not self.__dvrk_set_state('DVRK_POSITION_GOAL_CARTESIAN')):
@@ -530,7 +530,7 @@ class robot:
         rospy.loginfo(rospy.get_caller_id() + ' -> compeleting set position goal cartesian publish and wait')
         return True
 
-    def __dvrk_insert_tool(self, insert_distance):
+    def __dvrk_insert_tool(self, insert_distance=0.15):
         """Prepare for cartesian move, by making sure that the 2nd joint is moved deep enough so that
         the robot movement would not be hindered."""
         # make sure the camera is past the cannula and tool vertical
