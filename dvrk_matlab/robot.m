@@ -101,7 +101,7 @@ classdef robot < handle
             send(self.position_goal_joint_publisher, jointState);
         end
         
-        function delta_joint_move(self, value, index)
+        function delta_joint_move_list(self, value, index)
             if isfloat(value) && isfloat(index) && length(value) == length(index)
                 self.set_state('DVRK_POSITION_GOAL_JOINT');
                 jointState = rosmessage(self.position_goal_joint_publisher);
@@ -116,7 +116,7 @@ classdef robot < handle
            
         end
         
-        function joint_move_direct_single(self, value, index)
+        function joint_move_single(self, value, index)
             self.set_state('DVRK_POSITION_GOAL_JOINT');
             jointState = rosmessage(self.position_goal_joint_publisher);
             jointState.Position = self.position_joint_desired;
@@ -124,7 +124,7 @@ classdef robot < handle
             send(self.position_goal_joint_publisher, jointState);
         end
         
-        function joint_move_direct(self, value, index)
+        function joint_move_list(self, value, index)
             if isfloat(value) && isfloat(index) && length(value) == length(index)
                 self.set_state('DVRK_POSITION_GOAL_JOINT');
                 jointState = rosmessage(self.position_goal_joint_publisher);
@@ -136,23 +136,23 @@ classdef robot < handle
             end
         end
         
-        function open_gripper(self)
-            self.set_state('DVRK_POSITION_GOAL_JOINT');
-            jointState = rosmessage(self.position_goal_joint_publisher);
-            jointState.Position = self.position_joint_desired;
-            jointState.Position(7) = pi/4;
-            send(self.position_goal_joint_publisher, jointState);
-        end
+       % function open_gripper(self)
+       %     self.set_state('DVRK_POSITION_GOAL_JOINT');
+       %     jointState = rosmessage(self.position_goal_joint_publisher);
+       %     jointState.Position = self.position_joint_desired;
+       %     jointState.Position(7) = pi/4;
+       %     send(self.position_goal_joint_publisher, jointState);
+       % end
         
-        function close_gripper(self)
-            self.set_state('DVRK_POSITION_GOAL_JOINT');
-            jointState = rosmessage(self.position_goal_joint_publisher);
-            jointState.Position = self.position_joint_desired;
-            jointState.Position(7) = 0.0;
-            send(self.position_goal_joint_publisher, jointState);
-        end
+       % function close_gripper(self)
+       %     self.set_state('DVRK_POSITION_GOAL_JOINT');
+       %     jointState = rosmessage(self.position_goal_joint_publisher);
+       %     jointState.Position = self.position_joint_desired;
+       %     jointState.Position(7) = 0.0;
+       %     send(self.position_goal_joint_publisher, jointState);
+       % end
         
-        function delta_cartesian_move_single(self,value,index)
+        function delta_cartesian_move(self,value,index)
             
         end 
     end
