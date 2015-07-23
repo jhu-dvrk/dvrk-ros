@@ -28,6 +28,16 @@ Here are the examples of how to run the code:
    plotting_cartesian
    plotting_joint
 
+More Examples
+=============
+Here are more complex examples:
+
+.. toctree::
+   :maxdepth: 4
+
+   regular_polygon
+   picking_and_moving
+
 Indices and tables
 ==================
 
