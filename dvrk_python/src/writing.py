@@ -9,8 +9,10 @@ def dictionary(robotName):
     dict['test'] = [('u'),('d')]
     dict['test2'] = [('r',90,60),('r',180,60),('r',270,60),('r',0,60)]
     dict['a'] = [('r',80,60),('r',280,30),('r',180,10),('r',0,10),('r',280,30)]
-    #dict['b'] = [('f',60),('r',100),('f',30),('r',80),('f',20),('r',80),('f',30),('r',200),('f',40),('r',80),('f',23),('r',90),('f',40)]
-    #dict['c'] = [('u'),('r',90),('f',35),('r',180),('d'),('f',30),('r',71.57),('f',15.8114),('r',18.43),('f',30),('r',18.43),('f',15.8114),('r',71.57),('f',30)]
+    dict['b'] = [('r',90,60),('r',350,30),('r',270,20),('r',190,30),('r',350,40),('r',270,23),('r',180,40)] 
+    dict['c'] = [('u'),('r',0,35),('d'),('r',180,30),('r',108.43,15.8114),('r',90,30),('r',71.57,15.8114),('r',0,30)]
+    dict['d'] = [('r',90,60),('r',340,30),('r',270,40),('r',200,30)]
+    
     #dict['d'] = [('f',60),('r',110),('f',30),('r',70),('f',40),('r',70),('f',30)]
     #dict['e'] = [('u'),('r',90),('f',40),('r',180),('d'),('f',40),('r',90),('f',30),('r',90),('f',30),('r',180),('f',30),('r',90),('f',30),('r',90),('f',40)]
     #dict['f'] = [('f',30),('r',90),('f',30),('r',180),('f',30),('r',90),('f',30),('r',90),('f',40)]
@@ -22,10 +24,10 @@ def dictionary(robotName):
  
 
     #print dict['a'][0][0]
-    r.move_cartesian([0.0,0.0,-0.12])
+    r.move_cartesian([0.0,-0.1,-0.12])
     letter_number = 0
 
-    while letter_number < 500:  
+    while letter_number < .2:  
 
         cycle_number = 0  
         letter = raw_input('enter the letter you would like typed: ') 
@@ -38,8 +40,10 @@ def dictionary(robotName):
                 length = (dict[letter][cycle_number][2])/1000.0
                 print 'l', length
 
+                # we want the robot to actual write something that we
+                # can read and not something backwards
                 x_position = math.cos(angle)*length
-                y_position = math.sin(angle)*length
+                y_position = math.sin(angle +180)*length
 
                 r.delta_move_cartesian([x_position,y_position,0.0])
 
@@ -50,11 +54,14 @@ def dictionary(robotName):
             
             cycle_number += 1
 
+        letter_number +=.05
         r.delta_move_cartesian([0.0,0.0,-0.01])
-        r.move_cartesian([0.0,0.0,-0.12])
+        r.move_cartesian_translation([0.0,-.10+letter_number,-0.12])
+        print 'ln',letter_number
+        print 'get', r.get_desired_cartesian_position()
         r.delta_move_cartesian([0.0,0.0,0.01])
         r.close_gripper()
-        letter_number +=50
+       
 
 if __name__ == '__main__':
     if (len(sys.argv) != 2):
