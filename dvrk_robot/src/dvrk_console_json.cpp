@@ -26,6 +26,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstCommon/cmnCommandLineOptions.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsoleQt.h>
+#include <sawOpenIGTLink/mtsOpenIGTLinkBridge.h>
 
 #include <QApplication>
 
@@ -66,6 +67,7 @@ int main(int argc, char ** argv)
     cmnCommandLineOptions options;
     std::string jsonMainConfigFile;
     std::string jsonCollectionConfigFile;
+    std::string jsonIGTLConfigFile;
 
     options.AddOptionOneValue("j", "json-config",
                               "json configuration file",
@@ -74,6 +76,10 @@ int main(int argc, char ** argv)
     options.AddOptionOneValue("c", "collection-config",
                               "json configuration file for data collection",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &jsonCollectionConfigFile);
+
+    options.AddOptionOneValue("o", "openigtlink-config",
+                              "json configuration file for sawOpenIGTLink bridge",
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &jsonIGTLConfigFile);
 
     // check that all required options have been provided
     std::string errorMessage;
@@ -88,7 +94,9 @@ int main(int argc, char ** argv)
 
     // make sure the json config file exists and can be parsed
     fileExists("JSON configuration", jsonMainConfigFile);
-
+    if(!jsonIGTLConfigFile.empty()) {
+        fileExists("OpenIGTLink configuration", jsonIGTLConfigFile);
+    }
     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
 
     // console
@@ -107,6 +115,15 @@ int main(int argc, char ** argv)
     componentManager->AddComponent(&rosBridge);
     consoleROS->Connect();
 
+    // OpenIGTLink bridge
+    if(!jsonIGTLConfigFile.empty()) {
+        fileExists("OpenIGTLink configuration", jsonIGTLConfigFile);
+
+    }
+    mtsOpenIGTLinkBridge igtlBridge("bridge", 1 * cmn_ms);
+    igtlBridge.Configure(jsonIGTLConfigFile);
+    componentManager->AddComponent(&igtlBridge);
+    igtlBridge.Connect();
 
     //-------------- create the components ------------------
     componentManager->CreateAllAndWait(2.0 * cmn_s);

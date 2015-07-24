@@ -61,6 +61,7 @@ if (cisst_FOUND_AS_REQUIRED)
   cisst_find_saw_component (sawIntuitiveResearchKit 1.1.0 REQUIRED)
   cisst_find_saw_component (sawControllers 1.1.0 REQUIRED)
   cisst_find_saw_component (sawConstraintController REQUIRED)
+  cisst_find_saw_component (sawOpenIGTLink REQUIRED)
 
   include_directories (
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -68,6 +69,7 @@ if (cisst_FOUND_AS_REQUIRED)
     ${sawControllers_INCLUDE_DIR}
     ${sawConstraintController_INCLUDE_DIR}
     ${sawIntuitiveResearchKit_INCLUDE_DIR}
+    ${sawOpenIGTLink_INCLUDE_DIR}
     )
 
   link_directories (
@@ -75,6 +77,7 @@ if (cisst_FOUND_AS_REQUIRED)
     ${sawControllers_LIBRARY_DIR}
     ${sawConstraintController_LIBRARY_DIR}
     ${sawIntuitiveResearchKit_LIBRARY_DIR}
+    ${sawOpenIGTLink_LIBRARY_DIR}
     )
 
   add_library (dvrk_utilities
@@ -88,6 +91,7 @@ if (cisst_FOUND_AS_REQUIRED)
       ${sawIntuitiveResearchKit_LIBRARIES}
       ${sawControllers_LIBRARIES}
       ${sawConstraintController_LIBRARIES}
+      ${sawOpenIGTLink_LIBRARIES}
     )
 
   set (_EXECUTABLES dvrk_mtm_ros dvrk_psm_ros dvrk_ecm_ros dvrk_full_ros dvrk_console_json)
@@ -99,6 +103,7 @@ if (cisst_FOUND_AS_REQUIRED)
       ${sawIntuitiveResearchKit_LIBRARIES}
       ${sawControllers_LIBRARIES}
       ${sawConstraintController_LIBRARIES}
+      ${sawOpenIGTLink_LIBRARIES}
       ${catkin_LIBRARIES}
     )
     cisst_target_link_libraries (${_executable} ${REQUIRED_CISST_LIBRARIES})
