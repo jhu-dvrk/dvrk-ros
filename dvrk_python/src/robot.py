@@ -350,12 +350,13 @@ class robot:
         """
         rospy.loginfo(rospy.get_caller_id() + ' -> starting delta move cartesian translation')
         #is this a legal translation input
-        if(self.__check_input_type(delta_input, [list, float, Vector, Rotation])):
+        if(self.__check_input_type(delta_input, [list, float, Vector, Rotation, Frame])):
                if(self.__check_input_type(delta_input, [list, float, Vector])):
                    self.delta_move_cartesian_translation(delta_input, interpolate)
-
                elif(self.__check_input_type(delta_input, [Rotation])):
                    self.delta_move_cartesian_rotation(delta_input, interpolate)
+               elif(self.__check_input_type(delta_input, [Frame])):
+                   self.delta_move_cartesian_frame(delta_input, interpolate)
         rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian translation')
 
     def delta_move_cartesian_translation(self, delta_translation, interpolate=True):
@@ -405,7 +406,7 @@ class robot:
         #is this a legal frame input
         if (self.__check_input_type(delta_frame, [Frame])):
             #add the incremental move to the current position, to get the ending frame
-            end_frame = self.__position_cartesian_desired * delta_frame
+            end_frame = delta_frame * self.__position_cartesian_desired
             #move accordingly
             self.move_cartesian_frame(end_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian frame')
@@ -442,11 +443,13 @@ class robot:
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting absolute move cartesian translation')
         #is this a legal translation input
-        if(self.__check_input_type(abs_input, [list, float, Vector, Rotation])):
+        if(self.__check_input_type(abs_input, [list, float, Vector, Rotation, Frame])):
                if(self.__check_input_type(abs_input, [list, float, Vector])):
                    self.move_cartesian_translation(abs_input, interpolate)
                elif(self.__check_input_type(abs_input, [Rotation])):
                    self.move_cartesian_rotation(abs_input, interpolate)
+               elif(self.__check_input_type(abs_input, [Frame])):
+                   self.move_cartesian_frame(abs_input, interpolate)
         rospy.loginfo(rospy.get_caller_id() + ' -> completing absolute move cartesian translation')
 
     def move_cartesian_rotation(self, abs_rotation, interpolate=True):
