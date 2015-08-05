@@ -1,4 +1,5 @@
 from robot import *
+import time
 import math
 
 
@@ -56,6 +57,7 @@ def dictionary(robotName):
     word_count = 0   #counts the position in the list of words
     line_count = 0   #counts the position in the list of lines
 
+    time.sleep(2.0)
     phrase = raw_input('enter the words you would like writen: ').lower()
     phrase = phrase.split()
 
@@ -72,19 +74,19 @@ def dictionary(robotName):
     for i in range (0,len(list_of_words)): #formats the words into lines of text
        
         word_length = len(list_of_words[i])
-        if counter_characters + word_length <= 10: #checks to see if the next word will make the line longer then 11 characters
-            counter_characters += word_length + 1 #if it isn't longer, it will add that word to the line
+        if counter_characters + word_length <= 10: #checks to see if the next word will make the line longer than 10 characters
+            counter_characters += (word_length + 1) #if it isn't longer, it will add that word to the line
             word.append(list_of_words[i])
-            print list_of_words[i]
+
             if i == len(list_of_words)-1:
                    draw_list.append(word)      
         else:
-            draw_list.append(word) #if line is longer then 11 characters, it will add the whole line of words, minus the new, to draw_list
+            draw_list.append(word) #if line is longer than 10 characters, it will add the whole line of words, minus the new, to draw_list
             word = [] #then it will set the next line to have no words in it, and add the new word to that next line
             counter_characters = len(list_of_words[i])+1
             word.append(list_of_words[i])
             if i == len(list_of_words)-1:
-                   draw_list.append(list_of_words[i])  
+                   draw_list.append(word)  
         
 
     print draw_list

@@ -53,6 +53,8 @@ def dictionary(robotName):
     start_x = -0.1    #sets the starting position for the x axis at -.1
     start_y = 0.12 / number_of_lines
     r.move_cartesian([start_x,start_y,-0.11])
+    time.sleep(2.0)
+
     rot_1 = Rotation.Identity() #sets to standard rotation
     #rot_1 = Rotation(0.47,0.87,-0.17,0.80,-0.50,-0.34,-0.38,0.02,-0.92)
     r.move_cartesian_rotation(rot_1)
@@ -94,7 +96,7 @@ def dictionary(robotName):
             counter_characters = len(list_of_words[i])+1
             word.append(list_of_words[i])
             if i == len(list_of_words)-1:
-                   draw_list.append(list_of_words[i])  
+                   draw_list.append(word)  
         
 
     print draw_list
