@@ -142,8 +142,6 @@ void dvrk::add_topics_psm(mtsROSBridge & bridge,
     // events
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
         (psm_component_name, "ManipClutch", ros_namespace + "/manip_clutch");
-    bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        (psm_component_name, "SUJClutch", ros_namespace + "/suj_clutch");
 }
 
 void dvrk::connect_bridge_psm(mtsROSBridge & bridge,
@@ -172,8 +170,6 @@ void dvrk::add_topics_ecm(mtsROSBridge & bridge,
     // events
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
         (ecm_component_name, "ManipClutch", ros_namespace + "/manip_clutch");
-    bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        (ecm_component_name, "SUJClutch", ros_namespace + "/suj_clutch");
 }
 
 void dvrk::connect_bridge_ecm(mtsROSBridge & bridge,
