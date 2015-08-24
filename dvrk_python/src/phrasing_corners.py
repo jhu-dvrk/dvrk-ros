@@ -40,24 +40,47 @@ def dictionary(robotName):
     dict['?'] = [('r',0,20),('d'),('u'),('r',90,10),('d'),('r',90,25),('r',0,20),('r',90,25),('r',180,40)] 
 
 
-    raw_input('Move the arm to the top left of your paper (press enter to continue)')
-    topleft = r.get_desired_cartesian_position().p
-    print topleft
-    top_left = deepcopy(topleft)
-    print top_left
-    print " "
-    raw_input('Move the arm to the top right of your paper (press enter to continue)')
-    topright = r.get_desired_cartesian_position().p
-    print topright
-    top_right = deepcopy(topright)
-    print top_right
-    print " "
-    raw_input('Move the arm to the bottom left of your paper (press enter to continue)')
-    bottomleft = r.get_desired_cartesian_position().p
-    print bottomleft
-    bottom_left = deepcopy(bottomleft)
-    print bottom_left
-    print " "
+    calibration_or_nah = raw_input('do you need to calibrate?(y or n) ')
+    if calibration_or_nah == 'y':
+        raw_input('Move the arm to the top left of your paper (press enter to continue)')
+        topleft = r.get_desired_cartesian_position().p
+        print topleft
+        top_left = deepcopy(topleft)
+        print top_left
+        print " "
+        raw_input('Move the arm to the top right of your paper (press enter to continue)')
+        topright = r.get_desired_cartesian_position().p
+        print topright
+        top_right = deepcopy(topright)
+        print top_right
+        print " "
+        raw_input('Move the arm to the bottom left of your paper (press enter to continue)')
+        bottomleft = r.get_desired_cartesian_position().p
+        print bottomleft
+        bottom_left = deepcopy(bottomleft)
+        print bottom_left
+        print " "
+    elif calibration_or_nah == 'n':
+        top_left = raw_input('please enter the coordinates for the top left point: ')
+        top_left = top_left.split()
+        for i in range (0,3):
+            top_left[i] = float(top_left[i])
+        print top_left
+        print " "
+        top_right = raw_input('please enter the coordinates for the top right point: ')
+        top_right = top_right.split()
+        for i in range (0,3):
+            top_right[i] = float(top_right[i])
+        print top_right
+        print " "
+        bottom_left = raw_input('please enter the coordinates for the bottom left point: ')
+        bottom_left = bottom_left.split()
+        for i in range (0,3):
+            bottom_left[i] = float(bottom_left[i])
+        print bottom_left
+        print " "
+    else:
+        print "invalid input"
 
     length_of_paper = (((top_left.x() - top_right.x())**2) + ((top_left.y() - top_right.y())**2)) ** 0.5
     width_of_paper = (((top_left.x() - bottom_left.x())**2) + ((top_left.y() - bottom_left.y())**2)) ** 0.5    
@@ -82,10 +105,6 @@ def dictionary(robotName):
     start_y = top_left.y()-.04
     print start_x
     print start_y
-    #r.move_cartesian([start_x,start_y,bottom_left.z() + 0.05])
-    #print r.get_desired_cartesian_position()
-    #time.sleep(0.5)
-    #r.move_cartesian([start_x,start_y,top_left.z() + 0.085])
     r.delta_move_cartesian([0.0,0.0, 0.030])
     raw_input('Enter to move to start')
     r.move_cartesian([start_x,start_y,top_left.z()]) 
@@ -139,6 +158,8 @@ def dictionary(robotName):
     print length_of_paper
     print width_of_paper               
     print draw_list
+    
+    time.sleep(10)
 
     for line_count in range (0,int(math.floor(width_of_paper/0.02))):
 
@@ -179,6 +200,7 @@ def dictionary(robotName):
         letter_number = 0
         word_number = 0
         line_number -= .04
+        r.delta_move_cartesian([0.0,0.0,0.03])
 
 
 
