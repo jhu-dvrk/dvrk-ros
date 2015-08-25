@@ -2,6 +2,7 @@ from robot import *
 from copy import deepcopy
 import time
 import math
+import PyKDL
 
 
 
@@ -11,7 +12,7 @@ def dictionary(robotName):
     dict[' '] = [('u'),('d')]
     dict['test2'] = [('r',90,60),('r',180,60),('r',270,60),('r',0,60)]
 
-    dict['a'] = [('d'),('r',80,60),('r',280,30),('r',180,10),('r',0,10),('r',280,30)]
+    dict['a'] = [('d'),('r',80,60),('r',0,10),('r',280,30),('r',180,20),('r',0,20),('r',280,30)]
     dict['b'] = [('d'),('r',90,60),('r',350,30),('r',270,20),('r',190,30),('r',350,40),('r',270,23),('r',180,40)] 
     dict['c'] = [('r',0,35),('d'),('r',180,30),('r',108.43,15.8114),('r',90,30),('r',71.57,15.8114),('r',0,30)]
     dict['d'] = [('d'),('r',90,60),('r',340,30),('r',270,40),('r',200,30)]
@@ -61,22 +62,29 @@ def dictionary(robotName):
         print bottom_left
         print " "
     elif calibration_or_nah == 'n':
+        print "enter coordinates in an x y z format without commas"
         top_left = raw_input('please enter the coordinates for the top left point: ')
         top_left = top_left.split()
         for i in range (0,3):
             top_left[i] = float(top_left[i])
+        #top_left = tuple(top_left)
+        top_left = PyKDL.Vector(top_left[0], top_left[1], top_left[2])
         print top_left
         print " "
         top_right = raw_input('please enter the coordinates for the top right point: ')
         top_right = top_right.split()
         for i in range (0,3):
             top_right[i] = float(top_right[i])
+        #top_right = tuple(top_right)
+        top_right = PyKDL.Vector(top_right[0], top_right[1], top_right[2])
         print top_right
         print " "
         bottom_left = raw_input('please enter the coordinates for the bottom left point: ')
         bottom_left = bottom_left.split()
         for i in range (0,3):
             bottom_left[i] = float(bottom_left[i])
+        #bottom_left = tuple(bottom_left)
+        bottom_left = PyKDL.Vector(bottom_left[0],bottom_left[1],bottom_left[2])
         print bottom_left
         print " "
     else:
