@@ -35,11 +35,16 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <QTabWidget>
 
-#include <ros/ros.h>
 #include <cisst_ros_bridge/mtsROSBridge.h>
+#include <dvrk_utilities/dvrk_add_topics_functions.h>
 
 int main(int argc, char ** argv)
 {
+    // desired frequencies
+    const double ioPeriod = 0.5 * cmn_ms;
+    const double armPeriod = 2.0 * cmn_ms;
+    const double rosPeriod = 10.0 * cmn_ms;
+
     // log configuration
     cmnLogger::SetMask(CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskDefaultLog(CMN_LOG_ALLOW_ALL);
@@ -129,7 +134,7 @@ int main(int argc, char ** argv)
     componentManager->Connect("console", "Main", "consoleGUI", "Main");
 
     // IO
-    mtsRobotIO1394 * io = new mtsRobotIO1394("io", 1.0 * cmn_ms, firewirePort);
+    mtsRobotIO1394 * io = new mtsRobotIO1394("io", ioPeriod, firewirePort);
     io->Configure(configFiles["io"]);
     componentManager->AddComponent(io);
 
@@ -141,15 +146,15 @@ int main(int argc, char ** argv)
     // Configure based on arm type assuming name
     if ((armName == "PSM1") || (armName == "PSM2") || (armName == "PSM3")) {
         arm->ConfigureArm(mtsIntuitiveResearchKitConsole::Arm::ARM_PSM,
-                          configFiles["kinematic"], 3.0 * cmn_ms);
+                          configFiles["kinematic"], armPeriod);
         numberOfAxis = 7;
     } else if ((armName == "MTML") || (armName == "MTMR")) {
         arm->ConfigureArm(mtsIntuitiveResearchKitConsole::Arm::ARM_MTM,
-                          configFiles["kinematic"], 3.0 * cmn_ms);
+                          configFiles["kinematic"], armPeriod);
         numberOfAxis = 8;
     } else if (armName == "ECM") {
         arm->ConfigureArm(mtsIntuitiveResearchKitConsole::Arm::ARM_ECM,
-                          configFiles["kinematic"], 3.0 * cmn_ms);
+                          configFiles["kinematic"], armPeriod);
         numberOfAxis = 4;
     } else {
         std::cerr << "Arm name should be either PSM1, PSM2, PSM3, MTML, MTMR or ECM, not " << armName << std::endl;
@@ -189,48 +194,15 @@ int main(int argc, char ** argv)
     tabWidget->addTab(robotWidgetFactory->ButtonsWidget(), "Buttons");
     tabWidget->show();
 
-
-    //-------------------------------------------------------
-    // Start ROS Bridge
-    // ------------------------------------------------------
-
     // ros wrapper
-    mtsROSBridge robotBridge("ROSECM", 5 * cmn_ms, true);
+    mtsROSBridge robotBridge("RobotBridge", rosPeriod, true);
 
-    // connect to ECM
-    robotBridge.AddPublisherFromReadCommand<prmPositionCartesianGet, geometry_msgs::Pose>(
-                "Robot", "GetPositionCartesian", "/dvrk_ecm/cartesian_pose_current");
-    robotBridge.AddSubscriberToWriteCommand<std::string, std_msgs::String>(
-                "Robot", "SetRobotControlState", "/dvrk_ecm/set_robot_state");
-    robotBridge.AddSubscriberToWriteCommand<prmPositionCartesianSet, geometry_msgs::Pose>(
-                "Robot", "SetPositionCartesian", "/dvrk_ecm/set_position_cartesian");
-
-    robotBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
-                "Robot","ManipClutchBtn","/dvrk_ecm/manip_clutch");
-    robotBridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>(
-                "Robot","SUJClutchBtn","/dvrk_ecm/suj_clutch");
-
-    // PID
-    robotBridge.AddPublisherFromReadCommand<prmPositionJointGet, sensor_msgs::JointState>(
-                "PID", "GetPositionJoint", "/dvrk_ecm/joint_position_current");
-    robotBridge.AddPublisherFromReadCommand<vctDoubleVec, cisst_msgs::vctDoubleVec>(
-                "PID", "GetEffortJointDesired", "/dvrk_ecm/joint_effort_current");
-    robotBridge.AddSubscriberToWriteCommand<prmForceTorqueJointSet , sensor_msgs::JointState>(
-                "PID", "SetTorqueJoint", "/dvrk_ecm/set_joint_effort");
-    robotBridge.AddSubscriberToWriteCommand<prmPositionJointSet, sensor_msgs::JointState>(
-                "PID", "SetPositionJoint","/dvrk_ecm/set_position_joint");
-
+    // populate interfaces
+    dvrk::add_topics_ecm(robotBridge, "/dvrk/" + armName, arm->Name());
 
     // Connect
     componentManager->AddComponent(&robotBridge);
-    componentManager->Connect(robotBridge.GetName(), "Robot", arm->Name(), "Robot");
-    componentManager->Connect(robotBridge.GetName(), "PID", arm->PIDComponentName(), "Controller");
-
-    //-------------------------------------------------------
-    // End ROS Bridge
-    // ------------------------------------------------------
-
-
+    dvrk::connect_bridge_ecm(robotBridge, arm->Name());
 
     //-------------- create the components ------------------
     io->CreateAndWait(2.0 * cmn_s); // this will also create the pids as they are in same thread
