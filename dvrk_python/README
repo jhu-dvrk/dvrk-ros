@@ -1,0 +1,43 @@
+robot.py - the api for all of these lessons
+
+Lessons:
+1 - power_on.py - shows users how to turn on the robot
+2 - power_off.py - shows users how to turn off the robot
+3 - getters.py - shows the users the getters that are avilable in the robot.py this progam include
+    	       	 getters for the current position in terms of cartesian and joint space as well 
+		 as the number of joints on the arm you are currently using
+4 - simple_cartesian_move.py - shows what is possible in cartesian movement, includes simple cartesian move and rotations
+5 - simple_joint_move.py - shows what is possible in joint movement
+6 - plotting_joint.py - map the position of joint ---- , compare the desired position and the current position as well
+7 - plotting_cartesian.py - map the cartesian desired and the current position
+
+To do:
+
+!- Documentation of Python class.
+  http://www.electricmonk.nl/log/2008/06/22/why-python-rocks-i-inline-documentation/
+
+!- Make some methods private (ideally, pydoc will not show them), all
+  callbacks, ...
+
+!- Better frame class.  pykdl.
+  Install:
+    sudo apt-get install ros-hydro-python-orocos-kdl ros-hydro-orocos-kinematics-dynamics ros-hydro-tf
+
+!-In Python:
+     import PyKDL
+     f = PyKDL.Frame()
+     import tf_conversions
+     
+!- Exceptions, type checking api
+
+?- Interactive interpreter
+
+
+- Quick Matlab prototype
+  - create a class
+  - add method to a class and use as callback
+  - thread events?
+
+- guards move(self, ...guard[]...)
+
+private methods noted?
