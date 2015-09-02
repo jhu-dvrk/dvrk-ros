@@ -541,8 +541,7 @@ class robot:
         initial_joint_position = self.__position_joint_desired
         if ((self.__robot_name == 'PSM1') or (self.__robot_name == 'PSM2') or (self.__robot_name == 'PSM3') or (self.__robot_name == 'ECM')):
             # see if the robot is deep enough
-            if (initial_joint_position[2] < 0.03):
-		print 'HI'
+            if (initial_joint_position[2] < 0.1):
                 # set in position joint mode
                 self.__dvrk_set_state(state = 'DVRK_POSITION_GOAL_JOINT')
                 #create a new goal starting with current position

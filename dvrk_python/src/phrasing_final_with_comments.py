@@ -2,6 +2,7 @@ from robot import *
 import math
 
 
+
 def dictionary(robotName):
     r=robot(robotName)
     dict = {}
@@ -35,38 +36,24 @@ def dictionary(robotName):
     dict['?'] = [('r',0,20),('d'),('u'),('r',90,10),('d'),('r',90,25),('r',0,20),('r',90,25),('r',180,40)]
 
 
-    phrase = raw_input('enter the words you would like writen: ').lower() #asks the user what they would like writen and automatically makes sure its all lower case so the code understands it 
-    letter_size = raw_input('enter the size of the letter you want written(between .01 and .06: ') #askes the user for the size of the letters they would like writen
-    letter_size = float(letter_size) #makes sure letter size isn't beyond the two extreems of .06 and .01
-    if letter_size > .06:
-        letter_size = .06
-    elif letter_size < .01:
-        letter_size = .01 
-    
-    
-    number_of_lines = math.floor(.06 / letter_size)
-    number_of_lines = int(number_of_lines)
-    print number_of_lines #calculates how many lines can fit based off letter size
+ 
 
-    start_x = -0.1    #sets the starting position for the x axis at -.1
-    start_y = 0.12 / number_of_lines #sets the starting position for the y axis based on the number of lines
-    r.move_cartesian([start_x,start_y,-0.11])
-    time.sleep(2.0)
-
+    start_x = -0.1 #sets the starting position for the x axis at -.1
+    start_y = 0.04 #sets the starting position for the y axis at .04
+    r.move_cartesian([start_x,start_y,-0.12]) #moves robot to start position
     rot_1 = Rotation.Identity() #sets to standard rotation
-    r.move_cartesian_rotation(rot_1)
+    r.move_cartesian_rotation(rot_1) #^^^
     letter_number = 0 #used to keep the letters spaced out evenly
     word_number = 0   #used to keep the words spaced out evenly
     line_number = 0   #used to keep the lines spaced out evenly
  
-    cycle_number = 0  #counts the position in the list of actions to create a letter
-    phrase_cycle = 0  #counts the position in the list of letters
-    word_count = 0    #counts the position in the list of words
-    line_count = 0    #counts the position in the list of lines
+    cycle_number = 0 #counts the position in the list of actions to create a letter
+    phrase_cycle = 0 #counts the position in the list of letters
+    word_count = 0   #counts the position in the list of words
+    line_count = 0   #counts the position in the list of lines
 
-
-    
-    phrase = phrase.split() #makes the sentence a list of words
+    phrase = raw_input('enter the words you would like writen: ').lower() #asks the user what they would like writen and automatically makes sure its all lower case so the code understands it 
+    phrase = phrase.split()  #makes the sentence a list of words
 
     list_of_words = [] #formats user input as a list of words where each word is a list
     for i in range(0, len(phrase)):
@@ -75,68 +62,65 @@ def dictionary(robotName):
 
 
     counter_characters = 0 #checks number of characters per line
-    draw_list = []    #list of words per line
-    word = []         #list of characters in word per line
+    draw_list = [] #list of words per line
+    word = [] #list of characters in word per line
     for i in range (0,len(list_of_words)): #formats the words into lines of text
        
         word_length = len(list_of_words[i])
-        if counter_characters + word_length <= (.2 / letter_size): #checks to see if the next word will make the line longer then the max number of characters it can fit
+        if counter_characters + word_length <= 11: #checks to see if the next word will make the line longer then 11 characters
             counter_characters += word_length + 1 #if it isn't longer, it will add that word to the line
-
             word.append(list_of_words[i])
- 
+            print list_of_words[i]
             if i == len(list_of_words)-1:
                    draw_list.append(word)      
         else:
-            draw_list.append(word) #if line is longer then the max number of characters it can fit, it will add the whole line of words, minus the new, to draw_list
+            draw_list.append(word) #if line is longer then 11 characters, it will add the whole line of words, minus the new, to draw_list
             word = [] #then it will set the next line to have no words in it, and add the new word to that next line
             counter_characters = len(list_of_words[i])+1
             word.append(list_of_words[i])
             if i == len(list_of_words)-1:
-                   draw_list.append(word)  
+                   draw_list.append(list_of_words[i])  
         
 
     print draw_list #prints the completly formated list, where the first list determines the line, the second determines the word, and the third determines the letter
 
+    for line_count in range (0,3): #keeps track of what line the robot is on
 
-    for line_count in range (0,number_of_lines):#keeps track of what line the robot is on
-
-
-        for word_count in range (0,len(draw_list[line_count])):# keeps track of what word the robot is on
+        for word_count in range (0,len(draw_list[line_count])): # keeps track of what word the robot is on
 
             length_of_word = len(draw_list[line_count][word_count]) #finds the number of letters in a word for the next loop
 
-            for phrase_cycle in range (0, length_of_word):#keeps track of what letter the robot is on
-                length_of_letter_list = len(dict[draw_list[line_count][word_count][phrase_cycle]])   #finds the length of the list of actions in creating a given letter for the next loop
+            for phrase_cycle in range (0, length_of_word): #keeps track of what letter the robot is on
+                length_of_letter_list = len(dict[draw_list[line_count][word_count][phrase_cycle]])  #finds the length of the list of actions in creating a given letter for the next loop
                
                 print draw_list[line_count][word_count][phrase_cycle] #prints out the current letter being written
 
                 r.delta_move_cartesian([0.0,0.0,0.01])
                 r.move_cartesian_translation([start_x+letter_number+word_number,start_y+line_number,-0.11]) #before writing another letter, the robot moves to the next letter, word, or line's starting position, the pen itself starts in the up position
 
-                for cycle_number in range (0, length_of_letter_list):  #this loop goes through the list of actions for making a letter, there are three actions, move the pen in the xy direction, move the pen up, and move the pen down; these are represented by r, u and d respectively
-                    if dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number][0] == 'r':           # if r is the first thing detected in the next action's list, then the robot will move in the xy direction based on the angle and distance whihc are specified after the r like so: ('r',angle,distance) NOTE: the angle is based on a unit circle with 0 degrees being straight to the right, 90 being up, 180 being left, and 270 being down.
+                for cycle_number in range (0, length_of_letter_list): #this loop goes through the list of actions for making a letter, there are three actions, move the pen in the xy direction, move the pen up, and move the pen down; these are represented by r, u and d respectively
+                    if dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number][0] == 'r':        # if r is the first thing detected in the next action's list, then the robot will move in the xy direction based on the angle and distance whihc are specified after the r like so: ('r',angle,distance) NOTE: the angle is based on a unit circle with 0 degrees being straight to the right, 90 being up, 180 being left, and 270 being down.
                         angle = math.radians(dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number][1])
-                        length = (dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number][2])/(50/letter_size)
+                        length = (dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number][2])/2500.0
 
                    
                         x_position = math.cos(angle)*length #these functions convert the polar coordinate into cartesian x and y distances
                         y_position = math.sin(angle)*length
 
-                        r.delta_move_cartesian([x_position,y_position,0.0])#the x and y distances are then used to move the robot
+                        r.delta_move_cartesian([x_position,y_position,0.0]) #the x and y distances are then used to move the robot
                       
 
                     elif dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number] == 'u':       # if u is the first thing detected in the next action's list, then the robot's pen will move up
                         r.delta_move_cartesian([0.0,0.0,0.01])
-                    elif dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number] == 'd':       # if d is the first thing detected in the next action's list, then the robot's pen will move down
+                    elif dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number] == 'd':        # if d is the first thing detected in the next action's list, then the robot's pen will move down
                         r.delta_move_cartesian([0.0,0.0,-0.01])
 
 
-                letter_number += letter_size  #makes the pen move to the next letter's spot after writing a letter
-            word_number += letter_size  #adds a space after each word
+                letter_number += .02 #makes the pen move to the next letter's spot after writing a letter
+            word_number += .02 #adds a space after each word
         letter_number = 0  #resets letter_number so no letters are skipped
         word_number = 0    #resets word_number so there are no extra spaces
-        line_number -=  0.12 / number_of_lines #tells the pen to start one line lower; we move in the negative y direction for the next line, seeing as we start at the top and move down
+        line_number -= .04 #tells the pen to start one line lower; we move in the negative y direction for the next line, seeing as we start at the top and move down
 
 
 

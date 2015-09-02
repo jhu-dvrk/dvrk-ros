@@ -8,10 +8,8 @@ import PyKDL
 
 def dictionary(robotName):
     r=robot(robotName)
-    dict = {}
-    dict[' '] = [('u'),('d')]
-    dict['test2'] = [('r',90,60),('r',180,60),('r',270,60),('r',0,60)]
-
+    dict = {
+    #this dictionary keeps the list of actions used to make each letter (more info below)
     dict['a'] = [('d'),('r',80,60),('r',0,10),('r',280,30),('r',180,20),('r',0,20),('r',280,30)]
     dict['b'] = [('d'),('r',90,60),('r',350,30),('r',270,20),('r',190,30),('r',350,40),('r',270,23),('r',180,40)] 
     dict['c'] = [('r',0,35),('d'),('r',180,30),('r',108.43,15.8114),('r',90,30),('r',71.57,15.8114),('r',0,30)]
@@ -41,8 +39,8 @@ def dictionary(robotName):
     dict['?'] = [('r',0,20),('d'),('u'),('r',90,10),('d'),('r',90,25),('r',0,20),('r',90,25),('r',180,40)] 
 
 
-    calibration_or_nah = raw_input('do you need to calibrate?(y or n) ')
-    if calibration_or_nah == 'y':
+    calibration_or_nah = raw_input('do you need to calibrate?(y or n) ') #promts user to see if the robot has to have the area it writes in calibrated
+    if calibration_or_nah == 'y': #if it does, the user must move the arm to three different points on the page (top left, top right, and bottom left) so that the robot can determine the space it has to write in
         raw_input('Move the arm to the top left of your paper (press enter to continue)')
         topleft = r.get_desired_cartesian_position().p
         print topleft
@@ -61,7 +59,7 @@ def dictionary(robotName):
         bottom_left = deepcopy(bottomleft)
         print bottom_left
         print " "
-    elif calibration_or_nah == 'n':
+    elif calibration_or_nah == 'n': #if no calibration is needed, then the user can just enter in the carteisian coordinates, which will be converted to PyKDL vectors
         print "enter coordinates in an x y z format without commas"
         top_left = raw_input('please enter the coordinates for the top left point: ')
         top_left = top_left.split()
@@ -90,8 +88,8 @@ def dictionary(robotName):
     else:
         print "invalid input"
 
-    length_of_paper = (((top_left.x() - top_right.x())**2) + ((top_left.y() - top_right.y())**2)) ** 0.5
-    width_of_paper = (((top_left.x() - bottom_left.x())**2) + ((top_left.y() - bottom_left.y())**2)) ** 0.5    
+    width_of_paper = (((top_left.x() - top_right.x())**2) + ((top_left.y() - top_right.y())**2)) ** 0.5  #uses distance formula to find width of paper
+    length_of_paper = (((top_left.x() - bottom_left.x())**2) + ((top_left.y() - bottom_left.y())**2)) ** 0.5  #uses distance formula to find length of paper 
     
     print top_left
     print top_right
@@ -100,24 +98,18 @@ def dictionary(robotName):
     print center_page_x
     print center_page_y
     time.sleep(1.0)
-    raw_input('Press enter to move to middle')
-    print r.get_desired_cartesian_position()
+    raw_input('Press enter to move to start') #becuase the robot can sometimes move in an arc, we made sure the robot moves upward before getting to the start so the paper isn't written on accidently 
     r.delta_move_cartesian([0.0,0.0,0.040])
     time.sleep(1.0)
-    print r.get_desired_cartesian_position()
     r.move_cartesian([center_page_x,center_page_y,bottom_left.z()+0.040])
-    raw_input('Press enter to move z axis')
-    print r.get_desired_cartesian_position()
     time.sleep(1.0)
     start_x = top_left.x()
     start_y = top_left.y()-.04
     print start_x
     print start_y
     r.delta_move_cartesian([0.0,0.0, 0.030])
-    raw_input('Enter to move to start')
     r.move_cartesian([start_x,start_y,top_left.z()]) 
     rot_1 = Rotation.Identity() #sets to standard rotation
-    #rot_1 = Rotation(0.47,0.87,-0.17,0.80,-0.50,-0.34,-0.38,0.02,-0.92)
     r.move_cartesian_rotation(rot_1)
     letter_number = 0 #used to keep the letters spaced out evenly
     word_number = 0   #used to keep the words spaced out evenly
@@ -132,8 +124,8 @@ def dictionary(robotName):
 
 
     time.sleep(2.0)
-    phrase = raw_input('enter the words you would like writen: ').lower()
-    phrase = phrase.split()
+    phrase = raw_input('enter the words you would like writen: ').lower()#asks the user what they would like writen and automatically makes sure its all lower case so the code understands it 
+    phrase = phrase.split() #makes the sentence a list of words
 
     list_of_words = [] #formats user input as a list of words where each word is a list
     for i in range(0, len(phrase)):
@@ -148,67 +140,66 @@ def dictionary(robotName):
     for i in range (0,len(list_of_words)): #formats the words into lines of text
        
         word_length = len(list_of_words[i])
-        if counter_characters + word_length <= math.floor(length_of_paper/0.02): #checks to see if the next word will make the line longer than 10 characters
+        if counter_characters + word_length <= math.floor(width_of_paper/0.02): #checks to see if the next word will make the line longer than the page width
             counter_characters += (word_length + 1) #if it isn't longer, it will add that word to the line
             word.append(list_of_words[i])
 
             if i == len(list_of_words)-1:
                    draw_list.append(word)      
         else:
-            draw_list.append(word) #if line is longer than 10 characters, it will add the whole line of words, minus the new, to draw_list
+            draw_list.append(word) #if line is longer than the page width, it will add the whole line of words, minus the new, to draw_list
             word = [] #then it will set the next line to have no words in it, and add the new word to that next line
             counter_characters = len(list_of_words[i])+1
             word.append(list_of_words[i])
             if i == len(list_of_words)-1:
                    draw_list.append(word)  
         
+          
+    print draw_list #prints the completly formated list, where the first list determines the line, the second determines the word, and the third determines the letter
+
     
-    print length_of_paper
-    print width_of_paper               
-    print draw_list
-    
-    time.sleep(10)
+    time.sleep(10) 
 
-    for line_count in range (0,int(math.floor(width_of_paper/0.02))):
+    for line_count in range (0,int(math.floor(length_of_paper/0.02))): #keeps track of what line the robot is on
 
 
-        for word_count in range (0,len(draw_list[line_count])):
+        for word_count in range (0,len(draw_list[line_count])): #keeps track of what word the robot is on
 
-            length_of_word = len(draw_list[line_count][word_count])
+            length_of_word = len(draw_list[line_count][word_count]) #finds the number of letters in a word for the next loop
 
-            for phrase_cycle in range (0, length_of_word):
-                length_of_letter_list = len(dict[draw_list[line_count][word_count][phrase_cycle]])  
+            for phrase_cycle in range (0, length_of_word):  #keeps track of what letter the robot is on
+                length_of_letter_list = len(dict[draw_list[line_count][word_count][phrase_cycle]])  #finds the length of the list of actions in creating a given letter for the next loop
                
-                print draw_list[line_count][word_count][phrase_cycle]
+                print draw_list[line_count][word_count][phrase_cycle] #prints out the current letter being written
 
 
                 r.delta_move_cartesian([0.0,0.0,0.01])
-                r.move_cartesian_translation([start_x+letter_number+word_number,start_y+line_number,top_left.z()]) #before writing another letter, the robot moves to the next letter, word, or line's starting position
+                r.move_cartesian_translation([start_x+letter_number+word_number,start_y+line_number,top_left.z()]) #before writing another letter, the robot moves to the next letter, word, or line's starting position, the pen itself starts in the up position
 
-                for cycle_number in range (0, length_of_letter_list): 
-                    if dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number][0] == 'r':        # ('r',angle,distance)
+                for cycle_number in range (0, length_of_letter_list):  #this loop goes through the list of actions for making a letter, there are three actions, move the pen in the xy direction, move the pen up, and move the pen down; these are represented by r, u and d respectively
+                    if dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number][0] == 'r':       # if r is the first thing detected in the next action's list, then the robot will move in the xy direction based on the angle and distance whihc are specified after the r like so: ('r',angle,distance) NOTE: the angle is based on a unit circle with 0 degrees being straight to the right, 90 being up, 180 being left, and 270 being down.  
                         angle = math.radians(dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number][1])
                         length = (dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number][2])/2500.0
 
                    
-                        x_position = math.cos(angle)*length
+                        x_position = math.cos(angle)*length #these functions convert the polar coordinate into cartesian x and y distances
                         y_position = math.sin(angle)*length
 
-                        r.delta_move_cartesian([x_position,y_position,0.0])
+                        r.delta_move_cartesian([x_position,y_position,0.0])#the x and y distances are then used to move the robot
                       
 
-                    elif dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number] == 'u':         #u = pen up
+                    elif dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number] == 'u':       # if u is the first thing detected in the next action's list, then the robot's pen will move up
                         r.delta_move_cartesian([0.0,0.0,0.01])
-                    elif dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number] == 'd':         #d = pen down
+                    elif dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number] == 'd':     # if d is the first thing detected in the next action's list, then the robot's pen will move down
                         r.delta_move_cartesian([0.0,0.0,-0.01])
 
 
-                letter_number += .02
-            word_number += .02
-        letter_number = 0
-        word_number = 0
-        line_number -= .04
-        r.delta_move_cartesian([0.0,0.0,0.03])
+                letter_number += .02 #makes the pen move to the next letter's spot after writing a letter
+            word_number += .02  #adds a space after each word
+        letter_number = 0  #resets letter_number so no letters are skipped
+        word_number = 0    #resets word_number so there are no extra spaces
+        line_number -= .04  #tells the pen to start one line lower; we move in the negative y direction for the next line, seeing as we start at the top and move down
+        r.delta_move_cartesian([0.0,0.0,0.03]) #puts the pen upward to not scrape the paper while moving to the next line
 
 
 
