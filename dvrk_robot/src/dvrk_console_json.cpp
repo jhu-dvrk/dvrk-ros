@@ -26,7 +26,6 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstCommon/cmnCommandLineOptions.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsoleQt.h>
-#include <sawOpenIGTLink/mtsOpenIGTLinkBridge.h>
 
 #include <QApplication>
 
@@ -77,10 +76,6 @@ int main(int argc, char ** argv)
                               "json configuration file for data collection",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &jsonCollectionConfigFile);
 
-    options.AddOptionOneValue("o", "openigtlink-config",
-                              "json configuration file for sawOpenIGTLink bridge",
-                              cmnCommandLineOptions::OPTIONAL_OPTION, &jsonIGTLConfigFile);
-
     // check that all required options have been provided
     std::string errorMessage;
     if (!options.Parse(argc, argv, errorMessage)) {
@@ -92,11 +87,6 @@ int main(int argc, char ** argv)
     options.PrintParsedArguments(arguments);
     std::cout << "Options provided:" << std::endl << arguments << std::endl;
 
-    // make sure the json config file exists and can be parsed
-    fileExists("JSON configuration", jsonMainConfigFile);
-    if(!jsonIGTLConfigFile.empty()) {
-        fileExists("OpenIGTLink configuration", jsonIGTLConfigFile);
-    }
     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
 
     // console
@@ -107,23 +97,15 @@ int main(int argc, char ** argv)
 
     // add all Qt widgets
     QApplication application(argc, argv);
-    mtsIntuitiveResearchKitConsoleQt * consoleQt = new mtsIntuitiveResearchKitConsoleQt(console);
+    mtsIntuitiveResearchKitConsoleQt * consoleQt = new mtsIntuitiveResearchKitConsoleQt();
+    consoleQt->Configure(console);
+    consoleQt->Connect();
 
     // ros wrapper
     mtsROSBridge rosBridge("dVRKBridge", rosPeriod, true);
     dvrk::console * consoleROS = new dvrk::console(rosBridge, "/dvrk/", console);
     componentManager->AddComponent(&rosBridge);
     consoleROS->Connect();
-
-    // OpenIGTLink bridge
-    if(!jsonIGTLConfigFile.empty()) {
-        fileExists("OpenIGTLink configuration", jsonIGTLConfigFile);
-
-    }
-    mtsOpenIGTLinkBridge igtlBridge("bridge", 1 * cmn_ms);
-    igtlBridge.Configure(jsonIGTLConfigFile);
-    componentManager->AddComponent(&igtlBridge);
-    igtlBridge.Connect();
 
     //-------------- create the components ------------------
     componentManager->CreateAllAndWait(2.0 * cmn_s);
