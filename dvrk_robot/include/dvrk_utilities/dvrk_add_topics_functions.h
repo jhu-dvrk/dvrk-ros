@@ -84,6 +84,19 @@ namespace dvrk {
     void connect_bridge_ecm(const std::string & bridge_name,
                             const std::string & ecm_component_name);
 
+
+    /*! Add all the topics related to tele-op component. */
+    void add_topics_teleop(mtsROSBridge & bridge,
+                           const std::string & ros_namespace,
+                           const std::string & teleop_component_name);
+
+    /*! This method connects all the required interfaces for a teleop
+     *  component, it must be used after add_topics_teleop. */
+    void connect_bridge_teleop(mtsROSBridge & bridge,
+                               const std::string & teleop_component_name);
+    void connect_bridge_teleop(const std::string & bridge_name,
+                               const std::string & teleop_component_name);
+
     void add_topics_suj(mtsROSBridge & bridge,
                         const std::string & ros_namespace,
                         const std::string & arm_name);

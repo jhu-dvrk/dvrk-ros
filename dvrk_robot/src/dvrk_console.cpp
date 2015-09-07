@@ -26,12 +26,15 @@ dvrk::console::console(mtsROSBridge & bridge,
 {
     mBridgeName = bridge.GetName();
 
-    const mtsIntuitiveResearchKitConsole::ArmList::iterator end = mConsole->mArms.end();
-    mtsIntuitiveResearchKitConsole::ArmList::iterator iter;
-    for (iter = mConsole->mArms.begin(); iter != end; ++iter) {
-        const std::string name = iter->first;
+    const mtsIntuitiveResearchKitConsole::ArmList::iterator
+        armEnd = mConsole->mArms.end();
+    mtsIntuitiveResearchKitConsole::ArmList::iterator armIter;
+    for (armIter = mConsole->mArms.begin();
+         armIter != armEnd;
+         ++armIter) {
+        const std::string name = armIter->first;
 
-        switch (iter->second->mType) {
+        switch (armIter->second->mType) {
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
             dvrk::add_topics_mtm(bridge, ros_namespace + "/" + name, name);
             break;
@@ -50,15 +53,30 @@ dvrk::console::console(mtsROSBridge & bridge,
             break;
         }
     }
+
+    const mtsIntuitiveResearchKitConsole::TeleopList::iterator
+        teleopsEnd = mConsole->mTeleops.end();
+    mtsIntuitiveResearchKitConsole::TeleopList::iterator teleopIter;
+    for (teleopIter = mConsole->mTeleops.begin();
+         teleopIter != teleopsEnd;
+         ++teleopIter) {
+        const std::string name = teleopIter->first;
+        std::string topic_name = teleopIter->first;
+        std::replace(topic_name.begin(), topic_name.end(), '-', '_');
+        dvrk::add_topics_teleop(bridge, ros_namespace + "/" + topic_name, name);
+    }
 }
 
 void dvrk::console::Connect(void)
 {
-    const mtsIntuitiveResearchKitConsole::ArmList::iterator end = mConsole->mArms.end();
-    mtsIntuitiveResearchKitConsole::ArmList::iterator iter;
-    for (iter = mConsole->mArms.begin(); iter != end; ++iter) {
-        const std::string name = iter->first;
-        switch (iter->second->mType) {
+    const mtsIntuitiveResearchKitConsole::ArmList::iterator
+        armEnd = mConsole->mArms.end();
+    mtsIntuitiveResearchKitConsole::ArmList::iterator armIter;
+    for (armIter = mConsole->mArms.begin();
+         armIter != armEnd;
+         ++armIter) {
+        const std::string name = armIter->first;
+        switch (armIter->second->mType) {
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
             dvrk::connect_bridge_mtm(mBridgeName, name);
             break;
@@ -76,5 +94,15 @@ void dvrk::console::Connect(void)
         default:
             break;
         }
+    }
+
+    const mtsIntuitiveResearchKitConsole::TeleopList::iterator
+        teleopsEnd = mConsole->mTeleops.end();
+    mtsIntuitiveResearchKitConsole::TeleopList::iterator teleopIter;
+    for (teleopIter = mConsole->mTeleops.begin();
+         teleopIter != teleopsEnd;
+         ++teleopIter) {
+        const std::string name = teleopIter->first;
+        dvrk::connect_bridge_teleop(mBridgeName, name);
     }
 }
