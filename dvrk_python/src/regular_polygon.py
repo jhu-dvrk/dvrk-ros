@@ -1,9 +1,16 @@
 from robot import *
 import math
+import time
 
-def polygon(robotName, sides, length):
+#trace out a polygon of side `sides` and length `length`
+def polygon(robotName):
     r = robot(robotName)
-    
+
+    input_sides = raw_input('How many sides : ')
+    sides = int(input_sides)
+    input_length = raw_input('What is the length : ')
+    length = float(input_length)
+
     #get the interior degree of the polygon, in terms of radians
     interior_degrees = 360/sides
     interior_radians = math.radians(interior_degrees)
@@ -23,7 +30,7 @@ def polygon(robotName, sides, length):
         current_angle+=interior_radians
 
 if __name__ == '__main__':
-    if (len(sys.argv) != 4):
+    if (len(sys.argv) != 2):
         print sys.argv[0] + ' requires one argument, i.e. name of dVRK arm'
     else:
-        polygon(sys.argv[1], int(sys.argv[2]), float(sys.argv[3]))
+        polygon(sys.argv[1])

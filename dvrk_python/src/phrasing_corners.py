@@ -8,7 +8,7 @@ import PyKDL
 
 def dictionary(robotName):
     r=robot(robotName)
-    dict = {
+    dict = {}
     #this dictionary keeps the list of actions used to make each letter (more info below)
     dict['a'] = [('d'),('r',80,60),('r',0,10),('r',280,30),('r',180,20),('r',0,20),('r',280,30)]
     dict['b'] = [('d'),('r',90,60),('r',350,30),('r',270,20),('r',190,30),('r',350,40),('r',270,23),('r',180,40)] 

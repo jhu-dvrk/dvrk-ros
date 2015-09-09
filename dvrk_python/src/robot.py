@@ -27,7 +27,7 @@ positions close to each other.
 
 It is important to note that when `interpolate` is set to `False`,
 sending a new goal that is far from the last desired position will
-likely trigger a `PID tracking error <https://en.wikipedia.org/wiki/PID_controller>`_. 
+likely trigger a `PID tracking error <https://en.wikipedia.org/wiki/PID_controller>`_.
 
 .. _currentvdesired:
 
@@ -117,8 +117,11 @@ class robot:
 
         # continuous publish from dvrk_bridge
         self.__position_joint_desired = []
+        self.__effort_joint_desired = []
         self.__position_cartesian_desired = Frame()
         self.__position_joint_current = []
+        self.__velocity_joint_current = []
+        self.__effort_joint_current = []
         self.__position_cartesian_current = Frame()
 
         # publishers
@@ -133,9 +136,9 @@ class robot:
         # subscribers
         rospy.Subscriber(ros_namespace + '/robot_state', String, self.__robot_state_callback)
         rospy.Subscriber(ros_namespace + '/goal_reached', Bool, self.__goal_reached_callback)
-        rospy.Subscriber(ros_namespace + '/position_joint_desired', JointState, self.__position_joint_desired_callback)
+        rospy.Subscriber(ros_namespace + '/state_joint_desired', JointState, self.__state_joint_desired_callback)
         rospy.Subscriber(ros_namespace + '/position_cartesian_desired', Pose, self.__position_cartesian_desired_callback)
-        rospy.Subscriber(ros_namespace + '/position_joint_current', JointState, self.__position_joint_current_callback)
+        rospy.Subscriber(ros_namespace + '/state_joint_current', JointState, self.__state_joint_current_callback)
         rospy.Subscriber(ros_namespace + '/position_cartesian_current', Pose, self.__position_cartesian_current_callback)
         # create node
         #rospy.init_node('robot_api', anonymous = True)
@@ -158,11 +161,12 @@ class robot:
         self.__goal_reached = data.data
         self.__goal_reached_event.set()
 
-    def __position_joint_desired_callback(self, data):
+    def __state_joint_desired_callback(self, data):
         """Callback for the joint desired position.
 
         :param data: the `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_desired"""
         self.__position_joint_desired[:] = data.position
+        self.__effort_joint_desired[:] = data.effort
 
     def __position_cartesian_desired_callback(self, data):
         """Callback for the cartesian desired position.
@@ -170,11 +174,13 @@ class robot:
         :param data: the cartesian position desired"""
         self.__position_cartesian_desired = posemath.fromMsg(data)
 
-    def __position_joint_current_callback(self, data):
+    def __state_joint_current_callback(self, data):
         """Callback for the current joint position.
 
         :param data: the `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_current"""
         self.__position_joint_current[:] = data.position
+        self.__velocity_joint_current[:] = data.velocity
+        self.__effort_joint_current[:] = data.effort
 
     def __position_cartesian_current_callback(self, data):
         """Callback for the current cartesian position.
@@ -224,37 +230,57 @@ class robot:
         rospy.loginfo(rospy.get_caller_id() + ' -> end homing')
         self.__dvrk_set_state('DVRK_UNINITIALIZED', 20)
 
+    def get_robot_state(self):
+        return self.__robot_state
+
     def get_current_cartesian_position(self):
         """Gets the :ref:`current cartesian position <currentvdesired>` of the robot in terms of cartesian space.
 
-        :returns: the current position of the robot in cartesian position
+        :returns: the current position of the robot in cartesian space
         :rtype: `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_"""
-        rospy.loginfo(rospy.get_caller_id() + " -> return the current position of the robot in cartesian space")
         return self.__position_cartesian_current
 
     def get_current_joint_position(self):
         """Gets the :ref:`current joint position <currentvdesired>` of the robot in terms of joint space.
 
-        :returns: the current position of the robot in joint position
+        :returns: the current position of the robot in joint space
         :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
-        rospy.loginfo(rospy.get_caller_id() + " -> return the current position of the robot in joint space")
         return self.__position_joint_current
+
+    def get_current_joint_velocity(self):
+        """Gets the :ref:`current joint velocity <currentvdesired>` of the robot in terms of joint space.
+
+        :returns: the current position of the robot in joint space
+        :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
+        return self.__velocity_joint_current
+
+    def get_current_joint_effort(self):
+        """Gets the :ref:`current joint effort <currentvdesired>` of the robot in terms of joint space.
+
+        :returns: the current position of the robot in joint space
+        :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
+        return self.__effort_joint_current
 
     def get_desired_cartesian_position(self):
         """Get the :ref:`desired cartesian position <currentvdesired>` of the robot in terms of caretsian space.
 
-        :returns: the desired position of the robot in cartesian position
+        :returns: the desired position of the robot in cartesian space
         :rtype: `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_"""
-        rospy.loginfo(rospy.get_caller_id() + " -> return the desired position of the robot in cartesian space")
         return self.__position_cartesian_desired
 
     def get_desired_joint_position(self):
         """Gets the :ref:`desired joint position <currentvdesired>` of the robot in terms of joint space.
 
-        :returns: the desired position of the robot in joint position
+        :returns: the desired position of the robot in joint space
         :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
-        rospy.loginfo(rospy.get_caller_id() + " -> return the desired position of the robot in joint space")
         return self.__position_joint_desired
+
+    def get_desired_joint_effort(self):
+        """Gets the :ref:`desired joint effort <currentvdesired>` of the robot in terms of joint space.
+
+        :returns: the desired effort of the robot in joint space
+        :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
+        return self.__effort_joint_desired
 
     def get_joint_number(self):
         """Gets the number of joints on the arm specified.
@@ -353,7 +379,6 @@ class robot:
         if(self.__check_input_type(delta_input, [list, float, Vector, Rotation, Frame])):
                if(self.__check_input_type(delta_input, [list, float, Vector])):
                    self.delta_move_cartesian_translation(delta_input, interpolate)
-
                elif(self.__check_input_type(delta_input, [Rotation])):
                    self.delta_move_cartesian_rotation(delta_input, interpolate)
                elif(self.__check_input_type(delta_input, [Frame])):
@@ -450,7 +475,7 @@ class robot:
                elif(self.__check_input_type(abs_input, [Rotation])):
                    self.move_cartesian_rotation(abs_input, interpolate)
                elif(self.__check_input_type(abs_input, [Frame])):
-                   self.move_cartesian_rotation(abs_input, interpolate)
+                   self.move_cartesian_frame(abs_input, interpolate)
         rospy.loginfo(rospy.get_caller_id() + ' -> completing absolute move cartesian translation')
 
     def move_cartesian_rotation(self, abs_rotation, interpolate=True):

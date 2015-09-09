@@ -31,7 +31,7 @@ classdef robot < handle
                 @(sub, data)self.robot_state_callback(sub, data);
 
             % position cartesian desired
-            self.position_cartesian_desired = rostype.geometry_msgs_Pose;
+            self.position_cartesian_desired = [];
             topic = strcat('/dvrk/', self.robot_name, '/position_cartesian_desired');
             self.position_cartesian_desired_subscriber = ...
                 rossubscriber(topic, rostype.geometry_msgs_Pose);
@@ -39,7 +39,7 @@ classdef robot < handle
                 @(sub, data)self.position_cartesian_desired_callback(sub, data);
             
             % position joint desired
-            self.position_joint_desired = rostype.sensor_msgs_JointState;
+            self.position_joint_desired = [];
             topic = strcat('/dvrk/', self.robot_name, '/position_joint_desired');
             self.position_joint_desired_subscriber = ...
                 rossubscriber(topic, rostype.sensor_msgs_JointState);
@@ -100,5 +100,60 @@ classdef robot < handle
             jointState.Position(index) = jointState.Position(index) + value;
             send(self.position_goal_joint_publisher, jointState);
         end
+        
+        function delta_joint_move_list(self, value, index)
+            if isfloat(value) && isfloat(index) && length(value) == length(index)
+                self.set_state('DVRK_POSITION_GOAL_JOINT');
+                jointState = rosmessage(self.position_goal_joint_publisher);
+                jointState.Position = self.position_joint_desired;
+                for i = 1:length(value)
+                    jointState.Position(index(i)) = jointState.Position(index(i)) + value(i);
+                end
+                send(self.position_goal_joint_publisher, jointState);
+            else
+                disp('Parameters must be arrays of the same length')
+            end
+           
+        end
+        
+        function joint_move_single(self, value, index)
+            self.set_state('DVRK_POSITION_GOAL_JOINT');
+            jointState = rosmessage(self.position_goal_joint_publisher);
+            jointState.Position = self.position_joint_desired;
+            jointState.Position(index) = value;
+            send(self.position_goal_joint_publisher, jointState);
+        end
+        
+        function joint_move_list(self, value, index)
+            if isfloat(value) && isfloat(index) && length(value) == length(index)
+                self.set_state('DVRK_POSITION_GOAL_JOINT');
+                jointState = rosmessage(self.position_goal_joint_publisher);
+                jointState.Position = self.position_joint_desired;
+                for i = 1:length(value)
+                    jointState.Position(index(i)) = value(i);
+                end
+                send(self.position_goal_joint_publisher, jointState);
+            end
+        end
+        
+       % function open_gripper(self)
+       %     self.set_state('DVRK_POSITION_GOAL_JOINT');
+       %     jointState = rosmessage(self.position_goal_joint_publisher);
+       %     jointState.Position = self.position_joint_desired;
+       %     jointState.Position(7) = pi/4;
+       %     send(self.position_goal_joint_publisher, jointState);
+       % end
+        
+       % function close_gripper(self)
+       %     self.set_state('DVRK_POSITION_GOAL_JOINT');
+       %     jointState = rosmessage(self.position_goal_joint_publisher);
+       %     jointState.Position = self.position_joint_desired;
+       %     jointState.Position(7) = 0.0;
+       %     send(self.position_goal_joint_publisher, jointState);
+       % end
+        
+        function delta_cartesian_move(self,value,index)
+            
+        end 
     end
 end
