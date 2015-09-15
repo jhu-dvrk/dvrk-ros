@@ -3,14 +3,14 @@ from copy import deepcopy
 import time
 import math
 import PyKDL
-
+import corners
 
 
 def dictionary(robotName):
     r=robot(robotName)
     dict = {}
     #this dictionary keeps the list of actions used to make each letter (more info below)
-    dict['a'] = [('d'),('r',80,60),('r',0,10),('r',280,30),('r',180,20),('r',0,20),('r',280,30)]
+    dict['a'] = [('d'),('r',80,60),('r',0,10),('r',280,60),('u'),('r',100,30),('d'),('r',180,20)]
     dict['b'] = [('d'),('r',90,60),('r',350,30),('r',270,20),('r',190,30),('r',350,40),('r',270,23),('r',180,40)] 
     dict['c'] = [('r',0,35),('d'),('r',180,30),('r',108.43,15.8114),('r',90,30),('r',71.57,15.8114),('r',0,30)]
     dict['d'] = [('d'),('r',90,60),('r',340,30),('r',270,40),('r',200,30)]
@@ -40,49 +40,87 @@ def dictionary(robotName):
 
 
     calibration_or_nah = raw_input('do you need to calibrate?(y or n) ') #promts user to see if the robot has to have the area it writes in calibrated
-    if calibration_or_nah == 'y': #if it does, the user must move the arm to three different points on the page (top left, top right, and bottom left) so that the robot can determine the space it has to write in
+    if calibration_or_nah == 'y': #if it does, the user must move the arm to three different points on the page (top left, top right, and bottom left) so that the robot can determine the space it has to write in; This also changes the corners.py file, which is where the robot will get the calibarations from
+
         raw_input('Move the arm to the top left of your paper (press enter to continue)')
         topleft = r.get_desired_cartesian_position().p
         print topleft
         top_left = deepcopy(topleft)
         print top_left
         print " "
+      
         raw_input('Move the arm to the top right of your paper (press enter to continue)')
         topright = r.get_desired_cartesian_position().p
         print topright
         top_right = deepcopy(topright)
         print top_right
         print " "
+
         raw_input('Move the arm to the bottom left of your paper (press enter to continue)')
         bottomleft = r.get_desired_cartesian_position().p
         print bottomleft
         bottom_left = deepcopy(bottomleft)
         print bottom_left
         print " "
+        
+        f = open('corners.py','w')
+
+        tlx = top_left.x()
+        tly = top_left.y()
+        tlz = top_left.z()
+        cornerA = 'cornerA = [' + str(tlx) + ',' + str(tly) + ',' + str(tlz) + ']'
+        f.write('#top left corner\n')
+        f.write(cornerA)
+        f.write('\n')
+        f.write('tlx =' + str(tlx))
+        f.write('\n')
+        f.write('tly =' + str(tly))
+        f.write('\n')
+        f.write('tlz =' + str(tlz))
+        f.write('\n')
+
+        Trx = top_right.x()
+        Try = top_right.y()
+        Trz = top_right.z()
+        cornerB = 'cornerB = [' + str(Trx) + ',' + str(Try) + ',' + str(Trz) + ']'
+        f.write('#top right corner\n')
+        f.write(cornerB)
+        f.write('\n')
+        f.write('Trx =' + str(Trx))
+        f.write('\n')
+        f.write('Try =' + str(Try))
+        f.write('\n')
+        f.write('Trz =' + str(Trz))
+        f.write('\n')
+
+        blx = bottom_left.x()
+        bly = bottom_left.y()
+        blz = bottom_left.z()
+        cornerC = 'cornerC = [' + str(blx) + ',' + str(bly) + ',' + str(blz) + ']'
+        f.write('#bottom left corner\n')
+        f.write(cornerC)
+        f.write('\n')
+        f.write('blx =' + str(blx))
+        f.write('\n')
+        f.write('bly =' + str(bly))
+        f.write('\n')
+        f.write('blz =' + str(blz))
+        f.write('\n')
+        
+        f.close
+
+
     elif calibration_or_nah == 'n': #if no calibration is needed, then the user can just enter in the carteisian coordinates, which will be converted to PyKDL vectors
-        print "enter coordinates in an x y z format without commas"
-        top_left = raw_input('please enter the coordinates for the top left point: ')
-        top_left = top_left.split()
-        for i in range (0,3):
-            top_left[i] = float(top_left[i])
-        #top_left = tuple(top_left)
-        top_left = PyKDL.Vector(top_left[0], top_left[1], top_left[2])
+
+        top_left = PyKDL.Vector(corners.tlx,corners.tly,corners.tlz)
         print top_left
         print " "
-        top_right = raw_input('please enter the coordinates for the top right point: ')
-        top_right = top_right.split()
-        for i in range (0,3):
-            top_right[i] = float(top_right[i])
-        #top_right = tuple(top_right)
-        top_right = PyKDL.Vector(top_right[0], top_right[1], top_right[2])
+ 
+        top_right = PyKDL.Vector(corners.Trx,corners.Try,corners.Trz)
         print top_right
         print " "
-        bottom_left = raw_input('please enter the coordinates for the bottom left point: ')
-        bottom_left = bottom_left.split()
-        for i in range (0,3):
-            bottom_left[i] = float(bottom_left[i])
-        #bottom_left = tuple(bottom_left)
-        bottom_left = PyKDL.Vector(bottom_left[0],bottom_left[1],bottom_left[2])
+
+        bottom_left = PyKDL.Vector(corners.blx,corners.bly,corners.blz)
         print bottom_left
         print " "
     else:
@@ -157,6 +195,8 @@ def dictionary(robotName):
           
     print draw_list #prints the completly formated list, where the first list determines the line, the second determines the word, and the third determines the letter
 
+
+
     
     time.sleep(10) 
 
@@ -173,8 +213,8 @@ def dictionary(robotName):
                 print draw_list[line_count][word_count][phrase_cycle] #prints out the current letter being written
 
 
-                r.delta_move_cartesian([0.0,0.0,0.01])
-                r.move_cartesian_translation([start_x+letter_number+word_number,start_y+line_number,top_left.z()]) #before writing another letter, the robot moves to the next letter, word, or line's starting position, the pen itself starts in the up position
+                r.delta_move_cartesian([0.0,0.0,0.015])
+                r.move_cartesian_translation([start_x+letter_number+word_number,start_y+line_number,top_left.z() + 0.015]) #before writing another letter, the robot moves to the next letter, word, or line's starting position, the pen itself starts in the up position
 
                 for cycle_number in range (0, length_of_letter_list):  #this loop goes through the list of actions for making a letter, there are three actions, move the pen in the xy direction, move the pen up, and move the pen down; these are represented by r, u and d respectively
                     if dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number][0] == 'r':       # if r is the first thing detected in the next action's list, then the robot will move in the xy direction based on the angle and distance whihc are specified after the r like so: ('r',angle,distance) NOTE: the angle is based on a unit circle with 0 degrees being straight to the right, 90 being up, 180 being left, and 270 being down.  
@@ -189,9 +229,11 @@ def dictionary(robotName):
                       
 
                     elif dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number] == 'u':       # if u is the first thing detected in the next action's list, then the robot's pen will move up
-                        r.delta_move_cartesian([0.0,0.0,0.01])
-                    elif dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number] == 'd':     # if d is the first thing detected in the next action's list, then the robot's pen will move down
-                        r.delta_move_cartesian([0.0,0.0,-0.01])
+                        r.delta_move_cartesian([0.0,0.0,0.015])
+                    elif dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number] == 'd':     # if d is the first thing detected in the next action's list, then the robot's pen will move down slowly untill it feels enough resistance from the paper
+                        while(r.get_desired_joint_effort()[2] < 1):
+                              r.delta_move_cartesian_translation([0.0,0.0,-0.001])
+                              time.sleep(.3)
 
 
                 letter_number += .02 #makes the pen move to the next letter's spot after writing a letter

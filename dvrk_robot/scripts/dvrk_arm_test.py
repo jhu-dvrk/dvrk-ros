@@ -244,11 +244,23 @@ class example_application:
         amplitude = 0.05 # 5 cm
         # first motion
         goal.position.x =  initial_cartesian_position.position.x - amplitude
-        goal.position.y =  initial_cartesian_position.position.y + amplitude
+        goal.position.y =  initial_cartesian_position.position.y
         self.set_position_goal_cartesian_publish_and_wait(goal)
         # second motion
         goal.position.x =  initial_cartesian_position.position.x + amplitude
+        goal.position.y =  initial_cartesian_position.position.y
+        self.set_position_goal_cartesian_publish_and_wait(goal)
+        # back to initial position
+        goal.position.x =  initial_cartesian_position.position.x
+        goal.position.y =  initial_cartesian_position.position.y
+        self.set_position_goal_cartesian_publish_and_wait(goal)
+        # first motion
+        goal.position.x =  initial_cartesian_position.position.x
         goal.position.y =  initial_cartesian_position.position.y - amplitude
+        self.set_position_goal_cartesian_publish_and_wait(goal)
+        # second motion
+        goal.position.x =  initial_cartesian_position.position.x
+        goal.position.y =  initial_cartesian_position.position.y + amplitude
         self.set_position_goal_cartesian_publish_and_wait(goal)
         # back to initial position
         goal.position.x =  initial_cartesian_position.position.x
@@ -258,11 +270,11 @@ class example_application:
 
     # main method
     def run(self):
-        self.home()
-        self.joint_direct()
-        self.joint_goal()
-        self.cartesian_direct()
-        self.cartesian_goal()
+#       self.home()
+#       self.joint_direct()
+#       self.joint_goal()
+#       self.cartesian_direct()
+       self.cartesian_goal()
 
 if __name__ == '__main__':
     try:
