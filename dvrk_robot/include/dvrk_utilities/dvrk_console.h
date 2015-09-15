@@ -30,10 +30,13 @@ namespace dvrk {
         console(mtsROSBridge & bridge,
                 const std::string & ros_namespace,
                 mtsIntuitiveResearchKitConsole * mts_console);
+        void Configure(const std::string & jsonFile);
         void Connect(void);
     protected:
-        mtsIntuitiveResearchKitConsole * mConsole;
         std::string mBridgeName;
+        std::string mNameSpace;
+        mtsIntuitiveResearchKitConsole * mConsole;
+        std::list<std::string> mIOInterfaces;
     };
 }
 
