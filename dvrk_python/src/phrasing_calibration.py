@@ -146,7 +146,7 @@ def dictionary(robotName):
     print start_x
     print start_y
     r.delta_move_cartesian([0.0,0.0, 0.030])
-    r.move_cartesian([start_x,start_y,top_left.z()]) 
+    r.move_cartesian([start_x,start_y,top_left.z()+0.01]) 
     rot_1 = Rotation.Identity() #sets to standard rotation
     r.move_cartesian_rotation(rot_1)
     letter_number = 0 #used to keep the letters spaced out evenly
@@ -213,8 +213,8 @@ def dictionary(robotName):
                 print draw_list[line_count][word_count][phrase_cycle] #prints out the current letter being written
 
 
-                r.delta_move_cartesian([0.0,0.0,0.015])
-                r.move_cartesian_translation([start_x+letter_number+word_number,start_y+line_number,top_left.z() + 0.015]) #before writing another letter, the robot moves to the next letter, word, or line's starting position, the pen itself starts in the up position
+
+                r.move_cartesian_translation([start_x+letter_number+word_number,start_y+line_number,top_left.z() + 0.007]) #before writing another letter, the robot moves to the next letter, word, or line's starting position, the pen itself starts in the up position
 
                 for cycle_number in range (0, length_of_letter_list):  #this loop goes through the list of actions for making a letter, there are three actions, move the pen in the xy direction, move the pen up, and move the pen down; these are represented by r, u and d respectively
                     if dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number][0] == 'r':       # if r is the first thing detected in the next action's list, then the robot will move in the xy direction based on the angle and distance whihc are specified after the r like so: ('r',angle,distance) NOTE: the angle is based on a unit circle with 0 degrees being straight to the right, 90 being up, 180 being left, and 270 being down.  
@@ -229,7 +229,7 @@ def dictionary(robotName):
                       
 
                     elif dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number] == 'u':       # if u is the first thing detected in the next action's list, then the robot's pen will move up
-                        r.delta_move_cartesian([0.0,0.0,0.015])
+                        r.delta_move_cartesian([0.0,0.0,0.007])
                     elif dict[draw_list[line_count][word_count][phrase_cycle]][cycle_number] == 'd':     # if d is the first thing detected in the next action's list, then the robot's pen will move down slowly untill it feels enough resistance from the paper
                         while(r.get_desired_joint_effort()[2] < 1):
                               r.delta_move_cartesian_translation([0.0,0.0,-0.001])
@@ -241,7 +241,7 @@ def dictionary(robotName):
         letter_number = 0  #resets letter_number so no letters are skipped
         word_number = 0    #resets word_number so there are no extra spaces
         line_number -= .04  #tells the pen to start one line lower; we move in the negative y direction for the next line, seeing as we start at the top and move down
-        r.delta_move_cartesian([0.0,0.0,0.03]) #puts the pen upward to not scrape the paper while moving to the next line
+        r.delta_move_cartesian([0.0,0.0,0.06]) #puts the pen upward to not scrape the paper while moving to the next line
 
 
 
