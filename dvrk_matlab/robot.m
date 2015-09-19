@@ -200,7 +200,7 @@ classdef robot < handle
             % the joint/cartesian and direct/trajectory modes
             message = rosmessage(self.robot_state_publisher);
             message.Data = state_as_string;
-            self.robot_state_timer.StartDel = 5.0; % 5 seconds should be plenty for most state changes
+            self.robot_state_timer.StartDelay = 5.0; % 5 seconds should be plenty for most state changes
             start(self.robot_state_timer);
             send(self.robot_state_publisher, message);
             wait(self.robot_state_timer);
