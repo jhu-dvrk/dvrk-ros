@@ -67,8 +67,8 @@ def dVRK_90degree_calibariton_test(robotName):
 
             for i in range(-45,46):
 
-                r.move_joint_list([i * math.pi / 180],[joint_number])
-                print i * math.pi / 180
+                r.move_joint_list([i * 0.001],[joint_number])
+                
                 time.sleep(.2)
                 x.append(r.get_desired_joint_position()[joint_number])
                 print x
@@ -79,8 +79,8 @@ def dVRK_90degree_calibariton_test(robotName):
 
             for i in range(-45,46):
 
-                r.move_joint_list([i * math.pi / 180],[joint_number])
-                print i * math.pi / 180
+                r.move_joint_list([i * 0.001],[joint_number])
+
                 time.sleep(.2)
                 x.append(r.get_current_joint_position()[joint_number])
                 print x
