@@ -89,6 +89,7 @@ if (cisst_FOUND_AS_REQUIRED)
       ${sawControllers_LIBRARIES}
       ${sawConstraintController_LIBRARIES}
     )
+    cisst_target_link_libraries (dvrk_utilities ${REQUIRED_CISST_LIBRARIES})
 
   set (_EXECUTABLES dvrk_mtm_ros dvrk_psm_ros dvrk_ecm_ros dvrk_full_ros dvrk_console_json)
   foreach (_executable ${_EXECUTABLES})
