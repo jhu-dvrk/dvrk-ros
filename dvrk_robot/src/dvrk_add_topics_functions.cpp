@@ -28,16 +28,9 @@ void dvrk::add_topics_footpedal(mtsROSBridge & bridge,
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
         ("Camera", "Button", ros_namespace + "/camera");
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-<<<<<<< HEAD
-        ("Cam+", "Button", ros_namespace + "/camplus");
-    bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        ("Cam-", "Button", ros_namespace + "/camminus");
-=======
         ("Cam+", "Button", ros_namespace + "/camera_plus");
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
         ("Cam-", "Button", ros_namespace + "/camera_minus");
->>>>>>> cbaf2a685f6f1925bff61e604a5ed2c5c4681ee3
-
 }
 
 void dvrk::connect_bridge_footpedal(mtsROSBridge & bridge,
