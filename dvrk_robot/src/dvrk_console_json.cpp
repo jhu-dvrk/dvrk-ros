@@ -36,12 +36,12 @@ http://www.cisst.org/cisst/license.txt.
 void fileExists(const std::string & description, const std::string & filename)
 {
     if (!cmnPath::Exists(filename)) {
-        std::cerr << "File not found for " << description
-                  << ": " << filename << std::endl;
+        std::cerr << "File not found: " << description
+                  << "; " << filename << std::endl;
         exit(-1);
     } else {
-        std::cout << "File found for " << description
-                  << ": " << filename << std::endl;
+        std::cout << "File found: " << description
+                  << "; " << filename << std::endl;
     }
 }
 
@@ -60,21 +60,28 @@ int main(int argc, char ** argv)
     argc = argout.size();
     // ------------------------------------------
 
-    const double rosPeriod = 10.0 * cmn_ms;
-
     // parse options
     cmnCommandLineOptions options;
     std::string jsonMainConfigFile;
-    std::string jsonCollectionConfigFile;
-    std::string jsonIGTLConfigFile;
+    std::string rosNamespace = "/dvrk/";
+    double rosPeriod = 20.0 * cmn_ms;
+    std::list<std::string> jsonIOConfigFiles;
 
     options.AddOptionOneValue("j", "json-config",
                               "json configuration file",
                               cmnCommandLineOptions::REQUIRED_OPTION, &jsonMainConfigFile);
 
-    options.AddOptionOneValue("c", "collection-config",
-                              "json configuration file for data collection",
-                              cmnCommandLineOptions::OPTIONAL_OPTION, &jsonCollectionConfigFile);
+    options.AddOptionOneValue("p", "ros-period",
+                              "period in seconds to read all arms/teleop components and publish (default 0.02, 20 ms)",
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &rosPeriod);
+
+    options.AddOptionOneValue("n", "ros-namespace",
+                              "ROS namespace to prefix all topics, must have start and end \"/\" (default /dvrk/)",
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &rosNamespace);
+
+    options.AddOptionMultipleValues("i", "ros-io-config",
+                                    "json config file to configure ROS bridges to collect low level data (IO)",
+                                    cmnCommandLineOptions::OPTIONAL_OPTION, &jsonIOConfigFiles);
 
     // check that all required options have been provided
     std::string errorMessage;
@@ -91,6 +98,7 @@ int main(int argc, char ** argv)
 
     // console
     mtsIntuitiveResearchKitConsole * console = new mtsIntuitiveResearchKitConsole("console");
+    fileExists("console JSON configuration file", jsonMainConfigFile);
     console->Configure(jsonMainConfigFile);
     componentManager->AddComponent(console);
     console->Connect();
@@ -101,9 +109,18 @@ int main(int argc, char ** argv)
     consoleQt->Configure(console);
     consoleQt->Connect();
 
-    // ros wrapper
+    // ros wrapper for arms and optionally IOs
     mtsROSBridge rosBridge("dVRKBridge", rosPeriod, true);
-    dvrk::console * consoleROS = new dvrk::console(rosBridge, "/dvrk/", console);
+    dvrk::console * consoleROS = new dvrk::console(rosBridge, rosNamespace, console);
+    // IOs
+    const std::list<std::string>::const_iterator end = jsonIOConfigFiles.end();
+    std::list<std::string>::const_iterator iter;
+    for (iter = jsonIOConfigFiles.begin();
+         iter != end;
+         iter++) {
+        fileExists("ROS IO JSON configuration file", *iter);
+        consoleROS->Configure(*iter);
+    }
     componentManager->AddComponent(&rosBridge);
     consoleROS->Connect();
 

@@ -73,7 +73,7 @@ import math
 from PyKDL import *
 from tf import transformations
 from tf_conversions import posemath
-from std_msgs.msg import String, Bool
+from std_msgs.msg import String, Bool, Float32
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import Vector3
 from geometry_msgs.msg import Quaternion
@@ -102,7 +102,7 @@ class robot:
     """
 
     #initialize the robot
-    def __init__(self, robot_name):
+    def __init__(self, robot_name, ros_namespace = '/dvrk/'):
         """Constructor.  This initializes a few data members.It
         requires a robot name, this will be used to find the ROS
         topics for the robot being controlled.  For example if the
@@ -110,6 +110,7 @@ class robot:
         `/dvrk/PSM1`"""
         # data members, event based
         self.__robot_name = robot_name
+        self.__ros_namespace = ros_namespace
         self.__robot_state = 'uninitialized'
         self.__robot_state_event = threading.Event()
         self.__goal_reached = False
@@ -126,20 +127,33 @@ class robot:
 
         # publishers
         frame = Frame()
-        ros_namespace = '/dvrk/' + self.__robot_name
-        self.set_robot_state = rospy.Publisher(ros_namespace + '/set_robot_state', String, latch=True)
-        self.set_position_joint = rospy.Publisher(ros_namespace + '/set_position_joint',JointState, latch=True)
-        self.set_position_goal_joint = rospy.Publisher(ros_namespace + '/set_position_goal_joint', JointState, latch=True)
-        self.set_position_cartesian = rospy.Publisher(ros_namespace + '/set_position_cartesian',Pose, latch=True)
-        self.set_position_goal_cartesian = rospy.Publisher(ros_namespace + '/set_position_goal_cartesian', Pose, latch=True)
+        full_ros_namespace = self.__ros_namespace + self.__robot_name
+        self.set_robot_state = rospy.Publisher(full_ros_namespace + '/set_robot_state',
+                                               String, latch=True)
+        self.set_position_joint = rospy.Publisher(full_ros_namespace + '/set_position_joint',
+                                                  JointState, latch=True)
+        self.set_position_goal_joint = rospy.Publisher(full_ros_namespace + '/set_position_goal_joint',
+                                                       JointState, latch=True)
+        self.set_position_cartesian = rospy.Publisher(full_ros_namespace + '/set_position_cartesian',
+                                                      Pose, latch=True)
+        self.set_position_goal_cartesian = rospy.Publisher(full_ros_namespace + '/set_position_goal_cartesian',
+                                                           Pose, latch=True)
+        self.set_jaw_position = rospy.Publisher(full_ros_namespace + '/set_jaw_position',
+                                                Float32, latch=True)
 
         # subscribers
-        rospy.Subscriber(ros_namespace + '/robot_state', String, self.__robot_state_callback)
-        rospy.Subscriber(ros_namespace + '/goal_reached', Bool, self.__goal_reached_callback)
-        rospy.Subscriber(ros_namespace + '/state_joint_desired', JointState, self.__state_joint_desired_callback)
-        rospy.Subscriber(ros_namespace + '/position_cartesian_desired', Pose, self.__position_cartesian_desired_callback)
-        rospy.Subscriber(ros_namespace + '/state_joint_current', JointState, self.__state_joint_current_callback)
-        rospy.Subscriber(ros_namespace + '/position_cartesian_current', Pose, self.__position_cartesian_current_callback)
+        rospy.Subscriber(full_ros_namespace + '/robot_state',
+                         String, self.__robot_state_callback)
+        rospy.Subscriber(full_ros_namespace + '/goal_reached',
+                         Bool, self.__goal_reached_callback)
+        rospy.Subscriber(full_ros_namespace + '/state_joint_desired',
+                         JointState, self.__state_joint_desired_callback)
+        rospy.Subscriber(full_ros_namespace + '/position_cartesian_desired',
+                         Pose, self.__position_cartesian_desired_callback)
+        rospy.Subscriber(full_ros_namespace + '/state_joint_current',
+                         JointState, self.__state_joint_current_callback)
+        rospy.Subscriber(full_ros_namespace + '/position_cartesian_current',
+                         Pose, self.__position_cartesian_current_callback)
         # create node
         #rospy.init_node('robot_api', anonymous = True)
         rospy.init_node('robot_api',anonymous = True, log_level = rospy.WARN)
@@ -360,13 +374,15 @@ class robot:
 
     def close_gripper(self):
         "Close the arm gripper"
-        last_joint_value = self.get_joint_number()-1
-        self.move_joint_list([0.0],[last_joint_value])
+        if (not self.__dvrk_set_state('DVRK_POSITION_GOAL_CARTESIAN')):
+            return False
+        self.set_jaw_position.publish(-10.0 * math.pi / 180.0);
 
     def open_gripper(self):
         "Open the arm gripper"
-        last_joint_value = self.get_joint_number()-1
-        self.move_joint_list([math.pi/4],[last_joint_value])
+        if (not self.__dvrk_set_state('DVRK_POSITION_GOAL_CARTESIAN')):
+            return False
+        self.set_jaw_position.publish(80.0 * math.pi / 180.0);
 
     def delta_move_cartesian(self, delta_input, interpolate=True):
         """Incremental translation in cartesian space.
