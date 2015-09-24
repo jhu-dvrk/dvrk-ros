@@ -33,6 +33,14 @@ http://www.cisst.org/cisst/license.txt.
 
 int main(int argc, char** argv)
 {
+    // program deprecated
+    std::cout << "-----------------------------------------------------------" << std::endl
+              << "- This program is deprecated:                             -" << std::endl
+              << "-   use dvrk_console_json instead                         -" << std::endl
+              << "-   examples can be found in share/jhu-dVRK/console*.json -" << std::endl
+              << "-----------------------------------------------------------" << std::endl
+              << std::endl;
+
     // desired frequencies
     const double ioPeriod = 0.5 * cmn_ms;
     const double armPeriod = 2.0 * cmn_ms;

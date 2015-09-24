@@ -70,6 +70,14 @@ void fileExists(const std::string & description, const std::string & filename)
 
 int main(int argc, char ** argv)
 {
+    // program deprecated
+    std::cout << "-----------------------------------------------------------" << std::endl
+              << "- This program is deprecated:                             -" << std::endl
+              << "-   use dvrk_console_json instead                         -" << std::endl
+              << "-   examples can be found in share/jhu-dVRK/console*.json -" << std::endl
+              << "-----------------------------------------------------------" << std::endl
+              << std::endl;
+
     // configuration
     const double periodIO = 0.5 * cmn_ms;
     const double periodKinematics = 2.0 * cmn_ms;
