@@ -110,7 +110,7 @@ int main(int argc, char ** argv)
     console->Connect();
 
     QApplication * application;
-    mtsIntuitiveResearchKitConsoleQt * consoleQt;
+    mtsIntuitiveResearchKitConsoleQt * consoleQt = 0;
     // add all Qt widgets if needed
     if (hasQt) {
         application = new QApplication(argc, argv);

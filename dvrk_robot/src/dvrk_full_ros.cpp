@@ -346,11 +346,11 @@ int main(int argc, char ** argv)
     mtsROSBridge rosBridge("RobotBridge", 20 * cmn_ms, true, false);
 
     // populate interfaces
-    dvrk::add_topics_mtm(rosBridge, "/dvrk_mtmr", "MTMR");
-    dvrk::add_topics_mtm(rosBridge, "/dvrk_mtml", "MTML");
-    dvrk::add_topics_psm(rosBridge, "/dvrk_psm1", "PSM1");
-    dvrk::add_topics_psm(rosBridge, "/dvrk_psm2", "PSM2");
-    dvrk::add_topics_footpedal(rosBridge, "/dvrk_footpedal");
+    dvrk::add_topics_mtm(rosBridge, "/dvrk/MTMR", "MTMR");
+    dvrk::add_topics_mtm(rosBridge, "/dvrk/MTML", "MTML");
+    dvrk::add_topics_psm(rosBridge, "/dvrk/PSM1", "PSM1");
+    dvrk::add_topics_psm(rosBridge, "/dvrk/PSM2", "PSM2");
+    dvrk::add_topics_footpedals(rosBridge, "/dvrk/footpedals");
 
     componentManager->AddComponent(&rosBridge);
 
@@ -359,7 +359,7 @@ int main(int argc, char ** argv)
     componentManager->Connect(rosBridge.GetName(), "MTMR", "MTMR", "Robot");
     componentManager->Connect(rosBridge.GetName(), "PSM1", "PSM1", "Robot");
     componentManager->Connect(rosBridge.GetName(), "PSM2", "PSM2", "Robot");
-    dvrk::connect_bridge_footpedal(rosBridge, "io");
+    dvrk::connect_bridge_footpedals(rosBridge, "io");
 
     ///////////////////////////////////////////////////////////////////
 

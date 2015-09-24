@@ -72,6 +72,10 @@ dvrk::console::console(mtsROSBridge & bridge,
         std::replace(topic_name.begin(), topic_name.end(), '-', '_');
         dvrk::add_topics_teleop(bridge, mNameSpace + "/" + topic_name, name);
     }
+
+    if (mConsole->mHasFootpedals) {
+        dvrk::add_topics_footpedals(bridge, mNameSpace + "/footpedals");
+    }
 }
 
 void dvrk::console::Configure(const std::string & jsonFile)
@@ -149,6 +153,11 @@ void dvrk::console::Connect(void)
          ++teleopIter) {
         const std::string name = teleopIter->first;
         dvrk::connect_bridge_teleop(mBridgeName, name);
+    }
+
+    // connect foot pedal, all arms use same
+    if (mConsole->mHasFootpedals) {
+        dvrk::connect_bridge_footpedals(mBridgeName, mConsole->mIOComponentName);
     }
 
     // ros wrappers for IO

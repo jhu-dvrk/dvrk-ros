@@ -124,14 +124,14 @@ int main(int argc, char** argv)
 
     // populate interfaces
     dvrk::add_topics_mtm(robotBridge, "/dvrk/" + config_name, mtm->GetName());
-    dvrk::add_topics_footpedal(robotBridge, "/dvrk/" + config_name + "/footpedal");
+    dvrk::add_topics_footpedals(robotBridge, "/dvrk/" + config_name + "/footpedals");
 
     // add component
     componentManager->AddComponent(&robotBridge);
 
     // connect interfaces on cisst/SAW side
     dvrk::connect_bridge_mtm(robotBridge, mtm->GetName());
-    dvrk::connect_bridge_footpedal(robotBridge, io->GetName());
+    dvrk::connect_bridge_footpedals(robotBridge, io->GetName());
 
     // organize all widgets in a tab widget
     QTabWidget * tabWidget = new QTabWidget;
