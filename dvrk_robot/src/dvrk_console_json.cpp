@@ -24,6 +24,7 @@ http://www.cisst.org/cisst/license.txt.
 // cisst/saw
 #include <cisstCommon/cmnPath.h>
 #include <cisstCommon/cmnCommandLineOptions.h>
+#include <cisstCommon/cmnGetChar.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsoleQt.h>
 
@@ -83,6 +84,9 @@ int main(int argc, char ** argv)
                                     "json config file to configure ROS bridges to collect low level data (IO)",
                                     cmnCommandLineOptions::OPTIONAL_OPTION, &jsonIOConfigFiles);
 
+    options.AddOptionNoValue("t", "text-only",
+                             "text only interface, do not create Qt widgets");
+
     // check that all required options have been provided
     std::string errorMessage;
     if (!options.Parse(argc, argv, errorMessage)) {
@@ -96,6 +100,8 @@ int main(int argc, char ** argv)
 
     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
 
+    const bool hasQt = !options.IsSet("text-only");
+
     // console
     mtsIntuitiveResearchKitConsole * console = new mtsIntuitiveResearchKitConsole("console");
     fileExists("console JSON configuration file", jsonMainConfigFile);
@@ -103,11 +109,15 @@ int main(int argc, char ** argv)
     componentManager->AddComponent(console);
     console->Connect();
 
-    // add all Qt widgets
-    QApplication application(argc, argv);
-    mtsIntuitiveResearchKitConsoleQt * consoleQt = new mtsIntuitiveResearchKitConsoleQt();
-    consoleQt->Configure(console);
-    consoleQt->Connect();
+    QApplication * application;
+    mtsIntuitiveResearchKitConsoleQt * consoleQt;
+    // add all Qt widgets if needed
+    if (hasQt) {
+        application = new QApplication(argc, argv);
+        consoleQt = new mtsIntuitiveResearchKitConsoleQt();
+        consoleQt->Configure(console);
+        consoleQt->Connect();
+    }
 
     // ros wrapper for arms and optionally IOs
     mtsROSBridge rosBridge("dVRKBridge", rosPeriod, true);
@@ -128,7 +138,13 @@ int main(int argc, char ** argv)
     componentManager->CreateAllAndWait(2.0 * cmn_s);
     componentManager->StartAllAndWait(2.0 * cmn_s);
 
-    application.exec();
+    if (hasQt) {
+        application->exec();
+    } else {
+        do {
+            std::cout << "Press 'q' to quit" << std::endl;
+        } while (cmnGetChar() != 'q');
+    }
 
     componentManager->KillAllAndWait(2.0 * cmn_s);
     componentManager->Cleanup();
@@ -136,7 +152,11 @@ int main(int argc, char ** argv)
     // stop all logs
     cmnLogger::Kill();
 
-    delete consoleQt;
+    delete console;
+    if (hasQt) {
+        delete consoleQt;
+    }
+    delete consoleROS;
 
     return 0;
 }
