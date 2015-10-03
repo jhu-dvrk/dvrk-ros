@@ -1,9 +1,22 @@
 classdef robot < handle
     % Class used to interface with ROS topics and convert to useful
-    % Matlab commands and properties.  To use:
+    % Matlab commands and properties.  To create a robot interface:
     %   r = robot('PSM1);
+    %   r
+    %
+    % To home and check current state:
     %   r.home();
     %   r.position_cartesian_desired   % contains 4x4 homogeneous transform
+    %
+    % To move a single joint, be careful with radians and meters
+    %   r.delta_joint_move_single(int8(3), -0.01)
+    %
+    % To move all joints (radians and meters)
+    %   r.delta_joint_move([-0.01, -0.01, 0.0, 0.0, 0.0, 0.0, 0.0])
+    %
+    % To move in cartesian space, translation only:
+    %   v = [0.0, 0.0, 0.01]
+    %   r.delta_cartesian_move_translation(-v)
 
     % settings that are not supposed to change after constructor
     properties (SetAccess = immutable)
@@ -35,6 +48,7 @@ classdef robot < handle
         position_cartesian_current_subscriber
         position_joint_current_subscriber
         position_goal_joint_publisher
+        position_goal_cartesian_publisher
     end
 
     methods
@@ -119,8 +133,15 @@ classdef robot < handle
             % position goal joint
             topic = strcat(self.ros_name, '/set_position_goal_joint');
             self.position_goal_joint_publisher = rospublisher(topic, rostype.sensor_msgs_JointState);
+
+            % position goal joint
+            topic = strcat(self.ros_name, '/set_position_goal_cartesian');
+            self.position_goal_cartesian_publisher = rospublisher(topic, rostype.geometry_msgs_Pose);
         end
 
+        
+        
+        
         function delete(self)
             % delete all timers
             delete(self.robot_state_timer);
@@ -136,6 +157,9 @@ classdef robot < handle
             self.position_joint_current_subscriber.NewMessageFcn = @(a, b, c)[];
         end
 
+        
+        
+        
         function robot_state_callback(self, ~, data) % second argument is subscriber, not used
             % Method used internally when a new robot_state is published by
             % the controller.  We use a timer to synchronize the callback
@@ -149,9 +173,8 @@ classdef robot < handle
         end
 
         function goal_reached_callback(self, ~, data) % second argument is subscriber, not used
-            % Method used internally when a new goal_reached is published by
-            % the controller.  We use a timer to synchronize the callback
-            % and user code.
+            % Method used internally when a new goal_reached is published
+            % by the controller.  We use a timer to synchronize the callback and user code.
             self.goal_reached = data.Data;
             stop(self.goal_reached_timer);
         end
@@ -172,14 +195,14 @@ classdef robot < handle
         end
 
         function position_joint_desired_callback(self, ~, jointState) % second argument is subscriber, not used
-            % Callback used to retrieve the last desired joint position published
-            % and store as property position_joint_desired
+            % Callback used to retrieve the last desired joint position
+            % published and store as property position_joint_desired
             self.position_joint_desired = jointState.Position;
         end
 
         function position_cartesian_current_callback(self, ~, pose) % second argument is subscriber, not used
-            % Callback used to retrieve the last measured cartesian position
-            % published and store as property position_cartesian_current
+            % Callback used to retrieve the last measured cartesian
+            % position published and store as property position_cartesian_current
 
             % convert idiotic ROS message type to homogeneous transforms
             position = trvec2tform([pose.Position.X, pose.Position.Y, pose.Position.Z]);
@@ -189,21 +212,34 @@ classdef robot < handle
         end
 
         function position_joint_current_callback(self, ~, jointState) % second argument is subscriber, not used
-            % Callback used to retrieve the last measured joint position published
-            % and store as property position_joint_current
+            % Callback used to retrieve the last measured joint position
+            % published and store as property position_joint_current
             self.position_joint_current = jointState.Position;
         end
 
+        
+        
+        
         function result = set_state(self, state_as_string)
             % Set the robot state.  For homing, used the robot.home()
             % method instead.  This is used internally to switch between
             % the joint/cartesian and direct/trajectory modes
+            
+            % first check that state is different
+            if strcmp(state_as_string, self.robot_state)
+                result = true;
+                return
+            end
+            % else, prepare message and send
             message = rosmessage(self.robot_state_publisher);
             message.Data = state_as_string;
-            self.robot_state_timer.StartDelay = 5.0; % 5 seconds should be plenty for most state changes
+             % 5 seconds should be plenty for most state changes
+            self.robot_state_timer.StartDelay = 5.0;
             start(self.robot_state_timer);
             send(self.robot_state_publisher, message);
             wait(self.robot_state_timer);
+            % after waiting, check what is current state to make sure it
+            % changed
             result = strcmp(self.robot_state, state_as_string);
             if not(result)
                 disp(strcat(self.robot_name, ...
@@ -215,6 +251,9 @@ classdef robot < handle
             end
         end
 
+        
+        
+        
         function home(self)
             % Home the robot.  This method will request power on, calibrate
             % and then go to home position.   For a PSM, this method will
@@ -245,6 +284,9 @@ classdef robot < handle
             end
         end
 
+        
+        
+        
         function result = joint_move(self, joint_values)
             % Move to absolute joint value using trajectory
             % generator
@@ -271,61 +313,191 @@ classdef robot < handle
                 end
             else
                 result = false;
-                disp(strcat(self.robot_state, ...
+                disp(strcat(self.robot_name, ...
                             [': joint_move, joint_values does not have right ' ...
                              'size, size of provided array is '], ...
                             int2str(length(joint_values))));
             end
         end
-
-        function result = delta_joint_move_single(self, joint_value, joint_index)
-            % Move one single joint by increment, first argument is
-            % value (radian or meter), second parameter in joint
-            % index (from 1 for first joint)
-            if self.set_state('DVRK_POSITION_GOAL_JOINT')
-                joint_goal = self.position_joint_desired;
-                joint_goal(joint_index) = joint_goal(joint_index) + joint_value;
-                result = self.joint_move(joint_goal);
-            else
-                result = false
-            end
-        end
-
-        function delta_joint_move_list(self, value, index)
-            if isfloat(value) && isfloat(index) && length(value) == length(index)
-                self.set_state('DVRK_POSITION_GOAL_JOINT');
-                jointState = rosmessage(self.position_goal_joint_publisher);
-                jointState.Position = self.position_joint_desired;
-                for i = 1:length(value)
-                    jointState.Position(index(i)) = jointState.Position(index(i)) + value(i);
-                end
-                send(self.position_goal_joint_publisher, jointState);
-            else
+  
+        
+        
+        
+        function result = cartesian_move(self, frame)
+            % Move to absolute cartesian frame using trajectory
+            % generator
+            
+            if ~isreal(frame)
+                result = false;
                 disp(strcat(self.robot_name, ...
-                            ': delta_joint_move_list: ', ...
-                            'parameters must be arrays of the same length'));
+                            ': cartesian_move, input must be an array or real numbers'));               
+               return
             end
+            
+            if ~ismatrix(frame)
+                result = false;
+                disp(strcat(self.robot_name, ...
+                            ': cartesian_move, input must be a matrix'));               
+               return
+            end
+            
+            [nbRows, nbCols] = size(frame);
+            if (nbRows ~= 4) || (nbCols ~=4)
+                result = false;
+                disp(strcat(self.robot_name, ...
+                            ': cartesian_move, input must be a 4x4 matrix'));               
+               return
+            end 
 
-        end
-
-        function joint_move_single(self, value, index)
-            self.set_state('DVRK_POSITION_GOAL_JOINT');
-            jointState = rosmessage(self.position_goal_joint_publisher);
-            jointState.Position = self.position_joint_desired;
-            jointState.Position(index) = value;
-            send(self.position_goal_joint_publisher, jointState);
-        end
-
-        function joint_move_list(self, value, index)
-            if isfloat(value) && isfloat(index) && length(value) == length(index)
-                self.set_state('DVRK_POSITION_GOAL_JOINT');
-                jointState = rosmessage(self.position_goal_joint_publisher);
-                jointState.Position = self.position_joint_desired;
-                for i = 1:length(value)
-                    jointState.Position(index(i)) = value(i);
-                end
-                send(self.position_goal_joint_publisher, jointState);
+            % actual move
+            if self.set_state('DVRK_POSITION_GOAL_CARTESIAN')
+                % prepare the ROS message
+                pose_message = rosmessage(self.position_goal_cartesian_publisher);
+                % convert to ROS idiotic data type
+                pose_message.Position.X = frame(1, 4);
+                pose_message.Position.Y = frame(2, 4);
+                pose_message.Position.Z = frame(3, 4);
+                quaternion = tform2quat(frame);
+                pose_message.Orientation.W = quaternion(1);
+                pose_message.Orientation.X = quaternion(2);
+                pose_message.Orientation.Y = quaternion(3);
+                pose_message.Orientation.Z = quaternion(4);
+                % reset goal reached value and timer
+                self.goal_reached = false;
+                start(self.goal_reached_timer);
+                % send message
+                send(self.position_goal_cartesian_publisher, ...
+                     pose_message);
+                % wait for timer to be interrupted by goal_reached
+                wait(self.goal_reached_timer);
+                result = self.goal_reached;
+            else
+                % unable to set the desired state
+                % set_state should already provide a message
+                result = false;
             end
         end
-    end
-end
+
+        
+        
+        
+        function result = delta_joint_move_single(self, joint_index, joint_value)
+            % Move one single joint by increment, first argument is joint
+            % index (index start at 1 for first joint), second parameter is
+            % value (radian or meter).  Example: r.delta_joint_move_single(int8(3), -0.01)
+            if ~isinteger(joint_index)
+                result = false;
+                disp(strcat(self.robot_name, ...
+                            ': delta_joint_move_single, joint_index must be a real numbers (use int8(index) to create index)'));
+                return;
+            end
+            if ~isfloat(joint_value)
+                result = false;
+                disp(strcat(self.robot_name, ...
+                            ': delta_joint_move_single, joint_value must be a real number'));
+                return;
+            end
+            goal = self.position_joint_desired;
+            goal(joint_index) = goal(joint_index) + joint_value;
+            result = self.joint_move(goal);
+        end
+
+        
+        
+        
+        function result = delta_joint_move(self, joint_values)
+            % Move all joints by increment, joint value are provided in SI
+            % units (radian or meter).  Example: r.delta_joint_move([-0.01, -0.01, 0.0, 0.0, 0.0, 0.0, 0.0])
+            if ~isfloat(joint_values)
+                result = false;
+                disp(strcat(self.robot_name, ...
+                            ': delta_joint_move, joint_values must be a real array'));
+                return;
+            end
+            if length(joint_values) ~= length(self.position_joint_current)
+                result = false;
+                disp(strcat(self.robot_name, ...
+                            [': delta_joint_move, joint_values does not have right ' ...
+                             'size, size of provided array is '], ...
+                            int2str(length(joint_values))));
+                return
+            end
+            goal = self.position_joint_desired;
+            goal = goal + joint_values';
+            result = self.joint_move(goal);
+        end
+
+        
+        
+
+        function result = joint_move_single(self, joint_index, joint_value)
+            % Move one single joint, first argument is joint
+            % index (index start at 1 for first joint), second parameter is
+            % value (radian or meter).  Example: r.delta_joint_move_single(int8(3), -0.01)
+            if ~isinteger(joint_index)
+                result = false;
+                disp(strcat(self.robot_name, ...
+                            ': joint_move_single, joint_index must be a real numbers (use int8(index) to create index)'));
+                return;
+            end
+            if ~isfloat(joint_value)
+                result = false;
+                disp(strcat(self.robot_name, ...
+                            ': joint_move_single, joint_value must be a real number'));
+                return;
+            end
+            goal = self.position_joint_desired;
+            goal(joint_index) = joint_value;
+            result = self.joint_move(goal);
+        end
+
+        
+        
+
+        function result = delta_cartesian_move_translation(self, translation)
+            % Move incrementaly in cartesian space
+            if ~isfloat(translation)
+                result = false;
+                disp(strcat(self.robot_name, ...
+                            ': delta_cartesian_move_translation, input must be an array or real numbers'));
+                return;
+            end
+            if length(translation) ~= 3
+                result = false;
+                disp(strcat(self.robot_name, ...
+                            ': delta_cartesian_move_translation, translation must be a vector of 3 elements'));
+                return;
+            end
+            goal = self.position_cartesian_desired;
+            goal(1, 4) = goal(1, 4) + translation(1);
+            goal(2, 4) = goal(2, 4) + translation(2);
+            goal(3, 4) = goal(3, 4) + translation(3);
+            result = self.cartesian_move(goal);
+            return
+        end
+
+        function result = cartesian_move_translation(self, translation)
+            % Move incrementaly in cartesian space
+            if ~isfloat(translation)
+                result = false;
+                disp(strcat(self.robot_name, ...
+                            ': cartesian_move_translation, input must be an array or real numbers'));
+                return;
+            end
+            if length(translation) ~= 3
+                result = false;
+                disp(strcat(self.robot_name, ...
+                            ': cartesian_move_translation, translation must be a vector of 3 elements'));
+                return;
+            end
+            goal = self.position_cartesian_desired;
+            goal(1, 4) = translation(1);
+            goal(2, 4) = translation(2);
+            goal(3, 4) = translation(3);
+            result = self.cartesian_move(goal);
+            return
+        end
+
+    end % methods
+    
+end % class
