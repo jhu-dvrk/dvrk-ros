@@ -27,4 +27,11 @@ You will need Matlab 2015a or higher with the Robotic System Toolbox: http://www
      * `r.delta_joint_move([-0.01, -0.01, 0.0, 0.0, 0.0, 0.0, 0.0])` to move all joints (radians and meters)
      * `v = [0.0, 0.0, 0.01];`
        `r.delta_cartesian_move_translation(v)` to move in cartesian space, translation only.
-     * Similar commands without the `delta` prefix exist and allow you to use absolute positions 
+     * Similar commands without the `delta` prefix exist and allow you to use absolute positions
+
+Notes
+=====
+
+* If you modify the `robot.m` file, send us a pull request or use the dVRK google group.  Your contributions are always welcome!
+* The current code doesn't do a great job at cleaning up.  you might have to use `rosshutdown` and delete your robot instances manually.
+* To create 4x4 matrices, take a look at the matlab commands `axang2tform`, `eul2tform`, ...
