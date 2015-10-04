@@ -456,44 +456,25 @@ classdef robot < handle
 
         function result = delta_cartesian_move_translation(self, translation)
             % Move incrementaly in cartesian space
-            if ~isfloat(translation)
-                result = false;
-                disp(strcat(self.robot_name, ...
-                            ': delta_cartesian_move_translation, input must be an array or real numbers'));
-                return;
-            end
-            if length(translation) ~= 3
-                result = false;
-                disp(strcat(self.robot_name, ...
-                            ': delta_cartesian_move_translation, translation must be a vector of 3 elements'));
-                return;
-            end
+            translationH = trvec2tform(translation);
             goal = self.position_cartesian_desired;
-            goal(1, 4) = goal(1, 4) + translation(1);
-            goal(2, 4) = goal(2, 4) + translation(2);
-            goal(3, 4) = goal(3, 4) + translation(3);
+            goal(1, 4) = goal(1, 4) + translationH(1, 4);
+            goal(2, 4) = goal(2, 4) + translationH(2, 4);
+            goal(3, 4) = goal(3, 4) + translationH(3, 4);
             result = self.cartesian_move(goal);
             return
         end
 
+        
+        
+        
         function result = cartesian_move_translation(self, translation)
-            % Move incrementaly in cartesian space
-            if ~isfloat(translation)
-                result = false;
-                disp(strcat(self.robot_name, ...
-                            ': cartesian_move_translation, input must be an array or real numbers'));
-                return;
-            end
-            if length(translation) ~= 3
-                result = false;
-                disp(strcat(self.robot_name, ...
-                            ': cartesian_move_translation, translation must be a vector of 3 elements'));
-                return;
-            end
+            % Move to absolute position in cartesian space
+            translationH = trvec2tform(translation);
             goal = self.position_cartesian_desired;
-            goal(1, 4) = translation(1);
-            goal(2, 4) = translation(2);
-            goal(3, 4) = translation(3);
+            goal(1, 4) = translationH(1, 4);
+            goal(2, 4) = translationH(2, 4);
+            goal(3, 4) = translationH(3, 4);
             result = self.cartesian_move(goal);
             return
         end
