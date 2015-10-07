@@ -13,23 +13,30 @@ def main(robotName):
                      JointState, pot_callback)
 
     r.move_joint_list([0.0,0.0,0.1,0.0,0.0,0.0,0.0],[0,1,2,3,4,5,6])
-    joint_number = int(raw_input('enter the joint you want to test: '))
+    joint_number = int(raw_input('enter the joint you want to tested: '))
     x = []
     y = []
 
-    raw_input('move the joint to the first extreme')
+
+    r.move_joint_list([1.186,0.837,0.0],[0,1,2])
+    time.sleep(.5)
     first_extreme = r.get_current_joint_position()[joint_number]
-    raw_input('move the joint to the second extreme')
+    time.sleep(.5)
+    r.move_joint_list([-1.186,-0.837,0.235],[0,1,2])
+    time.sleep(.5)
     second_extreme = r.get_current_joint_position()[joint_number]
+    time.sleep(.5)
 
     r.move_joint_list([0.0,0.0,0.1,0.0,0.0,0.0,0.0],[0,1,2,3,4,5,6])
-
     range_of_motion = (math.fabs(first_extreme) + math.fabs(second_extreme))
     
     print range_of_motion
 
     for i in range(-50,51):
-        move_amount =  (range_of_motion / 100) * i 
+        if joint_number == 0 or joint_number == 1:
+            move_amount =  (range_of_motion / 100) * i 
+        if joint_number == 2:
+            move_amount =  ((range_of_motion / 100) * i ) + ( range_of_motion / 2 )
 
         r.move_joint_list([move_amount],[joint_number])
         
@@ -49,6 +56,23 @@ def main(robotName):
         
 
 
+    f = open('pot_v._enc_data','w')
+    f.write('potentiometer data:')
+    f.write('\n')
+    for i in x:
+        f.write(str(i))
+        f.write('\n')
+    f.write('\n')
+    f.write('encoder data:')
+    for i in y:
+        f.write(str(i))
+        f.write('\n')
+    f.close
+
+    print "done"
+
+
+    """
     x_mean = sum(x)/len(x)
     y_mean = sum(y)/len(y)
     a = x
@@ -77,7 +101,9 @@ def main(robotName):
     print 'y standard deviation: ',"%.16f" % y_standard_deviation    
     regression_slope = correlation * ( y_standard_deviation / x_standard_deviation )  
     print 'regression slope: ',"%.16f" % regression_slope
-       
+
+    """
+
 
 
 if __name__ == '__main__':
