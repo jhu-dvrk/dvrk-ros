@@ -8,7 +8,7 @@
   <xacro:macro name="psm_tool_sca" params="prefix">
     
     <!-- joint 5: Outer wrist pitch joint -->
-    <joint name="${prefix}outer_wrist_pitch_joint" type="revolute">
+    <joint name="outer_wrist_pitch" type="revolute">
       <parent link="${prefix}tool_wrist_shaft_link"/>
       <child link="${prefix}tool_wrist_sca_link"/>
       <axis xyz="0 0 1"/>
@@ -28,7 +28,7 @@
     </link>
 
     <!-- joint 6: Outer wrist yaw joint -->
-    <joint name="${prefix}outer_wrist_yaw_joint" type="revolute">
+    <joint name="outer_wrist_yaw" type="revolute">
       <parent link="${prefix}tool_wrist_sca_link"/>
       <child link="${prefix}tool_wrist_sca_shaft_link"/>
       <axis xyz="0 0 1"/>
@@ -47,13 +47,33 @@
       </visual>
     </link>
     
+    <!-- joint 7-0: Outer open angle 1  -->
+    <joint name="jaw" type="revolute">
+      <parent link="${prefix}tool_wrist_sca_shaft_link"/>
+      <child link="${prefix}tool_wrist_sca_ee_link_0"/>      
+      <axis xyz="0 0 1"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <limit lower="0" upper="1.5707" velocity=".4" effort="1000"/>
+    </joint>
+
+    <!-- link 7-0: Outer open angle virtual -->
+    <link name="${prefix}tool_wrist_sca_ee_link_0">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>          
+          <box size="0 0 0" />
+        </geometry>
+      </visual>
+    </link>
+
     <!-- joint 7-1: Outer open angle 1  -->
-    <joint name="${prefix}outer_wrist_open_angle_joint" type="revolute">
+    <joint name="jaw_mimic_1" type="revolute">
       <parent link="${prefix}tool_wrist_sca_shaft_link"/>
       <child link="${prefix}tool_wrist_sca_ee_link_1"/>
       <axis xyz="0 0 1"/>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <limit lower="0" upper="1.5707" velocity=".4" effort="1000"/>
+      <limit lower="-1.5707" upper="1.5707" velocity=".4" effort="1000"/>
+      <mimic joint="jaw" multiplier="0.5"/>
     </joint>
 
     <!-- link 7-1: Outer open angle link 1 -->
@@ -67,13 +87,13 @@
     </link>
 
     <!-- joint 7-2: Outer open angle 2   -->
-    <joint name="${prefix}outer_wrist_open_angle_joint_mimic" type="revolute">
+    <joint name="jaw_mimic_2" type="revolute">
       <parent link="${prefix}tool_wrist_sca_shaft_link"/>
       <child link="${prefix}tool_wrist_sca_ee_link_2"/>
       <axis xyz="0 0 1"/>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <limit lower="-1.5707" upper="1.5707" velocity=".4" effort="1000"/>
-      <mimic joint="${prefix}outer_wrist_open_angle_joint" multiplier="-1"/>
+      <mimic joint="jaw" multiplier="-0.5"/>
     </joint>
 
     <!-- link 7-2: Outer open angle link 2 -->
@@ -87,7 +107,7 @@
     </link>
 
     <!-- tool tip -->
-    <joint name="${prefix}tool_tip_joint_" type="fixed">
+    <joint name="tool_tip" type="fixed">
       <parent link="${prefix}tool_wrist_sca_shaft_link"/>
       <child link="${prefix}tool_tip_link"/>
       <origin rpy="0 ${PI/2} ${PI/2}" xyz="0 0.0102 0"/>
