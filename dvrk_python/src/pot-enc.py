@@ -54,6 +54,7 @@ def main(robotName):
         y.append(pot_points_average)
         x.append(enc_points_average)
         
+    r.move_joint_list([0.0,0.0,0.1,0.0,0.0,0.0,0.0],[0,1,2,3,4,5,6])
 
     xy = []
     for i in range(100):
@@ -67,10 +68,10 @@ def main(robotName):
     f.write('enc' ',' 'pot')
     f.write('\n')
     for i in range(200):
-        if i%2 == 1:
+        if i%2 == 0:
             f.write(str(xy[i]))
             f.write(',')
-        elif i%2 == 0:
+        elif i%2 == 1:
             f.write(str(xy[i]))
             f.write('\n')
     f.close
