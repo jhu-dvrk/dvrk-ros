@@ -32,7 +32,7 @@ def main(robotName):
     
     print range_of_motion
 
-    for i in range(-50,51):
+    for i in range(-50,50):
         if joint_number == 0 or joint_number == 1:
             move_amount =  (range_of_motion / 100) * i 
         if joint_number == 2:
@@ -40,33 +40,39 @@ def main(robotName):
 
         r.move_joint_list([move_amount],[joint_number])
         
-        time.sleep(.2)
+        time.sleep(.5)
         pot_points = []
         enc_points = []
         print x
         print y
-        for c in range(0,10):
+        for c in range(0,100):
             pot_points.append(pots[joint_number])
             enc_points.append(r.get_current_joint_position()[joint_number])
             time.sleep(.01)
-        pot_points_average = (math.fsum(pot_points))/10
-        enc_points_average = (math.fsum(enc_points))/10
-        x.append(pot_points_average)
-        y.append(enc_points_average)
+        pot_points_average = (math.fsum(pot_points))/100
+        enc_points_average = (math.fsum(enc_points))/100
+        y.append(pot_points_average)
+        x.append(enc_points_average)
         
 
+    xy = []
+    for i in range(100):
+        xy.append(x[i])
+        xy.append(y[i])
+    
 
-    f = open('pot_v._enc_data','w')
-    f.write('potentiometer data:')
+
+    f = open('pot_v._enc_data.csv','w')
+    
+    f.write('enc' ',' 'pot')
     f.write('\n')
-    for i in x:
-        f.write(str(i))
-        f.write('\n')
-    f.write('\n')
-    f.write('encoder data:')
-    for i in y:
-        f.write(str(i))
-        f.write('\n')
+    for i in range(200):
+        if i%2 == 1:
+            f.write(str(xy[i]))
+            f.write(',')
+        elif i%2 == 0:
+            f.write(str(xy[i]))
+            f.write('\n')
     f.close
 
     print "done"
