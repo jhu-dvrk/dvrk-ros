@@ -14,6 +14,8 @@ def main(robotName):
 
     r.move_joint_list([0.0,0.0,0.1,0.0,0.0,0.0,0.0],[0,1,2,3,4,5,6])
     joint_number = int(raw_input('enter the joint you want to tested: '))
+    number_of_points = int(raw_input('enter the number of points you want to tested: '))
+    stop_time = float(raw_input('enter the stop time you want to tested: '))
     x = []
     y = []
 
@@ -40,21 +42,21 @@ def main(robotName):
 
         r.move_joint_list([move_amount],[joint_number])
         
-        time.sleep(.5)
+        time.sleep(stop_time)
         pot_points = []
         enc_points = []
-        print 'time left: ', "(i + 50) * 1.5"
+ 
         print x
         print y
-        for c in range(0,100):
+        for c in range(0,number_of_points):
             pot_points.append(pots[joint_number])
             enc_points.append(r.get_current_joint_position()[joint_number])
             time.sleep(.01)
-        pot_points_average = (math.fsum(pot_points))/100
-        enc_points_average = (math.fsum(enc_points))/100
+        pot_points_average = (math.fsum(pot_points))/number_of_points
+        enc_points_average = (math.fsum(enc_points))/number_of_points
         x.append(enc_points_average)
         y.append(pot_points_average)
-       
+        print 'time left: ', ((100) * (stop_time + (number_of_points * .01))) - ((i + 50) * (stop_time + (number_of_points * .01)))      
         
     r.move_joint_list([0.0,0.0,0.1,0.0,0.0,0.0,0.0],[0,1,2,3,4,5,6])
 
@@ -67,7 +69,11 @@ def main(robotName):
 
     f = open('pot_v._enc_data.csv','w')
     
-    f.write('Joint ' + str(joint_number))
+    f.write('Joint: ' + str(joint_number))
+    f.write('\n')
+    f.write('Number of Points: ' + str(number_of_points))
+    f.write('\n')
+    f.write('Stop Time: ' + str(stop_time))
     f.write('\n')
     f.write('encoder' ',' 'potentiometer')
     f.write('\n')
