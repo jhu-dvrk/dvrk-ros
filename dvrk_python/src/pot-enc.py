@@ -43,6 +43,7 @@ def main(robotName):
         time.sleep(.5)
         pot_points = []
         enc_points = []
+        print 'time left: ', "(i + 50) * 1.5"
         print x
         print y
         for c in range(0,100):
@@ -51,8 +52,9 @@ def main(robotName):
             time.sleep(.01)
         pot_points_average = (math.fsum(pot_points))/100
         enc_points_average = (math.fsum(enc_points))/100
-        y.append(pot_points_average)
         x.append(enc_points_average)
+        y.append(pot_points_average)
+       
         
     r.move_joint_list([0.0,0.0,0.1,0.0,0.0,0.0,0.0],[0,1,2,3,4,5,6])
 
@@ -65,7 +67,9 @@ def main(robotName):
 
     f = open('pot_v._enc_data.csv','w')
     
-    f.write('enc' ',' 'pot')
+    f.write('Joint ' + str(joint_number))
+    f.write('\n')
+    f.write('encoder' ',' 'potentiometer')
     f.write('\n')
     for i in range(200):
         if i%2 == 0:
