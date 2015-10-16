@@ -129,17 +129,17 @@ class robot:
         frame = Frame()
         full_ros_namespace = self.__ros_namespace + self.__robot_name
         self.set_robot_state = rospy.Publisher(full_ros_namespace + '/set_robot_state',
-                                               String, latch=True)
+                                               String, latch=True, queue_size=1)
         self.set_position_joint = rospy.Publisher(full_ros_namespace + '/set_position_joint',
-                                                  JointState, latch=True)
+                                                  JointState, latch=True, queue_size=1)
         self.set_position_goal_joint = rospy.Publisher(full_ros_namespace + '/set_position_goal_joint',
-                                                       JointState, latch=True)
+                                                       JointState, latch=True, queue_size=1)
         self.set_position_cartesian = rospy.Publisher(full_ros_namespace + '/set_position_cartesian',
-                                                      Pose, latch=True)
+                                                      Pose, latch=True, queue_size=1)
         self.set_position_goal_cartesian = rospy.Publisher(full_ros_namespace + '/set_position_goal_cartesian',
-                                                           Pose, latch=True)
+                                                           Pose, latch=True, queue_size=1)
         self.set_jaw_position = rospy.Publisher(full_ros_namespace + '/set_jaw_position',
-                                                Float32, latch=True)
+                                                Float32, latch=True, queue_size=1)
 
         # subscribers
         rospy.Subscriber(full_ros_namespace + '/robot_state',
