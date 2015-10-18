@@ -3,20 +3,10 @@ da Vinci Research Kit ROS
 This repository has code related to daVinci Research Kit (dVRK) ROS packages.
 See https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki
 
-# Install 
-* Download and compile the cisst libraries and SAW components for the dVRK, see the dVRK tutorial wiki: https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki/Build
-* Download and compile cisst-ros, see: https://github.com/jhu-cisst/cisst-ros
-* Download and compile dvrk-ros
-
-   ```sh
-# cd to catkin ws src dir
-cd ~/catkin_ws/src
-# clone repo
-git clone http://github.com/jhu-dvrk/dvrk-ros.git
-# build 
-cd ..
-catkin_make
-```
+# Install
+We use the catkin build tools, NOT catkin_make.  Please don't use catkin_make
+* Download and compile the cisst libraries and SAW components for the dVRK, see the dVRK tutorial wiki: https://github.com/jhu-cisst/cisst/wiki/Compiling-cisst-and-SAW-with-CMake#13-building-using-catkin-build-tools-for-ros
+* Download and compile dvrk-ros: https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki/CatkinBuild
 
 # How to run the code
 * **simulation:** see dvrk_teleop/README.md for details
@@ -29,7 +19,6 @@ catkin_make
 
 # List of Packages:
 * dv\_gazebo\_plugins: from WPI Nirav, don't know how to use Nirav? 
-* dvrk\_joint\_publisher: publishes joint state
 * dvrk_kinematics:
   * kinematics model of MTM/PSM
 * dvrk_model:
@@ -40,5 +29,3 @@ catkin_make
   * dummy teleop component with a Qt GUI
 * dvrk_robot: 
   * main file to start robot, publish & subscribe ros topics 
-* dvrk\_joint\_publisher:
-  * publish named joint states (position + velocity)
