@@ -1,161 +1,160 @@
 from robot import *
 import time
 import math
+import xml.etree.ElementTree as ET
+
 
 pots = []
 
 def pot_callback(data):
     pots[:] = data.position
 
+def slope(x,y):
+    a = []
+    for i in range(0,len(x)):
+        a.append(x[i]*y[i])
+    sum_a = sum(a)
+    final_a = (sum_a * len(x))
+    final_b = (sum(x)*sum(y))
+
+    c_squared = []
+    for i in x:
+        c_squared.append(i**2)
+
+    c_sum = sum(c_squared)
+    final_c = (c_sum * len(x))
+
+    final_d = (sum(x)**2)
+
+    slope = (final_a - final_b) / (final_c - final_d)
+    return slope
+
+
 def main(robotName):
     r = robot(robotName)
     rospy.Subscriber('/dvrk/' + robotName +  '/io/analog_input_pos_si',
                      JointState, pot_callback)
 
-    r.move_joint_list([0.0,0.0,0.1,0.0,0.0,0.0,0.0],[0,1,2,3,4,5,6])
-    #joint_number = int(raw_input('enter the joint you want to tested: '))
-    number_of_points = 200 #int(raw_input('enter the number of points you want to tested: '))
-    stop_time = 2 #float(raw_input('enter the stop time you want to tested: '))
-    x_joint_0 = []
-    y_joint_0 = []
-    x_joint_1 = []
-    y_joint_1 = []
-    x_joint_2 = []
-    y_joint_2 = []
+    nb_samples = 10 # number of positions between limits
+    number_of_points = 10 # number of values collected at each position
 
-    r.move_joint_list([1.186,0.837,0.0],[0,1,2])
-    time.sleep(.5)
-    first_extreme_joint_0 = r.get_current_joint_position()[0]
-    first_extreme_joint_1 = r.get_current_joint_position()[1]
-    first_extreme_joint_2 = r.get_current_joint_position()[2]
-    time.sleep(.5)
-    r.move_joint_list([-1.186,-0.837,0.235],[0,1,2])
-    time.sleep(.5)
-    second_extreme_joint_0 = r.get_current_joint_position()[0]
-    second_extreme_joint_1 = r.get_current_joint_position()[1]
-    second_extreme_joint_2 = r.get_current_joint_position()[2]
-    time.sleep(.5)
+    sleep_time_after_motion = 1.0 # time after motion from position to position to allow potentiometers to stabilize
 
-    r.move_joint_list([0.0,0.0,0.1,0.0,0.0,0.0,0.0],[0,1,2,3,4,5,6])
-    range_of_motion_joint_0 = (math.fabs(first_extreme_joint_0) + math.fabs(second_extreme_joint_0))
-    range_of_motion_joint_1 = (math.fabs(first_extreme_joint_1) + math.fabs(second_extreme_joint_1))
-    range_of_motion_joint_2 = (math.fabs(first_extreme_joint_2) + math.fabs(second_extreme_joint_2))
+    nb_axis = 7 #number of joints being tested
 
-    for i in range(-50,50):
+    encoders = []
+    potentiometers = []
+    range_of_motion_joint = []
 
-        move_amount_joint_0 =  (range_of_motion_joint_0 / 100) * i 
-        move_amount_joint_1 =  (range_of_motion_joint_1 / 100) * i 
-        move_amount_joint_2 =  ((range_of_motion_joint_2 / 100) * i ) + ( range_of_motion_joint_2 / 2 )
+    average_encoder = []
+    average_potentiometer = []
 
-        r.move_joint_list([move_amount_joint_0],[0])
-        r.move_joint_list([move_amount_joint_1],[1])
-        r.move_joint_list([move_amount_joint_2],[2])
-        
-        time.sleep(stop_time)
+    lower_joint_limits = [-1.186, -0.837, 0.0, -2.61, -1.39, -0.871, 0]
+    upper_joint_limits = [ 1.186,  0.837, 0.235, 2.61, 1.39, 0, 0.871]
+    
+    slopes = []
+    actuators = []
+    gain_list = []
+    is_there_robot_in_xml = 0
+    new_gains = []
+    is_finished = False
+    
+    for axis in range(0, nb_axis):
+        encoders.append([])
+        potentiometers.append([])
+        average_encoder.append([])
+        average_potentiometer.append([])
+        range_of_motion_joint.append(math.fabs(upper_joint_limits[axis] - lower_joint_limits[axis]))
 
-        pot_points_joint_0 = []
-        enc_points_joint_0 = []
-        pot_points_joint_1 = []
-        enc_points_joint_1 = []
-        pot_points_joint_2 = []
-        enc_points_joint_2 = []
+    for sample in range(0, nb_samples):
+        # create joint goal
+        joint_goal = []
+        for axis in range(0, nb_axis):
+            joint_goal.append(lower_joint_limits[axis] + sample * (range_of_motion_joint[axis] / nb_samples))
+            average_encoder[axis] = []
+            average_potentiometer[axis] = []
 
-        for c in range(0,number_of_points):
-            pot_points_joint_0.append(pots[0])
-            enc_points_joint_0.append(r.get_current_joint_position()[0])
-            pot_points_joint_1.append(pots[1])
-            enc_points_joint_1.append(r.get_current_joint_position()[1])
-            pot_points_joint_2.append(pots[2])
-            enc_points_joint_2.append(r.get_current_joint_position()[2])
-            
-            time.sleep(.01)
-        pot_points_average_joint_0 = (math.fsum(pot_points_joint_0))/number_of_points
-        enc_points_average_joint_0 = (math.fsum(enc_points_joint_0))/number_of_points
-        pot_points_average_joint_1 = (math.fsum(pot_points_joint_1))/number_of_points
-        enc_points_average_joint_1 = (math.fsum(enc_points_joint_1))/number_of_points
-        pot_points_average_joint_2 = (math.fsum(pot_points_joint_2))/number_of_points
-        enc_points_average_joint_2 = (math.fsum(enc_points_joint_2))/number_of_points
+        # move and sleep
+        r.move_joint_list(joint_goal, range(0, nb_axis))
+        time.sleep(sleep_time_after_motion)
 
-        x_joint_0.append(enc_points_average_joint_0)
-        y_joint_0.append(pot_points_average_joint_0)
-        x_joint_1.append(enc_points_average_joint_1)
-        y_joint_1.append(pot_points_average_joint_1)
-        x_joint_2.append(enc_points_average_joint_2)
-        y_joint_2.append(pot_points_average_joint_2)
+        # collect number_of_points at current position to compute average
+        for data in range(0, number_of_points):
+            for axis in range(0, nb_axis):
+                average_potentiometer[axis].append(pots[axis])
+                average_encoder[axis].append(r.get_current_joint_position()[axis])
+                time.sleep(.01)
 
-        print 'time left: ', ((100) * (stop_time + (number_of_points * .01))) - ((i + 50) * (stop_time + (number_of_points * .01)))      
-        
-    r.move_joint_list([0.0,0.0,0.1,0.0,0.0,0.0,0.0],[0,1,2,3,4,5,6])
+        # compute averages
+        for axis in range(0, nb_axis):
+            potentiometers[axis].append(math.fsum(average_potentiometer[axis]) / number_of_points)
+            encoders[axis].append(math.fsum(average_encoder[axis]) / number_of_points)
 
+        print 'time left: ', ((nb_samples) * (sleep_time_after_motion + (number_of_points * 0.01))) - ((sample) * (sleep_time_after_motion + (number_of_points * 0.01)))
 
-    """
-    xy = []
-    for i in range(100):
-        xy.append(x[i])
-        xy.append(y[i])
+    for axis in range(0, nb_axis):
+        print 'joint ', axis, ' slope: ', slope(encoders[axis], potentiometers[axis])
+        slope_of_joint = slope(encoders[axis], potentiometers[axis])
+        slopes.append(slope_of_joint)
+
     
 
 
-    f = open('pot_v._enc_data.csv','w')
-    
-    f.write('Joint: ' + str(joint_number))
-    f.write('\n')
-    f.write('Number of Points: ' + str(number_of_points))
-    f.write('\n')
-    f.write('Stop Time: ' + str(stop_time))
-    f.write('\n')
-    f.write('encoder' ',' 'potentiometer')
-    f.write('\n')
-    for i in range(200):
-        if i%2 == 0:
-            f.write(str(xy[i]))
-            f.write(',')
-        elif i%2 == 1:
-            f.write(str(xy[i]))
-            f.write('\n')
-    f.close
-    """
-
-
-    print "done"
-    
-
-    def slope(x,y):
-        a = []
-        for i in range(0,len(x)):
-            a.append(x[i]*y[i])
-        sum_a = sum(a)
-        final_a = (sum_a * len(x))
-        #print final_a
-
-        final_b = (sum(x)*sum(y))
-        #print final_b
-
-        c_squared = []
-        for i in x:
-            c_squared.append(i**2)
-
-        c_sum = sum(c_squared)
-        final_c = (c_sum * len(x))
-        #print final_c    
-
-        final_d = (sum(x)**2)
-        #print final_d
-
-        slope = (final_a - final_b) / (final_c - final_d)
-        return slope
-    print'joint 0 slope: ', slope(x_joint_0,y_joint_0)
-    print'joint 1 slope: ', slope(x_joint_1,y_joint_1)
-    print'joint 2 slope: ', slope(x_joint_2,y_joint_2)
-
-
-
-
-#will have to modify xml file to divide current values by slopes 
-# location:   cd ~/catkin_ws/src/cisst-saw/sawIntuitiveResearchKit/share/jhu-daVinci/     
-# file name: sawRobotIO1394-PSM3-28613.xml
+#will have to modify xml file to divide current values by slopes
+# location:   cd /home/catkin_ws/src/cisst-saw/sawIntuitiveResearchKit/share/jhu-daVinci/sawRobotIO1394-PSM2-32204.xml
+# file name: sawRobotIO1394-PSM2-32204.xml
 # Actuator > AnalogIn > VoltsToPosSI > Scale = ____
+    
 
+
+    tree = ET.parse('/home/neusman1/catkin_ws/src/cisst-saw/sawIntuitiveResearchKit/share/jhu-daVinci/sawRobotIO1394-PSM2-32204.xml')
+    root = tree.getroot()
+    stuffInRoot = root.getchildren()
+    for children in range(0,len(stuffInRoot)):
+        if stuffInRoot[children].tag == "Robot":
+            xmlrobot = stuffInRoot[children]
+        else:
+            is_there_robot_in_xml += 1
+            if is_there_robot_in_xml == len(stuffInRoot):
+                print "Robot tree could not be found in xml file"
+    stuffInRobot = xmlrobot.getchildren()
+    for children in range(0,len(stuffInRobot)):
+        if stuffInRobot[children].tag == "Actuator":
+            actuators.append(stuffInRobot[children])
+    #print actuators
+    for children in range(0,len(actuators)):
+        actuators[children] = actuators[children].getchildren()
+        for grandchildren in range(0,len(actuators[children])):
+            actuators[children][grandchildren] =  actuators[children][grandchildren].getchildren()
+    #print actuators
+    for gains in range(0,len(actuators)):
+        gain = actuators[gains][2][1]
+        #print gain.attrib['Scale']
+        gain_list.append(gain.attrib["Scale"])
+    print gain_list
+    
+    for ngains in range(0,len(gain_list)):
+        new_gains.append( float(gain_list[ngains]) / float(slopes[ngains]) )
+    print new_gains
+    
+    finish = raw_input("if these values seem correct, enter '/y'/, if not enter '/n'/ ")
+    
+    while is_finished == False:
+        if finish == "y":
+            for ngains in range(0,len(actuators)):
+                actuators[ngains][2][1].set("Scale", new_gains[ngains])
+                tree.write('/home/neusman1/catkin_ws/src/cisst-saw/sawIntuitiveResearchKit/share/jhu-daVinci/sawRobotIO1394-PSM2-32204-test.xml')
+                #tree.write('sawRobotIO1394-PSM2-32204-test.xml')
+            is_finished = True
+            
+        elif finish == "n":
+            print "Calibration cancled"
+            is_finished = True
+        else:
+            finish = raw_input("Not a correct value, please enter '/y'/ or '/n'/ ")
+            is_finished = False
+    print "Done"
+    
 
 
 
