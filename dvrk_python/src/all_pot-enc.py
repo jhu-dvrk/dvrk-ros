@@ -4,10 +4,14 @@ import math
 import xml.etree.ElementTree as ET
 
 
-pots = []
+lastPotentiometers = []
+lastActuators = []
 
 def pot_callback(data):
-    pots[:] = data.position
+    lastPotentiometers[:] = data.position
+
+def actuatorsCallback(data):
+    lastActuators[:] = data.position
 
 def slope(x,y):
     a = []
@@ -34,11 +38,13 @@ def main(robotName):
     r = robot(robotName)
     rospy.Subscriber('/dvrk/' + robotName +  '/io/analog_input_pos_si',
                      JointState, pot_callback)
+    rospy.Subscriber('/dvrk/' + robotName +  '/io/actuator_position',
+                     JointState, actuatorsCallback)
 
-    nb_samples = 10 # number of positions between limits
-    number_of_points = 10 # number of values collected at each position
+    nb_samples = 20 # number of positions between limits
+    number_of_points = 100 # number of values collected at each position
 
-    sleep_time_after_motion = 1.0 # time after motion from position to position to allow potentiometers to stabilize
+    sleep_time_after_motion = 0.5 # time after motion from position to position to allow potentiometers to stabilize
 
     nb_axis = 7 #number of joints being tested
 
@@ -51,14 +57,9 @@ def main(robotName):
 
     lower_joint_limits = [-1.186, -0.837, 0.0, -2.61, -1.39, -0.871, 0]
     upper_joint_limits = [ 1.186,  0.837, 0.235, 2.61, 1.39, 0, 0.871]
-    
+
     slopes = []
-    actuators = []
-    gain_list = []
-    is_there_robot_in_xml = 0
-    new_gains = []
-    is_finished = False
-    
+
     for axis in range(0, nb_axis):
         encoders.append([])
         potentiometers.append([])
@@ -81,9 +82,9 @@ def main(robotName):
         # collect number_of_points at current position to compute average
         for data in range(0, number_of_points):
             for axis in range(0, nb_axis):
-                average_potentiometer[axis].append(pots[axis])
-                average_encoder[axis].append(r.get_current_joint_position()[axis])
-                time.sleep(.01)
+                average_potentiometer[axis].append(lastPotentiometers[axis])
+                average_encoder[axis].append(lastActuators[axis])
+            time.sleep(.01)
 
         # compute averages
         for axis in range(0, nb_axis):
@@ -92,71 +93,62 @@ def main(robotName):
 
         print 'time left: ', ((nb_samples) * (sleep_time_after_motion + (number_of_points * 0.01))) - ((sample) * (sleep_time_after_motion + (number_of_points * 0.01)))
 
-    for axis in range(0, nb_axis):
-        print 'joint ', axis, ' slope: ', slope(encoders[axis], potentiometers[axis])
-        slope_of_joint = slope(encoders[axis], potentiometers[axis])
-        slopes.append(slope_of_joint)
-
-    
-
-
 #will have to modify xml file to divide current values by slopes
 # location:   cd /home/catkin_ws/src/cisst-saw/sawIntuitiveResearchKit/share/jhu-daVinci/sawRobotIO1394-PSM2-32204.xml
 # file name: sawRobotIO1394-PSM2-32204.xml
 # Actuator > AnalogIn > VoltsToPosSI > Scale = ____
-    
 
+
+    xmlVoltsToPosSI = {}
 
     tree = ET.parse('/home/neusman1/catkin_ws/src/cisst-saw/sawIntuitiveResearchKit/share/jhu-daVinci/sawRobotIO1394-PSM2-32204.xml')
     root = tree.getroot()
+    robotFound = False
     stuffInRoot = root.getchildren()
-    for children in range(0,len(stuffInRoot)):
-        if stuffInRoot[children].tag == "Robot":
-            xmlrobot = stuffInRoot[children]
-        else:
-            is_there_robot_in_xml += 1
-            if is_there_robot_in_xml == len(stuffInRoot):
-                print "Robot tree could not be found in xml file"
-    stuffInRobot = xmlrobot.getchildren()
-    for children in range(0,len(stuffInRobot)):
-        if stuffInRobot[children].tag == "Actuator":
-            actuators.append(stuffInRobot[children])
-    #print actuators
-    for children in range(0,len(actuators)):
-        actuators[children] = actuators[children].getchildren()
-        for grandchildren in range(0,len(actuators[children])):
-            actuators[children][grandchildren] =  actuators[children][grandchildren].getchildren()
-    #print actuators
-    for gains in range(0,len(actuators)):
-        gain = actuators[gains][2][1]
-        #print gain.attrib['Scale']
-        gain_list.append(gain.attrib["Scale"])
-    print gain_list
-    
-    for ngains in range(0,len(gain_list)):
-        new_gains.append( float(gain_list[ngains]) / float(slopes[ngains]) )
-    print new_gains
-    
-    finish = raw_input("if these values seem correct, enter '/y'/, if not enter '/n'/ ")
-    
-    while is_finished == False:
-        if finish == "y":
-            for ngains in range(0,len(actuators)):
-                actuators[ngains][2][1].set("Scale", new_gains[ngains])
-                tree.write('/home/neusman1/catkin_ws/src/cisst-saw/sawIntuitiveResearchKit/share/jhu-daVinci/sawRobotIO1394-PSM2-32204-test.xml')
-                #tree.write('sawRobotIO1394-PSM2-32204-test.xml')
-            is_finished = True
-            
-        elif finish == "n":
-            print "Calibration cancled"
-            is_finished = True
-        else:
-            finish = raw_input("Not a correct value, please enter '/y'/ or '/n'/ ")
-            is_finished = False
-    print "Done"
-    
+    for index in range(0, len(stuffInRoot)):
+        if stuffInRoot[index].tag == "Robot":
+            currentRobot = stuffInRoot[index]
+            if currentRobot.attrib["Name"] == robotName:
+                xmlRobot = currentRobot
+                robotFound = True
+            else:
+                print "Found robot \"", currentRobot.attrib["Name"], "\", while looking for \"", robotName, "\""
 
+    if robotFound == False:
+        print "Robot tree could not be found in xml file"
 
+    # look for all VoltsToPosSI
+    stuffInRobot = xmlRobot.getchildren()
+    for index in range(0, len(stuffInRobot)):
+        child = stuffInRobot[index]
+        if child.tag == "Actuator":
+            actuatorId = int(child.attrib["ActuatorID"])
+            stuffInActuator = child.getchildren()
+            for subIndex in range(0, len(stuffInActuator)):
+                subChild = stuffInActuator[subIndex]
+                if subChild.tag == "AnalogIn":
+                    stuffInAnalogIn = subChild.getchildren()
+                    for subSubIndex in range(0, len(stuffInAnalogIn)):
+                        subSubChild = stuffInAnalogIn[subSubIndex]
+                        if subSubChild.tag == "VoltsToPosSI":
+                            xmlVoltsToPosSI[actuatorId] = subSubChild
+
+    print "index | old scale  | new scale  | correction | old offset"
+    for index in range(0, nb_axis):
+        # find existing values
+        oldOffset = float(xmlVoltsToPosSI[index].attrib["Offset"])
+        oldScale = float(xmlVoltsToPosSI[index].attrib["Scale"])
+        # compute new values
+        correction = slope(encoders[index], potentiometers[index])
+        newScale = oldScale / correction
+        # display
+        print " %d    | % 4.6f | % 4.6f | % 4.6f  | % 4.6f " % (index, oldScale, newScale, correction, oldOffset)
+        # replace values
+        xmlVoltsToPosSI[index].attrib["Scale"] = str(newScale)
+
+    save = raw_input("if these values seem correct, enter y, if not enter n ")
+    if save == "y":
+        tree.write('/home/neusman1/catkin_ws/src/cisst-saw/sawIntuitiveResearchKit/share/jhu-daVinci/sawRobotIO1394-PSM2-32204-test.xml')
 
 if __name__ == '__main__':
     if (len(sys.argv) != 2):

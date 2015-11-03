@@ -329,7 +329,9 @@ void dvrk::add_topics_io(mtsROSBridge & bridge,
     bridge.AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
         (arm_name + "-io", "GetPosition",
          ros_namespace + "/joint_position");
-
+    bridge.AddPublisherFromCommandRead<prmPositionJointGet, sensor_msgs::JointState>
+        (arm_name + "-io", "GetPositionActuator",
+         ros_namespace + "/actuator_position");
 }
 
 void dvrk::connect_bridge_io(mtsROSBridge & bridge,
