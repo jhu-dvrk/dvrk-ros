@@ -34,7 +34,7 @@ def slope(x,y):
     return slope
 
 
-def main(robotName):
+def potCalibration(robotName,fileLocation):
     r = robot(robotName)
     rospy.Subscriber('/dvrk/' + robotName +  '/io/analog_input_pos_si',
                      JointState, pot_callback)
@@ -54,19 +54,29 @@ def main(robotName):
 
     average_encoder = []
     average_potentiometer = []
-
-    lower_joint_limits = [-1.186, -0.837, 0.0, -2.61, -1.39, -0.871, 0]
-    upper_joint_limits = [ 1.186,  0.837, 0.235, 2.61, 1.39, 0, 0.871]
+    d2r = math.pi / 180.0
+    r2d = 180.0 / math.pi
+    lower_joint_limits = [-1.186, -0.837, 0.0,   -250.0 * d2r, -65.0 * d2r, -80.0 * d2r, 0.0 * d2r]
+    upper_joint_limits = [ 1.186,  0.837, 0.235,  250.0 * d2r,  65.0 * d2r,  80.0 * d2r, 0.0 * d2r]
 
     slopes = []
+    offsets = []
+    average_offsets = []
 
     for axis in range(0, nb_axis):
         encoders.append([])
+        offsets.append([])
         potentiometers.append([])
         average_encoder.append([])
+        average_offsets.append([])
         average_potentiometer.append([])
         range_of_motion_joint.append(math.fabs(upper_joint_limits[axis] - lower_joint_limits[axis]))
-
+    
+    
+    raw_input("If you haven't already, hit [enter] and place a tool on the robot\n")
+    r.home()
+    raw_input("The robot will now start moving, please hit [enter] to continue once it is safe to proceed\n")
+    
     for sample in range(0, nb_samples):
         # create joint goal
         joint_goal = []
@@ -92,16 +102,28 @@ def main(robotName):
             encoders[axis].append(math.fsum(average_encoder[axis]) / number_of_points)
 
         print 'time left: ', ((nb_samples) * (sleep_time_after_motion + (number_of_points * 0.01))) - ((sample) * (sleep_time_after_motion + (number_of_points * 0.01)))
+    
+    print "Now calibrating offsets using calibration plate"
+    r.move_joint_list([0.0,0.0,0.0,0.0],[3,4,5,6])
+    r.shutdown()
+    
+    raw_input("Place the plate over the final four joints and hit [enter]\n")
+    for data in range(0,number_of_points):
+        for axis in range(3, nb_axis):
+            average_offsets[axis].append(float(lastActuators[axis] * r2d))
+        time.sleep(.01)
+        for axis in range(0,3):
+            average_offsets[axis].append(0.0)
+    for axis in range(0,nb_axis):
+        offsets[axis] = (math.fsum(average_offsets[axis]) / number_of_points)
+        
 
-#will have to modify xml file to divide current values by slopes
-# location:   cd /home/catkin_ws/src/cisst-saw/sawIntuitiveResearchKit/share/jhu-daVinci/sawRobotIO1394-PSM2-32204.xml
-# file name: sawRobotIO1394-PSM2-32204.xml
-# Actuator > AnalogIn > VoltsToPosSI > Scale = ____
 
-
+    # Looking in XML assuming following tree structure 
+    # config > Robot> Actuator > AnalogIn > VoltsToPosSI > Scale = ____   or   Offset = ____
     xmlVoltsToPosSI = {}
 
-    tree = ET.parse('/home/neusman1/catkin_ws/src/cisst-saw/sawIntuitiveResearchKit/share/jhu-daVinci/sawRobotIO1394-PSM2-32204.xml')
+    tree = ET.parse(fileLocation)
     root = tree.getroot()
     robotFound = False
     stuffInRoot = root.getchildren()
@@ -110,6 +132,7 @@ def main(robotName):
             currentRobot = stuffInRoot[index]
             if currentRobot.attrib["Name"] == robotName:
                 xmlRobot = currentRobot
+                print "Succesfully found robot \"", currentRobot.attrib["Name"], "\" in XML file"
                 robotFound = True
             else:
                 print "Found robot \"", currentRobot.attrib["Name"], "\", while looking for \"", robotName, "\""
@@ -133,7 +156,7 @@ def main(robotName):
                         if subSubChild.tag == "VoltsToPosSI":
                             xmlVoltsToPosSI[actuatorId] = subSubChild
 
-    print "index | old scale  | new scale  | correction | old offset"
+    print "index | old scale  | new scale  | correction | old offset  | new offset"
     for index in range(0, nb_axis):
         # find existing values
         oldOffset = float(xmlVoltsToPosSI[index].attrib["Offset"])
@@ -141,17 +164,22 @@ def main(robotName):
         # compute new values
         correction = slope(encoders[index], potentiometers[index])
         newScale = oldScale / correction
+        newOffset = oldOffset - offsets[index]
+       
+        
         # display
-        print " %d    | % 4.6f | % 4.6f | % 4.6f  | % 4.6f " % (index, oldScale, newScale, correction, oldOffset)
+        print " %d    | % 4.6f | % 4.6f | % 4.6f  | % 4.6f  | % 4.6f  " % (index, oldScale, newScale, correction, oldOffset, newOffset)
         # replace values
         xmlVoltsToPosSI[index].attrib["Scale"] = str(newScale)
+        xmlVoltsToPosSI[index].attrib["Offset"] = str(newOffset)
 
-    save = raw_input("if these values seem correct, enter y, if not enter n ")
+    save = raw_input("To save this in new file press 'y' followed by [enter]\n")
     if save == "y":
-        tree.write('/home/neusman1/catkin_ws/src/cisst-saw/sawIntuitiveResearchKit/share/jhu-daVinci/sawRobotIO1394-PSM2-32204-test.xml')
+        tree.write(fileLocation + "-new")
+        print "Results saved in ", fileLocation + "-new"
 
 if __name__ == '__main__':
-    if (len(sys.argv) != 2):
-        print sys.argv[0] + ' requires one argument, i.e. name of dVRK arm'
+    if (len(sys.argv) != 3):
+        print sys.argv[0] + ' requires two arguments, i.e. name of dVRK arm and file name'
     else:
-        main(sys.argv[1])
+        potCalibration(sys.argv[1], sys.argv[2])
