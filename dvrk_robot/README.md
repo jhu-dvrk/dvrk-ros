@@ -16,10 +16,14 @@ need to copy your configuration files back and forth anymore.
 # How to Run
 
 For the Qt based application without rviz:
+```sh
   rosrun dvrk_robot dvrk_console_json -j <path_to_your_console_config.json>
+```
 
 We also provide a launch script for single arm using rviz (you need to provide your own console_<arm>.json file):
+```sh
   roslaunch dvrk_robot dvrk_arm_rviz.launch arm:=PSM1 config:=/home/adeguet1/catkin_ws/src/cisst-saw/sawIntuitiveResearchKit/share/jhu-dVRK/console-PSM1.json
+```
 
 # Using the ROS topics
 
