@@ -1,44 +1,30 @@
 dvrk robot 
-==================
-This package contains programs, which fires real robot, publishes and subscribes ROS topics.
-You can either run individual PIDs for any MTM or PSM or run the whole system in TeleOp mode.
+==========
+
+This package contains programs, which fires real robot, publishes and
+subscribes ROS topics.  You can either run individual PIDs for any MTM
+or PSM or run the whole system in TeleOp mode.
 
 # Depends  
 * ciss-ros 
 
-IMPORTANT:
-and the configuration files for MTMs/PSMs etc ... They would most probably be located in 
-~/dev/cisst/source/saw/applications/sawIntuitiveResearchKit/share if you followed the custom
-installation for CISST libraries from JHU. For your convinience, copy these files into a folder 
-called /config in dvrk_robot directory (the directory this README file is located in). The launch files
-in the /launch folder use this config folder, so don't forget to rename the configuration file
-names in the launch files based on your DVRK configuration files that you just copied to the 
-/config folder.
+IMPORTANT: You first need to make sure you have all your configuration
+files ready, very likely in
+~/catkin_ws/src/cisst-saw/sawIntuitiveResearchKit/share.  You don't
+need to copy your configuration files back and forth anymore.
 
-# How to Run 
-roslaunch dvrk_robot test_dvrk_mtm.launch
+# How to Run
 
-roslaunch dvrk_robot test_dvrk_psm.launch
+For the Qt based application without rviz:
+  rosrun dvrk_robot dvrk_console_json -j <path_to_your_console_config.json>
 
+We also provide a launch script for single arm using rviz (you need to provide your own console_<arm>.json file):
+  roslaunch dvrk_robot dvrk_arm_rviz.launch arm:=PSM1 config:=/home/adeguet1/catkin_ws/src/cisst-saw/sawIntuitiveResearchKit/share/jhu-dVRK/console-PSM1.json
 
-This will launch the Qt Application and for running the PSM/MTM and the Joint Publisher Slider GUI. You can 
-use the sliders to move the joints, use caution to avoid collisions. You can then use rostopic list
-to see all the topics that are available for getting/setting joint positions/torques/cartesians etc from 
-command-line or from ROS nodes ..
+# Using the ROS topics
 
-to run the whole teleop program
-
-rosrun dvrk_robot dvrk_full_ros -j {path to config folder}/two-arms.json
-
-
-# create config folder
-as explained above
-* roscd dvrk_robot
-* mkdir config
-
-# copy config fils (io/pid/kinematics)
-cp /PATH/TO/sawIntuitiveResearchKit/share/*.* config 
-
+The best way to figure how to use the ROS topics is to look at the
+files dvrk_python/src/robot.py and dvrk_matlab/robot.m.
 
 **set robot state to HOME**  
 rostopic pub -1 /dvrk_mtm/set_robot_state std_msgs/String Home
@@ -49,14 +35,9 @@ rostopic pub -1 /dvrk_mtm/set_robot_state std_msgs/String Gravity
 ### Topic Names: 
 https://github.com/jhu-dvrk/dvrk-ros/wiki/ROS-Topic-Interface
 
-
 # Note
 With this package, you no longer need the programs such as
 * sawIntuitiveResearchKitQtPID -i ... -a ... -n ....
 * sawIntuitiveResearchKitQtTeleOperationJSON -j two-arms.json
-
-to run the arm pids or the entire teleop programs. The programs compiled with this 
-package provide the same core functionality as the programs listed above and add
-ros interface directly in the source code.
 
 

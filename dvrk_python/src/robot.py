@@ -57,7 +57,7 @@ Robot API
 
 """
 
-#sphinx-apidoc -F -A "Yijun Hu" -o doc src
+# sphinx-apidoc -F -A "Yijun Hu" -o doc src
 
 import rospy
 import threading
@@ -101,7 +101,7 @@ class robot:
     """Simple robot API wrapping around ROS messages
     """
 
-    #initialize the robot
+    # initialize the robot
     def __init__(self, robot_name, ros_namespace = '/dvrk/'):
         """Constructor.  This initializes a few data members.It
         requires a robot name, this will be used to find the ROS
@@ -129,17 +129,17 @@ class robot:
         frame = Frame()
         full_ros_namespace = self.__ros_namespace + self.__robot_name
         self.set_robot_state = rospy.Publisher(full_ros_namespace + '/set_robot_state',
-                                               String, latch=True)
+                                               String, latch=True, queue_size=1)
         self.set_position_joint = rospy.Publisher(full_ros_namespace + '/set_position_joint',
-                                                  JointState, latch=True)
+                                                  JointState, latch=True, queue_size=1)
         self.set_position_goal_joint = rospy.Publisher(full_ros_namespace + '/set_position_goal_joint',
-                                                       JointState, latch=True)
+                                                       JointState, latch=True, queue_size=1)
         self.set_position_cartesian = rospy.Publisher(full_ros_namespace + '/set_position_cartesian',
-                                                      Pose, latch=True)
+                                                      Pose, latch=True, queue_size=1)
         self.set_position_goal_cartesian = rospy.Publisher(full_ros_namespace + '/set_position_goal_cartesian',
-                                                           Pose, latch=True)
+                                                           Pose, latch=True, queue_size=1)
         self.set_jaw_position = rospy.Publisher(full_ros_namespace + '/set_jaw_position',
-                                                Float32, latch=True)
+                                                Float32, latch=True, queue_size=1)
 
         # subscribers
         rospy.Subscriber(full_ros_namespace + '/robot_state',
@@ -155,7 +155,7 @@ class robot:
         rospy.Subscriber(full_ros_namespace + '/position_cartesian_current',
                          Pose, self.__position_cartesian_current_callback)
         # create node
-        #rospy.init_node('robot_api', anonymous = True)
+        # rospy.init_node('robot_api', anonymous = True)
         rospy.init_node('robot_api',anonymous = True, log_level = rospy.WARN)
         rospy.loginfo(rospy.get_caller_id() + ' -> started robot: ' + self.__robot_name)
 
@@ -202,7 +202,7 @@ class robot:
         :param data: The cartesian position current."""
         self.__position_cartesian_current = posemath.fromMsg(data)
 
-    def __dvrk_set_state(self, state, timeout = 20):
+    def __dvrk_set_state(self, state, timeout = 5):
         """Simple set state with block.
 
         :param state: the robot state
@@ -214,7 +214,7 @@ class robot:
         self.__robot_state_event.clear()
         self.set_robot_state.publish(state)
         self.__robot_state_event.wait(timeout)
-        #if the state is not changed return False
+        # if the state is not changed return False
         if (self.__robot_state != state):
             rospy.logfatal(rospy.get_caller_id() + ' -> failed to reach state ' + state)
             return False
@@ -312,7 +312,7 @@ class robot:
         :returns: whether or not the input is a type in type_list
         :rtype: Bool"""
         found = False
-        #check the input against all input_type
+        # check the input against all input_type
         for i in range (len(type_list)):
             if (type(input) is type_list[i]):
                 if(not(type(input) is list)):
@@ -320,14 +320,14 @@ class robot:
                 else:
                     found = True
                     found1 = True
-                    #if the list is of type list, check that each input is of
-                    #the type that is after list in type_list
+                    # if the list is of type list, check that each input is of
+                    # the type that is after list in type_list
                     for j in range(len(input)):
                         if (not (type(input[j]) is type_list[i+1])):
                             found1 = False
                         else:
                             i+1
-                    #print statements for error inside list
+                    # print statements for error inside list
                     if(found1 == False):
                         print 'Error in ', inspect.stack()[1][3], 'list should be made up of', type_list[i+1],'and not of'
                         print_type1 = ' '
@@ -337,11 +337,11 @@ class robot:
                         print print_type1
                     else:
                         return True
-        #not of type_list print state for this error inside
+        # not of type_list print state for this error inside
         if (found == False):
             print 'Error in ', inspect.stack()[1][3], 'input is of type', input, 'and is not one of:'
             print_type2 = ''
-            #skip_length
+            # skip_length
             i = 0
             while i < len(type_list):
                 print_medium2 = ' '+ str(type_list[i])
@@ -363,13 +363,13 @@ class robot:
             return True
         else:
             print 'input is of size', len(check_list), 'but required size is', check_length
-            #sperspace = new_module('superspace')
-            #sperspace.check_list = check_list
-            #console = Console({'superspace': superspace})
-            #console.interact()
-            #print 'new value of list ', superspace.check_list
-            #check_list[:] = superspace.check_list
-            #print 'check_list', check_list
+            # sperspace = new_module('superspace')
+            # sperspace.check_list = check_list
+            # console = Console({'superspace': superspace})
+            # console.interact()
+            # print 'new value of list ', superspace.check_list
+            # check_list[:] = superspace.check_list
+            # print 'check_list', check_list
             return False ####   should be False or actually based on user's return code from console
 
     def close_gripper(self):
@@ -391,7 +391,7 @@ class robot:
         :param interpolate: see  :ref:`interpolate <interpolate>`
         """
         rospy.loginfo(rospy.get_caller_id() + ' -> starting delta move cartesian translation')
-        #is this a legal translation input
+        # is this a legal translation input
         if(self.__check_input_type(delta_input, [list, float, Vector, Rotation, Frame])):
                if(self.__check_input_type(delta_input, [list, float, Vector])):
                    self.delta_move_cartesian_translation(delta_input, interpolate)
@@ -407,20 +407,20 @@ class robot:
         :param delta_translation: the incremental translation you want to make based on the current position, this is in terms of a  `PyKDL.Vector <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ or a list of floats of size 3
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting delta move cartesian translation')
-        #is this a legal translation input
+        # is this a legal translation input
         if(self.__check_input_type(delta_translation, [list, float,Vector])):
             if(type(delta_translation) is list):
                 if (self.__check_list_length(delta_translation, 3)):
-                    #convert into a Vector
+                    # convert into a Vector
                     delta_vector = Vector(delta_translation[0], delta_translation[1], delta_translation[2])
                 else:
                     return
             else:
                 delta_vector = delta_translation
-            #convert into a Frame
+            # convert into a Frame
             delta_rotation = Rotation.Identity()
             delta_frame = Frame(delta_rotation, delta_vector)
-            #move accordingly
+            # move accordingly
             self.delta_move_cartesian_frame(delta_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian translation')
 
@@ -430,12 +430,12 @@ class robot:
         :param delta_rotation: the incremental `PyKDL.Rotation <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ based upon the current position
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting delta move cartesian rotation')
-        #is this a legal rotation input
+        # is this a legal rotation input
         if(self.__check_input_type(delta_rotation, [Rotation])):
-            #convert into a Frame
+            # convert into a Frame
             delta_vector = Vector(0.0, 0.0, 0.0)
             delta_frame = Frame(delta_rotation, delta_vector)
-            #move accordingly
+            # move accordingly
             self.delta_move_cartesian_frame(delta_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian rotation')
 
@@ -445,11 +445,11 @@ class robot:
         :param delta_frame: the incremental `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ based upon the current position
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting delta move cartesian frame')
-        #is this a legal frame input
+        # is this a legal frame input
         if (self.__check_input_type(delta_frame, [Frame])):
-            #add the incremental move to the current position, to get the ending frame
+            # add the incremental move to the current position, to get the ending frame
             end_frame = delta_frame * self.__position_cartesian_desired
-            #move accordingly
+            # move accordingly
             self.move_cartesian_frame(end_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian frame')
 
@@ -460,21 +460,21 @@ class robot:
         :param abs_translation: the absolute translation you want to make, this is in terms of a  `PyKDL.Vector <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ or a list of floats of size 3
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting absolute move cartesian translation')
-        #is this a legal translation input
+        # is this a legal translation input
         if(self.__check_input_type(abs_translation, [list,float,Vector])):
-            #if the input is a list convert it into a vector
+            # if the input is a list convert it into a vector
             if(type(abs_translation) is list):
                 if (self.__check_list_length(abs_translation, 3)):
-                    #convert intoa vector
+                    # convert intoa vector
                     abs_vector = Vector(abs_translation[0], abs_translation[1], abs_translation[2])
                 else:
                     return
             else:
                 abs_vector = abs_translation
-            #convert into a Frame
+            # convert into a Frame
             abs_rotation = self.__position_cartesian_desired.M
             abs_frame = Frame(abs_rotation, abs_vector)
-            #move accordingly
+            # move accordingly
             self.move_cartesian_frame(abs_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing absolute move cartesian translation')
 
@@ -484,7 +484,7 @@ class robot:
         :param abs_input: the absolute translation you want to make
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting absolute move cartesian translation')
-        #is this a legal translation input
+        # is this a legal translation input
         if(self.__check_input_type(abs_input, [list, float, Vector, Rotation, Frame])):
                if(self.__check_input_type(abs_input, [list, float, Vector])):
                    self.move_cartesian_translation(abs_input, interpolate)
@@ -500,12 +500,12 @@ class robot:
         :param abs_rotation: the absolute `PyKDL.Rotation <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting absolute move cartesian rotation')
-        #is this a legal rotation input
+        # is this a legal rotation input
         if(self.__check_input_type(abs_rotation, [Rotation])):
-            #convert into a Frame
+            # convert into a Frame
             abs_vector = self.__position_cartesian_desired.p
             abs_frame = Frame(abs_rotation, abs_vector)
-            #move accordingly
+            # move accordingly
             self.move_cartesian_frame(abs_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing absolute move cartesian rotation')
 
@@ -517,7 +517,7 @@ class robot:
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting absolute move cartesian frame')
         if (self.__check_input_type(abs_frame, [Frame])):
-            #move based on value of interpolate
+            # move based on value of interpolate
             if (interpolate):
                 self.__move_cartesian_goal(abs_frame)
             else:
@@ -531,9 +531,7 @@ class robot:
         :returns: true if you had successfully move
         :rtype: Bool"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting move cartesian direct')
-        #prepare the robot to move
-        self.__dvrk_insert_tool()
-        #set in position cartesian mode
+        # set in position cartesian mode
         end_position = posemath.toMsg(end_frame)
         if (not self.__dvrk_set_state('DVRK_POSITION_CARTESIAN')):
             return False
@@ -549,13 +547,11 @@ class robot:
         :returns: true if you had succesfully move
         :rtype: Bool"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting move cartesian goal')
-        #prepare the robot
-        self.__dvrk_insert_tool()
-        #set in position cartesian mode
+        # set in position cartesian mode
         end_position= posemath.toMsg(end_frame)
         if (not self.__dvrk_set_state('DVRK_POSITION_GOAL_CARTESIAN')):
             return False
-        #go to that position by goal
+        # go to that position by goal
         return self.__set_position_goal_cartesian_publish_and_wait(end_position)
 
     def __set_position_goal_cartesian_publish_and_wait(self, end_position):
@@ -565,36 +561,15 @@ class robot:
         :returns: returns true if the goal is reached
         :rtype: Bool"""
         self.__goal_reached_event.clear()
-        #the goal is originally not reached
+        # the goal is originally not reached
         self.__goal_reached = False
-        #recursively call this function until end is reached
+        # recursively call this function until end is reached
         self.set_position_goal_cartesian.publish(end_position)
         self.__goal_reached_event.wait(20) # 1 minute at most
         if not self.__goal_reached:
             return False
         rospy.loginfo(rospy.get_caller_id() + ' -> compeleting set position goal cartesian publish and wait')
         return True
-
-    def __dvrk_insert_tool(self, insert_distance=0.15):
-        """Prepare for cartesian move, by making sure that the 2nd joint is moved deep enough so that
-        the robot movement would not be hindered."""
-        # make sure the camera is past the cannula and tool vertical
-        initial_joint_position = self.__position_joint_desired
-        if ((self.__robot_name == 'PSM1') or (self.__robot_name == 'PSM2') or (self.__robot_name == 'PSM3') or (self.__robot_name == 'ECM')):
-            # see if the robot is deep enough
-            if (initial_joint_position[2] < 0.1):
-                # set in position joint mode
-                self.__dvrk_set_state(state = 'DVRK_POSITION_GOAL_JOINT')
-                #create a new goal starting with current position
-                goal = JointState()
-                goal.position[:] = initial_joint_position
-                goal.position[2] = insert_distance
-                self.__goal_reached_event.clear()
-                self.set_position_goal_joint.publish(goal)
-                self.__goal_reached_event.wait(60) # 1 minute at most
-                if not self.__goal_reached:
-                    rospy.signal_shutdown('failed to reach goal')
-                    sys.exit(-1)
 
     def delta_move_joint_list(self, value, index=[], interpolate=True):
         """Incremental index move in joint space.
@@ -603,27 +578,27 @@ class robot:
         :param index: the joint you want to move, this is a list
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting delta move joint index')
-        #check if value is a list
+        # check if value is a list
         if(self.__check_input_type(value, [list,float])):
             initial_joint_position = self.__position_joint_desired
             delta_joint = []
             delta_joint[:] = initial_joint_position
-            #give index is not given and the size of the value is 7
+            # give index is not given and the size of the value is 7
             if (index == []):
                 if(self.__check_list_length(value, len(self.__position_joint_desired))):
                     index = range(len(self.__position_joint_desired))
-            #is there both an index and a value
+            # is there both an index and a value
             else:
-                #check the length of the delta move
+                # check the length of the delta move
                 if(self.__check_input_type(index, [list,int]) and len(index) == len(value)):
-                    #make sure it does not exceed the legal joint amount
+                    # make sure it does not exceed the legal joint amount
                     if(len(index) <= len(initial_joint_position)):
                         for j in range(len(index)):
                             if(index[j] < len(initial_joint_position)):
                                 for i in range (len(initial_joint_position)):
                                     if i == index[j]:
                                         delta_joint[i] = initial_joint_position[i] + value[j]
-                    #move accordingly
+                    # move accordingly
                     self.__move_joint(delta_joint, interpolate)
                 else:
                     return
@@ -635,18 +610,18 @@ class robot:
         :param index: the incremental joint you want to move, this is a list
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting abs move joint index')
-        #check if value is a list
+        # check if value is a list
         if(self.__check_input_type(value, [list,float])):
             initial_joint_position = self.__position_joint_desired
             abs_joint = []
             abs_joint[:] = initial_joint_position
-            #give index is not given and the size of the value is 7
+            # give index is not given and the size of the value is 7
             if (index == []):
                 if(self.__check_list_length(value, len(self.__position_joint_desired))):
                     index = range(len(self.__position_joint_desired))
-            #is there both an index and a value
+            # is there both an index and a value
             if(self.__check_input_type(index, [list,int]) and len(index) == len(value)):
-            #if the joint specified exists
+            # if the joint specified exists
                 if(len(index) <= len(initial_joint_position)):
                     for j in range(len(index)):
                         if(index[j] < len(initial_joint_position)):

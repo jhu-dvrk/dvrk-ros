@@ -5,7 +5,7 @@
 
   <!-- Macro for the da Vinci Master Console -->
   <xacro:macro name="master_console" params="prefix parent_link xyz rpy">
-    <joint name="${prefix}base_fixed_joint" type="fixed">
+    <joint name="base_fixed" type="fixed">
       <parent link="${parent_link}"/>
       <child link="${prefix}master_base_link"/>
       <origin rpy="${rpy}" xyz="${xyz}"/>
@@ -20,25 +20,25 @@
   <!-- Macros for left and right MTMs -->
   <xacro:macro name="mtm_left" params="prefix parent_link xyz rpy">
     <xacro:mtm 
-        prefix="${prefix}left_"
+        prefix="${prefix}"
         parent_link="${parent_link}"
         xyz="${xyz}" rpy="${rpy}"/>
-    <xacro:mtm_platform_left prefix="${prefix}left_"/>    
+    <xacro:mtm_platform_left prefix="${prefix}"/>    
   </xacro:macro>
   
   <xacro:macro name="mtm_right" params="prefix parent_link xyz rpy">
     <xacro:mtm 
-      prefix="${prefix}right_"
+      prefix="${prefix}"
       parent_link="${parent_link}"
       xyz="${xyz}" rpy="${rpy}"/>
-    <xacro:mtm_platform_right prefix="${prefix}right_"/>
+    <xacro:mtm_platform_right prefix="${prefix}"/>
   </xacro:macro>
 
   <!-- Macro for da Vinci Master Tool Manipulator (MTM) -->
   <xacro:macro name="mtm" params="prefix parent_link xyz rpy">
 
     <!-- Joint 0: Fixed to World-->
-    <joint name="${prefix}fixed_joint" type="fixed">
+    <joint name="fixed" type="fixed">
       <parent link="${parent_link}"/>
       <child link="${prefix}top_panel"/>
       <origin rpy="${rpy}" xyz="${xyz}"/>
@@ -67,7 +67,7 @@
     </link>
 
     <!-- Joint 1: Outer Yaw -->
-    <joint name="${prefix}outer_yaw_joint" type="revolute">
+    <joint name="outer_yaw" type="revolute">
       <parent link="${prefix}top_panel"/>
       <child link="${prefix}outer_yaw_link"/>
       <origin rpy="0 0 ${PI/2}" xyz="0 0 0"/>
@@ -99,7 +99,7 @@
 
 
     <!-- Joint 2: Shoulder Pitch -->
-    <joint name="${prefix}shoulder_pitch_joint" type="revolute">
+    <joint name="shoulder_pitch" type="revolute">
       <parent link="${prefix}outer_yaw_link"/>
       <child link="${prefix}back_parallel_link"/>  <!-- xyz= 0 0 -.19037-->
       <origin rpy="${-PI/2} ${-PI/2} 0" xyz="0 0 0"/>
@@ -126,7 +126,7 @@
       </inertial>
     </link>
 
-    <joint name="${prefix}shoulder_pitch_parallel_joint" type="revolute">
+    <joint name="shoulder_pitch_parallel" type="revolute">
       <parent link="${prefix}outer_yaw_link"/>
       <child link="${prefix}top_parallel_link"/>
       <origin rpy="${-PI/2} ${-PI/2} 0" xyz="0 0 0"/>
@@ -135,7 +135,7 @@
       <!--limit effort and velocity picked arbitrarily check-->
       <limit effort="100.0" lower="${-PI/2}" upper="${PI/2}" velocity="10"/>
       <joint_properties damping="1.0" friction="0.0"/>
-      <mimic joint="${prefix}shoulder_pitch_joint" multiplier="1"/>
+      <mimic joint="shoulder_pitch" multiplier="1"/>
     </joint>
 
     <link name="${prefix}top_parallel_link">
@@ -159,7 +159,7 @@
 
     
     <!-- Joint 3: Elbow Pitch -->
-    <joint name="${prefix}elbow_pitch_joint" type="revolute">
+    <joint name="elbow_pitch" type="revolute">
       <parent link="${prefix}back_parallel_link"/>
       <child link="${prefix}bottom_parallel_link"/>  <!-- xyz= -->
       <origin rpy="0 0 ${PI/2}" xyz="-0.2794 0 0"/>
@@ -190,7 +190,7 @@
 
     <transmission name="tran1">
       <type>transmission_interface/SimpleTransmission</type>
-      <joint name="${prefix}outer_yaw_joint"/>
+      <joint name="outer_yaw"/>
       <actuator name="motor1">
         <hardwareInterface>EffortJointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
@@ -198,7 +198,7 @@
     </transmission>
     <transmission name="tran2">
       <type>transmission_interface/SimpleTransmission</type>
-      <joint name="${prefix}shoulder_pitch_joint"/>
+      <joint name="shoulder_pitch"/>
       <actuator name="motor2">
         <hardwareInterface>EffortJointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
@@ -206,7 +206,7 @@
     </transmission>
     <transmission name="tran3">
       <type>transmission_interface/SimpleTransmission</type>
-      <joint name="${prefix}elbow_pitch_joint"/>
+      <joint name="elbow_pitch"/>
       <actuator name="motor3">
         <hardwareInterface>EffortJointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
@@ -233,7 +233,7 @@
   <!-- Macro for dVRK MTM Platform Right -->
   <xacro:macro name="mtm_platform_right" params="prefix">
     <!-- Joint 4: Platform -->
-    <joint name="${prefix}wrist_platform_joint" type="revolute">
+    <joint name="wrist_platform" type="revolute">
       <parent link="${prefix}bottom_parallel_link"/>
       <child link="${prefix}wrist_platform_link"/>
       <origin rpy="${PI/2} 0 0" xyz="-0.3645 -0.1506 0.0"/>
@@ -264,7 +264,7 @@
     </link>
 
     <!-- Joint 5: Wrist Pitch -->
-    <joint name="${prefix}wrist_pitch_joint" type="revolute">
+    <joint name="wrist_pitch" type="revolute">
       <parent link="${prefix}wrist_platform_link"/>
       <child link="${prefix}wrist_pitch_link"/>   
       <origin rpy="${-PI/2} 0 0" xyz="0 0 0"/>
@@ -294,7 +294,7 @@
     </link> 
 
     <!-- Joint 6: Wrist Yaw-->
-    <joint name="${prefix}wrist_yaw_joint" type="revolute">
+    <joint name="wrist_yaw" type="revolute">
       <parent link="${prefix}wrist_pitch_link"/>
       <child link="${prefix}wrist_yaw_link"/>    <!--  defined from CAD file-->
       <origin rpy="${PI/2} ${-PI/2} 0" xyz="0 0 0"/>
@@ -326,7 +326,7 @@
 
 
     <!-- Joint 7: Wrist Roll -->
-    <joint name="${prefix}wrist_roll_joint" type="revolute">
+    <joint name="wrist_roll" type="revolute">
       <parent link="${prefix}wrist_yaw_link"/>
       <child link="${prefix}wrist_roll_link"/>  <!-- -.039 & .055 defined from CAD file-->
       <!-- <origin rpy="${-PI/2} ${PI/2} 0" xyz="0 -.039 0"/> -->
@@ -360,7 +360,7 @@
 
     <transmission name="tran4">
       <type>transmission_interface/SimpleTransmission</type>
-      <joint name="${prefix}wrist_platform_joint"/>
+      <joint name="wrist_platform"/>
       <actuator name="motor4">
         <hardwareInterface>EffortJointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
@@ -368,7 +368,7 @@
     </transmission>
     <transmission name="tran5">
       <type>transmission_interface/SimpleTransmission</type>
-      <joint name="${prefix}wrist_pitch_joint"/>
+      <joint name="wrist_pitch"/>
       <actuator name="motor5">
         <hardwareInterface>EffortJointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
@@ -376,7 +376,7 @@
     </transmission>
     <transmission name="tran6">
       <type>transmission_interface/SimpleTransmission</type>
-      <joint name="${prefix}wrist_yaw_joint"/>
+      <joint name="wrist_yaw"/>
       <actuator name="motor6">
         <hardwareInterface>EffortJointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
@@ -384,7 +384,7 @@
     </transmission>
     <transmission name="tran7">
       <type>transmission_interface/SimpleTransmission</type>
-      <joint name="${prefix}wrist_roll_joint"/>
+      <joint name="wrist_roll"/>
       <actuator name="motor7">
         <hardwareInterface>EffortJointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
@@ -397,7 +397,7 @@
   <!-- Macro for dVRK MTM Platform Left -->
   <xacro:macro name="mtm_platform_left" params="prefix">
     <!-- Joint 4: Platform -->
-    <joint name="${prefix}wrist_platform_joint" type="revolute">
+    <joint name="wrist_platform" type="revolute">
       <parent link="${prefix}bottom_parallel_link"/>
       <child link="${prefix}wrist_platform_link"/>
       <origin rpy="${PI/2} 0 0" xyz="-0.3645 -0.1506 0.0"/>
@@ -430,7 +430,7 @@
     </link>
 
     <!-- Joint 5: Wrist Pitch -->
-    <joint name="${prefix}wrist_pitch_joint" type="revolute">
+    <joint name="wrist_pitch" type="revolute">
       <parent link="${prefix}wrist_platform_link"/>
       <child link="${prefix}wrist_pitch_link"/>   
       <origin rpy="${-PI/2} 0 0" xyz="0 0 0"/>
@@ -462,7 +462,7 @@
     </link> 
 
     <!-- Joint 6: Wrist Yaw-->
-    <joint name="${prefix}wrist_yaw_joint" type="revolute">
+    <joint name="wrist_yaw" type="revolute">
       <parent link="${prefix}wrist_pitch_link"/>
       <child link="${prefix}wrist_yaw_link"/>    <!--  defined from CAD file-->
       <origin rpy="${PI/2} ${-PI/2} 0" xyz="0 0 0"/>
@@ -494,7 +494,7 @@
 
 
     <!-- Joint 7: Wrist Roll -->
-    <joint name="${prefix}wrist_roll_joint" type="revolute">
+    <joint name="wrist_roll" type="revolute">
       <parent link="${prefix}wrist_yaw_link"/>
       <child link="${prefix}wrist_roll_link"/>  <!-- -.039 & .055 defined from CAD file-->
       <!-- <origin rpy="${-PI/2} ${PI/2} 0" xyz="0 -.039 0"/> -->
@@ -528,7 +528,7 @@
 
     <transmission name="tran4">
       <type>transmission_interface/SimpleTransmission</type>
-      <joint name="${prefix}wrist_platform_joint"/>
+      <joint name="wrist_platform"/>
       <actuator name="motor4">
         <hardwareInterface>EffortJointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
@@ -536,7 +536,7 @@
     </transmission>
     <transmission name="tran5">
       <type>transmission_interface/SimpleTransmission</type>
-      <joint name="${prefix}wrist_pitch_joint"/>
+      <joint name="wrist_pitch"/>
       <actuator name="motor5">
         <hardwareInterface>EffortJointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
@@ -544,7 +544,7 @@
     </transmission>
     <transmission name="tran6">
       <type>transmission_interface/SimpleTransmission</type>
-      <joint name="${prefix}wrist_yaw_joint"/>
+      <joint name="wrist_yaw"/>
       <actuator name="motor6">
         <hardwareInterface>EffortJointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
@@ -552,7 +552,7 @@
     </transmission>
     <transmission name="tran7">
       <type>transmission_interface/SimpleTransmission</type>
-      <joint name="${prefix}wrist_roll_joint"/>
+      <joint name="wrist_roll"/>
       <actuator name="motor7">
         <hardwareInterface>EffortJointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>

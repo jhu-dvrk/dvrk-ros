@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<robot name="mtm" xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot name="ecm" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <!-- Colors -->
   <xacro:include filename="$(find dvrk_model)/model/common.urdf.xacro"/>
 
@@ -7,15 +7,15 @@
   <xacro:macro name="ecm" params="prefix parent_link xyz rpy">
 
     <!-- Joint 0: Fixed to World-->
-    <joint name="${prefix}_setup_fixed_joint" type="fixed">
+    <joint name="setup_fixed_joint" type="fixed">
       <parent link="${parent_link}"/>
       <child link="${prefix}_setup_base_link"/>
       <origin rpy="${rpy}" xyz="${xyz}"/>
     </joint>
-    
+
     <link name="${prefix}_setup_base_link"/>
 
-    <joint name="${prefix}_setup_tip_joint" type="fixed">
+    <joint name="setup_tip_joint" type="fixed">
       <parent link="${prefix}_setup_base_link"/>
       <child link="${prefix}_setup_link"/>
       <origin rpy="-0.87046370379 0 -${PI/2}" xyz="0.91324 -0.02111 0.03166"/>
@@ -39,7 +39,7 @@
     </link>
 
     <!-- Joint 0: Fixed to Setup Joint-->
-    <joint name="${prefix}_fixed_joint" type="fixed">
+    <joint name="fixed_joint" type="fixed">
       <parent link="${prefix}_setup_link"/>
       <child link="${prefix}_base_link"/>
       <origin rpy="0 0 0" xyz="0 0.603 0"/>
@@ -47,7 +47,7 @@
     <link name="${prefix}_base_link"/>
 
     <!-- Joint 1: Outer Yaw -->
-    <joint name="${prefix}_yaw_joint" type="revolute">
+    <joint name="outer_yaw" type="revolute">
       <parent link="${prefix}_base_link"/>
       <child link="${prefix}_yaw_link"/>
       <origin rpy="0 -${PI/2} ${PI/2}" xyz="0 0 0"/>
@@ -76,7 +76,7 @@
     </link>
 
     <!-- Joint 2: Pitch -->
-    <joint name="${prefix}_pitch_joint" type="revolute">
+    <joint name="outer_pitch" type="revolute">
       <parent link="${prefix}_yaw_link"/>
       <child link="${prefix}_pitch_link"/>
       <origin rpy="-${PI/2} -${PI/2} 0" xyz="0 0 0"/>
@@ -86,13 +86,13 @@
     </joint>
     <link name="${prefix}_pitch_link"/>
 
-    <joint name="${prefix}_pitch_joint_0" type="continuous">
+    <joint name="outer_pitch_0" type="continuous">
       <parent link="${prefix}_yaw_link"/>
       <child link="${prefix}_pitch_link_1"/>
       <origin rpy="-${PI/2} -${PI/2} 0" xyz="0 0 0.378"/>
       <axis xyz="0 0 1"/>
       <joint_properties damping="1.0" friction="0.0"/>
-      <mimic joint="${prefix}_pitch_joint" multiplier="1"/>
+      <mimic joint="outer_pitch" multiplier="1"/>
     </joint>
 
     <link name="${prefix}_pitch_link_1">
@@ -115,13 +115,13 @@
       </inertial>
     </link>
 
-    <joint name="${prefix}_pitch_joint_1" type="continuous">
+    <joint name="outer_pitch_1" type="continuous">
       <parent link="${prefix}_pitch_link_1"/>
       <child link="${prefix}_pitch_link_2"/>
       <origin rpy="0 0 0" xyz="0.0558629 0.274575 0"/>
       <axis xyz="0 0 1"/>
       <joint_properties damping="1.0" friction="0.0"/>
-      <mimic joint="${prefix}_pitch_joint" multiplier="-1"/>
+      <mimic joint="outer_pitch" multiplier="-1"/>
     </joint>
 
     <link name="${prefix}_pitch_link_2">
@@ -144,13 +144,13 @@
       </inertial>
     </link>
 
-    <joint name="${prefix}_pitch_joint_2" type="continuous">
+    <joint name="outer_pitch_2" type="continuous">
       <parent link="${prefix}_pitch_link_2"/>
       <child link="${prefix}_pitch_link_3"/>
       <origin rpy="0 0 0" xyz="-0.340 0 0"/>
       <axis xyz="0 0 1"/>
       <joint_properties damping="1.0" friction="0.0"/>
-      <mimic joint="${prefix}_pitch_joint" multiplier="1"/>
+      <mimic joint="outer_pitch" multiplier="1"/>
     </joint>
 
     <link name="${prefix}_pitch_link_3">
@@ -172,9 +172,9 @@
         <inertia ixx="9.0" ixy="0.0" ixz="0.0" iyy="9.0" iyz="0.0" izz="9.0"/>
       </inertial>
     </link>
-    
+
     <!-- Joint 3: Insertion -->
-    <joint name="${prefix}_insertion_joint" type="prismatic">
+    <joint name="insertion" type="prismatic">
       <parent link="${prefix}_pitch_link"/>
       <child link="${prefix}_insertion_link"/>
       <origin rpy="${PI/2} 0 0" xyz="0 0.3822 0"/>
@@ -200,7 +200,7 @@
     </link>
 
     <!-- Joint 4: Roll -->
-    <joint name="${prefix}_roll_joint" type="revolute">
+    <joint name="outer_roll" type="revolute">
       <parent link="${prefix}_insertion_link"/>
       <child link="${prefix}_roll_link"/>
       <origin rpy="0 0 0" xyz="0 0 0.3829"/>
@@ -226,7 +226,5 @@
     </link>
 
   </xacro:macro>
-  
+
 </robot>
-
-

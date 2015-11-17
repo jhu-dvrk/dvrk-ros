@@ -18,8 +18,8 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <dvrk_utilities/dvrk_add_topics_functions.h>
 
-void dvrk::add_topics_footpedal(mtsROSBridge & bridge,
-                                const std::string & ros_namespace)
+void dvrk::add_topics_footpedals(mtsROSBridge & bridge,
+                                 const std::string & ros_namespace)
 {
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
         ("Clutch", "Button", ros_namespace + "/clutch");
@@ -33,14 +33,14 @@ void dvrk::add_topics_footpedal(mtsROSBridge & bridge,
         ("Cam-", "Button", ros_namespace + "/camera_minus");
 }
 
-void dvrk::connect_bridge_footpedal(mtsROSBridge & bridge,
-                                    const std::string & io_component_name)
+void dvrk::connect_bridge_footpedals(mtsROSBridge & bridge,
+                                     const std::string & io_component_name)
 {
-    dvrk::connect_bridge_footpedal(bridge.GetName(), io_component_name);
+    dvrk::connect_bridge_footpedals(bridge.GetName(), io_component_name);
 }
 
-void dvrk::connect_bridge_footpedal(const std::string & bridge_name,
-                                    const std::string & io_component_name)
+void dvrk::connect_bridge_footpedals(const std::string & bridge_name,
+                                     const std::string & io_component_name)
 {
     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
     componentManager->Connect(bridge_name, "Clutch",

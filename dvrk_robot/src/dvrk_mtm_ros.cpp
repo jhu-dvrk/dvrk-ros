@@ -33,6 +33,14 @@ http://www.cisst.org/cisst/license.txt.
 
 int main(int argc, char** argv)
 {
+    // program deprecated
+    std::cout << "-----------------------------------------------------------" << std::endl
+              << "- This program is deprecated:                             -" << std::endl
+              << "-   use dvrk_console_json instead                         -" << std::endl
+              << "-   examples can be found in share/jhu-dVRK/console*.json -" << std::endl
+              << "-----------------------------------------------------------" << std::endl
+              << std::endl;
+
     // desired frequencies
     const double ioPeriod = 0.5 * cmn_ms;
     const double armPeriod = 2.0 * cmn_ms;
@@ -124,14 +132,14 @@ int main(int argc, char** argv)
 
     // populate interfaces
     dvrk::add_topics_mtm(robotBridge, "/dvrk/" + config_name, mtm->GetName());
-    dvrk::add_topics_footpedal(robotBridge, "/dvrk/" + config_name + "/footpedal");
+    dvrk::add_topics_footpedals(robotBridge, "/dvrk/" + config_name + "/footpedals");
 
     // add component
     componentManager->AddComponent(&robotBridge);
 
     // connect interfaces on cisst/SAW side
     dvrk::connect_bridge_mtm(robotBridge, mtm->GetName());
-    dvrk::connect_bridge_footpedal(robotBridge, io->GetName());
+    dvrk::connect_bridge_footpedals(robotBridge, io->GetName());
 
     // organize all widgets in a tab widget
     QTabWidget * tabWidget = new QTabWidget;

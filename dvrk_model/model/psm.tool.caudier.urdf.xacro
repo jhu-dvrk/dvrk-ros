@@ -4,7 +4,7 @@
   <xacro:macro name="psm_tool_caudier" params="prefix">
     
     <!-- joint 5: Outer wrist pitch joint -->
-    <joint name="${prefix}outer_wrist_pitch_joint" type="revolute">
+    <joint name="outer_wrist_pitch" type="revolute">
       <parent link="${prefix}tool_wrist_shaft_link"/>
       <child link="${prefix}tool_wrist_caudier_link"/>
       <axis xyz="0 0 1"/>
@@ -30,7 +30,7 @@
     </link>
 
     <!-- joint 6: Tool wrist yaw joint -->
-    <joint name="${prefix}outer_wrist_yaw_joint" type="revolute">
+    <joint name="outer_wrist_yaw" type="revolute">
       <parent link="${prefix}tool_wrist_caudier_link"/>
       <child link="${prefix}tool_wrist_caudier_link_shaft"/>
       <axis xyz="0 0 1"/>
@@ -55,64 +55,70 @@
       </collision>
     </link>
     
-    <!-- joint 6-1: Outer open angle 1 -->
-    <joint name="${prefix}outer_wrist_open_angle_joint" type="revolute">
+    <!-- joint 7-0: Outer open angle 1  -->
+    <joint name="jaw" type="revolute">
       <parent link="${prefix}tool_wrist_caudier_link_shaft"/>
-      <child link="${prefix}tool_wrist_caudier_link_2_left"/>
+      <child link="${prefix}tool_wrist_caudier_ee_link_0"/>      
       <axis xyz="0 0 1"/>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <limit lower="0" upper="1.5707" velocity=".4" effort="1000"/>
     </joint>
 
-    <!-- link 6-1: Outer open angle link 1 -->
+    <!-- link 7-0: Outer open angle virtual -->
+    <link name="${prefix}tool_wrist_caudier_ee_link_0">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>          
+          <box size="0 0 0" />
+        </geometry>
+      </visual>
+    </link>
+
+    <!-- joint 7-1: Outer open angle 1 -->
+    <joint name="jaw_mimic_1" type="revolute">
+      <parent link="${prefix}tool_wrist_caudier_link_shaft"/>
+      <child link="${prefix}tool_wrist_caudier_link_2_left"/>
+      <axis xyz="0 0 1"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <limit lower="0" upper="1.5707" velocity=".4" effort="1000"/>
+      <mimic joint="jaw" multiplier="0.5"/>
+    </joint>
+
+    <!-- link 7-1: Outer open angle link 1 -->
     <link name="${prefix}tool_wrist_caudier_link_2_left">
       <visual>
         <origin rpy="0.0 0 0.0" xyz="0 0 0.00195"/>
         <geometry>
-          <mesh filename="package://dvrk_model/meshes/psm/tool_wrist_caudier_link_2_left.stl"/>
+          <mesh filename="package://dvrk_model/meshes/psm/tool_wrist_caudier_link_2.stl"/>
         </geometry>
-      </visual>
-      <collision>
-        <origin rpy="0.0 0 0.0" xyz="0 0 0.00195"/>
-        <geometry>
-          <mesh filename="package://dvrk_model/meshes/psm/tool_wrist_caudier_link_2_left.stl"/>
-        </geometry>
-      </collision>
+      </visual>     
     </link>
 
-    <!-- joint 6-2: Outer open angle 2  -->
-    <joint name="${prefix}outer_wrist_open_angle_joint_mimic" type="revolute">
+    <!-- joint 7-2: Outer open angle 2  -->
+    <joint name="jaw_mimic_2" type="revolute">
       <parent link="${prefix}tool_wrist_caudier_link_shaft"/>
       <child link="${prefix}tool_wrist_caudier_link_2_right"/>
       <axis xyz="0 0 1"/>
       <origin rpy="3.1415926 0 0" xyz="0 0 0"/>
       <limit lower="0" upper="1.5707" velocity=".4" effort="1000"/>
-      <mimic joint="${prefix}outer_wrist_open_angle_joint" multiplier="1"/>
+      <mimic joint="jaw" multiplier="0.5"/>
     </joint>
 
-    <!-- link 6-2: Outer open angle link 2 -->
+    <!-- link 7-2: Outer open angle link 2 -->
     <link name="${prefix}tool_wrist_caudier_link_2_right">
       <visual>
         <origin rpy="0 0 -3.1415926" xyz="0 0 0.00195"/>
         <geometry>
-          <mesh filename="package://dvrk_model/meshes/psm/tool_wrist_caudier_link_2_right.stl"/>
+          <mesh filename="package://dvrk_model/meshes/psm/tool_wrist_caudier_link_2.stl"/>
         </geometry>
-      </visual>
-      <collision>
-        <origin rpy="0 0 -3.1415926" xyz="0 0 0.00195"/>
-        <geometry>
-          <mesh filename="package://dvrk_model/meshes/psm/tool_wrist_caudier_link_2_right.stl"/>
-        </geometry>
-      </collision>
+      </visual>      
     </link>
 
-    <!-- joint 6-3:   -->
-    <joint name="${prefix}tool_wrist_caudier_ee_joint" type="revolute">
+    <!-- tool tip   -->
+    <joint name="tool_wrist_caudier_ee" type="fixed">
       <parent link="${prefix}tool_wrist_caudier_link_shaft"/>
-      <child link="${prefix}tool_wrist_caudier_ee_link"/>
-      <axis xyz="0 0 1"/>
-      <origin rpy="0.0 1.5708 1.5708" xyz="0 0 0"/>
-      <limit lower="-1.5707" upper="1.5707" velocity=".4" effort="1000"/>
+      <child link="${prefix}tool_wrist_caudier_ee_link"/>      
+      <origin rpy="0.0 1.5708 1.5708" xyz="0 0 0"/>      
     </joint>
 
     <!-- link 6-3:  -->
