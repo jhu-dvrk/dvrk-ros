@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Authors: Nick Eusman, Anton Deguet
-# Date: 2015-09-01
+# Date: 2015-09-24
 
 # Todo:
 # - add data saved to file for offsets/scales using xml filename to name the output file (e.g calib-offsets-sawRobotIO1394-PSM1-12345.csv)
@@ -122,7 +122,7 @@ class potentiometer_calibration:
         r2d = 180.0 / math.pi
         lower_joint_limits = [-90.0 * d2r, -50.0 * d2r, 0.005, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r]
         upper_joint_limits = [ 90.0 * d2r,  50.0 * d2r, 0.235,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r]
-
+        
         slopes = []
         offsets = []
         average_offsets = []
@@ -135,6 +135,43 @@ class potentiometer_calibration:
             average_offsets.append([])
             average_potentiometer.append([])
             range_of_motion_joint.append(math.fabs(upper_joint_limits[axis] - lower_joint_limits[axis]))
+
+        # Looking in XML assuming following tree structure
+        # config > Robot> Actuator > AnalogIn > VoltsToPosSI > Scale = ____   or   Offset = ____
+        xmlVoltsToPosSI = {}
+
+        tree = ET.parse(filename)
+        root = tree.getroot()
+        robotFound = False
+        stuffInRoot = root.getchildren()
+        for index in range(0, len(stuffInRoot)):
+            if stuffInRoot[index].tag == "Robot":
+                currentRobot = stuffInRoot[index]
+                if currentRobot.attrib["Name"] == self._robot_name:
+                    xmlRobot = currentRobot
+                    print "Succesfully found robot \"", currentRobot.attrib["Name"], "\" in XML file"
+                    robotFound = True
+                else:
+                    print "Found robot \"", currentRobot.attrib["Name"], "\", while looking for \"", self._robot_name, "\""
+
+        if robotFound == False:
+            print "Robot tree could not be found in xml file"
+
+        # look for all VoltsToPosSI
+        stuffInRobot = xmlRobot.getchildren()
+        for index in range(0, len(stuffInRobot)):
+            child = stuffInRobot[index]
+            if child.tag == "Actuator":
+                actuatorId = int(child.attrib["ActuatorID"])
+                stuffInActuator = child.getchildren()
+                for subIndex in range(0, len(stuffInActuator)):
+                    subChild = stuffInActuator[subIndex]
+                    if subChild.tag == "AnalogIn":
+                        stuffInAnalogIn = subChild.getchildren()
+                        for subSubIndex in range(0, len(stuffInAnalogIn)):
+                            subSubChild = stuffInAnalogIn[subSubIndex]
+                            if subSubChild.tag == "VoltsToPosSI":
+                                xmlVoltsToPosSI[actuatorId] = subSubChild
 
 
         if calibrate == "scales":
@@ -173,6 +210,26 @@ class potentiometer_calibration:
                     potentiometers[axis].append(math.fsum(average_potentiometer[axis]) / nb_samples_per_position)
                     encoders[axis].append(math.fsum(average_encoder[axis]) / nb_samples_per_position)
 
+                #write all values to csv file
+
+                average_master_list = []
+                for sample in range(0, nb_samples_per_position):
+                    for axis in range(0, nb_axis):
+                        average_master_list.append(average_encoder[axis][sample])
+                        average_master_list.append(average_potentiometer[axis][sample])
+
+                f = open('pot_calib_scales_' + ('.').join(filename.split('.')[:-1]) + '.csv', 'w')
+                for i in range(0,nb_axis):
+                    f.write('Joint ' + i + ' encoder' ',' 'Joint ' + i + ' potentiometer' ',')
+                for i in range(0, 2*nb_axis*nb_samples_per_position):
+                    if i%14 != 0:
+                        f.write(str(average_master_list[i]))
+                        f.write(',')
+                    elif i%14 == 0:
+                        f.write(str(average_master_list[i]))
+                        f.write('\n')               
+                f.close
+
             # at the end, return to home position
             self.set_position_goal_joint([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
@@ -195,43 +252,8 @@ class potentiometer_calibration:
                 offsets[axis] = (math.fsum(average_offsets[axis]) / (nb_samples) )
 
         print ""
-
-        # Looking in XML assuming following tree structure
-        # config > Robot> Actuator > AnalogIn > VoltsToPosSI > Scale = ____   or   Offset = ____
-        xmlVoltsToPosSI = {}
-
-        tree = ET.parse(filename)
-        root = tree.getroot()
-        robotFound = False
-        stuffInRoot = root.getchildren()
-        for index in range(0, len(stuffInRoot)):
-            if stuffInRoot[index].tag == "Robot":
-                currentRobot = stuffInRoot[index]
-                if currentRobot.attrib["Name"] == self._robot_name:
-                    xmlRobot = currentRobot
-                    print "Succesfully found robot \"", currentRobot.attrib["Name"], "\" in XML file"
-                    robotFound = True
-                else:
-                    print "Found robot \"", currentRobot.attrib["Name"], "\", while looking for \"", self._robot_name, "\""
-
-        if robotFound == False:
-            print "Robot tree could not be found in xml file"
-
-        # look for all VoltsToPosSI
-        stuffInRobot = xmlRobot.getchildren()
-        for index in range(0, len(stuffInRobot)):
-            child = stuffInRobot[index]
-            if child.tag == "Actuator":
-                actuatorId = int(child.attrib["ActuatorID"])
-                stuffInActuator = child.getchildren()
-                for subIndex in range(0, len(stuffInActuator)):
-                    subChild = stuffInActuator[subIndex]
-                    if subChild.tag == "AnalogIn":
-                        stuffInAnalogIn = subChild.getchildren()
-                        for subSubIndex in range(0, len(stuffInAnalogIn)):
-                            subSubChild = stuffInAnalogIn[subSubIndex]
-                            if subSubChild.tag == "VoltsToPosSI":
-                                xmlVoltsToPosSI[actuatorId] = subSubChild
+      
+        
 
         if calibrate == "scales":
             print "index | old scale  | new scale  | correction"
