@@ -222,10 +222,10 @@ class potentiometer_calibration:
                 for i in range(0,nb_axis):
                     f.write('Joint ' + i + ' encoder' ',' 'Joint ' + i + ' potentiometer' ',')
                 for i in range(0, 2*nb_axis*nb_samples_per_position):
-                    if i%14 != 0:
+                    if i%((2*nb_axis)-1) != 0:
                         f.write(str(average_master_list[i]))
                         f.write(',')
-                    elif i%14 == 0:
+                    elif i%((2*nb_axis)-1) == 0:
                         f.write(str(average_master_list[i]))
                         f.write('\n')               
                 f.close
