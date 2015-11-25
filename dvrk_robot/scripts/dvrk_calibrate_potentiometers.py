@@ -49,12 +49,10 @@ class potentiometer_calibration:
         self._last_actuators[:] = data.position
 
     def robot_state_callback(self, data):
-        rospy.loginfo(rospy.get_caller_id() + " -> current state is %s", data.data)
         self._robot_state = data.data
         self._robot_state_event.set()
 
     def goal_reached_callback(self, data):
-        rospy.loginfo(rospy.get_caller_id() + " -> goal reached is %s", data.data)
         self._goal_reached = data.data
         self._goal_reached_event.set()
 
@@ -95,10 +93,13 @@ class potentiometer_calibration:
         # create node
         rospy.init_node('dvrk_calibrate_potentiometers', anonymous = True)
 
-        nb_samples = 20 # number of positions between limits
-        number_of_points = 100 # number of values collected at each position
+        nb_joint_positions = 20 # number of positions between limits
+        nb_samples_per_position = 100 # number of values collected at each position
+        total_samples = nb_joint_positions * nb_samples_per_position
+        samples_so_far = 0
 
         sleep_time_after_motion = 0.5 # time after motion from position to position to allow potentiometers to stabilize
+        sleep_time_between_samples = 0.01 # time between two samples read (potentiometers)
 
         nb_axis = 7 #number of joints being tested
 
@@ -110,8 +111,8 @@ class potentiometer_calibration:
         average_potentiometer = []
         d2r = math.pi / 180.0
         r2d = 180.0 / math.pi
-        lower_joint_limits = [-1.186, -0.837, 0.0,   -250.0 * d2r, -65.0 * d2r, -80.0 * d2r, 0.0 * d2r]
-        upper_joint_limits = [ 1.186,  0.837, 0.235,  250.0 * d2r,  65.0 * d2r,  80.0 * d2r, 0.0 * d2r]
+        lower_joint_limits = [-1.186, -0.837, 0.0,   -170.0 * d2r, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r]
+        upper_joint_limits = [ 1.186,  0.837, 0.235,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r]
 
         slopes = []
         offsets = []
@@ -128,16 +129,19 @@ class potentiometer_calibration:
 
 
         if calibrate == "scales":
-            raw_input("The robot will now start moving, please hit [enter] to continue once it is safe to proceed\n")
+            print "Calibrating scales using encoders as reference"
+            raw_input("To start with some initial values, you first need to \"home\" the robot.  When homed, press [enter]")
+            raw_input("If you are calibrating a PSM, make sure there is no tool inserted.  Please remove tool or calibration plate if any and press [enter]")
+            raw_input("The robot will make LARGE MOVEMENTS, please hit [enter] to continue once it is safe to proceed")
             
             # set in proper mode for joint control
             self.set_state_block('DVRK_POSITION_GOAL_JOINT')
 
-            for sample in range(0, nb_samples):
+            for position in range(0, nb_joint_positions):
                 # create joint goal
                 joint_goal = []
                 for axis in range(0, nb_axis):
-                    joint_goal.append(lower_joint_limits[axis] + sample * (range_of_motion_joint[axis] / nb_samples))
+                    joint_goal.append(lower_joint_limits[axis] + position * (range_of_motion_joint[axis] / nb_joint_positions))
                     average_encoder[axis] = []
                     average_potentiometer[axis] = []
 
@@ -145,38 +149,43 @@ class potentiometer_calibration:
                 self.set_position_goal_joint(joint_goal)
                 time.sleep(sleep_time_after_motion)
 
-                # collect number_of_points at current position to compute average
-                for data in range(0, number_of_points):
+                # collect nb_samples_per_position at current position to compute average
+                for sample in range(0, nb_samples_per_position):
                     for axis in range(0, nb_axis):
                         average_potentiometer[axis].append(self._last_potentiometers[axis])
                         average_encoder[axis].append(self._last_actuators[axis])
-                    time.sleep(.01)
+                    time.sleep(sleep_time_between_samples)
+                    samples_so_far = samples_so_far + 1
+                    sys.stdout.write('\rProgress %02.1f%%' % (float(samples_so_far) / float(total_samples) * 100.0))
+                    sys.stdout.flush()
 
                 # compute averages
                 for axis in range(0, nb_axis):
-                    potentiometers[axis].append(math.fsum(average_potentiometer[axis]) / number_of_points)
-                    encoders[axis].append(math.fsum(average_encoder[axis]) / number_of_points)
+                    potentiometers[axis].append(math.fsum(average_potentiometer[axis]) / nb_samples_per_position)
+                    encoders[axis].append(math.fsum(average_encoder[axis]) / nb_samples_per_position)
 
-                print 'time left: ', ((nb_samples) * (sleep_time_after_motion + (number_of_points * 0.01))) - ((sample) * (sleep_time_after_motion + (number_of_points * 0.01)))
+                # print 'time left: ', ((nb_joint_positions) * (sleep_time_after_motion + (nb_samples_per_position * 0.01))) - ((position) * (sleep_time_after_motion + (nb_samples_per_position * 0.01)))
                 
             # at the end, return to home position
             self.set_position_goal_joint([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
         if calibrate == "offsets":
-            print "Now calibrating offsets using calibration plate"
-            raw_input("Make sure you power off the arm, i.e. put it in \"idle\" mode and hit[enter]\n")
-            raw_input("Place the plate over the final four joints and hit [enter]\n")
-            number_of_points = 1000;
-            for data in range(0, number_of_points):
+            print "Calibrating offsets using calibration plate"
+            raw_input("To start with some initial values, you first need to \"home\" the robot.  When homed, press [enter]")
+            raw_input("The robot will now go in \"idle\" mode, i.e. turn PID off.  Press [enter]")
+            self.set_state_block('DVRK_UNINITIALIZED')
+            raw_input("Place the plate over the final four joints and hit [enter]")
+            number_of_samples = 1000;
+            for sample in range(0, number_of_samples):
                 for axis in range(3, nb_axis):
                     average_offsets[axis].append(self._last_potentiometers[axis] * r2d)
-                time.sleep(.01)
+                time.sleep(sleep_time_between_samples)
                 for axis in range(0, 3):
                     average_offsets[axis].append(0.0)
-                sys.stdout.write('\rProgress %02.1f%%' % (float(data) / float(number_of_points) * 100.0))
+                sys.stdout.write('\rProgress %02.1f%%' % (float(sample) / float(number_of_samples) * 100.0))
                 sys.stdout.flush()
             for axis in range(0, nb_axis):
-                offsets[axis] = (math.fsum(average_offsets[axis]) / (number_of_points) )
+                offsets[axis] = (math.fsum(average_offsets[axis]) / (number_of_samples) )
 
         print ""
 
