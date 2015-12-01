@@ -1,5 +1,14 @@
 #!/usr/bin/env python
 
+# Authors: Nick Eusman, Anton Deguet
+# Date: 2015-09-01
+
+# Todo:
+# - add data saved to file for offsets/scales using xml filename to name the output file (e.g calib-offsets-sawRobotIO1394-PSM1-12345.csv)
+# - test on ECM/MTM, use arm name to determine arm type, set number of axis and joint limits based on arm type
+# - for offset calibration, instead of using average of all, eliminate outliers using std dev?  Test to see if more stable
+# - test calibrating 3rd offset on PSM? 
+
 import time
 import rospy
 import threading
@@ -94,7 +103,7 @@ class potentiometer_calibration:
         rospy.init_node('dvrk_calibrate_potentiometers', anonymous = True)
 
         nb_joint_positions = 20 # number of positions between limits
-        nb_samples_per_position = 100 # number of values collected at each position
+        nb_samples_per_position = 500 # number of values collected at each position
         total_samples = nb_joint_positions * nb_samples_per_position
         samples_so_far = 0
 
@@ -111,8 +120,8 @@ class potentiometer_calibration:
         average_potentiometer = []
         d2r = math.pi / 180.0
         r2d = 180.0 / math.pi
-        lower_joint_limits = [-1.186, -0.837, 0.0,   -170.0 * d2r, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r]
-        upper_joint_limits = [ 1.186,  0.837, 0.235,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r]
+        lower_joint_limits = [-90.0 * d2r, -50.0 * d2r, 0.005, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r]
+        upper_joint_limits = [ 90.0 * d2r,  50.0 * d2r, 0.235,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r]
 
         slopes = []
         offsets = []
@@ -164,8 +173,6 @@ class potentiometer_calibration:
                     potentiometers[axis].append(math.fsum(average_potentiometer[axis]) / nb_samples_per_position)
                     encoders[axis].append(math.fsum(average_encoder[axis]) / nb_samples_per_position)
 
-                # print 'time left: ', ((nb_joint_positions) * (sleep_time_after_motion + (nb_samples_per_position * 0.01))) - ((position) * (sleep_time_after_motion + (nb_samples_per_position * 0.01)))
-                
             # at the end, return to home position
             self.set_position_goal_joint([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
@@ -175,17 +182,17 @@ class potentiometer_calibration:
             raw_input("The robot will now go in \"idle\" mode, i.e. turn PID off.  Press [enter]")
             self.set_state_block('DVRK_UNINITIALIZED')
             raw_input("Place the plate over the final four joints and hit [enter]")
-            number_of_samples = 1000;
-            for sample in range(0, number_of_samples):
+            nb_samples = 10 * nb_samples_per_position
+            for sample in range(0, nb_samples):
                 for axis in range(3, nb_axis):
                     average_offsets[axis].append(self._last_potentiometers[axis] * r2d)
                 time.sleep(sleep_time_between_samples)
                 for axis in range(0, 3):
                     average_offsets[axis].append(0.0)
-                sys.stdout.write('\rProgress %02.1f%%' % (float(sample) / float(number_of_samples) * 100.0))
+                sys.stdout.write('\rProgress %02.1f%%' % (float(sample) / float(nb_samples) * 100.0))
                 sys.stdout.flush()
             for axis in range(0, nb_axis):
-                offsets[axis] = (math.fsum(average_offsets[axis]) / (number_of_samples) )
+                offsets[axis] = (math.fsum(average_offsets[axis]) / (nb_samples) )
 
         print ""
 
