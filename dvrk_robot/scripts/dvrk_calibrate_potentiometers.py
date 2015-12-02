@@ -14,6 +14,7 @@ import rospy
 import threading
 import math
 import sys
+import csv
 
 from std_msgs.msg import String, Bool
 from sensor_msgs.msg import JointState
@@ -110,31 +111,20 @@ class potentiometer_calibration:
         sleep_time_after_motion = 0.5 # time after motion from position to position to allow potentiometers to stabilize
         sleep_time_between_samples = 0.01 # time between two samples read (potentiometers)
 
-        nb_axis = 7 #number of joints being tested
-
         encoders = []
         potentiometers = []
         range_of_motion_joint = []
-
-        average_encoder = []
-        average_potentiometer = []
-        d2r = math.pi / 180.0
-        r2d = 180.0 / math.pi
-        lower_joint_limits = [-90.0 * d2r, -50.0 * d2r, 0.005, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r]
-        upper_joint_limits = [ 90.0 * d2r,  50.0 * d2r, 0.235,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r]
         
+        average_encoder = [] #all encoder values collected at a sample position used for averaging the values of that position
+        average_potentiometer = [] #all potentiometer values collected at a sample position used for averaging the values of that position
+        total_encoder_values = [] #every single collected encoder value
+        total_potentiometer_values = [] #every single collected potentiometer value
+        d2r = math.pi / 180.0 #degrees to radians
+        r2d = 180.0 / math.pi #radians to degrees
+
         slopes = []
         offsets = []
         average_offsets = []
-
-        for axis in range(0, nb_axis):
-            encoders.append([])
-            offsets.append([])
-            potentiometers.append([])
-            average_encoder.append([])
-            average_offsets.append([])
-            average_potentiometer.append([])
-            range_of_motion_joint.append(math.fabs(upper_joint_limits[axis] - lower_joint_limits[axis]))
 
         # Looking in XML assuming following tree structure
         # config > Robot> Actuator > AnalogIn > VoltsToPosSI > Scale = ____   or   Offset = ____
@@ -173,6 +163,33 @@ class potentiometer_calibration:
                             if subSubChild.tag == "VoltsToPosSI":
                                 xmlVoltsToPosSI[actuatorId] = subSubChild
 
+        if ("").join(list(currentRobot.attrib["Name"])[:-1]) == "PSM": #checks to see if the robot being tested is a PSM
+            lower_joint_limits = [-90.0 * d2r, -50.0 * d2r, 0.005, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r] 
+            upper_joint_limits = [ 90.0 * d2r,  50.0 * d2r, 0.235,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r]
+            nb_axis = 7 #number of joints being tested
+        elif currentRobot.attrib["Name"] == "MTML":
+            lower_joint_limits = [-40 * d2r, -15 * d2r, -50 * d2r, -200 * d2r, -90 * d2r, -45 * d2r, -480 * d2r,  0 * d2r]
+            upper_joint_limits = [ 65 * d2r,  50 * d2r,  35 * d2r,   90 * d2r, 180 * d2r,  45 * d2r,  450 * d2r, 30 * d2r]
+            nb_axis = 8
+        elif currentRobot.attrib["Name"] == "MTMR":
+            lower_joint_limits = [-65 * d2r, -15 * d2r, -50 * d2r, -90 * d2r, -90 * d2r, -45 * d2r, -480 * d2r,  0 * d2r]
+            upper_joint_limits = [ 40 * d2r,  50 * d2r,  35 * d2r, 200 * d2r, 180 * d2r,  45 * d2r,  450 * d2r, 30 * d2r]
+            nb_axis = 8
+        elif currentRobot.attrib["Name"] == "ECM":
+            lower_joint_limits = [-90 * d2r, -45 * d2r,   0, -90 * d2r]
+            upper_joint_limits = [ 90 * d2r,  65 * d2r, 235,  90 * d2r]
+            nb_axis = 4
+
+        for axis in range(0, nb_axis):
+            encoders.append([])
+            offsets.append([])
+            potentiometers.append([])
+            average_encoder.append([])
+            average_offsets.append([])
+            average_potentiometer.append([])
+            total_potentiometer_values.append([])
+            total_encoder_values.append([])
+            range_of_motion_joint.append(math.fabs(upper_joint_limits[axis] - lower_joint_limits[axis]))
 
         if calibrate == "scales":
             print "Calibrating scales using encoders as reference"
@@ -182,6 +199,8 @@ class potentiometer_calibration:
             
             # set in proper mode for joint control
             self.set_state_block('DVRK_POSITION_GOAL_JOINT')
+
+            print "Values will be saved in: "'pot_calib_scales_' + ('.').join(filename.split('.')[:-1]) + '.csv'
 
             for position in range(0, nb_joint_positions):
                 # create joint goal
@@ -200,6 +219,8 @@ class potentiometer_calibration:
                     for axis in range(0, nb_axis):
                         average_potentiometer[axis].append(self._last_potentiometers[axis])
                         average_encoder[axis].append(self._last_actuators[axis])
+                        total_potentiometer_values[axis].append(self._last_potentiometers[axis])
+                        total_encoder_values[axis].append(self._last_actuators[axis])
                     time.sleep(sleep_time_between_samples)
                     samples_so_far = samples_so_far + 1
                     sys.stdout.write('\rProgress %02.1f%%' % (float(samples_so_far) / float(total_samples) * 100.0))
@@ -210,25 +231,16 @@ class potentiometer_calibration:
                     potentiometers[axis].append(math.fsum(average_potentiometer[axis]) / nb_samples_per_position)
                     encoders[axis].append(math.fsum(average_encoder[axis]) / nb_samples_per_position)
 
-                #write all values to csv file
+            #write all values to csv file
+            csv_file_name = 'pot_calib_scales_' + ('.').join(filename.split('.')[:-1]) + '.csv'
+            with open(csv_file_name, 'wb') as f:
+                writer = csv.writer(f)
+                rows = zip(total_potentiometer_values[0],total_encoder_values[0],total_potentiometer_values[1],total_encoder_values[1],total_potentiometer_values[2],total_encoder_values[2],total_potentiometer_values[3],total_encoder_values[3],total_potentiometer_values[4],total_encoder_values[4],total_potentiometer_values[5],total_encoder_values[5],total_potentiometer_values[6],total_encoder_values[6])
+                rowheaders = ["joint 0", "", "joint 1", "", "joint 2", "", "joint 3", "", "joint 4", "", "joint 5", "", "joint 6", ""]
+                writer.writerow(rowheaders)
+                for row in rows:
+                    writer.writerow(row)
 
-                average_master_list = []
-                for sample in range(0, nb_samples_per_position):
-                    for axis in range(0, nb_axis):
-                        average_master_list.append(average_encoder[axis][sample])
-                        average_master_list.append(average_potentiometer[axis][sample])
-
-                f = open('pot_calib_scales_' + ('.').join(filename.split('.')[:-1]) + '.csv', 'w')
-                for i in range(0,nb_axis):
-                    f.write('Joint ' + i + ' encoder' ',' 'Joint ' + i + ' potentiometer' ',')
-                for i in range(0, 2*nb_axis*nb_samples_per_position):
-                    if i%((2*nb_axis)-1) != 0:
-                        f.write(str(average_master_list[i]))
-                        f.write(',')
-                    elif i%((2*nb_axis)-1) == 0:
-                        f.write(str(average_master_list[i]))
-                        f.write('\n')               
-                f.close
 
             # at the end, return to home position
             self.set_position_goal_joint([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
