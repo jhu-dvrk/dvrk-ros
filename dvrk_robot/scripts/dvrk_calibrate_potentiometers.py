@@ -4,10 +4,9 @@
 # Date: 2015-09-24
 
 # Todo:
-# - add data saved to file for offsets/scales using xml filename to name the output file (e.g calib-offsets-sawRobotIO1394-PSM1-12345.csv)
 # - test on ECM/MTM, use arm name to determine arm type, set number of axis and joint limits based on arm type
 # - for offset calibration, instead of using average of all, eliminate outliers using std dev?  Test to see if more stable
-# - test calibrating 3rd offset on PSM? 
+# - test calibrating 3rd offset on PSM?
 
 import time
 import rospy
@@ -23,7 +22,7 @@ import xml.etree.ElementTree as ET
 
 def slope(x, y):
     a = []
-    for i in range(0,len(x)):
+    for i in range(len(x)):
         a.append(x[i] * y[i])
     sum_a = sum(a)
     final_a = (sum_a * len(x))
@@ -114,11 +113,9 @@ class potentiometer_calibration:
         encoders = []
         potentiometers = []
         range_of_motion_joint = []
-        
+
         average_encoder = [] #all encoder values collected at a sample position used for averaging the values of that position
         average_potentiometer = [] #all potentiometer values collected at a sample position used for averaging the values of that position
-        total_encoder_values = [] #every single collected encoder value
-        total_potentiometer_values = [] #every single collected potentiometer value
         d2r = math.pi / 180.0 #degrees to radians
         r2d = 180.0 / math.pi #radians to degrees
 
@@ -130,11 +127,43 @@ class potentiometer_calibration:
         # config > Robot> Actuator > AnalogIn > VoltsToPosSI > Scale = ____   or   Offset = ____
         xmlVoltsToPosSI = {}
 
+
+        """
+        alist = [1,2,3,5,6,37,9,4,9,2]   #list(int(raw_input("type a list \n")))
+        print alist
+        asortedlist = sorted(alist)
+        print asortedlist
+        if len(asortedlist) % 2 == 0:
+            median = float(asortedlist[(len(asortedlist)/2)-1] + asortedlist[(len(asortedlist)/2)])/2
+            print median
+            Q1list = asortedlist[:-((len(asortedlist))/2)]
+            print Q1list
+            Q3list = asortedlist[-((len(asortedlist))/2):]
+            print Q3list
+        elif len(asortedlist) % 2 == 1:
+            median = asortedlist[int((len(asortedlist)/2)+.5)]
+            print median
+            Q1list = asortedlist[:-int(((len(asortedlist))/2)+1.5)]
+            print Q1list
+            Q3list = asortedlist[-int(((len(asortedlist))/2)+.5):]
+            print Q3list
+        if len(Q1list) % 2 == 0:
+            Q1 = float(Q1list[(len(Q1list)/2)-1] + Q1list[(len(Q1list)/2)])/2
+        elif len(Q1list) % 2 == 1:
+            Q1 = Q1list[int((len(Q1list)/2)+.5)]
+        if len(Q3list) % 2 == 0:
+            Q3 = float(Q3list[(len(Q3list)/2)-1] + Q3list[(len(Q3list)/2)])/2
+        elif len(Q3list) % 2 == 1:
+            Q3 = Q3list[int((len(Q3list)/2)+.5)]
+        IQR = Q3 - Q1
+        for i in asortedlist
+        """
+
         tree = ET.parse(filename)
         root = tree.getroot()
         robotFound = False
         stuffInRoot = root.getchildren()
-        for index in range(0, len(stuffInRoot)):
+        for index in range(len(stuffInRoot)):
             if stuffInRoot[index].tag == "Robot":
                 currentRobot = stuffInRoot[index]
                 if currentRobot.attrib["Name"] == self._robot_name:
@@ -145,67 +174,85 @@ class potentiometer_calibration:
                     print "Found robot \"", currentRobot.attrib["Name"], "\", while looking for \"", self._robot_name, "\""
 
         if robotFound == False:
-            print "Robot tree could not be found in xml file"
+            sys.exit("Robot tree could not be found in xml file")
 
         # look for all VoltsToPosSI
         stuffInRobot = xmlRobot.getchildren()
-        for index in range(0, len(stuffInRobot)):
+        for index in range(len(stuffInRobot)):
             child = stuffInRobot[index]
             if child.tag == "Actuator":
                 actuatorId = int(child.attrib["ActuatorID"])
                 stuffInActuator = child.getchildren()
-                for subIndex in range(0, len(stuffInActuator)):
+                for subIndex in range(len(stuffInActuator)):
                     subChild = stuffInActuator[subIndex]
                     if subChild.tag == "AnalogIn":
                         stuffInAnalogIn = subChild.getchildren()
-                        for subSubIndex in range(0, len(stuffInAnalogIn)):
+                        for subSubIndex in range(len(stuffInAnalogIn)):
                             subSubChild = stuffInAnalogIn[subSubIndex]
                             if subSubChild.tag == "VoltsToPosSI":
                                 xmlVoltsToPosSI[actuatorId] = subSubChild
 
         if ("").join(list(currentRobot.attrib["Name"])[:-1]) == "PSM": #checks to see if the robot being tested is a PSM
-            lower_joint_limits = [-90.0 * d2r, -50.0 * d2r, 0.005, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r] 
-            upper_joint_limits = [ 90.0 * d2r,  50.0 * d2r, 0.235,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r]
+            arm_type = "PSM"
+            lower_joint_limits = [-60.0 * d2r, -30.0 * d2r, 0.005, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r]
+            upper_joint_limits = [ 60.0 * d2r,  30.0 * d2r, 0.235,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r]
             nb_axis = 7 #number of joints being tested
         elif currentRobot.attrib["Name"] == "MTML":
-            lower_joint_limits = [-40 * d2r, -15 * d2r, -50 * d2r, -200 * d2r, -90 * d2r, -45 * d2r, -480 * d2r,  0 * d2r]
-            upper_joint_limits = [ 65 * d2r,  50 * d2r,  35 * d2r,   90 * d2r, 180 * d2r,  45 * d2r,  450 * d2r, 30 * d2r]
-            nb_axis = 8
+            arm_type = "MTM"
+            lower_joint_limits = [-40 * d2r, -15 * d2r, -50 * d2r, -200 * d2r, -90 * d2r, -45 * d2r, -480 * d2r]
+            upper_joint_limits = [ 65 * d2r,  50 * d2r,  35 * d2r,   90 * d2r, 180 * d2r,  45 * d2r,  450 * d2r]
+            nb_axis = 7
         elif currentRobot.attrib["Name"] == "MTMR":
-            lower_joint_limits = [-65 * d2r, -15 * d2r, -50 * d2r, -90 * d2r, -90 * d2r, -45 * d2r, -480 * d2r,  0 * d2r]
-            upper_joint_limits = [ 40 * d2r,  50 * d2r,  35 * d2r, 200 * d2r, 180 * d2r,  45 * d2r,  450 * d2r, 30 * d2r]
-            nb_axis = 8
+            arm_type = "MTM"
+            lower_joint_limits = [-65 * d2r, -15 * d2r, -50 * d2r, -90 * d2r, -90 * d2r, -45 * d2r, -480 * d2r]
+            upper_joint_limits = [ 40 * d2r,  50 * d2r,  35 * d2r, 200 * d2r, 180 * d2r,  45 * d2r,  450 * d2r]
+            nb_axis = 7
         elif currentRobot.attrib["Name"] == "ECM":
+            arm_type = "ECM"
             lower_joint_limits = [-90 * d2r, -45 * d2r,   0, -90 * d2r]
             upper_joint_limits = [ 90 * d2r,  65 * d2r, 235,  90 * d2r]
             nb_axis = 4
 
-        for axis in range(0, nb_axis):
+        for axis in range(nb_axis):
             encoders.append([])
             offsets.append([])
             potentiometers.append([])
             average_encoder.append([])
             average_offsets.append([])
             average_potentiometer.append([])
-            total_potentiometer_values.append([])
-            total_encoder_values.append([])
             range_of_motion_joint.append(math.fabs(upper_joint_limits[axis] - lower_joint_limits[axis]))
 
         if calibrate == "scales":
+
             print "Calibrating scales using encoders as reference"
+
+            # write all values to csv file
+            csv_file_name = 'pot_calib_scales_' + ('.').join(filename.split('.')[:-1]) + '.csv'
+            print "Values will be saved in: ", csv_file_name
+            f = open(csv_file_name, 'wb')
+            writer = csv.writer(f)
+            header = []
+            for axis in range(nb_axis):
+                header.append("potentiometer" + str(axis))
+            for axis in range(nb_axis):
+                header.append("encoder" + str(axis))
+            writer.writerow(header)
+
+            # messages
             raw_input("To start with some initial values, you first need to \"home\" the robot.  When homed, press [enter]")
-            raw_input("If you are calibrating a PSM, make sure there is no tool inserted.  Please remove tool or calibration plate if any and press [enter]")
+            if arm_type == "PSM":
+                raw_input("Since you are calibrating a PSM, make sure there is no tool inserted.  Please remove tool or calibration plate if any and press [enter]")
+            if arm_type == "ECM":
+                raw_input("Since you are calibrating an ECM, remove the endoscope and press [enter]")
             raw_input("The robot will make LARGE MOVEMENTS, please hit [enter] to continue once it is safe to proceed")
-            
+
             # set in proper mode for joint control
             self.set_state_block('DVRK_POSITION_GOAL_JOINT')
 
-            print "Values will be saved in: "'pot_calib_scales_' + ('.').join(filename.split('.')[:-1]) + '.csv'
-
-            for position in range(0, nb_joint_positions):
+            for position in range(nb_joint_positions):
                 # create joint goal
                 joint_goal = []
-                for axis in range(0, nb_axis):
+                for axis in range(nb_axis):
                     joint_goal.append(lower_joint_limits[axis] + position * (range_of_motion_joint[axis] / nb_joint_positions))
                     average_encoder[axis] = []
                     average_potentiometer[axis] = []
@@ -215,61 +262,85 @@ class potentiometer_calibration:
                 time.sleep(sleep_time_after_motion)
 
                 # collect nb_samples_per_position at current position to compute average
-                for sample in range(0, nb_samples_per_position):
-                    for axis in range(0, nb_axis):
+                for sample in range(nb_samples_per_position):
+                    for axis in range(nb_axis):
                         average_potentiometer[axis].append(self._last_potentiometers[axis])
                         average_encoder[axis].append(self._last_actuators[axis])
-                        total_potentiometer_values[axis].append(self._last_potentiometers[axis])
-                        total_encoder_values[axis].append(self._last_actuators[axis])
+                    writer.writerow(self._last_potentiometers + self._last_actuators)
                     time.sleep(sleep_time_between_samples)
                     samples_so_far = samples_so_far + 1
                     sys.stdout.write('\rProgress %02.1f%%' % (float(samples_so_far) / float(total_samples) * 100.0))
                     sys.stdout.flush()
 
+                """
+                # remove outliers
+                for sample in range(nb_samples_per_position):
+                    for axis in range(nb_axis):
+                        if (average_potentiometer[axis][sample] - statistics.mean(average_potentiometer[axis]))/statistics.stdev(average_potentiometer[axis]) > 2:
+                            average_potentiometer[axis].pop(sample)
+                            average_encoder[axis].pop(sample)
+                """
+
                 # compute averages
-                for axis in range(0, nb_axis):
+                for axis in range(nb_axis):
                     potentiometers[axis].append(math.fsum(average_potentiometer[axis]) / nb_samples_per_position)
                     encoders[axis].append(math.fsum(average_encoder[axis]) / nb_samples_per_position)
-
-            #write all values to csv file
-            csv_file_name = 'pot_calib_scales_' + ('.').join(filename.split('.')[:-1]) + '.csv'
-            with open(csv_file_name, 'wb') as f:
-                writer = csv.writer(f)
-                rows = zip(total_potentiometer_values[0],total_encoder_values[0],total_potentiometer_values[1],total_encoder_values[1],total_potentiometer_values[2],total_encoder_values[2],total_potentiometer_values[3],total_encoder_values[3],total_potentiometer_values[4],total_encoder_values[4],total_potentiometer_values[5],total_encoder_values[5],total_potentiometer_values[6],total_encoder_values[6])
-                rowheaders = ["joint 0", "", "joint 1", "", "joint 2", "", "joint 3", "", "joint 4", "", "joint 5", "", "joint 6", ""]
-                writer.writerow(rowheaders)
-                for row in rows:
-                    writer.writerow(row)
 
 
             # at the end, return to home position
             self.set_position_goal_joint([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+            # close file
+            f.close()
 
         if calibrate == "offsets":
-            print "Calibrating offsets using calibration plate"
+
+            print "Calibrating offsets"
+
+            # write all values to csv file
+            csv_file_name = 'pot_calib_offsets_' + ('.').join(filename.split('.')[:-1]) + '.csv'
+            print "Values will be saved in: ", csv_file_name
+            f = open(csv_file_name, 'wb')
+            writer = csv.writer(f)
+            header = []
+            for axis in range(nb_axis):
+                header.append("potentiometer" + str(axis))
+            writer.writerow(header)
+
+            # messages
+            if arm_type == "PSM":
+                print "Calibrating offsets using calibration plate, this allows to calibrate the last 4 potentiometers.  The first 3 will remain unchanged."
+            else:
+                print("Since there is no calibration template for ECM/MTM, you need to manually place and constrain the arm in zero position!")
+            raw_input("Press [enter] to continue")
             raw_input("To start with some initial values, you first need to \"home\" the robot.  When homed, press [enter]")
             raw_input("The robot will now go in \"idle\" mode, i.e. turn PID off.  Press [enter]")
             self.set_state_block('DVRK_UNINITIALIZED')
-            raw_input("Place the plate over the final four joints and hit [enter]")
+            if arm_type == "PSM":
+                raw_input("Place the plate over the final four joints and hit [enter]")
             nb_samples = 10 * nb_samples_per_position
-            for sample in range(0, nb_samples):
-                for axis in range(3, nb_axis):
-                    average_offsets[axis].append(self._last_potentiometers[axis] * r2d)
+            for sample in range(nb_samples):
+                if arm_type == "PSM":
+                    for axis in range(3, nb_axis):
+                        average_offsets[axis].append(self._last_potentiometers[axis] * r2d)
+                    for axis in range(0, 3):
+                        average_offsets[axis].append(0.0)
+                else:
+                    for axis in range(nb_axis):
+                        average_offsets[axis].append(self._last_potentiometers[axis] * r2d)
+
+                writer.writerow(self._last_potentiometers)
                 time.sleep(sleep_time_between_samples)
-                for axis in range(0, 3):
-                    average_offsets[axis].append(0.0)
                 sys.stdout.write('\rProgress %02.1f%%' % (float(sample) / float(nb_samples) * 100.0))
                 sys.stdout.flush()
-            for axis in range(0, nb_axis):
+            for axis in range(nb_axis):
                 offsets[axis] = (math.fsum(average_offsets[axis]) / (nb_samples) )
 
         print ""
-      
-        
+
 
         if calibrate == "scales":
             print "index | old scale  | new scale  | correction"
-            for index in range(0, nb_axis):
+            for index in range(nb_axis):
                 # find existing values
                 oldScale = float(xmlVoltsToPosSI[index].attrib["Scale"])
                 # compute new values
@@ -283,7 +354,7 @@ class potentiometer_calibration:
 
         if calibrate == "offsets":
             print "index | old offset  | new offset | correction"
-            for index in range(0, nb_axis):
+            for index in range(nb_axis):
                 # find existing values
                 oldOffset = float(xmlVoltsToPosSI[index].attrib["Offset"])
                 # compute new values
