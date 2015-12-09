@@ -101,6 +101,12 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandWrite<prmPositionCartesianSet, geometry_msgs::Pose>
         (arm_component_name, "SetPositionGoalCartesian",
          ros_namespace + "/set_position_goal_cartesian");
+    bridge.AddSubscriberToWriteCommand<prmForceCartesianSet, geometry_msgs::Wrench>
+        (arm_component_name, "SetWrenchBody",
+         ros_namespace + "/set_wrench_body");
+    bridge.AddSubscriberToWriteCommand<prmForceCartesianSet, geometry_msgs::Wrench>
+        (arm_component_name, "SetWrenchSpatial",
+         ros_namespace + "/set_wrench_spatial");
 
     // events
     bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>

@@ -42,13 +42,17 @@ dvrk::console::console(mtsROSBridge & bridge,
         switch (armIter->second->mType) {
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
+        case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_KIN_SIMULATED:
             dvrk::add_topics_mtm(bridge, mNameSpace + "/" + name, name);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
+        case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
+        case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_KIN_SIMULATED:
             dvrk::add_topics_ecm(bridge, mNameSpace + "/" + name, name);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
+        case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_KIN_SIMULATED:
             dvrk::add_topics_psm(bridge, mNameSpace + "/" + name, name);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
@@ -126,13 +130,17 @@ void dvrk::console::Connect(void)
         switch (armIter->second->mType) {
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
+        case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_KIN_SIMULATED:
             dvrk::connect_bridge_mtm(mBridgeName, name);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
+        case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
+        case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_KIN_SIMULATED:
             dvrk::connect_bridge_ecm(mBridgeName, name);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
+        case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_KIN_SIMULATED:
             dvrk::connect_bridge_psm(mBridgeName, name);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
