@@ -46,6 +46,7 @@ class potentiometer_calibration:
         self._robot_name = robot_name
         self._last_potentiometers = []
         self._last_actuators = []
+        self._last_joints = []
         self._robot_state = 'uninitialized'
         self._robot_state_event = threading.Event()
         self._goal_reached = False
@@ -56,6 +57,9 @@ class potentiometer_calibration:
 
     def actuators_callback(self, data):
         self._last_actuators[:] = data.position
+
+    def joints_callback(self, data):
+        self._last_joints[:] = data.position
 
     def robot_state_callback(self, data):
         self._robot_state = data.data
@@ -98,6 +102,7 @@ class potentiometer_calibration:
         rospy.Subscriber(ros_namespace + '/goal_reached', Bool, self.goal_reached_callback)
         rospy.Subscriber(ros_namespace +  '/io/analog_input_pos_si', JointState, self.pot_callback)
         rospy.Subscriber(ros_namespace +  '/io/actuator_position', JointState, self.actuators_callback)
+        rospy.Subscriber(ros_namespace +  '/io/joint_position', JointState, self.joints_callback)
 
         # create node
         rospy.init_node('dvrk_calibrate_potentiometers', anonymous = True)
@@ -199,13 +204,13 @@ class potentiometer_calibration:
             nb_axis = 7 #number of joints being tested
         elif currentRobot.attrib["Name"] == "MTML":
             arm_type = "MTM"
-            lower_joint_limits = [-40 * d2r, -15 * d2r, -50 * d2r, -200 * d2r, -90 * d2r, -45 * d2r, -480 * d2r]
-            upper_joint_limits = [ 65 * d2r,  50 * d2r,  35 * d2r,   90 * d2r, 180 * d2r,  45 * d2r,  450 * d2r]
+            lower_joint_limits = [-15.0 * d2r, -10.0 * d2r, -10.0 * d2r, -180.0 * d2r, -80.0 * d2r, -40.0 * d2r, -100.0 * d2r]
+            upper_joint_limits = [ 35.0 * d2r,  20.0 * d2r,  10.0 * d2r,   80.0 * d2r, 160.0 * d2r,  40.0 * d2r,  100.0 * d2r]
             nb_axis = 7
         elif currentRobot.attrib["Name"] == "MTMR":
             arm_type = "MTM"
-            lower_joint_limits = [-65 * d2r, -15 * d2r, -50 * d2r, -90 * d2r, -90 * d2r, -45 * d2r, -480 * d2r]
-            upper_joint_limits = [ 40 * d2r,  50 * d2r,  35 * d2r, 200 * d2r, 180 * d2r,  45 * d2r,  450 * d2r]
+            lower_joint_limits = [-30.0 * d2r, -10.0 * d2r, -10.0 * d2r,  -80.0 * d2r, -80.0 * d2r, -40.0 * d2r, -100.0 * d2r]
+            upper_joint_limits = [ 15.0 * d2r,  20.0 * d2r,  10.0 * d2r,  180.0 * d2r, 160.0 * d2r,  40.0 * d2r,  100.0 * d2r]
             nb_axis = 7
         elif currentRobot.attrib["Name"] == "ECM":
             arm_type = "ECM"
@@ -268,8 +273,16 @@ class potentiometer_calibration:
                 for sample in range(nb_samples_per_position):
                     for axis in range(nb_axis):
                         average_potentiometer[axis].append(self._last_potentiometers[axis])
-                        average_encoder[axis].append(self._last_actuators[axis])
-                    writer.writerow(self._last_potentiometers + self._last_actuators)
+                        # on MTM, there is coupling and potentiometers are on joints
+                        if arm_type == "MTM":
+                            average_encoder[axis].append(self._last_joints[axis])
+                        else:
+                            average_encoder[axis].append(self._last_actuators[axis])
+                    # log data based on arm types
+                    if arm_type == "MTM":
+                        writer.writerow(self._last_potentiometers + self._last_joints)
+                    else:
+                        writer.writerow(self._last_potentiometers + self._last_actuators)
                     time.sleep(sleep_time_between_samples)
                     samples_so_far = samples_so_far + 1
                     sys.stdout.write('\rProgress %02.1f%%' % (float(samples_so_far) / float(total_samples) * 100.0))
