@@ -71,7 +71,7 @@ class potentiometer_calibration:
         joint_state = JointState()
         joint_state.position[:] = goal
         self._set_position_goal_joint_publisher.publish(joint_state)
-        self._goal_reached_event.wait(60) # 1 minute at most
+        self._goal_reached_event.wait(180) # 3 minutes at most
         if not self._goal_reached:
             rospy.signal_shutdown('failed to reach goal')
             sys.exit(-1)
@@ -114,19 +114,14 @@ class potentiometer_calibration:
         potentiometers = []
         range_of_motion_joint = []
 
-        average_encoder = [] #all encoder values collected at a sample position used for averaging the values of that position
-        average_potentiometer = [] #all potentiometer values collected at a sample position used for averaging the values of that position
-        d2r = math.pi / 180.0 #degrees to radians
-        r2d = 180.0 / math.pi #radians to degrees
+        average_encoder = [] # all encoder values collected at a sample position used for averaging the values of that position
+        average_potentiometer = [] # all potentiometer values collected at a sample position used for averaging the values of that position
+        d2r = math.pi / 180.0 # degrees to radians
+        r2d = 180.0 / math.pi # radians to degrees
 
         slopes = []
         offsets = []
         average_offsets = []
-
-        # Looking in XML assuming following tree structure
-        # config > Robot> Actuator > AnalogIn > VoltsToPosSI > Scale = ____   or   Offset = ____
-        xmlVoltsToPosSI = {}
-
 
         """
         alist = [1,2,3,5,6,37,9,4,9,2]   #list(int(raw_input("type a list \n")))
@@ -158,6 +153,10 @@ class potentiometer_calibration:
         IQR = Q3 - Q1
         for i in asortedlist
         """
+
+        # Looking in XML assuming following tree structure
+        # config > Robot> Actuator > AnalogIn > VoltsToPosSI > Scale = ____   or   Offset = ____
+        xmlVoltsToPosSI = {}
 
         tree = ET.parse(filename)
         root = tree.getroot()
@@ -192,6 +191,7 @@ class potentiometer_calibration:
                             if subSubChild.tag == "VoltsToPosSI":
                                 xmlVoltsToPosSI[actuatorId] = subSubChild
 
+        # set joint limits and number of axis based on arm type, using robot name
         if ("").join(list(currentRobot.attrib["Name"])[:-1]) == "PSM": #checks to see if the robot being tested is a PSM
             arm_type = "PSM"
             lower_joint_limits = [-60.0 * d2r, -30.0 * d2r, 0.005, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r]
@@ -209,10 +209,11 @@ class potentiometer_calibration:
             nb_axis = 7
         elif currentRobot.attrib["Name"] == "ECM":
             arm_type = "ECM"
-            lower_joint_limits = [-90 * d2r, -45 * d2r,   0, -90 * d2r]
-            upper_joint_limits = [ 90 * d2r,  65 * d2r, 235,  90 * d2r]
+            lower_joint_limits = [-60.0 * d2r, -40.0 * d2r,  0.005, -80.0 * d2r]
+            upper_joint_limits = [ 60.0 * d2r,  40.0 * d2r,  0.230,  80.0 * d2r]
             nb_axis = 4
 
+        # resize all arrays
         for axis in range(nb_axis):
             encoders.append([])
             offsets.append([])
@@ -222,6 +223,8 @@ class potentiometer_calibration:
             average_potentiometer.append([])
             range_of_motion_joint.append(math.fabs(upper_joint_limits[axis] - lower_joint_limits[axis]))
 
+
+        ######## scale calibration
         if calibrate == "scales":
 
             print "Calibrating scales using encoders as reference"
@@ -292,6 +295,8 @@ class potentiometer_calibration:
             # close file
             f.close()
 
+
+        ######## offset calibration
         if calibrate == "offsets":
 
             print "Calibrating offsets"
