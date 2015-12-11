@@ -39,6 +39,30 @@ def slope(x, y):
     result = (final_a - final_b) / (final_c - final_d)
     return result
 
+def outlier_removal(alist):
+    asortedlist = sorted(alist)
+    asortedlist2 = asortedlist
+    if len(asortedlist) % 2 == 0:
+        median = float(asortedlist[(len(asortedlist)/2)-1] + asortedlist[(len(asortedlist)/2)])/2
+        Q1list = asortedlist[:-((len(asortedlist))/2)]
+        Q3list = asortedlist[-((len(asortedlist))/2):]
+    elif len(asortedlist) % 2 == 1:
+        median = asortedlist[int((len(asortedlist)/2)+.5)]
+        Q1list = asortedlist[:-int(((len(asortedlist))/2)+1.5)]
+        Q3list = asortedlist[-int(((len(asortedlist))/2)+.5):]
+    if len(Q1list) % 2 == 0:
+        Q1 = float(Q1list[(len(Q1list)/2)-1] + Q1list[(len(Q1list)/2)])/2
+    elif len(Q1list) % 2 == 1:
+        Q1 = Q1list[int((len(Q1list)/2)+.5)]
+    if len(Q3list) % 2 == 0:
+        Q3 = float(Q3list[(len(Q3list)/2)-1] + Q3list[(len(Q3list)/2)])/2
+    elif len(Q3list) % 2 == 1:
+        Q3 = Q3list[int((len(Q3list)/2)+.5)]
+    IQR = Q3 - Q1
+    for i in asortedlist:
+        if i > ((1.5 * IQR) + median) or i < ((-1.5 * IQR) + median):
+            asortedlist2.remove(i)
+    return asortedlist2
 
 class potentiometer_calibration:
 
@@ -288,14 +312,11 @@ class potentiometer_calibration:
                     sys.stdout.write('\rProgress %02.1f%%' % (float(samples_so_far) / float(total_samples) * 100.0))
                     sys.stdout.flush()
 
-                """
+                
                 # remove outliers
-                for sample in range(nb_samples_per_position):
-                    for axis in range(nb_axis):
-                        if (average_potentiometer[axis][sample] - statistics.mean(average_potentiometer[axis]))/statistics.stdev(average_potentiometer[axis]) > 2:
-                            average_potentiometer[axis].pop(sample)
-                            average_encoder[axis].pop(sample)
-                """
+                for axis in range(nb_axis):
+                    average_potentiometer[axis] =  outlier_removal(average_potentiometer[axis])
+                
 
                 # compute averages
                 for axis in range(nb_axis):
