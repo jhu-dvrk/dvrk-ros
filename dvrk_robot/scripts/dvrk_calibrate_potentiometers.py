@@ -4,8 +4,6 @@
 # Date: 2015-09-24
 
 # Todo:
-# - test on ECM/MTM, use arm name to determine arm type, set number of axis and joint limits based on arm type
-# - for offset calibration, instead of using average of all, eliminate outliers using std dev?  Test to see if more stable
 # - test calibrating 3rd offset on PSM?
 
 import time
@@ -127,37 +125,6 @@ class potentiometer_calibration:
         slopes = []
         offsets = []
         average_offsets = []
-
-        """
-        alist = [1,2,3,5,6,37,9,4,9,2]   #list(int(raw_input("type a list \n")))
-        print alist
-        asortedlist = sorted(alist)
-        print asortedlist
-        if len(asortedlist) % 2 == 0:
-            median = float(asortedlist[(len(asortedlist)/2)-1] + asortedlist[(len(asortedlist)/2)])/2
-            print median
-            Q1list = asortedlist[:-((len(asortedlist))/2)]
-            print Q1list
-            Q3list = asortedlist[-((len(asortedlist))/2):]
-            print Q3list
-        elif len(asortedlist) % 2 == 1:
-            median = asortedlist[int((len(asortedlist)/2)+.5)]
-            print median
-            Q1list = asortedlist[:-int(((len(asortedlist))/2)+1.5)]
-            print Q1list
-            Q3list = asortedlist[-int(((len(asortedlist))/2)+.5):]
-            print Q3list
-        if len(Q1list) % 2 == 0:
-            Q1 = float(Q1list[(len(Q1list)/2)-1] + Q1list[(len(Q1list)/2)])/2
-        elif len(Q1list) % 2 == 1:
-            Q1 = Q1list[int((len(Q1list)/2)+.5)]
-        if len(Q3list) % 2 == 0:
-            Q3 = float(Q3list[(len(Q3list)/2)-1] + Q3list[(len(Q3list)/2)])/2
-        elif len(Q3list) % 2 == 1:
-            Q3 = Q3list[int((len(Q3list)/2)+.5)]
-        IQR = Q3 - Q1
-        for i in asortedlist
-        """
 
         # Looking in XML assuming following tree structure
         # config > Robot> Actuator > AnalogIn > VoltsToPosSI > Scale = ____   or   Offset = ____
@@ -287,15 +254,6 @@ class potentiometer_calibration:
                     samples_so_far = samples_so_far + 1
                     sys.stdout.write('\rProgress %02.1f%%' % (float(samples_so_far) / float(total_samples) * 100.0))
                     sys.stdout.flush()
-
-                """
-                # remove outliers
-                for sample in range(nb_samples_per_position):
-                    for axis in range(nb_axis):
-                        if (average_potentiometer[axis][sample] - statistics.mean(average_potentiometer[axis]))/statistics.stdev(average_potentiometer[axis]) > 2:
-                            average_potentiometer[axis].pop(sample)
-                            average_encoder[axis].pop(sample)
-                """
 
                 # compute averages
                 for axis in range(nb_axis):
