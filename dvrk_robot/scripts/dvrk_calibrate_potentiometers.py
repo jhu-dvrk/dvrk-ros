@@ -113,13 +113,14 @@ class potentiometer_calibration:
 
     def run(self, calibrate, filename):
         ros_namespace = '/dvrk/' + self._robot_name
-        self.set_robot_state = rospy.Publisher(ros_namespace + '/set_robot_state', String, latch=True)
+        self.set_robot_state = rospy.Publisher(ros_namespace + '/set_robot_state',
+                                               String, latch = True, queue_size = 1)
         self._set_position_goal_joint_publisher = rospy.Publisher(ros_namespace
                                                                   + '/set_position_goal_joint',
-                                                                  JointState, latch = True)
+                                                                  JointState, latch = True, queue_size = 1)
         self._set_robot_state_publisher = rospy.Publisher(ros_namespace
                                                           + '/set_robot_state',
-                                                          String, latch = True)
+                                                          String, latch = True, queue_size = 1)
         rospy.Subscriber(ros_namespace + '/robot_state', String, self.robot_state_callback)
         rospy.Subscriber(ros_namespace + '/goal_reached', Bool, self.goal_reached_callback)
         rospy.Subscriber(ros_namespace +  '/io/analog_input_pos_si', JointState, self.pot_callback)
