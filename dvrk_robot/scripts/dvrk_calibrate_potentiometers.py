@@ -12,6 +12,7 @@ import threading
 import math
 import sys
 import csv
+import datetime
 
 from std_msgs.msg import String, Bool
 from sensor_msgs.msg import JointState
@@ -37,35 +38,12 @@ def slope(x, y):
     result = (final_a - final_b) / (final_c - final_d)
     return result
 
-def outlier_removal(alist):
-    asortedlist = sorted(alist)
-    asortedlist2 = asortedlist
-    if len(asortedlist) % 2 == 0:
-        median = float(asortedlist[(len(asortedlist)/2)-1] + asortedlist[(len(asortedlist)/2)])/2
-        Q1list = asortedlist[:-((len(asortedlist))/2)]
-        Q3list = asortedlist[-((len(asortedlist))/2):]
-    elif len(asortedlist) % 2 == 1:
-        median = asortedlist[int((len(asortedlist)/2)+.5)]
-        Q1list = asortedlist[:-int(((len(asortedlist))/2)+1.5)]
-        Q3list = asortedlist[-int(((len(asortedlist))/2)+.5):]
-    if len(Q1list) % 2 == 0:
-        Q1 = float(Q1list[(len(Q1list)/2)-1] + Q1list[(len(Q1list)/2)])/2
-    elif len(Q1list) % 2 == 1:
-        Q1 = Q1list[int((len(Q1list)/2)+.5)]
-    if len(Q3list) % 2 == 0:
-        Q3 = float(Q3list[(len(Q3list)/2)-1] + Q3list[(len(Q3list)/2)])/2
-    elif len(Q3list) % 2 == 1:
-        Q3 = Q3list[int((len(Q3list)/2)+.5)]
-    IQR = Q3 - Q1
-    for i in asortedlist:
-        if i > ((1.5 * IQR) + median) or i < ((-1.5 * IQR) + median):
-            asortedlist2.remove(i)
-    return asortedlist2
-
 class potentiometer_calibration:
 
     def __init__(self, robot_name):
         self._robot_name = robot_name
+        self._serial_number = ""
+        self._data_received = False # use pots to make sure the ROS topics are OK
         self._last_potentiometers = []
         self._last_actuators = []
         self._last_joints = []
@@ -76,6 +54,7 @@ class potentiometer_calibration:
 
     def pot_callback(self, data):
         self._last_potentiometers[:] = data.position
+        self._data_received = True
 
     def actuators_callback(self, data):
         self._last_actuators[:] = data.position
@@ -163,8 +142,9 @@ class potentiometer_calibration:
             if stuffInRoot[index].tag == "Robot":
                 currentRobot = stuffInRoot[index]
                 if currentRobot.attrib["Name"] == self._robot_name:
+                    self._serial_number = currentRobot.attrib["SN"]
                     xmlRobot = currentRobot
-                    print "Succesfully found robot \"", currentRobot.attrib["Name"], "\" in XML file"
+                    print "Succesfully found robot \"", currentRobot.attrib["Name"], "\", Serial number: ", self._serial_number, " in XML file"
                     robotFound = True
                 else:
                     print "Found robot \"", currentRobot.attrib["Name"], "\", while looking for \"", self._robot_name, "\""
@@ -220,14 +200,28 @@ class potentiometer_calibration:
             average_potentiometer.append([])
             range_of_motion_joint.append(math.fabs(upper_joint_limits[axis] - lower_joint_limits[axis]))
 
+        # Check that everything is working
+        if not self._data_received:
+            print "It seems the console for ", self._robot_name, " is not started or is not publishing the IO topics"
+            print "Make sure you use \"rosrun dvrk_robot dvrk_console_json\" with the -i option"
+            sys.exit("Start the dvrk_console_json with the proper options first")
+
+        print "The serial number found in the XML file is: ", self._serial_number
+        print "Make sure the dvrk_console_json is using the same configuration file.  Serial number can be found in GUI tab \"IO\"."
+        ok = raw_input("Press `c` and [enter] to continue\n")
+        if ok != "c": 
+            sys.exit("Quitting")
 
         ######## scale calibration
+        now = datetime.datetime.now()
+        now_string = now.strftime("%Y-%m-%d-%H:%M")
+        
         if calibrate == "scales":
 
             print "Calibrating scales using encoders as reference"
 
             # write all values to csv file
-            csv_file_name = 'pot_calib_scales_' + ('.').join(filename.split('.')[:-1]) + '.csv'
+            csv_file_name = 'pot_calib_scales_' + self._robot_name + '-' + self._serial_number + '-' + now_string + '.csv'
             print "Values will be saved in: ", csv_file_name
             f = open(csv_file_name, 'wb')
             writer = csv.writer(f)
@@ -298,7 +292,7 @@ class potentiometer_calibration:
             print "Calibrating offsets"
 
             # write all values to csv file
-            csv_file_name = 'pot_calib_offsets_' + ('.').join(filename.split('.')[:-1]) + '.csv'
+            csv_file_name = 'pot_calib_offsets_' + self._robot_name + '-' + self._serial_number + '-' + now_string + '.csv'
             print "Values will be saved in: ", csv_file_name
             f = open(csv_file_name, 'wb')
             writer = csv.writer(f)
@@ -369,7 +363,8 @@ class potentiometer_calibration:
         save = raw_input("To save this in new file press 'y' followed by [enter]\n")
         if save == "y":
             tree.write(filename + "-new")
-            print 'Results saved in ', filename + '-new. Restart your dVRK application with the new file!'
+            print 'Results saved in', filename + '-new. Restart your dVRK application with the new file!'
+            print 'To copy the new file over the existing one: cp', filename + '-new', filename
 
 if __name__ == '__main__':
     if (len(sys.argv) != 4):
