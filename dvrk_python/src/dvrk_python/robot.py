@@ -696,7 +696,7 @@ class robot:
         return True
 
     def set_wrench_spatial_force(self, force):
-        "Apply a wrench with force only, torque is null"
+        "Apply a wrench with force only (spatial), torque is null"
         if (not self.__dvrk_set_state('DVRK_EFFORT_CARTESIAN')):
             return False
         w = Wrench()
@@ -707,3 +707,16 @@ class robot:
         w.torque.y = 0.0
         w.torque.z = 0.0
         self.set_wrench_spatial_publisher.publish(w)
+
+    def set_wrench_body_force(self, force):
+        "Apply a wrench with force only (body), torque is null"
+        if (not self.__dvrk_set_state('DVRK_EFFORT_CARTESIAN')):
+            return False
+        w = Wrench()
+        w.force.x = force[0]
+        w.force.y = force[1]
+        w.force.z = force[2]
+        w.torque.x = 0.0
+        w.torque.y = 0.0
+        w.torque.z = 0.0
+        self.set_wrench_body_publisher.publish(w)
