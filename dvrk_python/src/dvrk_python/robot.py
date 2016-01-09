@@ -77,6 +77,7 @@ from std_msgs.msg import String, Bool, Float32
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import Vector3
 from geometry_msgs.msg import Quaternion
+from geometry_msgs.msg import Wrench
 from sensor_msgs.msg import JointState
 
 from code import InteractiveConsole
@@ -128,18 +129,22 @@ class robot:
         # publishers
         frame = Frame()
         full_ros_namespace = self.__ros_namespace + self.__robot_name
-        self.set_robot_state = rospy.Publisher(full_ros_namespace + '/set_robot_state',
-                                               String, latch=True, queue_size=1)
-        self.set_position_joint = rospy.Publisher(full_ros_namespace + '/set_position_joint',
-                                                  JointState, latch=True, queue_size=1)
-        self.set_position_goal_joint = rospy.Publisher(full_ros_namespace + '/set_position_goal_joint',
-                                                       JointState, latch=True, queue_size=1)
-        self.set_position_cartesian = rospy.Publisher(full_ros_namespace + '/set_position_cartesian',
-                                                      Pose, latch=True, queue_size=1)
-        self.set_position_goal_cartesian = rospy.Publisher(full_ros_namespace + '/set_position_goal_cartesian',
-                                                           Pose, latch=True, queue_size=1)
-        self.set_jaw_position = rospy.Publisher(full_ros_namespace + '/set_jaw_position',
-                                                Float32, latch=True, queue_size=1)
+        self.set_robot_state_publisher = rospy.Publisher(full_ros_namespace + '/set_robot_state',
+                                                         String, latch=True, queue_size = 1)
+        self.set_position_joint_publisher = rospy.Publisher(full_ros_namespace + '/set_position_joint',
+                                                            JointState, latch=True, queue_size = 1)
+        self.set_position_goal_joint_publisher = rospy.Publisher(full_ros_namespace + '/set_position_goal_joint',
+                                                                 JointState, latch=True, queue_size = 1)
+        self.set_position_cartesian_publisher = rospy.Publisher(full_ros_namespace + '/set_position_cartesian',
+                                                                Pose, latch=True, queue_size = 1)
+        self.set_position_goal_cartesian_publisher = rospy.Publisher(full_ros_namespace + '/set_position_goal_cartesian',
+                                                                     Pose, latch=True, queue_size = 1)
+        self.set_jaw_position_publisher = rospy.Publisher(full_ros_namespace + '/set_jaw_position',
+                                                          Float32, latch=True, queue_size = 1)
+        self.set_wrench_body_publisher = rospy.Publisher(full_ros_namespace + '/set_wrench_body',
+                                                         Wrench, latch=True, queue_size = 1)
+        self.set_wrench_spatial_publisher = rospy.Publisher(full_ros_namespace + '/set_wrench_spatial',
+                                                            Wrench, latch=True, queue_size = 1)
 
         # subscribers
         rospy.Subscriber(full_ros_namespace + '/robot_state',
@@ -212,7 +217,7 @@ class robot:
         if (self.__robot_state == state):
             return True
         self.__robot_state_event.clear()
-        self.set_robot_state.publish(state)
+        self.set_robot_state_publisher.publish(state)
         self.__robot_state_event.wait(timeout)
         # if the state is not changed return False
         if (self.__robot_state != state):
@@ -225,7 +230,7 @@ class robot:
         the robot. This method requries the robot name."""
         rospy.loginfo(rospy.get_caller_id() + ' -> start homing')
         self.__robot_state_event.clear()
-        self.set_robot_state.publish('Home')
+        self.set_robot_state_publisher.publish('Home')
         counter = 10 # up to 10 transitions to get ready
         while (counter > 0):
             self.__robot_state_event.wait(20) # give up to 20 secs for each transition
@@ -346,9 +351,9 @@ class robot:
             while i < len(type_list):
                 print_medium2 = ' '+ str(type_list[i])
                 print_type2 += print_medium2
-                if(type_list[i] == list):
-                    i+=1
-                i+=1
+                if (type_list[i] == list):
+                    i += 1
+                i += 1
             print print_type2
         return False
 
@@ -376,18 +381,18 @@ class robot:
         "Close the arm gripper"
         if (not self.__dvrk_set_state('DVRK_POSITION_GOAL_CARTESIAN')):
             return False
-        self.set_jaw_position.publish(-10.0 * math.pi / 180.0);
+        self.set_jaw_position_publisher.publish(-10.0 * math.pi / 180.0);
 
     def open_gripper(self):
         "Open the arm gripper"
         if (not self.__dvrk_set_state('DVRK_POSITION_GOAL_CARTESIAN')):
             return False
-        self.set_jaw_position.publish(80.0 * math.pi / 180.0);
+        self.set_jaw_position_publisher.publish(80.0 * math.pi / 180.0);
 
     def delta_move_cartesian(self, delta_input, interpolate=True):
-        """Incremental translation in cartesian space.
+        """Incremental motion in cartesian space.
 
-        :param delta_input: the incremental translation you want to make
+        :param delta_input: the incremental motion you want to make
         :param interpolate: see  :ref:`interpolate <interpolate>`
         """
         rospy.loginfo(rospy.get_caller_id() + ' -> starting delta move cartesian translation')
@@ -536,7 +541,7 @@ class robot:
         if (not self.__dvrk_set_state('DVRK_POSITION_CARTESIAN')):
             return False
         # go to that position directly
-        self.set_position_cartesian.publish(end_position)
+        self.set_position_cartesian_publisher.publish(end_position)
         rospy.loginfo(rospy.get_caller_id() + ' <- completing move cartesian direct')
         return True
 
@@ -564,7 +569,7 @@ class robot:
         # the goal is originally not reached
         self.__goal_reached = False
         # recursively call this function until end is reached
-        self.set_position_goal_cartesian.publish(end_position)
+        self.set_position_goal_cartesian_publisher.publish(end_position)
         self.__goal_reached_event.wait(20) # 1 minute at most
         if not self.__goal_reached:
             return False
@@ -656,7 +661,7 @@ class robot:
             # go to that position directly
             joint_state = JointState()
             joint_state.position[:] = end_joint
-            self.set_position_joint.publish(joint_state)
+            self.set_position_joint_publisher.publish(joint_state)
             rospy.loginfo(rospy.get_caller_id() + ' <- completing move joint direct')
             return True
 
@@ -683,9 +688,35 @@ class robot:
         :rtype: Bool"""
         self.__goal_reached_event.clear()
         self.__goal_reached = False
-        self.set_position_goal_joint.publish(end_position)
+        self.set_position_goal_joint_publisher.publish(end_position)
         self.__goal_reached_event.wait(20) # 1 minute at most
         if not self.__goal_reached:
             return False
         rospy.loginfo(rospy.get_caller_id() + ' -> completing set position goal joint publish and wait')
         return True
+
+    def set_wrench_spatial_force(self, force):
+        "Apply a wrench with force only (spatial), torque is null"
+        if (not self.__dvrk_set_state('DVRK_EFFORT_CARTESIAN')):
+            return False
+        w = Wrench()
+        w.force.x = force[0]
+        w.force.y = force[1]
+        w.force.z = force[2]
+        w.torque.x = 0.0
+        w.torque.y = 0.0
+        w.torque.z = 0.0
+        self.set_wrench_spatial_publisher.publish(w)
+
+    def set_wrench_body_force(self, force):
+        "Apply a wrench with force only (body), torque is null"
+        if (not self.__dvrk_set_state('DVRK_EFFORT_CARTESIAN')):
+            return False
+        w = Wrench()
+        w.force.x = force[0]
+        w.force.y = force[1]
+        w.force.z = force[2]
+        w.torque.x = 0.0
+        w.torque.y = 0.0
+        w.torque.z = 0.0
+        self.set_wrench_body_publisher.publish(w)

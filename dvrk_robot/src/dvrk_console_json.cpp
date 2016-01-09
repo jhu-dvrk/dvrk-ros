@@ -29,6 +29,8 @@ http://www.cisst.org/cisst/license.txt.
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsoleQt.h>
 
 #include <QApplication>
+#include <QLocale>
+#include <clocale>
 
 #include <ros/ros.h>
 #include <cisst_ros_bridge/mtsROSBridge.h>
@@ -48,6 +50,9 @@ void fileExists(const std::string & description, const std::string & filename)
 
 int main(int argc, char ** argv)
 {
+    // replace the C++ global locale by C locale
+    std::setlocale(LC_ALL, "C");
+
     // log configuration
     cmnLogger::SetMask(CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskDefaultLog(CMN_LOG_ALLOW_ALL);
@@ -113,6 +118,7 @@ int main(int argc, char ** argv)
     mtsIntuitiveResearchKitConsoleQt * consoleQt = 0;
     // add all Qt widgets if needed
     if (hasQt) {
+        QLocale::setDefault(QLocale::English);
         application = new QApplication(argc, argv);
         consoleQt = new mtsIntuitiveResearchKitConsoleQt();
         consoleQt->Configure(console);

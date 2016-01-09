@@ -45,6 +45,7 @@ dvrk::console::console(mtsROSBridge & bridge,
             dvrk::add_topics_mtm(bridge, mNameSpace + "/" + name, name);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
+        case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
             dvrk::add_topics_ecm(bridge, mNameSpace + "/" + name, name);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
@@ -129,6 +130,7 @@ void dvrk::console::Connect(void)
             dvrk::connect_bridge_mtm(mBridgeName, name);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
+        case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
             dvrk::connect_bridge_ecm(mBridgeName, name);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
