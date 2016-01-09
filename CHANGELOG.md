@@ -1,6 +1,21 @@
 Change log
 ==========
 
+1.3.0 (2016-01-08)
+==================
+
+* API changes:
+  * Python: now import as a package using `import dvrk_python.robot`
+* Deprecated features:
+  * None
+* New features:
+  * Potentiometer calibration script: `dvrk_robot/scripts/dvrk_calibrate_potentiometers.py`
+  * dvrk_robot: added low level IO data colelction for pots/joints/actuators (see potentiometer calibration wiki)
+  * dvrk_robot: added set_wrench topics
+  * dvrk_robot: console supports kinematic simulation with RViz (optional)
+* Bug fixes:
+  * None
+
 1.1.1 (2015-10-18)
 ==================
 

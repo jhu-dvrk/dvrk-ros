@@ -1,5 +1,5 @@
 #
-# (C) Copyright 2015 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2015-2016 Johns Hopkins University (JHU), All Rights Reserved.
 #
 # --- begin cisst license - do not edit ---
 #
@@ -57,9 +57,9 @@ if (cisst_FOUND_AS_REQUIRED)
                   DEPENDS ${REQUIRED_CISST_LIBRARIES})
 
   # sawRobotIO1394 has been compiled within cisst, we should find it automatically
-  cisst_find_saw_component (sawRobotIO1394 1.2.0 REQUIRED)
-  cisst_find_saw_component (sawIntuitiveResearchKit 1.2.0 REQUIRED)
-  cisst_find_saw_component (sawControllers 1.2.0 REQUIRED)
+  cisst_find_saw_component (sawRobotIO1394          1.3.0 REQUIRED)
+  cisst_find_saw_component (sawIntuitiveResearchKit 1.3.0 REQUIRED)
+  cisst_find_saw_component (sawControllers          1.3.0 REQUIRED)
   cisst_find_saw_component (sawConstraintController REQUIRED)
 
   include_directories (
