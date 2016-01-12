@@ -1,16 +1,19 @@
-"""This class presents a robot api for the da Vinci Research Kit.
+"""This class presents a arm api for the da Vinci Research Kit.
 Remember that for this program to work, you will need to import the
-robot class, this can be done by `import robot` an well as initialize
-the robot. For example, if we want to create a robot called `r`, for
-robot `PSM1`, we will simply type `r = robot.robot('PSM1')` in iPython
-and `r = robot('PSM1')` in python.
+arm class, this can be done by `from dvrk.arm import arm` as well as
+initialize the arm. For example, if we want to create a arm called
+`r`, for arm `PSM1`, we will simply type `r = arm('PSM1')`.
+
+For arm specific features, import the class psm or mtm (e.g. `from
+dvrk.psm import psm`) and initialize your instance using `psm1 =
+psm('PSM1')`.
 
 .. _interpolate:
 
 Interpolation
 =============
 
-If the `interpolation` flag is set to `True` (default), the robot
+If the `interpolation` flag is set to `True` (default), the arm
 controller will use a `trajectory generator
 <http://ttuadvancedrobotics.wikidot.com/trajectory-planning-for-point-to-point-motion>`_
 to create set points between the current position and the position
@@ -34,7 +37,7 @@ likely trigger a `PID tracking error <https://en.wikipedia.org/wiki/PID_controll
 Current vs Desired position
 ===========================
 
-The robot controller can provide two different positions at any given
+The arm controller can provide two different positions at any given
 time.  The current position is the position measured by the sensors
 (in most cases, encoders).  This position defines the physical
 position of the system.  The desired joint position is the position
@@ -47,12 +50,12 @@ the desired position is not the final goal but the last set point
 generated for the trajectory.
 
 Desired positions might differ from the physical positions due to
-`forces (gravity, friction, ...) <https://en.wikipedia.org/wiki/Force>`_ applied on the robot.  When
+`forces (gravity, friction, ...) <https://en.wikipedia.org/wiki/Force>`_ applied on the arm.  When
 implementing an incremental move, one should always use the last
-desired position.  If one needs to track the robot, it is better to
+desired position.  If one needs to track the arm, it is better to
 use the current position.
 
-Robot API
+Arm API
 =========
 
 """
@@ -73,15 +76,15 @@ import math
 from PyKDL import *
 from tf import transformations
 from tf_conversions import posemath
-from std_msgs.msg import String, Bool, Float32
+from std_msgs.msg import String, Bool, Float32, Empty
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import Vector3
 from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import Wrench
 from sensor_msgs.msg import JointState
 
-from code import InteractiveConsole
-from imp import new_module
+# from code import InteractiveConsole
+# from imp import new_module
 
 #class Console(InteractiveConsole):
 #    def __init__(self, names=None):
@@ -98,19 +101,24 @@ from imp import new_module
 #    def preprocess(source):
 #        return source
 
-class robot:
-    """Simple robot API wrapping around ROS messages
+class arm:
+    """Simple arm API wrapping around ROS messages
     """
 
-    # initialize the robot
-    def __init__(self, robot_name, ros_namespace = '/dvrk/'):
+    # initialize the arm
+    def __init__(self, arm_name, ros_namespace = '/dvrk/'):
+        # base class constructor in separate method so it can be called in derived classes
+        self.__init_arm(arm_name, ros_namespace)
+
+
+    def __init_arm(self, arm_name, ros_namespace = '/dvrk/'):
         """Constructor.  This initializes a few data members.It
-        requires a robot name, this will be used to find the ROS
-        topics for the robot being controlled.  For example if the
+        requires a arm name, this will be used to find the ROS
+        topics for the arm being controlled.  For example if the
         user wants `PSM1`, the ROS topics will be from the namespace
         `/dvrk/PSM1`"""
         # data members, event based
-        self.__robot_name = robot_name
+        self.__arm_name = arm_name
         self.__ros_namespace = ros_namespace
         self.__robot_state = 'uninitialized'
         self.__robot_state_event = threading.Event()
@@ -128,46 +136,46 @@ class robot:
 
         # publishers
         frame = Frame()
-        full_ros_namespace = self.__ros_namespace + self.__robot_name
-        self.set_robot_state_publisher = rospy.Publisher(full_ros_namespace + '/set_robot_state',
+        self.__full_ros_namespace = self.__ros_namespace + self.__arm_name
+        self.set_robot_state_publisher = rospy.Publisher(self.__full_ros_namespace + '/set_robot_state',
                                                          String, latch=True, queue_size = 1)
-        self.set_position_joint_publisher = rospy.Publisher(full_ros_namespace + '/set_position_joint',
+        self.set_position_joint_publisher = rospy.Publisher(self.__full_ros_namespace + '/set_position_joint',
                                                             JointState, latch=True, queue_size = 1)
-        self.set_position_goal_joint_publisher = rospy.Publisher(full_ros_namespace + '/set_position_goal_joint',
+        self.set_position_goal_joint_publisher = rospy.Publisher(self.__full_ros_namespace + '/set_position_goal_joint',
                                                                  JointState, latch=True, queue_size = 1)
-        self.set_position_cartesian_publisher = rospy.Publisher(full_ros_namespace + '/set_position_cartesian',
+        self.set_position_cartesian_publisher = rospy.Publisher(self.__full_ros_namespace + '/set_position_cartesian',
                                                                 Pose, latch=True, queue_size = 1)
-        self.set_position_goal_cartesian_publisher = rospy.Publisher(full_ros_namespace + '/set_position_goal_cartesian',
+        self.set_position_goal_cartesian_publisher = rospy.Publisher(self.__full_ros_namespace + '/set_position_goal_cartesian',
                                                                      Pose, latch=True, queue_size = 1)
-        self.set_jaw_position_publisher = rospy.Publisher(full_ros_namespace + '/set_jaw_position',
-                                                          Float32, latch=True, queue_size = 1)
-        self.set_wrench_body_publisher = rospy.Publisher(full_ros_namespace + '/set_wrench_body',
+        self.set_wrench_body_publisher = rospy.Publisher(self.__full_ros_namespace + '/set_wrench_body',
                                                          Wrench, latch=True, queue_size = 1)
-        self.set_wrench_spatial_publisher = rospy.Publisher(full_ros_namespace + '/set_wrench_spatial',
+        self.set_wrench_body_orientation_absolute_publisher = rospy.Publisher(self.__full_ros_namespace + '/set_wrench_body_orientation_absolute',
+                                                                              Bool, latch=True, queue_size = 1)
+        self.set_wrench_spatial_publisher = rospy.Publisher(self.__full_ros_namespace + '/set_wrench_spatial',
                                                             Wrench, latch=True, queue_size = 1)
 
         # subscribers
-        rospy.Subscriber(full_ros_namespace + '/robot_state',
+        rospy.Subscriber(self.__full_ros_namespace + '/robot_state',
                          String, self.__robot_state_callback)
-        rospy.Subscriber(full_ros_namespace + '/goal_reached',
+        rospy.Subscriber(self.__full_ros_namespace + '/goal_reached',
                          Bool, self.__goal_reached_callback)
-        rospy.Subscriber(full_ros_namespace + '/state_joint_desired',
+        rospy.Subscriber(self.__full_ros_namespace + '/state_joint_desired',
                          JointState, self.__state_joint_desired_callback)
-        rospy.Subscriber(full_ros_namespace + '/position_cartesian_desired',
+        rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_desired',
                          Pose, self.__position_cartesian_desired_callback)
-        rospy.Subscriber(full_ros_namespace + '/state_joint_current',
+        rospy.Subscriber(self.__full_ros_namespace + '/state_joint_current',
                          JointState, self.__state_joint_current_callback)
-        rospy.Subscriber(full_ros_namespace + '/position_cartesian_current',
+        rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_current',
                          Pose, self.__position_cartesian_current_callback)
         # create node
-        # rospy.init_node('robot_api', anonymous = True)
-        rospy.init_node('robot_api',anonymous = True, log_level = rospy.WARN)
-        rospy.loginfo(rospy.get_caller_id() + ' -> started robot: ' + self.__robot_name)
+        # rospy.init_node('arm_api', anonymous = True)
+        rospy.init_node('arm_api',anonymous = True, log_level = rospy.WARN)
+        rospy.loginfo(rospy.get_caller_id() + ' -> started arm: ' + self.__arm_name)
 
     def __robot_state_callback(self, data):
-        """Callback for robot state.
+        """Callback for arm state.
 
-        :param data: the current robot state"""
+        :param data: the current arm state"""
         rospy.loginfo(rospy.get_caller_id() + " -> current state is %s", data.data)
         self.__robot_state = data.data
         self.__robot_state_event.set()
@@ -210,9 +218,9 @@ class robot:
     def __dvrk_set_state(self, state, timeout = 5):
         """Simple set state with block.
 
-        :param state: the robot state
-        :param timeout: the lenghth you want to wait for robot to change state
-        :return: whether or not the robot state has been successfuly set
+        :param state: the arm state
+        :param timeout: the lenghth you want to wait for arm to change state
+        :return: whether or not the arm state has been successfuly set
         :rtype: Bool"""
         if (self.__robot_state == state):
             return True
@@ -226,8 +234,8 @@ class robot:
         return True
 
     def home(self):
-        """This method will provide power to the robot as will as home
-        the robot. This method requries the robot name."""
+        """This method will provide power to the arm as will as home
+        the arm. This method requries the arm name."""
         rospy.loginfo(rospy.get_caller_id() + ' -> start homing')
         self.__robot_state_event.clear()
         self.set_robot_state_publisher.publish('Home')
@@ -245,7 +253,7 @@ class robot:
         rospy.loginfo(rospy.get_caller_id() + ' <- homing complete')
 
     def shutdown(self):
-        """Stops providing power to the robot."""
+        """Stops providing power to the arm."""
         rospy.loginfo(rospy.get_caller_id() + ' -> end homing')
         self.__dvrk_set_state('DVRK_UNINITIALIZED', 20)
 
@@ -253,51 +261,51 @@ class robot:
         return self.__robot_state
 
     def get_current_cartesian_position(self):
-        """Gets the :ref:`current cartesian position <currentvdesired>` of the robot in terms of cartesian space.
+        """Gets the :ref:`current cartesian position <currentvdesired>` of the arm in terms of cartesian space.
 
-        :returns: the current position of the robot in cartesian space
+        :returns: the current position of the arm in cartesian space
         :rtype: `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_"""
         return self.__position_cartesian_current
 
     def get_current_joint_position(self):
-        """Gets the :ref:`current joint position <currentvdesired>` of the robot in terms of joint space.
+        """Gets the :ref:`current joint position <currentvdesired>` of the arm in terms of joint space.
 
-        :returns: the current position of the robot in joint space
+        :returns: the current position of the arm in joint space
         :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
         return self.__position_joint_current
 
     def get_current_joint_velocity(self):
-        """Gets the :ref:`current joint velocity <currentvdesired>` of the robot in terms of joint space.
+        """Gets the :ref:`current joint velocity <currentvdesired>` of the arm in terms of joint space.
 
-        :returns: the current position of the robot in joint space
+        :returns: the current position of the arm in joint space
         :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
         return self.__velocity_joint_current
 
     def get_current_joint_effort(self):
-        """Gets the :ref:`current joint effort <currentvdesired>` of the robot in terms of joint space.
+        """Gets the :ref:`current joint effort <currentvdesired>` of the arm in terms of joint space.
 
-        :returns: the current position of the robot in joint space
+        :returns: the current position of the arm in joint space
         :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
         return self.__effort_joint_current
 
     def get_desired_cartesian_position(self):
-        """Get the :ref:`desired cartesian position <currentvdesired>` of the robot in terms of caretsian space.
+        """Get the :ref:`desired cartesian position <currentvdesired>` of the arm in terms of caretsian space.
 
-        :returns: the desired position of the robot in cartesian space
+        :returns: the desired position of the arm in cartesian space
         :rtype: `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_"""
         return self.__position_cartesian_desired
 
     def get_desired_joint_position(self):
-        """Gets the :ref:`desired joint position <currentvdesired>` of the robot in terms of joint space.
+        """Gets the :ref:`desired joint position <currentvdesired>` of the arm in terms of joint space.
 
-        :returns: the desired position of the robot in joint space
+        :returns: the desired position of the arm in joint space
         :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
         return self.__position_joint_desired
 
     def get_desired_joint_effort(self):
-        """Gets the :ref:`desired joint effort <currentvdesired>` of the robot in terms of joint space.
+        """Gets the :ref:`desired joint effort <currentvdesired>` of the arm in terms of joint space.
 
-        :returns: the desired effort of the robot in joint space
+        :returns: the desired effort of the arm in joint space
         :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
         return self.__effort_joint_desired
 
@@ -376,18 +384,6 @@ class robot:
             # check_list[:] = superspace.check_list
             # print 'check_list', check_list
             return False ####   should be False or actually based on user's return code from console
-
-    def close_gripper(self):
-        "Close the arm gripper"
-        if (not self.__dvrk_set_state('DVRK_POSITION_GOAL_CARTESIAN')):
-            return False
-        self.set_jaw_position_publisher.publish(-10.0 * math.pi / 180.0);
-
-    def open_gripper(self):
-        "Open the arm gripper"
-        if (not self.__dvrk_set_state('DVRK_POSITION_GOAL_CARTESIAN')):
-            return False
-        self.set_jaw_position_publisher.publish(80.0 * math.pi / 180.0);
 
     def delta_move_cartesian(self, delta_input, interpolate=True):
         """Incremental motion in cartesian space.
@@ -530,7 +526,7 @@ class robot:
             rospy.loginfo(rospy.get_caller_id() + ' -> completing absolute move cartesian frame')
 
     def __move_cartesian_direct(self, end_frame):
-        """Move the robot to the end position by passing the trajectory generator.
+        """Move the arm to the end position by passing the trajectory generator.
 
         :param end_frame: the ending `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_
         :returns: true if you had successfully move
@@ -546,7 +542,7 @@ class robot:
         return True
 
     def __move_cartesian_goal(self, end_frame):
-        """Move the robot to the end position by providing a goal for trajectory generator.
+        """Move the arm to the end position by providing a goal for trajectory generator.
 
         :param end_frame: the ending `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_
         :returns: true if you had succesfully move
@@ -649,7 +645,7 @@ class robot:
         rospy.loginfo(rospy.get_caller_id() + ' -> completing absolute move joint vector')
 
     def __move_joint_direct(self, end_joint):
-        """Move the robot to the end vector by passing the trajectory generator.
+        """Move the arm to the end vector by passing the trajectory generator.
 
         :param end_joint: the list of joints in which you should conclude movement
         :returns: true if you had succesfully move
@@ -666,7 +662,7 @@ class robot:
             return True
 
     def __move_joint_goal(self, end_joint):
-        """Move the robot to the end vector by bypassing the trajectory generator.
+        """Move the arm to the end vector by bypassing the trajectory generator.
 
         :param end_joint: the list of joints in which you should conclude movement
         :returns: true if you had succesfully move
@@ -707,6 +703,12 @@ class robot:
         w.torque.y = 0.0
         w.torque.z = 0.0
         self.set_wrench_spatial_publisher.publish(w)
+
+    def set_wrench_body_orientation_absolute(self, absolute):
+        "Apply body wrench using body orientation (relative/False) or reference frame (absolute/True)"
+        m = Bool()
+        m.data = absolute
+        self.set_wrench_body_orientation_absolute_publisher.publish(m)
 
     def set_wrench_body_force(self, force):
         "Apply a wrench with force only (body), torque is null"

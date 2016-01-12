@@ -70,7 +70,7 @@ int main(int argc, char ** argv)
     cmnCommandLineOptions options;
     std::string jsonMainConfigFile;
     std::string rosNamespace = "/dvrk/";
-    double rosPeriod = 20.0 * cmn_ms;
+    double rosPeriod = 10.0 * cmn_ms;
     std::list<std::string> jsonIOConfigFiles;
 
     options.AddOptionOneValue("j", "json-config",
@@ -78,7 +78,7 @@ int main(int argc, char ** argv)
                               cmnCommandLineOptions::REQUIRED_OPTION, &jsonMainConfigFile);
 
     options.AddOptionOneValue("p", "ros-period",
-                              "period in seconds to read all arms/teleop components and publish (default 0.02, 20 ms)",
+                              "period in seconds to read all arms/teleop components and publish (default 0.01, 10 ms, 100Hz)",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &rosPeriod);
 
     options.AddOptionOneValue("n", "ros-namespace",

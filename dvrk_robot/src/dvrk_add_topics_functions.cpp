@@ -5,7 +5,7 @@
   Author(s):  Zihan Chen, Anton Deguet
   Created on: 2015-04-33
 
-  (C) Copyright 2015 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2016 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -104,6 +104,9 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     bridge.AddSubscriberToWriteCommand<prmForceCartesianSet, geometry_msgs::Wrench>
         (arm_component_name, "SetWrenchBody",
          ros_namespace + "/set_wrench_body");
+    bridge.AddSubscriberToWriteCommand<bool, std_msgs::Bool>
+        (arm_component_name, "SetWrenchBodyOrientationAbsolute",
+         ros_namespace + "/set_wrench_body_orientation_absolute");
     bridge.AddSubscriberToWriteCommand<prmForceCartesianSet, geometry_msgs::Wrench>
         (arm_component_name, "SetWrenchSpatial",
          ros_namespace + "/set_wrench_spatial");
@@ -138,6 +141,12 @@ void dvrk::add_topics_mtm(mtsROSBridge & bridge,
     dvrk::add_topics_arm(bridge, ros_namespace, mtm_component_name);
 
     // mtm specific API
+    bridge.AddSubscriberToWriteCommand<vctMatRot3, geometry_msgs::Quaternion>
+        (mtm_component_name, "LockOrientation",
+         ros_namespace + "/lock_orientation");
+    bridge.AddSubscriberToVoidCommand
+        (mtm_component_name, "UnlockOrientation",
+         ros_namespace + "/unlock_orientation");
     bridge.AddPublisherFromCommandRead<double, std_msgs::Float32>
         (mtm_component_name, "GetGripperPosition",
          ros_namespace + "/gripper_position_current");
