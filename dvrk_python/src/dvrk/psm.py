@@ -9,7 +9,8 @@ class psm(arm):
         self._arm__init_arm(psm_name, ros_namespace)
         
         # publishers
-        self.set_jaw_position_publisher = rospy.Publisher(self._arm__full_ros_namespace + '/set_jaw_position',
+        self.set_jaw_position_publisher = rospy.Publisher(self._arm__full_ros_namespace
+                                                          + '/set_jaw_position',
                                                           Float32, latch=True, queue_size = 1)
 
     def close_jaw(self):
