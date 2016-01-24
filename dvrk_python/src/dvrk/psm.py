@@ -16,10 +16,19 @@ class psm(arm):
         "Close the tool jaw"
         if (not self._arm__dvrk_set_state('DVRK_POSITION_GOAL_CARTESIAN')):
             return False
-        self.set_jaw_position_publisher.publish(-10.0 * math.pi / 180.0);
+        self.set_jaw_position_publisher.publish(-10.0 * math.pi / 180.0)
 
     def open_jaw(self):
         "Open the tool jaw"
         if (not self._arm__dvrk_set_state('DVRK_POSITION_GOAL_CARTESIAN')):
             return False
-        self.set_jaw_position_publisher.publish(80.0 * math.pi / 180.0);
+        self.set_jaw_position_publisher.publish(80.0 * math.pi / 180.0)
+
+    def set_jaw(self, set_jaw):
+        "Set the jaw tool to set_jaw"
+        if (not self._arm__dvrk_set_state('DVRK_POSITION_GOAL_CARTESIAN')):
+            return False
+        if (set_jaw >= -10.0 * math.pi / 180.0 and set_jaw <= 80.0 * math.pi / 180.0):
+            self.set_jaw_position_publisher.publish(set_jaw)
+        else:
+            print 'not a valid jaw position'
