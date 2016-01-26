@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2016 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -62,10 +62,10 @@ dvrk::console::console(mtsROSBridge & bridge,
         }
     }
 
-    const mtsIntuitiveResearchKitConsole::TeleopList::iterator
-        teleopsEnd = mConsole->mTeleops.end();
-    mtsIntuitiveResearchKitConsole::TeleopList::iterator teleopIter;
-    for (teleopIter = mConsole->mTeleops.begin();
+    const mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator
+        teleopsEnd = mConsole->mTeleopsPSM.end();
+    mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator teleopIter;
+    for (teleopIter = mConsole->mTeleopsPSM.begin();
          teleopIter != teleopsEnd;
          ++teleopIter) {
         const std::string name = teleopIter->first;
@@ -147,10 +147,10 @@ void dvrk::console::Connect(void)
         }
     }
 
-    const mtsIntuitiveResearchKitConsole::TeleopList::iterator
-        teleopsEnd = mConsole->mTeleops.end();
-    mtsIntuitiveResearchKitConsole::TeleopList::iterator teleopIter;
-    for (teleopIter = mConsole->mTeleops.begin();
+    const mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator
+        teleopsEnd = mConsole->mTeleopsPSM.end();
+    mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator teleopIter;
+    for (teleopIter = mConsole->mTeleopsPSM.begin();
          teleopIter != teleopsEnd;
          ++teleopIter) {
         const std::string name = teleopIter->first;
