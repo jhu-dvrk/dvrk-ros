@@ -137,21 +137,29 @@ class arm:
         # publishers
         frame = Frame()
         self.__full_ros_namespace = self.__ros_namespace + self.__arm_name
-        self.set_robot_state_publisher = rospy.Publisher(self.__full_ros_namespace + '/set_robot_state',
+        self.set_robot_state_publisher = rospy.Publisher(self.__full_ros_namespace
+                                                         + '/set_robot_state',
                                                          String, latch=True, queue_size = 1)
-        self.set_position_joint_publisher = rospy.Publisher(self.__full_ros_namespace + '/set_position_joint',
+        self.set_position_joint_publisher = rospy.Publisher(self.__full_ros_namespace
+                                                            + '/set_position_joint',
                                                             JointState, latch=True, queue_size = 1)
-        self.set_position_goal_joint_publisher = rospy.Publisher(self.__full_ros_namespace + '/set_position_goal_joint',
+        self.set_position_goal_joint_publisher = rospy.Publisher(self.__full_ros_namespace
+                                                                 + '/set_position_goal_joint',
                                                                  JointState, latch=True, queue_size = 1)
-        self.set_position_cartesian_publisher = rospy.Publisher(self.__full_ros_namespace + '/set_position_cartesian',
+        self.set_position_cartesian_publisher = rospy.Publisher(self.__full_ros_namespace
+                                                                + '/set_position_cartesian',
                                                                 Pose, latch=True, queue_size = 1)
-        self.set_position_goal_cartesian_publisher = rospy.Publisher(self.__full_ros_namespace + '/set_position_goal_cartesian',
+        self.set_position_goal_cartesian_publisher = rospy.Publisher(self.__full_ros_namespace
+                                                                     + '/set_position_goal_cartesian',
                                                                      Pose, latch=True, queue_size = 1)
-        self.set_wrench_body_publisher = rospy.Publisher(self.__full_ros_namespace + '/set_wrench_body',
+        self.set_wrench_body_publisher = rospy.Publisher(self.__full_ros_namespace
+                                                         + '/set_wrench_body',
                                                          Wrench, latch=True, queue_size = 1)
-        self.set_wrench_body_orientation_absolute_publisher = rospy.Publisher(self.__full_ros_namespace + '/set_wrench_body_orientation_absolute',
+        self.set_wrench_body_orientation_absolute_publisher = rospy.Publisher(self.__full_ros_namespace
+                                                                              + '/set_wrench_body_orientation_absolute',
                                                                               Bool, latch=True, queue_size = 1)
-        self.set_wrench_spatial_publisher = rospy.Publisher(self.__full_ros_namespace + '/set_wrench_spatial',
+        self.set_wrench_spatial_publisher = rospy.Publisher(self.__full_ros_namespace
+                                                            + '/set_wrench_spatial',
                                                             Wrench, latch=True, queue_size = 1)
 
         # subscribers
