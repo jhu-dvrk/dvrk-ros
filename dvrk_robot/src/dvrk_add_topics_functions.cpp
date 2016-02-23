@@ -249,8 +249,10 @@ void dvrk::add_topics_teleop(mtsROSBridge & bridge,
                                 mtsROSEventWriteLog::ROS_LOG_INFO);
 
     // events
-    bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
-        (teleop_component_name, "Enabled", ros_namespace + "/enabled");
+    bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
+        (teleop_component_name, "DesiredState", ros_namespace + "/desired_state");
+    bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
+        (teleop_component_name, "CurrentState", ros_namespace + "/current_state");
     bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
         (teleop_component_name, "RotationLocked", ros_namespace + "/rotation_locked");
     bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
@@ -259,9 +261,9 @@ void dvrk::add_topics_teleop(mtsROSBridge & bridge,
         (teleop_component_name, "Scale", ros_namespace + "/scale");
 
     // commands
-    bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        (teleop_component_name, "Enable",
-         ros_namespace + "/enable");
+    bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
+        (teleop_component_name, "SetDesiredState",
+         ros_namespace + "/set_desired_state");
     bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (teleop_component_name, "LockTranslation",
          ros_namespace + "/lock_translation");
