@@ -1,0 +1,28 @@
+<!-- -*- mode: XML -*- -->
+<!-- Example launch file for a pair of stereo cameras. -->
+
+<launch>
+
+  <!-- Set this to your camera's name -->
+  <arg name="cam_name" default="camera"/>
+  <arg name="dev_name" default="/dev/video0"/>
+  <arg name="cam_info" default="package://dvrk_robot/data/$(arg cam_name).yaml"/>
+  <arg name="rect" default="false"/>
+  
+
+  <node pkg="gscam" type="gscam" name="$(arg cam_name)">
+    <env name="GSCAM_CONFIG"
+         value="v4l2src device=$(arg dev_name) ! video/x-raw-rgb ! ffmpegcolorspace"/>
+    <param name="camera_name" value="$(arg cam_name)" />
+    <param name="camera_info_url" value="$(arg cam_info)" />
+    <param name="frame_id" value="/camera_frame" /> 
+    <remap from="camera/image_raw" to="image_raw" />
+  </node>
+
+  <!-- Provide rectification -->
+  <node if="$(arg rect)"
+        pkg="image_proc" type="image_proc" name="$(arg cam_name)_rect">
+  </node>
+
+</launch>
+
