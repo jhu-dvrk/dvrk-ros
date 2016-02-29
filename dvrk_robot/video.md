@@ -30,7 +30,7 @@ Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
 Bus 003 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
 Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
 ```
-In this example, the frame grabbers on bus `004` and `001`.
+In this example, the Hauppage frame grabbers are on bus `004` and `001`.
 
 To check if the frame grabbers are working, one can use `tvtime`
 (available on most Linux distributions).  The two frame grabbers
@@ -46,20 +46,24 @@ To test each channel one after another:
 ```sh
 tvtime -d /dev/video0
 ```
+Then:
+```sh
+tvtime -d /dev/video1
+```
 
 Once in tvtime, change the input to S-Video.  If you see a black
 image, it's possible that you don't have enough light in front of your
 camera or endoscope.  If you happen to use a real da Vinci endoscope
-and CCUs (Camera Control Units), you can use the toggle swith
-`CAM/BAR` to use the video pattern
+and CCUs (Camera Control Units), you can use the toggle switch
+`CAM/BAR` to use the video test pattern
 (https://en.wikipedia.org/wiki/SMPTE_color_bars).
 
 # Software
 
 ## gscam
 
-gscam is a ROS node using the gstreamer library.  The gstreamer
-library supports a few frame grabbers including the Hauppage one, the
+`gscam` is a ROS node using the `gstreamer` library.  The gstreamer
+library supports a few frame grabbers including the Hauppage one.  The
 gstreamer developement library can be installed using `apt-get install
 libgstreamer0.10-dev`.
 
@@ -67,7 +71,7 @@ The gscam node is part of ROS Hydro but hasn't made it to ROS Indigo
 yet (as of March 2016).  If you have ROS Hydro, use `apt-get` to
 install it.  If you're using a more recent version of ROS, get the
 sources from github and build it.  Assuming your Catkin workspace is
-in ~/catkin and you're using the catkin build tools:
+in `~/catkin` and you're using the Catkin Python build tools:
 
 ```sh
 cd ~/catkin/src
