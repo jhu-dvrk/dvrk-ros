@@ -78,3 +78,26 @@ cd ~/catkin/src
 git clone https://github.com/ros-drivers/gscam
 catkin build
 ```
+
+To start the `gscam` node, we provide a couple of ROS launch scripts.  For a stereo system, use:
+
+```sh
+roslaunch dvrk_robot gscam_stereo.launch rig_name:=jhu_daVinci
+```
+
+Where `jhu_daVinci` is a name you want to give to your camera rig.  This name will be used to define the ROS namespace for all the data published.  It is also used to define a directory to save the results of your camera calibration or load said camera calibration (i.e. `dvrk_robot/data/<rig_name>`).  If you don't have a calibration for your rig, you can still render both video channels using the ROS topics:
+  * `/jhu_daVinci/left/image_color`
+  * `/jhu_daVinci/right/image_color`
+
+## rqt_image_view
+
+A simple program to view the different camera topics.  Pick the image to display using the drop-down menu on the top left corner.
+
+## RViz
+
+Use RViz to display both channels at the same time.  Add image, select topic and then drop image to separate screen/eye on the HRSV display.  You can save your settings to everytime you start RViz you will have both images.
+
+## Camera calibration
+
+Work in progress
+
