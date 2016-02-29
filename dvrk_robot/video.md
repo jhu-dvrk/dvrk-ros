@@ -86,12 +86,18 @@ roslaunch dvrk_robot gscam_stereo.launch rig_name:=jhu_daVinci
 ```
 
 Where `jhu_daVinci` is a name you want to give to your camera rig.  This name will be used to define the ROS namespace for all the data published.  It is also used to define a directory to save the results of your camera calibration or load said camera calibration (i.e. `dvrk_robot/data/<rig_name>`).  If you don't have a calibration for your rig, you can still render both video channels using the ROS topics:
-  * `/jhu_daVinci/left/image_color`
-  * `/jhu_daVinci/right/image_color`
+  * `/jhu_daVinci/left/image_raw`
+  * `/jhu_daVinci/right/image_raw`
 
-## rqt_image_view
+## (rqt_)image_view
 
-A simple program to view the different camera topics.  Pick the image to display using the drop-down menu on the top left corner.
+One can use the `image_view` node to visualize a single image:
+
+```sh
+rosrun image_view image_view image:=/jhu_daVinci/right/image_raw
+```
+
+If you prefer GUI, you can use `rqt_image_view`, a simple program to view the different camera topics.  Pick the image to display using the drop-down menu on the top left corner.
 
 ## RViz
 
@@ -99,5 +105,25 @@ Use RViz to display both channels at the same time.  Add image, select topic and
 
 ## Camera calibration
 
-Work in progress
+```sh
+roslaunch dvrk_robot gscam_stereo.launch rig_name:=jhu_daVinci rect:=false 
+```
 
+To start the camera calibration:
+```
+# ros camera calibration
+# NOTE: checkerboard 11x10 square with = 5 mm 
+rosrun camera_calibration cameracalibrator.py --size 11x10 --square 0.005 right:=/jhu_daVinci/right/image_raw left:=/jhu_daVinci/left/image_raw right_camera:=/jhu_daVinci/right left_camera:=/jhu_daVinci/left --approximate=0.050
+```
+
+Save results:
+ * manual save: calibration result is located /tmp/calibrationdata.tar.gz 
+ * commit button to save (note camera_info_url should be correct)
+ * calibration result is saved as `ost.txt`, which is Videre INI format
+ * `gscam` requires calibration file with file extension `.ini` or `.yaml`.
+ * `gscam` only takes package://dvrk_robot/data/<rig_name>
+ * from now on, use topics `image_rect_color`
+
+References:
+ * http://wiki.ros.org/camera_calibration
+ * http://wiki.ros.org/camera_calibration_parsers
