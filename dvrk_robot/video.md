@@ -17,15 +17,15 @@ When you plug these in your PC, make sure both frame grabbers are on
 different USB channels otherwise you won't have enough bandwidth to
 capture both left and right videos.  To check, use `lsusb`.  The output should look like:
 ```sh
-$> lsusb 
-Bus 004 Device 006: ID 0461:4e22 Primax Electronics, Ltd 
-Bus 004 Device 005: ID 413c:2107 Dell Computer Corp. 
+$> lsusb
+Bus 004 Device 006: ID 0461:4e22 Primax Electronics, Ltd
+Bus 004 Device 005: ID 413c:2107 Dell Computer Corp.
 Bus 004 Device 004: ID 0424:2514 Standard Microsystems Corp. USB 2.0 Hub
-Bus 004 Device 003: ID 2040:c200 Hauppauge 
+Bus 004 Device 003: ID 2040:c200 Hauppauge
 Bus 004 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
 Bus 004 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
 Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
-Bus 001 Device 002: ID 2040:c200 Hauppauge 
+Bus 001 Device 002: ID 2040:c200 Hauppauge
 Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
 Bus 003 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
 Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
@@ -41,6 +41,10 @@ $> ls /dev/video*
 /dev/video0  /dev/video1
 ```
 
+The numbering (i.e. which frame grabber is `/dev/video0` and which one
+is `/dev/video1`) depends on the order the grabbers are plugged in.
+To have a consistent ordering, always plug the frame grabbers in the
+same order, e.g. first the left channel and then the right channel.
 To test each channel one after another:
 
 ```sh
@@ -51,12 +55,18 @@ Then:
 tvtime -d /dev/video1
 ```
 
-Once in tvtime, change the input to S-Video.  If you see a black
+Once in `tvtime`, change the input to S-Video.  If you see a black
 image, it's possible that you don't have enough light in front of your
 camera or endoscope.  If you happen to use a real da Vinci endoscope
 and CCUs (Camera Control Units), you can use the toggle switch
 `CAM/BAR` to use the video test pattern
 (https://en.wikipedia.org/wiki/SMPTE_color_bars).
+
+Using the color bar is also useful to test your video connections,
+i.e. if your video is noisy or not visible, put the CCUs in bar mode.
+If the video is still not working, the problem likely comes from your
+S-video cables.  If the color bars show correctly, the problem comes
+from the cables to the endoscope or the endoscope itself.
 
 # Software
 
@@ -97,27 +107,32 @@ One can use the `image_view` node to visualize a single image:
 rosrun image_view image_view image:=/jhu_daVinci/right/image_raw
 ```
 
-If you prefer GUI, you can use `rqt_image_view`, a simple program to view the different camera topics.  Pick the image to display using the drop-down menu on the top left corner.
+If you prefer GUI, you can use `rqt_image_view`, a simple program to
+view the different camera topics.  Pick the image to display using the
+drop-down menu on the top left corner.
 
 ## RViz
 
-Use RViz to display both channels at the same time.  Add image, select topic and then drop image to separate screen/eye on the HRSV display.  You can save your settings to everytime you start RViz you will have both images.
+Use RViz to display both channels at the same time.  Add image, select
+topic and then drop image to separate screen/eye on the HRSV display.
+You can save your settings to everytime you start RViz you will have
+both images.
 
 ## Camera calibration
 
 ```sh
-roslaunch dvrk_robot gscam_stereo.launch rig_name:=jhu_daVinci rect:=false 
+roslaunch dvrk_robot gscam_stereo.launch rig_name:=jhu_daVinci rect:=false
 ```
 
 To start the camera calibration:
 ```
 # ros camera calibration
-# NOTE: checkerboard 11x10 square with = 5 mm 
+# NOTE: checkerboard 11x10 square with = 5 mm
 rosrun camera_calibration cameracalibrator.py --size 11x10 --square 0.005 right:=/jhu_daVinci/right/image_raw left:=/jhu_daVinci/left/image_raw right_camera:=/jhu_daVinci/right left_camera:=/jhu_daVinci/left --approximate=0.050
 ```
 
 Save results:
- * manual save: calibration result is located /tmp/calibrationdata.tar.gz 
+ * manual save: calibration result is located /tmp/calibrationdata.tar.gz
  * commit button to save (note camera_info_url should be correct)
  * calibration result is saved as `ost.txt`, which is Videre INI format
  * `gscam` requires calibration file with file extension `.ini` or `.yaml`.

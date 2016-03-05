@@ -3,12 +3,11 @@
 <launch>
 
   <!-- Set this to your camera's name -->
-<!--   <arg name="rig_name" default="stereo"/>   force user to provide a rig name -->
   <arg name="left_cam_name" default="$(arg rig_name)_left"/>
-  <arg name="left_cam_device" default="/dev/video1"/>
+  <arg name="left_cam_device" default="/dev/video0"/>
   <arg name="left_cam_info" default="package://dvrk_robot/data/$(arg left_cam_name).ini"/>
   <arg name="right_cam_name" default="$(arg rig_name)_right"/>
-  <arg name="right_cam_device" default="/dev/video0"/>
+  <arg name="right_cam_device" default="/dev/video1"/>
   <arg name="right_cam_info" default="package://dvrk_robot/data/$(arg right_cam_name)_right.ini"/>
   <arg name="rect" default = "true"/>
 
