@@ -110,6 +110,10 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     bridge.AddSubscriberToWriteCommand<prmForceCartesianSet, geometry_msgs::Wrench>
         (arm_component_name, "SetWrenchSpatial",
          ros_namespace + "/set_wrench_spatial");
+    bridge.AddSubscriberToWriteCommand<bool, std_msgs::Bool>
+        (arm_component_name, "SetGravityCompensation",
+         ros_namespace + "/set_gravity_compensation");
+
 
     // events
     bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>

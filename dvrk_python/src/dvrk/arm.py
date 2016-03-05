@@ -161,6 +161,9 @@ class arm:
         self.set_wrench_spatial_publisher = rospy.Publisher(self.__full_ros_namespace
                                                             + '/set_wrench_spatial',
                                                             Wrench, latch=True, queue_size = 1)
+        self.set_gravity_compensation_publisher = rospy.Publisher(self.__full_ros_namespace
+                                                                  + '/set_gravity_compensation',
+                                                                  Bool, latch=True, queue_size = 1)
 
         # subscribers
         rospy.Subscriber(self.__full_ros_namespace + '/robot_state',
@@ -730,3 +733,9 @@ class arm:
         w.torque.y = 0.0
         w.torque.z = 0.0
         self.set_wrench_body_publisher.publish(w)
+
+    def set_gravity_compensation(self, gravity_compensation):
+        "Turn on/off gravity compensation in cartesian effort mode"
+        m = Bool()
+        m.data = gravity_compensation
+        self.set_gravity_compensation_publisher.publish(m)
