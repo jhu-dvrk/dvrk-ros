@@ -29,6 +29,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsoleQt.h>
 
 #include <QApplication>
+#include <QIcon>
 #include <QLocale>
 #include <clocale>
 
@@ -120,6 +121,7 @@ int main(int argc, char ** argv)
     if (hasQt) {
         QLocale::setDefault(QLocale::English);
         application = new QApplication(argc, argv);
+        application->setWindowIcon(QIcon(":/dVRK.svg"));
         consoleQt = new mtsIntuitiveResearchKitConsoleQt();
         consoleQt->Configure(console);
         consoleQt->Connect();
