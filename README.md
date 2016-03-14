@@ -9,27 +9,27 @@ We use the catkin build tools, NOT catkin_make.  Please don't use catkin_make
 * Download and compile dvrk-ros: https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki/CatkinBuild
 
 # List of Packages:
-* dvrk_robot [maintained] 
+* dvrk_robot **[maintained]** 
   * Main file to start dVRK (`dvrk_console_json`), publish & subscribe ros topics
   * Lauch files to start RViz with geometric simulation
-* dvrk_model [maintained]
+* dvrk_model **[maintained]**
   * CAD models & meshes
   * RViz configs
   * Launch files
-* dvrk_python [maintained]
+* dvrk_python **[maintained]**
   * Python classes using ROS topics
   * Simple API to control any dVRK arm
   * No support for console (yet)
-* dvrk_matlab [maintained, missing some features]
+* dvrk_matlab **[maintained, missing some features]**
   * Matlab classes using ROS topics
   * Requires Robotics Toolkit (2015a and above), any OS (Windows, Mac, Linux)
   * Simple API to control any dVRK arm
   * No support for console (yet)
-* dv\_gazebo\_plugins [not maintained]
+* dv\_gazebo\_plugins **[not maintained]**
   * from WPI Nirav, don't know how to use Nirav? 
-* dvrk_kinematics  [not maintained]
+* dvrk_kinematics  **[not maintained]**
   * kinematics model of MTM/PSM
-* dvrk_teleop  [not maintained]
+* dvrk_teleop  **[not maintained]**
   * dummy teleop component with a Qt GUI
  
 # How to run the code
