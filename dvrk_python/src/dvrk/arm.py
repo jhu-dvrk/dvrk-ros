@@ -74,6 +74,8 @@ import IPython
 import math
 
 from PyKDL import *
+
+# we should probably not import the symbols and put them in current namespace
 from tf import transformations
 from tf_conversions import posemath
 from std_msgs.msg import String, Bool, Float32, Empty
@@ -137,88 +139,88 @@ class arm:
         # publishers
         frame = Frame()
         self.__full_ros_namespace = self.__ros_namespace + self.__arm_name
-        self.set_robot_state_publisher = rospy.Publisher(self.__full_ros_namespace
-                                                         + '/set_robot_state',
-                                                         String, latch=True, queue_size = 1)
-        self.set_position_joint_publisher = rospy.Publisher(self.__full_ros_namespace
-                                                            + '/set_position_joint',
-                                                            JointState, latch=True, queue_size = 1)
-        self.set_position_goal_joint_publisher = rospy.Publisher(self.__full_ros_namespace
-                                                                 + '/set_position_goal_joint',
-                                                                 JointState, latch=True, queue_size = 1)
-        self.set_position_cartesian_publisher = rospy.Publisher(self.__full_ros_namespace
-                                                                + '/set_position_cartesian',
-                                                                Pose, latch=True, queue_size = 1)
-        self.set_position_goal_cartesian_publisher = rospy.Publisher(self.__full_ros_namespace
-                                                                     + '/set_position_goal_cartesian',
-                                                                     Pose, latch=True, queue_size = 1)
-        self.set_wrench_body_publisher = rospy.Publisher(self.__full_ros_namespace
-                                                         + '/set_wrench_body',
-                                                         Wrench, latch=True, queue_size = 1)
-        self.set_wrench_body_orientation_absolute_publisher = rospy.Publisher(self.__full_ros_namespace
-                                                                              + '/set_wrench_body_orientation_absolute',
-                                                                              Bool, latch=True, queue_size = 1)
-        self.set_wrench_spatial_publisher = rospy.Publisher(self.__full_ros_namespace
-                                                            + '/set_wrench_spatial',
-                                                            Wrench, latch=True, queue_size = 1)
+        self.__set_robot_state_pub = rospy.Publisher(self.__full_ros_namespace
+                                                     + '/set_robot_state',
+                                                     String, latch=True, queue_size = 1)
+        self.__set_position_joint_pub = rospy.Publisher(self.__full_ros_namespace
+                                                        + '/set_position_joint',
+                                                        JointState, latch=True, queue_size = 1)
+        self.__set_position_goal_joint_pub = rospy.Publisher(self.__full_ros_namespace
+                                                             + '/set_position_goal_joint',
+                                                             JointState, latch=True, queue_size = 1)
+        self.__set_position_cartesian_pub = rospy.Publisher(self.__full_ros_namespace
+                                                            + '/set_position_cartesian',
+                                                            Pose, latch=True, queue_size = 1)
+        self.__set_position_goal_cartesian_pub = rospy.Publisher(self.__full_ros_namespace
+                                                                 + '/set_position_goal_cartesian',
+                                                                 Pose, latch=True, queue_size = 1)
+        self.__set_wrench_body_pub = rospy.Publisher(self.__full_ros_namespace
+                                                     + '/set_wrench_body',
+                                                     Wrench, latch=True, queue_size = 1)
+        self.__set_wrench_body_orientation_absolute_pub = rospy.Publisher(self.__full_ros_namespace
+                                                                          + '/set_wrench_body_orientation_absolute',
+                                                                          Bool, latch=True, queue_size = 1)
+        self.__set_wrench_spatial_pub = rospy.Publisher(self.__full_ros_namespace
+                                                        + '/set_wrench_spatial',
+                                                        Wrench, latch=True, queue_size = 1)
 
         # subscribers
         rospy.Subscriber(self.__full_ros_namespace + '/robot_state',
-                         String, self.__robot_state_callback)
+                         String, self.__robot_state_cb)
         rospy.Subscriber(self.__full_ros_namespace + '/goal_reached',
-                         Bool, self.__goal_reached_callback)
+                         Bool, self.__goal_reached_cb)
         rospy.Subscriber(self.__full_ros_namespace + '/state_joint_desired',
-                         JointState, self.__state_joint_desired_callback)
+                         JointState, self.__state_joint_desired_cb)
         rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_desired',
-                         Pose, self.__position_cartesian_desired_callback)
+                         Pose, self.__position_cartesian_desired_cb)
         rospy.Subscriber(self.__full_ros_namespace + '/state_joint_current',
-                         JointState, self.__state_joint_current_callback)
+                         JointState, self.__state_joint_current_cb)
         rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_current',
-                         Pose, self.__position_cartesian_current_callback)
+                         Pose, self.__position_cartesian_current_cb)
         # create node
         # rospy.init_node('arm_api', anonymous = True)
         rospy.init_node('arm_api',anonymous = True, log_level = rospy.WARN)
         rospy.loginfo(rospy.get_caller_id() + ' -> started arm: ' + self.__arm_name)
 
-    def __robot_state_callback(self, data):
-        """Callback for arm state.
+    def __robot_state_cb(self, data):
+        """Cb for arm state.
 
         :param data: the current arm state"""
         rospy.loginfo(rospy.get_caller_id() + " -> current state is %s", data.data)
         self.__robot_state = data.data
         self.__robot_state_event.set()
 
-    def __goal_reached_callback(self, data):
-        """Callback for the goal reached.
+    def __goal_reached_cb(self, data):
+        """Cb for the goal reached.
 
         :param data: the goal reached"""
         rospy.loginfo(rospy.get_caller_id() + " -> goal reached is %s", data.data)
         self.__goal_reached = data.data
         self.__goal_reached_event.set()
 
-    def __state_joint_desired_callback(self, data):
-        """Callback for the joint desired position.
+    def __state_joint_desired_cb(self, data):
+        """Cb for the joint desired position.
 
         :param data: the `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_desired"""
         self.__position_joint_desired[:] = data.position
         self.__effort_joint_desired[:] = data.effort
 
-    def __position_cartesian_desired_callback(self, data):
-        """Callback for the cartesian desired position.
+    def __position_cartesian_desired_cb(self, data):
+        """Cb for the cartesian desired position.
 
         :param data: the cartesian position desired"""
         self.__position_cartesian_desired = posemath.fromMsg(data)
 
-    def __state_joint_current_callback(self, data):
-        """Callback for the current joint position.
+    def __state_joint_current_cb(self, data):
+        """Cb for the current joint position.
 
         :param data: the `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_current"""
         self.__position_joint_current[:] = data.position
         self.__velocity_joint_current[:] = data.velocity
         self.__effort_joint_current[:] = data.effort
 
-    def __position_cartesian_current_callback(self, data):
-        """Callback for the current cartesian position.
+    def __position_cartesian_current_cb(self, data):
+        """Cb for the current cartesian position.
 
         :param data: The cartesian position current."""
         self.__position_cartesian_current = posemath.fromMsg(data)
@@ -233,7 +235,7 @@ class arm:
         if (self.__robot_state == state):
             return True
         self.__robot_state_event.clear()
-        self.set_robot_state_publisher.publish(state)
+        self.__set_robot_state_pub.publish(state)
         self.__robot_state_event.wait(timeout)
         # if the state is not changed return False
         if (self.__robot_state != state):
@@ -246,7 +248,7 @@ class arm:
         the arm. This method requries the arm name."""
         rospy.loginfo(rospy.get_caller_id() + ' -> start homing')
         self.__robot_state_event.clear()
-        self.set_robot_state_publisher.publish('Home')
+        self.__set_robot_state_pub.publish('Home')
         counter = 10 # up to 10 transitions to get ready
         while (counter > 0):
             self.__robot_state_event.wait(20) # give up to 20 secs for each transition
@@ -268,7 +270,7 @@ class arm:
     def get_robot_state(self):
         return self.__robot_state
 
-    def get_current_cartesian_position(self):
+    def get_current_position(self):
         """Gets the :ref:`current cartesian position <currentvdesired>` of the arm in terms of cartesian space.
 
         :returns: the current position of the arm in cartesian space
@@ -296,7 +298,7 @@ class arm:
         :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
         return self.__effort_joint_current
 
-    def get_desired_cartesian_position(self):
+    def get_desired_position(self):
         """Get the :ref:`desired cartesian position <currentvdesired>` of the arm in terms of caretsian space.
 
         :returns: the desired position of the arm in cartesian space
@@ -393,7 +395,7 @@ class arm:
             # print 'check_list', check_list
             return False ####   should be False or actually based on user's return code from console
 
-    def delta_move_cartesian(self, delta_input, interpolate=True):
+    def dmove(self, delta_input, interpolate=True):
         """Incremental motion in cartesian space.
 
         :param delta_input: the incremental motion you want to make
@@ -403,14 +405,14 @@ class arm:
         # is this a legal translation input
         if(self.__check_input_type(delta_input, [list, float, Vector, Rotation, Frame])):
                if(self.__check_input_type(delta_input, [list, float, Vector])):
-                   self.delta_move_cartesian_translation(delta_input, interpolate)
+                   self.dmove_translation(delta_input, interpolate)
                elif(self.__check_input_type(delta_input, [Rotation])):
-                   self.delta_move_cartesian_rotation(delta_input, interpolate)
+                   self.dmove_rotation(delta_input, interpolate)
                elif(self.__check_input_type(delta_input, [Frame])):
-                   self.delta_move_cartesian_frame(delta_input, interpolate)
+                   self.dmove_frame(delta_input, interpolate)
         rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian translation')
 
-    def delta_move_cartesian_translation(self, delta_translation, interpolate=True):
+    def dmove_translation(self, delta_translation, interpolate=True):
         """Incremental translation in cartesian space.
 
         :param delta_translation: the incremental translation you want to make based on the current position, this is in terms of a  `PyKDL.Vector <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ or a list of floats of size 3
@@ -430,10 +432,10 @@ class arm:
             delta_rotation = Rotation.Identity()
             delta_frame = Frame(delta_rotation, delta_vector)
             # move accordingly
-            self.delta_move_cartesian_frame(delta_frame, interpolate)
+            self.dmove_frame(delta_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian translation')
 
-    def delta_move_cartesian_rotation(self, delta_rotation, interpolate=True):
+    def dmove_rotation(self, delta_rotation, interpolate=True):
         """Incremental rotation in cartesian plane.
 
         :param delta_rotation: the incremental `PyKDL.Rotation <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ based upon the current position
@@ -445,10 +447,10 @@ class arm:
             delta_vector = Vector(0.0, 0.0, 0.0)
             delta_frame = Frame(delta_rotation, delta_vector)
             # move accordingly
-            self.delta_move_cartesian_frame(delta_frame, interpolate)
+            self.dmove_frame(delta_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian rotation')
 
-    def delta_move_cartesian_frame(self, delta_frame, interpolate=True):
+    def dmove_frame(self, delta_frame, interpolate=True):
         """Incremental move by Frame in cartesian plane.
 
         :param delta_frame: the incremental `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ based upon the current position
@@ -459,11 +461,11 @@ class arm:
             # add the incremental move to the current position, to get the ending frame
             end_frame = delta_frame * self.__position_cartesian_desired
             # move accordingly
-            self.move_cartesian_frame(end_frame, interpolate)
+            self.move_frame(end_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian frame')
 
 
-    def move_cartesian_translation(self, abs_translation, interpolate=True):
+    def move_translation(self, abs_translation, interpolate=True):
         """Absolute translation in cartesian space.
 
         :param abs_translation: the absolute translation you want to make, this is in terms of a  `PyKDL.Vector <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ or a list of floats of size 3
@@ -484,10 +486,10 @@ class arm:
             abs_rotation = self.__position_cartesian_desired.M
             abs_frame = Frame(abs_rotation, abs_vector)
             # move accordingly
-            self.move_cartesian_frame(abs_frame, interpolate)
+            self.move_frame(abs_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing absolute move cartesian translation')
 
-    def move_cartesian(self, abs_input, interpolate=True):
+    def move(self, abs_input, interpolate=True):
         """Absolute translation in cartesian space.
 
         :param abs_input: the absolute translation you want to make
@@ -496,14 +498,14 @@ class arm:
         # is this a legal translation input
         if(self.__check_input_type(abs_input, [list, float, Vector, Rotation, Frame])):
                if(self.__check_input_type(abs_input, [list, float, Vector])):
-                   self.move_cartesian_translation(abs_input, interpolate)
+                   self.move_translation(abs_input, interpolate)
                elif(self.__check_input_type(abs_input, [Rotation])):
-                   self.move_cartesian_rotation(abs_input, interpolate)
+                   self.move_rotation(abs_input, interpolate)
                elif(self.__check_input_type(abs_input, [Frame])):
-                   self.move_cartesian_frame(abs_input, interpolate)
+                   self.move_frame(abs_input, interpolate)
         rospy.loginfo(rospy.get_caller_id() + ' -> completing absolute move cartesian translation')
 
-    def move_cartesian_rotation(self, abs_rotation, interpolate=True):
+    def move_rotation(self, abs_rotation, interpolate=True):
         """Absolute rotation in cartesian plane.
 
         :param abs_rotation: the absolute `PyKDL.Rotation <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_
@@ -515,11 +517,11 @@ class arm:
             abs_vector = self.__position_cartesian_desired.p
             abs_frame = Frame(abs_rotation, abs_vector)
             # move accordingly
-            self.move_cartesian_frame(abs_frame, interpolate)
+            self.move_frame(abs_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing absolute move cartesian rotation')
 
 
-    def move_cartesian_frame(self, abs_frame, interpolate=True):
+    def move_frame(self, abs_frame, interpolate=True):
         """Absolute move by Frame in cartesian plane.
 
         :param abs_frame: the absolute `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_
@@ -545,7 +547,7 @@ class arm:
         if (not self.__dvrk_set_state('DVRK_POSITION_CARTESIAN')):
             return False
         # go to that position directly
-        self.set_position_cartesian_publisher.publish(end_position)
+        self.__set_position_cartesian_pub.publish(end_position)
         rospy.loginfo(rospy.get_caller_id() + ' <- completing move cartesian direct')
         return True
 
@@ -573,15 +575,39 @@ class arm:
         # the goal is originally not reached
         self.__goal_reached = False
         # recursively call this function until end is reached
-        self.set_position_goal_cartesian_publisher.publish(end_position)
+        self.__set_position_goal_cartesian_pub.publish(end_position)
         self.__goal_reached_event.wait(20) # 1 minute at most
         if not self.__goal_reached:
             return False
         rospy.loginfo(rospy.get_caller_id() + ' -> compeleting set position goal cartesian publish and wait')
         return True
 
-    def delta_move_joint_list(self, value, index=[], interpolate=True):
-        """Incremental index move in joint space.
+    def dmove_joint(self, value, interpolate= True):
+        """Incremental move in joint space.
+        
+        :param value: the incremental amount in which you want to move index by, this is a list
+        :param interpolate: see  :ref:`interpolate <interpolate>`"""
+
+        initial_joint_position = self.__position_joint_desired
+        delta_joint = []
+        delta_joint[:] = initial_joint_position
+            
+        if(self.__check_list_length(value, self.get_joint_number())):
+            for i in range (len(value)) :
+                delta_joint[i] = initial_joint_position[i] + value[i]
+            self.__move_joint(delta_joint, interpolate)
+
+    def dmove_joint_one(self, value, index, interpolate=True):
+        """Incremental index move of 1 joint in joint space.
+
+        :param value: the incremental amount in which you want to move index by, this is a list
+        :param index: the joint you want to move, this is a list
+        :param interpolate: see  :ref:`interpolate <interpolate>`"""
+        if(type(value) is float and type(index) is int):
+            self.dmove_joint_some([value], [index], interpolate)
+        
+    def dmove_joint_some(self, value, index, interpolate=True):
+        """Incremental index move of a series of joints in joint space.
 
         :param value: the incremental amount in which you want to move index by, this is a list
         :param index: the joint you want to move, this is a list
@@ -612,8 +638,25 @@ class arm:
                 else:
                     return
 
-    def move_joint_list(self, value, index = [], interpolate=True):
-        """Absolute index move in joint space.
+    def  move_joint(self, value, interpolate= True):
+        """Absolute move in joint space.
+        
+        :param value: the incremental amount in which you want to move index by, this is a list
+        :param interpolate: see  :ref:`interpolate <interpolate>`"""
+        if(self.__check_list_length(value, self.get_joint_number())):
+            self.__move_joint(value, interpolate)
+            
+    def move_joint_one(self, value, index, interpolate=True):
+        """Absolute index move of 1 joint in joint space.
+
+        :param value: the incremental amount in which you want to move index by, this is a list
+        :param index: the joint you want to move, this is a list
+        :param interpolate: see  :ref:`interpolate <interpolate>`"""
+        if(type(value) is float and type(index) is int):
+            self.move_joint_some([value], [index], interpolate)
+            
+    def move_joint_some(self, value, index, interpolate=True):
+        """Absolute index move of a series of joints in joint space.
 
         :param value: the incremental amount in which you want to move index by, this is a list
         :param index: the incremental joint you want to move, this is a list
@@ -665,7 +708,7 @@ class arm:
             # go to that position directly
             joint_state = JointState()
             joint_state.position[:] = end_joint
-            self.set_position_joint_publisher.publish(joint_state)
+            self.__set_position_joint_pub.publish(joint_state)
             rospy.loginfo(rospy.get_caller_id() + ' <- completing move joint direct')
             return True
 
@@ -692,7 +735,7 @@ class arm:
         :rtype: Bool"""
         self.__goal_reached_event.clear()
         self.__goal_reached = False
-        self.set_position_goal_joint_publisher.publish(end_position)
+        self.__set_position_goal_joint_pub.publish(end_position)
         self.__goal_reached_event.wait(20) # 1 minute at most
         if not self.__goal_reached:
             return False
@@ -710,13 +753,13 @@ class arm:
         w.torque.x = 0.0
         w.torque.y = 0.0
         w.torque.z = 0.0
-        self.set_wrench_spatial_publisher.publish(w)
+        self.__set_wrench_spatial_pub.publish(w)
 
     def set_wrench_body_orientation_absolute(self, absolute):
         "Apply body wrench using body orientation (relative/False) or reference frame (absolute/True)"
         m = Bool()
         m.data = absolute
-        self.set_wrench_body_orientation_absolute_publisher.publish(m)
+        self.__set_wrench_body_orientation_absolute_pub.publish(m)
 
     def set_wrench_body_force(self, force):
         "Apply a wrench with force only (body), torque is null"
@@ -729,4 +772,4 @@ class arm:
         w.torque.x = 0.0
         w.torque.y = 0.0
         w.torque.z = 0.0
-        self.set_wrench_body_publisher.publish(w)
+        self.__set_wrench_body_pub.publish(w)
