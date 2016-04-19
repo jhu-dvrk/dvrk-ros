@@ -9,13 +9,13 @@ class mtm(arm):
         self._arm__init_arm(mtm_name, ros_namespace)
 
         # publishers
-        self.lock_orientation_publisher = rospy.Publisher(self._arm__full_ros_namespace
-                                                          + '/lock_orientation',
-                                                          Quaternion, latch=True, queue_size = 1)
+        self.__lock_orientation_pub = rospy.Publisher(self._arm__full_ros_namespace
+                                                      + '/lock_orientation',
+                                                      Quaternion, latch=True, queue_size = 1)
 
-        self.unlock_orientation_publisher = rospy.Publisher(self._arm__full_ros_namespace
-                                                            + '/unlock_orientation',
-                                                            Empty, latch=True, queue_size = 1)
+        self.__unlock_orientation_pub = rospy.Publisher(self._arm__full_ros_namespace
+                                                        + '/unlock_orientation',
+                                                        Empty, latch=True, queue_size = 1)
 
     def lock_orientation_as_is(self):
         "Lock orientation based on current orientation"
@@ -26,9 +26,9 @@ class mtm(arm):
         "Lock orientation"
         q = Quaternion()
         q.x, q.y, q.z, q.w = orientation.GetQuaternion()
-        self.lock_orientation_publisher.publish(q);
+        self.__lock_orientation_pub.publish(q);
 
     def unlock_orientation(self):
         "Lock orientation"
         e = Empty()
-        self.unlock_orientation_publisher.publish(e);
+        self.__unlock_orientation_pub.publish(e);
