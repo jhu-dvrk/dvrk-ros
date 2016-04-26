@@ -597,20 +597,24 @@ class arm:
     def dmove_joint(self, delta_pos, interpolate= True):
         """Incremental move in joint space.
 
-        :param delta_pos: the incremental amount in which you want to move index by, this is a list
+        :param delta_pos: the incremental amount in which you want to move index by, this is a numpy array
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
-
-        initial_joint_position = numpy.array(self.__position_joint_desired)
-        delta_joint = numpy.empty(self.get_joint_number())
-        if (type(delta_pos) is numpy.ndarray):
-            if(self.__check_list_length(delta_pos, self.get_joint_number())):
-                absolute_pos = initial_joint_position + delta_pos
-                self.__move_joint(absolute_pos, interpolate)
-
+        if ((not(type(delta_pos) is numpy.ndarray))
+             or (not(delta_pos.dtype == numpy.float64))):
+            print "delta_pos must be an array of floats"
+            return
+        if (delta_pos == self.get_joint_number()):
+            print "delta_pos must ne an array of size", self.get_joint_number
+            return
+        
+        abs_pos = numpy.array( self.__position_joint_desired)
+        abs_pos = abs_pos + delta_pos
+        self.__move_joint(abs_pos, interpolate)
+        
     def dmove_joint_one(self, delta_pos, indices, interpolate=True):
         """Incremental index move of 1 joint in joint space.
 
-        :param delta_pos: the incremental amount in which you want to move index by, this is a list
+        :param delta_pos: the incremental amount in which you want to move index by, this is a numpy array
         :param index: the joint you want to move, this is a list
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         if (type(delta_pos) is float and type(indices) is int):
@@ -619,18 +623,20 @@ class arm:
     def dmove_joint_some(self, delta_pos, indices, interpolate = True):
         """Incremental index move of a series of joints in joint space.
 
-        :param delta_pos: the incremental amount in which you want to move index by, this is a list
+        :param delta_pos: the incremental amount in which you want to move index by, this is a numpy array
         :param indices: the joints you want to move, this is a list of indices
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting delta move joint index')
 
         # check if delta is an array
-        if (not(type(delta_pos) is numpy.ndarray)):
+        if ((not(type(delta_pos) is numpy.ndarray))
+             or (not(delta_pos.dtype == numpy.float64))):
             print "delta_pos must be an array of floats"
             return
 
         # check the length of the delta move
-        if (not(type(indices) is numpy.ndarray)):
+        if ((not(type(indices) is numpy.ndarray))
+            or (not(indices.dtype == numpy.int64))):
             print "indices must be an array of integers"
             return
 
