@@ -603,12 +603,12 @@ class arm:
              or (not(delta_pos.dtype == numpy.float64))):
             print "delta_pos must be an array of floats"
             return
-        if (delta_pos == self.get_joint_number()):
-            print "delta_pos must ne an array of size", self.get_joint_number
+        if (not(delta_pos.size ==  self.get_joint_number())):
+            print "delta_pos must be an array of size", self.get_joint_number()
             return
         
-        abs_pos = numpy.array( self.__position_joint_desired)
-        abs_pos = abs_pos + delta_pos
+        abs_pos = numpy.array(self.__position_joint_desired)
+        abs_pos = abs_pos+ delta_pos
         self.__move_joint(abs_pos, interpolate)
         
     def dmove_joint_one(self, delta_pos, indices, interpolate=True):
@@ -656,27 +656,32 @@ class arm:
             # move accordingly
             self.__move_joint(abs_pos, interpolate)
 
-    def  move_joint(self, abs_pos, interpolate = True):
+    def move_joint(self, abs_pos, interpolate = True):
         """Absolute move in joint space.
 
         :param abs_pos: the absolute position in which you want to move, this is a list
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
 
-        if (type(abs_pos) is numpy.ndarray):
-            if(self.__check_list_length(abs_pos, self.get_joint_number())):
-                self.__move_joint(abs_pos, interpolate)
-
-
-    def move_joint_one(self, value, index, interpolate=True):
+        if ((not(type(abs_pos) is numpy.ndarray))
+            or (not(abs_pos.dtype == numpy.float64))):
+            print "abs_pos must be an array of floats"
+            return
+        if (not(abs_pos.size == self.get_joint_number())):
+            print "abs_pos must be an array of size", self.get_joint_number()
+            return
+        
+        self.__move_joint(abs_pos, interpolate)
+        
+    def move_joint_one(self, abs_pos, indices, interpolate=True):
         """Absolute index move of 1 joint in joint space.
 
         :param value: the incremental amount in which you want to move index by, this is a list
         :param index: the joint you want to move, this is a list
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
-        if(type(value) is float and type(index) is int):
-            self.dmove_joint_some(numpy.array(value), numpy.array(index), interpolate)
+        if(type(abs_pos) is float and type(indices) is int):
+            self.move_joint_some(numpy.array([abs_pos]), numpy.array([indices]), interpolate)
 
-    def move_joint_some(self, value, index, interpolate=True):
+    def move_joint_some(self, abs_pos, indices, interpolate=True):
         """Absolute index move of a series of joints in joint space.
 
         :param value: the incremental amount in which you want to move index by, this is a list
@@ -684,22 +689,32 @@ class arm:
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting abs move joint index')
 
-        #check if value is a list
-        if (type(value) is numpy.ndarray):
-            print 'here'
-            initial_joint_position = self.__position_joint_desire
-            abs_joint = numpy.array.empty(self.get_joint_number)
+        if ((not(type(abs_pos) is numpy.ndarray))
+            or (not(abs_pos.dtype == numpy.float64))):
+            print "delta_pos must be an array of floats"
+            return
+        
+        # check the length of the delta move
+        if ((not(type(indices) is numpy.ndarray))
+            or (not(indices.dtype == numpy.int64))):
+            print "indices must be an array of integers"
+            return
 
-            # check the length of the delta move
-            if(type(index) is numpy.ndarray and index.size == value.size):
-                # make sure it does not exceed the legal joint amount
-                if(index.size <= initial_joint_position.size):
-                    for j in range(len(index)):
-                        if(index[j] < initial_joint_position.size):
-                            for i in range (initial_joint_position.size):
-                                if i == index[j]:
-                                    abs_joint[i] = value[j]
-                    self.__move_joint(abs_joint, interpolate)
+        if ((not(indices.size == abs_pos.size))
+            or (indices > self.get_joint_number())):
+            print "size of delta_pos and indices must match and be less than", self.get_joint_number()
+            return
+
+        for i in range(indices.size):
+            if (indices[i] > self.get_joint_number()):
+                print "all indices must be less than", self.get_joint_number()
+                return
+
+        abs_pos_result = numpy.zeros(self.get_joint_number())
+        for i in range(len(indices)):
+            abs_pos_result[indices[i]] = abs_pos[i]
+            # move accordingly
+        self.__move_joint(abs_pos_result, interpolate)
 
     def __move_joint(self, abs_joint, interpolate = True):
         """Absolute move by vector in joint plane.
@@ -720,15 +735,14 @@ class arm:
         :returns: true if you had succesfully move
         :rtype: Bool"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting move joint direct')
-        if (type(end_joint) is numpy.ndarray):
-            if not self.__dvrk_set_state('DVRK_POSITION_JOINT'):
-                return False
-            # go to that position directly
-            joint_state = JointState()
-            joint_state.position[:] = end_joint
-            self.__set_position_joint_pub.publish(joint_state)
-            rospy.loginfo(rospy.get_caller_id() + ' <- completing move joint direct')
-            return True
+        if not self.__dvrk_set_state('DVRK_POSITION_JOINT'):
+            return False
+        # go to that position directly
+        joint_state = JointState()
+        joint_state.position[:] = end_joint.flat
+        self.__set_position_joint_pub.publish(joint_state)
+        rospy.loginfo(rospy.get_caller_id() + ' <- completing move joint direct')
+        return True
 
     def __move_joint_goal(self, end_joint):
         """Move the arm to the end vector by bypassing the trajectory generator.
