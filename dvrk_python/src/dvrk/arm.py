@@ -429,9 +429,7 @@ class arm:
             if(type(delta_translation) is list):
                 if (self.__check_list_length(delta_translation, 3)):
                     # convert into a Vector
-                    print 'in here'
                     delta_vector = Vector(delta_translation[0], delta_translation[1], delta_translation[2])
-                    print 'd', delta_vector
                 else:
                     return
             else:
@@ -439,7 +437,6 @@ class arm:
             # convert into a Frame
             delta_rotation = Rotation.Identity()
             delta_frame = Frame(delta_rotation, delta_vector)
-            print 'd frame', delta_frame
             # move accordingly
             self.dmove_frame(delta_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian translation')
@@ -469,7 +466,6 @@ class arm:
         if (self.__check_input_type(delta_frame, [Frame])):
             # add the incremental move to the current position, to get the ending frame
             end_frame = delta_frame * self.__position_cartesian_desired
-            print 'end frame', end_frame
             # move accordingly
             self.move_frame(end_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian frame')
@@ -554,11 +550,9 @@ class arm:
         rospy.loginfo(rospy.get_caller_id() + ' -> starting move cartesian direct')
         # set in position cartesian mode
         end_position = posemath.toMsg(end_frame)
-        print 'end pose', end_position
         if (not self.__dvrk_set_state('DVRK_POSITION_CARTESIAN')):
             return False
         # go to that position directly
-        print 'inhere2'
         self.__set_position_cartesian_pub.publish(end_position)
         rospy.loginfo(rospy.get_caller_id() + ' <- completing move cartesian direct')
         return True
