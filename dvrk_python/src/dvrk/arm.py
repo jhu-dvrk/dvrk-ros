@@ -72,6 +72,7 @@ import inspect
 import code
 import IPython
 import math
+import numpy
 
 from PyKDL import *
 
@@ -128,12 +129,12 @@ class arm:
         self.__goal_reached_event = threading.Event()
 
         # continuous publish from dvrk_bridge
-        self.__position_joint_desired = []
-        self.__effort_joint_desired = []
+        self.__position_joint_desired = numpy.array(0, dtype = numpy.float)
+        self.__effort_joint_desired = numpy.array(0, dtype = numpy.float)
         self.__position_cartesian_desired = Frame()
-        self.__position_joint_current = []
-        self.__velocity_joint_current = []
-        self.__effort_joint_current = []
+        self.__position_joint_current = numpy.array(0, dtype = numpy.float)
+        self.__velocity_joint_current = numpy.array(0, dtype = numpy.float)
+        self.__effort_joint_current = numpy.array(0, dtype = numpy.float)
         self.__position_cartesian_current = Frame()
 
         # publishers
@@ -202,8 +203,10 @@ class arm:
         """Cb for the joint desired position.
 
         :param data: the `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_desired"""
-        self.__position_joint_desired[:] = data.position
-        self.__effort_joint_desired[:] = data.effort
+        self.__position_joint_desired.resize(len(data.position))
+        self.__effort_joint_desired.resize(len(data.effort))
+        self.__position_joint_desired.flat[:] = data.position
+        self.__effort_joint_desired.flat[:] = data.effort
 
     def __position_cartesian_desired_cb(self, data):
         """Cb for the cartesian desired position.
@@ -215,9 +218,12 @@ class arm:
         """Cb for the current joint position.
 
         :param data: the `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_current"""
-        self.__position_joint_current[:] = data.position
-        self.__velocity_joint_current[:] = data.velocity
-        self.__effort_joint_current[:] = data.effort
+        self.__position_joint_current.resize(len(data.position))
+        self.__velocity_joint_current.resize(len(data.velocity))
+        self.__effort_joint_current.resize(len(data.effort))
+        self.__position_joint_current.flat[:] = data.position
+        self.__velocity_joint_current.flat[:] = data.velocity
+        self.__effort_joint_current.flat[:] = data.effort
 
     def __position_cartesian_current_cb(self, data):
         """Cb for the current cartesian position.
@@ -423,7 +429,9 @@ class arm:
             if(type(delta_translation) is list):
                 if (self.__check_list_length(delta_translation, 3)):
                     # convert into a Vector
+                    print 'in here'
                     delta_vector = Vector(delta_translation[0], delta_translation[1], delta_translation[2])
+                    print 'd', delta_vector
                 else:
                     return
             else:
@@ -431,6 +439,7 @@ class arm:
             # convert into a Frame
             delta_rotation = Rotation.Identity()
             delta_frame = Frame(delta_rotation, delta_vector)
+            print 'd frame', delta_frame
             # move accordingly
             self.dmove_frame(delta_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian translation')
@@ -460,6 +469,7 @@ class arm:
         if (self.__check_input_type(delta_frame, [Frame])):
             # add the incremental move to the current position, to get the ending frame
             end_frame = delta_frame * self.__position_cartesian_desired
+            print 'end frame', end_frame
             # move accordingly
             self.move_frame(end_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian frame')
@@ -544,9 +554,11 @@ class arm:
         rospy.loginfo(rospy.get_caller_id() + ' -> starting move cartesian direct')
         # set in position cartesian mode
         end_position = posemath.toMsg(end_frame)
+        print 'end pose', end_position
         if (not self.__dvrk_set_state('DVRK_POSITION_CARTESIAN')):
             return False
         # go to that position directly
+        print 'inhere2'
         self.__set_position_cartesian_pub.publish(end_position)
         rospy.loginfo(rospy.get_caller_id() + ' <- completing move cartesian direct')
         return True
@@ -582,70 +594,73 @@ class arm:
         rospy.loginfo(rospy.get_caller_id() + ' -> compeleting set position goal cartesian publish and wait')
         return True
 
-    def dmove_joint(self, value, interpolate= True):
+    def dmove_joint(self, delta_pos, interpolate= True):
         """Incremental move in joint space.
-        
-        :param value: the incremental amount in which you want to move index by, this is a list
+
+        :param delta_pos: the incremental amount in which you want to move index by, this is a list
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
 
-        initial_joint_position = self.__position_joint_desired
-        delta_joint = []
-        delta_joint[:] = initial_joint_position
-            
-        if(self.__check_list_length(value, self.get_joint_number())):
-            for i in range (len(value)) :
-                delta_joint[i] = initial_joint_position[i] + value[i]
-            self.__move_joint(delta_joint, interpolate)
+        initial_joint_position = numpy.array(self.__position_joint_desired)
+        delta_joint = numpy.empty(self.get_joint_number())
+        if (type(delta_pos) is numpy.ndarray):
+            if(self.__check_list_length(delta_pos, self.get_joint_number())):
+                absolute_pos = initial_joint_position + delta_pos
+                self.__move_joint(absolute_pos, interpolate)
 
-    def dmove_joint_one(self, value, index, interpolate=True):
+    def dmove_joint_one(self, delta_pos, indices, interpolate=True):
         """Incremental index move of 1 joint in joint space.
 
-        :param value: the incremental amount in which you want to move index by, this is a list
+        :param delta_pos: the incremental amount in which you want to move index by, this is a list
         :param index: the joint you want to move, this is a list
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
-        if(type(value) is float and type(index) is int):
-            self.dmove_joint_some([value], [index], interpolate)
-        
-    def dmove_joint_some(self, value, index, interpolate=True):
+        if (type(delta_pos) is float and type(indices) is int):
+            self.dmove_joint_some(numpy.array([delta_pos]), numpy.array([indices]), interpolate)
+
+    def dmove_joint_some(self, delta_pos, indices, interpolate = True):
         """Incremental index move of a series of joints in joint space.
 
-        :param value: the incremental amount in which you want to move index by, this is a list
-        :param index: the joint you want to move, this is a list
+        :param delta_pos: the incremental amount in which you want to move index by, this is a list
+        :param indices: the joints you want to move, this is a list of indices
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting delta move joint index')
-        # check if value is a list
-        if(self.__check_input_type(value, [list,float])):
-            initial_joint_position = self.__position_joint_desired
-            delta_joint = []
-            delta_joint[:] = initial_joint_position
-            # give index is not given and the size of the value is 7
-            if (index == []):
-                if(self.__check_list_length(value, len(self.__position_joint_desired))):
-                    index = range(len(self.__position_joint_desired))
-            # is there both an index and a value
-            else:
-                # check the length of the delta move
-                if(self.__check_input_type(index, [list,int]) and len(index) == len(value)):
-                    # make sure it does not exceed the legal joint amount
-                    if(len(index) <= len(initial_joint_position)):
-                        for j in range(len(index)):
-                            if(index[j] < len(initial_joint_position)):
-                                for i in range (len(initial_joint_position)):
-                                    if i == index[j]:
-                                        delta_joint[i] = initial_joint_position[i] + value[j]
-                    # move accordingly
-                    self.__move_joint(delta_joint, interpolate)
-                else:
-                    return
 
-    def  move_joint(self, value, interpolate= True):
+        # check if delta is an array
+        if (not(type(delta_pos) is numpy.ndarray)):
+            print "delta_pos must be an array of floats"
+            return
+
+        # check the length of the delta move
+        if (not(type(indices) is numpy.ndarray)):
+            print "indices must be an array of integers"
+            return
+
+        if ((not(indices.size == delta_pos.size))
+            or (indices > self.get_joint_number())):
+            print "size of delta_pos and indices must match and be less than", self.get_joint_number()
+            return
+
+        for i in range(indices.size):
+            if (indices[i] > self.get_joint_number()):
+                print "all indices must be less than", self.get_joint_number()
+                return
+
+        abs_pos = numpy.array( self.__position_joint_desired)
+        for i in range(len(indices)):
+            abs_pos[indices[i]] = abs_pos[indices[i]] + delta_pos[i]
+            # move accordingly
+            self.__move_joint(abs_pos, interpolate)
+
+    def  move_joint(self, abs_pos, interpolate = True):
         """Absolute move in joint space.
-        
-        :param value: the incremental amount in which you want to move index by, this is a list
+
+        :param abs_pos: the absolute position in which you want to move, this is a list
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
-        if(self.__check_list_length(value, self.get_joint_number())):
-            self.__move_joint(value, interpolate)
-            
+
+        if (type(abs_pos) is numpy.ndarray):
+            if(self.__check_list_length(abs_pos, self.get_joint_number())):
+                self.__move_joint(abs_pos, interpolate)
+
+
     def move_joint_one(self, value, index, interpolate=True):
         """Absolute index move of 1 joint in joint space.
 
@@ -653,8 +668,8 @@ class arm:
         :param index: the joint you want to move, this is a list
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         if(type(value) is float and type(index) is int):
-            self.move_joint_some([value], [index], interpolate)
-            
+            self.dmove_joint_some(numpy.array(value), numpy.array(index), interpolate)
+
     def move_joint_some(self, value, index, interpolate=True):
         """Absolute index move of a series of joints in joint space.
 
@@ -662,22 +677,20 @@ class arm:
         :param index: the incremental joint you want to move, this is a list
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting abs move joint index')
-        # check if value is a list
-        if(self.__check_input_type(value, [list,float])):
-            initial_joint_position = self.__position_joint_desired
-            abs_joint = []
-            abs_joint[:] = initial_joint_position
-            # give index is not given and the size of the value is 7
-            if (index == []):
-                if(self.__check_list_length(value, len(self.__position_joint_desired))):
-                    index = range(len(self.__position_joint_desired))
-            # is there both an index and a value
-            if(self.__check_input_type(index, [list,int]) and len(index) == len(value)):
-            # if the joint specified exists
-                if(len(index) <= len(initial_joint_position)):
+
+        #check if value is a list
+        if (type(value) is numpy.ndarray):
+            print 'here'
+            initial_joint_position = self.__position_joint_desire
+            abs_joint = numpy.array.empty(self.get_joint_number)
+
+            # check the length of the delta move
+            if(type(index) is numpy.ndarray and index.size == value.size):
+                # make sure it does not exceed the legal joint amount
+                if(index.size <= initial_joint_position.size):
                     for j in range(len(index)):
-                        if(index[j] < len(initial_joint_position)):
-                            for i in range (len(initial_joint_position)):
+                        if(index[j] < initial_joint_position.size):
+                            for i in range (initial_joint_position.size):
                                 if i == index[j]:
                                     abs_joint[i] = value[j]
                     self.__move_joint(abs_joint, interpolate)
@@ -688,11 +701,10 @@ class arm:
         :param abs_joint: the absolute position of the joints in terms of a list
         :param interpolate: if false the trajectory generator will be used; if true you can bypass the trajectory generator"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting absolute move joint vector')
-        if(self.__check_input_type(abs_joint, [list,float])):
-            if (interpolate):
-                self.__move_joint_goal(abs_joint)
-            else:
-                self.__move_joint_direct(abs_joint)
+        if (interpolate):
+            self.__move_joint_goal(abs_joint)
+        else:
+            self.__move_joint_direct(abs_joint)
         rospy.loginfo(rospy.get_caller_id() + ' -> completing absolute move joint vector')
 
     def __move_joint_direct(self, end_joint):
@@ -702,7 +714,7 @@ class arm:
         :returns: true if you had succesfully move
         :rtype: Bool"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting move joint direct')
-        if (self.__check_input_type(end_joint, [list,float])):
+        if (type(end_joint) is numpy.ndarray):
             if not self.__dvrk_set_state('DVRK_POSITION_JOINT'):
                 return False
             # go to that position directly
@@ -719,13 +731,12 @@ class arm:
         :returns: true if you had succesfully move
         :rtype: Bool"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting move joint goal')
-        if (self.__check_input_type(end_joint, [list,float])):
-            if (not self.__dvrk_set_state('DVRK_POSITION_GOAL_JOINT')):
-                return False
-            joint_state = JointState()
-            joint_state.position[:] = end_joint
-            self.__set_position_goal_joint_publish_and_wait(joint_state)
-            return True
+        if (not self.__dvrk_set_state('DVRK_POSITION_GOAL_JOINT')):
+            return False
+        joint_state = JointState()
+        joint_state.position[:] = end_joint.flat
+        self.__set_position_goal_joint_publish_and_wait(joint_state)
+        return True
 
     def __set_position_goal_joint_publish_and_wait(self, end_position):
         """Wrapper around publisher/subscriber to manage events for joint coordinates.
