@@ -10,6 +10,7 @@
 # --- end cisst license ---
 
 cmake_minimum_required (VERSION 2.8.3)
+
 project (dvrk_robot)
 
 ## find catkin macros and libraries
@@ -47,7 +48,6 @@ if (cisst_FOUND_AS_REQUIRED)
 
   include (${CISST_USE_FILE})
 
-
   # include_directories(include)
   include_directories (${catkin_INCLUDE_DIRS})
 
@@ -57,10 +57,10 @@ if (cisst_FOUND_AS_REQUIRED)
                   DEPENDS ${REQUIRED_CISST_LIBRARIES})
 
   # sawRobotIO1394 has been compiled within cisst, we should find it automatically
-  cisst_find_saw_component (sawRobotIO1394          1.3.0 REQUIRED)
-  cisst_find_saw_component (sawIntuitiveResearchKit 1.3.0 REQUIRED)
-  cisst_find_saw_component (sawControllers          1.3.0 REQUIRED)
-  cisst_find_saw_component (sawConstraintController REQUIRED)
+  find_package (sawRobotIO1394          1.3.0 REQUIRED)
+  find_package (sawIntuitiveResearchKit 1.3.0 REQUIRED)
+  find_package (sawControllers          1.3.0 REQUIRED)
+  find_package (sawConstraintController REQUIRED)
 
   include_directories (
     ${CMAKE_CURRENT_SOURCE_DIR}/include
