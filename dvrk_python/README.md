@@ -31,9 +31,10 @@ You should see one namespace per arm under `/dvrk`, e.g. `/dvrk/PSM1`, `/dvrk/MT
 
 Then in Python:
 ```python
-from dvrk_python.robot import *
-mtml = robot('MTML')
+from dvrk.arm import *
+mtml = arm('MTML')
 mtml.home()
 mtml.get_current_joint_position()
 ...
 ```
+To access arm specific features (e.g. PSM, MTM, ...), you can use the derived classes `psm` or `mtm`.   For example `from dvrk.psm import *`.
