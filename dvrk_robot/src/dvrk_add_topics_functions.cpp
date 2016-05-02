@@ -19,18 +19,35 @@ http://www.cisst.org/cisst/license.txt.
 #include <dvrk_utilities/dvrk_add_topics_functions.h>
 
 void dvrk::add_topics_footpedals(mtsROSBridge & bridge,
-                                 const std::string & ros_namespace)
+                                 const std::string & ros_namespace,
+                                 const dvrk_topics_version::version version)
 {
-    bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        ("Clutch", "Button", ros_namespace + "/clutch");
-    bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        ("Coag", "Button", ros_namespace + "/coag");
-    bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        ("Camera", "Button", ros_namespace + "/camera");
-    bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        ("Cam+", "Button", ros_namespace + "/camera_plus");
-    bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        ("Cam-", "Button", ros_namespace + "/camera_minus");
+    switch (version) {
+    case dvrk_topics_version::v1_3_0:
+        bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
+            ("Clutch", "Button", ros_namespace + "/clutch");
+        bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
+            ("Coag", "Button", ros_namespace + "/coag");
+        bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
+            ("Camera", "Button", ros_namespace + "/camera");
+        bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
+            ("Cam+", "Button", ros_namespace + "/camera_plus");
+        bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
+            ("Cam-", "Button", ros_namespace + "/camera_minus");
+        break;
+    default:
+        bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
+            ("Clutch", "Button", ros_namespace + "/clutch");
+        bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
+            ("Coag", "Button", ros_namespace + "/coag");
+        bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
+            ("Camera", "Button", ros_namespace + "/camera");
+        bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
+            ("Cam+", "Button", ros_namespace + "/camera_plus");
+        bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
+            ("Cam-", "Button", ros_namespace + "/camera_minus");
+        break;
+    }
 }
 
 void dvrk::connect_bridge_footpedals(mtsROSBridge & bridge,
@@ -57,7 +74,8 @@ void dvrk::connect_bridge_footpedals(const std::string & bridge_name,
 
 void dvrk::add_topics_arm(mtsROSBridge & bridge,
                           const std::string & ros_namespace,
-                          const std::string & arm_component_name)
+                          const std::string & arm_component_name,
+                          const dvrk_topics_version::version version)
 {
     // read
     bridge.AddPublisherFromCommandRead<prmPositionJointGet, sensor_msgs::JointState>
@@ -135,10 +153,12 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
 
 void dvrk::add_topics_mtm(mtsROSBridge & bridge,
                           const std::string & ros_namespace,
-                          const std::string & mtm_component_name)
+                          const std::string & mtm_component_name,
+                          const dvrk_topics_version::version version)
 {
     // arm API
-    dvrk::add_topics_arm(bridge, ros_namespace, mtm_component_name);
+    dvrk::add_topics_arm(bridge, ros_namespace,
+                         mtm_component_name, version);
 
     // mtm specific API
     bridge.AddSubscriberToCommandWrite<vctMatRot3, geometry_msgs::Quaternion>
@@ -176,10 +196,12 @@ void dvrk::connect_bridge_mtm(const std::string & bridge_name,
 
 void dvrk::add_topics_psm(mtsROSBridge & bridge,
                           const std::string & ros_namespace,
-                          const std::string & psm_component_name)
+                          const std::string & psm_component_name,
+                          const dvrk_topics_version::version version)
 {
     // arm API
-    dvrk::add_topics_arm(bridge, ros_namespace, psm_component_name);
+    dvrk::add_topics_arm(bridge, ros_namespace,
+                         psm_component_name, version);
 
     // psm specific API
     bridge.AddSubscriberToCommandWrite<double, std_msgs::Float32>
@@ -208,10 +230,12 @@ void dvrk::connect_bridge_psm(const std::string & bridge_name,
 
 void dvrk::add_topics_ecm(mtsROSBridge & bridge,
                           const std::string & ros_namespace,
-                          const std::string & ecm_component_name)
+                          const std::string & ecm_component_name,
+                          const dvrk_topics_version::version version)
 {
     // arm API
-    dvrk::add_topics_arm(bridge, ros_namespace, ecm_component_name);
+    dvrk::add_topics_arm(bridge, ros_namespace,
+                         ecm_component_name, version);
 
     // ecm specific API
 
@@ -238,7 +262,8 @@ void dvrk::connect_bridge_ecm(const std::string & bridge_name,
 
 void dvrk::add_topics_teleop(mtsROSBridge & bridge,
                              const std::string & ros_namespace,
-                             const std::string & teleop_component_name)
+                             const std::string & teleop_component_name,
+                             const dvrk_topics_version::version version)
 {
     // messages
     bridge.AddLogFromEventWrite(teleop_component_name + "-log", "Error",
@@ -291,7 +316,8 @@ void dvrk::connect_bridge_teleop(const std::string & bridge_name,
 
 void dvrk::add_topics_suj(mtsROSBridge & bridge,
                           const std::string & ros_namespace,
-                          const std::string & arm_name)
+                          const std::string & arm_name,
+                          const dvrk_topics_version::version version)
 {
     // events
     bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::Pose>
@@ -336,7 +362,8 @@ void dvrk::connect_bridge_suj(const std::string & bridge_name,
 
 void dvrk::add_topics_io(mtsROSBridge & bridge,
                          const std::string & ros_namespace,
-                         const std::string & arm_name)
+                         const std::string & arm_name,
+                         const dvrk_topics_version::version version)
 {
     bridge.AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
         (arm_name + "-io", "GetAnalogInputPosSI",

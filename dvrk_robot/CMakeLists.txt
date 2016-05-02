@@ -63,7 +63,8 @@ if (cisst_FOUND_AS_REQUIRED)
   find_package (sawConstraintController REQUIRED)
 
   include_directories (
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${dvrk_robot_SOURCE_DIR}/include
+    ${dvrk_robot_BINARY_DIR}/include
     ${sawRobotIO1394_INCLUDE_DIR}
     ${sawControllers_INCLUDE_DIR}
     ${sawConstraintController_INCLUDE_DIR}
@@ -77,11 +78,19 @@ if (cisst_FOUND_AS_REQUIRED)
     ${sawIntuitiveResearchKit_LIBRARY_DIR}
     )
 
+  cisst_data_generator (dvrk_utilities
+                        "${dvrk_robot_BINARY_DIR}/include" # where to save the file
+                        "dvrk_utilities/"    # sub directory for include
+                        src/dvrk_topics_version.cdg)
+
   add_library (dvrk_utilities
                include/dvrk_utilities/dvrk_add_topics_functions.h
                src/dvrk_add_topics_functions.cpp
                include/dvrk_utilities/dvrk_console.h
-               src/dvrk_console.cpp)
+               src/dvrk_console.cpp
+               ${dvrk_utilities_CISST_DG_SRCS}
+               ${dvrk_utilities_CISST_DG_HDRS})
+
     target_link_libraries (
       dvrk_utilities
       ${sawRobotIO1394_LIBRARIES}

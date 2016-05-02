@@ -5,7 +5,7 @@
   Author(s):  Zihan Chen, Anton Deguet
   Created on: 2015-05-23
 
-  (C) Copyright 2015 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2016 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -20,6 +20,7 @@ http://www.cisst.org/cisst/license.txt.
 #define _dvrk_add_topics_functions_h
 
 #include <cisst_ros_bridge/mtsROSBridge.h>
+#include <dvrk_utilities/dvrk_topics_version.h>
 
 namespace dvrk {
 
@@ -30,7 +31,8 @@ namespace dvrk {
       /clutch_state, /coag_state, /camera_state, /cam_plus_state,
       /cam_minus_state. */
     void add_topics_footpedals(mtsROSBridge & bridge,
-                               const std::string & ros_namespace);
+                               const std::string & ros_namespace,
+                               const dvrk_topics_version::version version);
 
     /*! This method connects all the required interfaces for the foot
       pedals, it must be used after add_topics_footpedals. */
@@ -43,13 +45,15 @@ namespace dvrk {
       PSM). */
     void add_topics_arm(mtsROSBridge & bridge,
                         const std::string & ros_namespace,
-                        const std::string & arm_component_name);
+                        const std::string & arm_component_name,
+                        const dvrk_topics_version::version version);
 
     /*! Add all the topics common to all arms (see add_topics_arm) as
       well as MTM specific topics. */
     void add_topics_mtm(mtsROSBridge & bridge,
                         const std::string & ros_namespace,
-                        const std::string & mtm_component_name);
+                        const std::string & mtm_component_name,
+                        const dvrk_topics_version::version version);
 
     /*! This method connects all the required interfaces for an MTM
       arm, it must be used after add_topics_mtm. */
@@ -62,7 +66,8 @@ namespace dvrk {
       well as PSM specific topics. */
     void add_topics_psm(mtsROSBridge & bridge,
                         const std::string & ros_namespace,
-                        const std::string & psm_component_name);
+                        const std::string & psm_component_name,
+                        const dvrk_topics_version::version version);
 
     /*! This method connects all the required interfaces for a PSM
       arm, it must be used after add_topics_psm. */
@@ -75,7 +80,8 @@ namespace dvrk {
       well as ECM specific topics. */
     void add_topics_ecm(mtsROSBridge & bridge,
                         const std::string & ros_namespace,
-                        const std::string & ecm_component_name);
+                        const std::string & ecm_component_name,
+                        const dvrk_topics_version::version version);
 
     /*! This method connects all the required interfaces for an ECM
       arm, it must be used after add_topics_ecm. */
@@ -88,7 +94,8 @@ namespace dvrk {
     /*! Add all the topics related to tele-op component. */
     void add_topics_teleop(mtsROSBridge & bridge,
                            const std::string & ros_namespace,
-                           const std::string & teleop_component_name);
+                           const std::string & teleop_component_name,
+                           const dvrk_topics_version::version version);
 
     /*! This method connects all the required interfaces for a teleop
      *  component, it must be used after add_topics_teleop. */
@@ -99,7 +106,9 @@ namespace dvrk {
 
     void add_topics_suj(mtsROSBridge & bridge,
                         const std::string & ros_namespace,
-                        const std::string & arm_name);
+                        const std::string & arm_name,
+                        const dvrk_topics_version::version version);
+
     void connect_bridge_suj(mtsROSBridge & bridge,
                             const std::string & suj_component_name,
                             const std::string & arm_name);
@@ -115,7 +124,8 @@ namespace dvrk {
       data collection and debugging. */
     void add_topics_io(mtsROSBridge & bridge,
                        const std::string & ros_namespace,
-                       const std::string & arm_name);
+                       const std::string & arm_name,
+                        const dvrk_topics_version::version version);
 
     /*! This method connects all the required interfaces for an arm
       IOs, it must be used after add_topics_io. */
