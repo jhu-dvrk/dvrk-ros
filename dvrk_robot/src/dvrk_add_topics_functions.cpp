@@ -90,18 +90,36 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
         (arm_component_name, "GetStateJointDesired",
          ros_namespace + "/state_joint_desired");
-    bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::Pose>
-        (arm_component_name, "GetPositionCartesianLocal",
-         ros_namespace + "/position_cartesian_local_current");
-    bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::Pose>
-        (arm_component_name, "GetPositionCartesianLocalDesired",
-         ros_namespace + "/position_cartesian_local_desired");
-    bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::Pose>
-        (arm_component_name, "GetPositionCartesian",
-         ros_namespace + "/position_cartesian_current");
-    bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::Pose>
-        (arm_component_name, "GetPositionCartesianDesired",
-         ros_namespace + "/position_cartesian_desired");
+    switch (version) {
+    case dvrk_topics_version::v1_3_0:
+        bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::Pose>
+            (arm_component_name, "GetPositionCartesianLocal",
+             ros_namespace + "/position_cartesian_local_current");
+        bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::Pose>
+            (arm_component_name, "GetPositionCartesianLocalDesired",
+             ros_namespace + "/position_cartesian_local_desired");
+        bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::Pose>
+            (arm_component_name, "GetPositionCartesian",
+             ros_namespace + "/position_cartesian_current");
+        bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::Pose>
+            (arm_component_name, "GetPositionCartesianDesired",
+             ros_namespace + "/position_cartesian_desired");
+        break;
+    default:
+        bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::PoseStamped>
+            (arm_component_name, "GetPositionCartesianLocal",
+             ros_namespace + "/position_cartesian_local_current");
+        bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::PoseStamped>
+            (arm_component_name, "GetPositionCartesianLocalDesired",
+             ros_namespace + "/position_cartesian_local_desired");
+        bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::PoseStamped>
+            (arm_component_name, "GetPositionCartesian",
+             ros_namespace + "/position_cartesian_current");
+        bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::PoseStamped>
+            (arm_component_name, "GetPositionCartesianDesired",
+             ros_namespace + "/position_cartesian_desired");
+        break;
+    }
 
     // write
     bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
@@ -320,18 +338,36 @@ void dvrk::add_topics_suj(mtsROSBridge & bridge,
                           const dvrk_topics_version::version version)
 {
     // events
-    bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::Pose>
-        (arm_name + "-suj", "BaseFrame",
-         ros_namespace + "/position_cartesian_current");
-    bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::Pose>
-        (arm_name + "-suj", "BaseFrameDesired",
-         ros_namespace + "/position_cartesian_desired");
-    bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::Pose>
-        (arm_name + "-suj", "BaseFrameLocal",
-         ros_namespace + "/position_cartesian_local_current");
-    bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::Pose>
-        (arm_name + "-suj", "BaseFrameLocalDesired",
-         ros_namespace + "/position_cartesian_local_desired");
+    switch (version) {
+    case dvrk_topics_version::v1_3_0:
+        bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::Pose>
+            (arm_name + "-suj", "BaseFrame",
+             ros_namespace + "/position_cartesian_current");
+        bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::Pose>
+            (arm_name + "-suj", "BaseFrameDesired",
+             ros_namespace + "/position_cartesian_desired");
+        bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::Pose>
+            (arm_name + "-suj", "BaseFrameLocal",
+             ros_namespace + "/position_cartesian_local_current");
+        bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::Pose>
+            (arm_name + "-suj", "BaseFrameLocalDesired",
+             ros_namespace + "/position_cartesian_local_desired");
+        break;
+    default:
+        bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::PoseStamped>
+            (arm_name + "-suj", "BaseFrame",
+             ros_namespace + "/position_cartesian_current");
+        bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::PoseStamped>
+            (arm_name + "-suj", "BaseFrameDesired",
+             ros_namespace + "/position_cartesian_desired");
+        bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::PoseStamped>
+            (arm_name + "-suj", "BaseFrameLocal",
+             ros_namespace + "/position_cartesian_local_current");
+        bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::PoseStamped>
+            (arm_name + "-suj", "BaseFrameLocalDesired",
+             ros_namespace + "/position_cartesian_local_desired");
+        break;
+    }
 
     // messages
     bridge.AddLogFromEventWrite(arm_name + "-suj-log", "Error",
