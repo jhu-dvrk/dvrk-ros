@@ -37,15 +37,20 @@ void dvrk::add_topics_footpedals(mtsROSBridge & bridge,
         break;
     default:
         bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-            ("Clutch", "Button", ros_namespace + "/clutch");
+            ("Clutch", "Button",
+             ros_namespace + "/clutch", ros_namespace + "/clutch");
         bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-            ("Coag", "Button", ros_namespace + "/coag");
+            ("Coag", "Button",
+             ros_namespace + "/coag", ros_namespace + "/coag");
         bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-            ("Camera", "Button", ros_namespace + "/camera");
+            ("Camera", "Button",
+             ros_namespace + "/camera", ros_namespace + "/camera");
         bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-            ("Cam+", "Button", ros_namespace + "/camera_plus");
+            ("Cam+", "Button",
+             ros_namespace + "/camera_plus", ros_namespace + "/camera_plus");
         bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-            ("Cam-", "Button", ros_namespace + "/camera_minus");
+            ("Cam-", "Button",
+             ros_namespace + "/camera_minus", ros_namespace + "/camera_minus");
         break;
     }
 }
@@ -78,20 +83,20 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
                           const dvrk_topics_version::version version)
 {
     // read
-    bridge.AddPublisherFromCommandRead<prmPositionJointGet, sensor_msgs::JointState>
-        (arm_component_name, "GetPositionJoint",
-         ros_namespace + "/position_joint_current");
-    bridge.AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
-        (arm_component_name, "GetPositionJointDesired",
-         ros_namespace + "/position_joint_desired");
-    bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
-        (arm_component_name, "GetStateJoint",
-         ros_namespace + "/state_joint_current");
-    bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
-        (arm_component_name, "GetStateJointDesired",
-         ros_namespace + "/state_joint_desired");
     switch (version) {
     case dvrk_topics_version::v1_3_0:
+        bridge.AddPublisherFromCommandRead<prmPositionJointGet, sensor_msgs::JointState>
+            (arm_component_name, "GetPositionJoint",
+             ros_namespace + "/position_joint_current");
+        bridge.AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
+            (arm_component_name, "GetPositionJointDesired",
+             ros_namespace + "/position_joint_desired");
+        bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
+            (arm_component_name, "GetStateJoint",
+             ros_namespace + "/state_joint_current");
+        bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
+            (arm_component_name, "GetStateJointDesired",
+             ros_namespace + "/state_joint_desired");
         bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::Pose>
             (arm_component_name, "GetPositionCartesianLocal",
              ros_namespace + "/position_cartesian_local_current");
@@ -106,18 +111,28 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
              ros_namespace + "/position_cartesian_desired");
         break;
     default:
+        bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
+            (arm_component_name, "GetStateJoint",
+             ros_namespace + "/state_joint_current", ros_namespace + "/current");
+        bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
+            (arm_component_name, "GetStateJointDesired",
+             ros_namespace + "/state_joint_desired", ros_namespace + "/desired");
         bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::PoseStamped>
             (arm_component_name, "GetPositionCartesianLocal",
-             ros_namespace + "/position_cartesian_local_current");
+             ros_namespace + "/position_cartesian_local_current",
+             ros_namespace + "/local_current");
         bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::PoseStamped>
             (arm_component_name, "GetPositionCartesianLocalDesired",
-             ros_namespace + "/position_cartesian_local_desired");
+             ros_namespace + "/position_cartesian_local_desired",
+             ros_namespace + "/local_desired");
         bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::PoseStamped>
             (arm_component_name, "GetPositionCartesian",
-             ros_namespace + "/position_cartesian_current");
+             ros_namespace + "/position_cartesian_current",
+             ros_namespace + "/current");
         bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::PoseStamped>
             (arm_component_name, "GetPositionCartesianDesired",
-             ros_namespace + "/position_cartesian_desired");
+             ros_namespace + "/position_cartesian_desired",
+             ros_namespace + "/desired");
         break;
     }
 
@@ -258,8 +273,17 @@ void dvrk::add_topics_ecm(mtsROSBridge & bridge,
     // ecm specific API
 
     // events
-    bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
-        (ecm_component_name, "ManipClutch", ros_namespace + "/manip_clutch");
+    switch (version) {
+    case dvrk_topics_version::v1_3_0:
+        bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
+            (ecm_component_name, "ManipClutch", ros_namespace + "/manip_clutch");
+        break;
+    default:
+        bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
+            (ecm_component_name, "ManipClutch",
+             ros_namespace + "/manip_clutch", ros_namespace + "/manip_clutch");
+        break;
+    }
 }
 
 void dvrk::connect_bridge_ecm(mtsROSBridge & bridge,
@@ -292,12 +316,27 @@ void dvrk::add_topics_teleop(mtsROSBridge & bridge,
                                 mtsROSEventWriteLog::ROS_LOG_INFO);
 
     // events
-    bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
-        (teleop_component_name, "Enabled", ros_namespace + "/enabled");
-    bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
-        (teleop_component_name, "RotationLocked", ros_namespace + "/rotation_locked");
-    bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
-        (teleop_component_name, "TranslationLocked", ros_namespace + "/translation_locked");
+    switch (version) {
+    case dvrk_topics_version::v1_3_0:
+        bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
+            (teleop_component_name, "Enabled", ros_namespace + "/enabled");
+        bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
+            (teleop_component_name, "RotationLocked", ros_namespace + "/rotation_locked");
+        bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
+            (teleop_component_name, "TranslationLocked", ros_namespace + "/translation_locked");
+        break;
+    default:
+        bridge.AddPublisherFromEventWrite<bool, sensor_msgs::Joy>
+            (teleop_component_name, "Enabled",
+             ros_namespace + "/enabled", ros_namespace + "/enabled");
+        bridge.AddPublisherFromEventWrite<bool, sensor_msgs::Joy>
+            (teleop_component_name, "RotationLocked",
+             ros_namespace + "/rotation_locked", ros_namespace + "/rotation_locked");
+        bridge.AddPublisherFromEventWrite<bool, sensor_msgs::Joy>
+            (teleop_component_name, "TranslationLocked",
+             ros_namespace + "/translation_locked", ros_namespace + "/translation_locked");
+        break;
+    }
     bridge.AddPublisherFromEventWrite<double, std_msgs::Float32>
         (teleop_component_name, "Scale", ros_namespace + "/scale");
 
@@ -356,16 +395,20 @@ void dvrk::add_topics_suj(mtsROSBridge & bridge,
     default:
         bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::PoseStamped>
             (arm_name + "-suj", "BaseFrame",
-             ros_namespace + "/position_cartesian_current");
+             ros_namespace + "/position_cartesian_current",
+             ros_namespace + "/current");
         bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::PoseStamped>
             (arm_name + "-suj", "BaseFrameDesired",
-             ros_namespace + "/position_cartesian_desired");
+             ros_namespace + "/position_cartesian_desired",
+             ros_namespace + "/desired");
         bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::PoseStamped>
             (arm_name + "-suj", "BaseFrameLocal",
-             ros_namespace + "/position_cartesian_local_current");
+             ros_namespace + "/position_cartesian_local_current",
+             ros_namespace + "/local_current");
         bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::PoseStamped>
             (arm_name + "-suj", "BaseFrameLocalDesired",
-             ros_namespace + "/position_cartesian_local_desired");
+             ros_namespace + "/position_cartesian_local_desired",
+             ros_namespace + "/local_desired");
         break;
     }
 
@@ -399,7 +442,7 @@ void dvrk::connect_bridge_suj(const std::string & bridge_name,
 void dvrk::add_topics_io(mtsROSBridge & bridge,
                          const std::string & ros_namespace,
                          const std::string & arm_name,
-                         const dvrk_topics_version::version version)
+                         const dvrk_topics_version::version CMN_UNUSED(version))
 {
     bridge.AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
         (arm_name + "-io", "GetAnalogInputPosSI",

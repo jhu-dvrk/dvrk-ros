@@ -69,7 +69,7 @@ int main(int argc, char ** argv)
     // parse options
     cmnCommandLineOptions options;
     std::string jsonMainConfigFile;
-    std::string rosNamespace = "/dvrk/";
+    std::string rosNamespace = "/dvrk";
     double rosPeriod = 10.0 * cmn_ms;
     std::list<std::string> jsonIOConfigFiles;
     std::string versionString = "v1_4_0";

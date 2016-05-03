@@ -77,11 +77,8 @@ from PyKDL import *
 from tf import transformations
 from tf_conversions import posemath
 from std_msgs.msg import String, Bool, Float32, Empty
-from geometry_msgs.msg import Pose
-from geometry_msgs.msg import Vector3
-from geometry_msgs.msg import Quaternion
-from geometry_msgs.msg import Wrench
-from sensor_msgs.msg import JointState
+from geometry_msgs.msg import Pose, PoseStamped, Vector3, Quaternion, Wrench
+from sensor_msgs.msg import JointState, Joy
 
 # from code import InteractiveConsole
 # from imp import new_module
@@ -170,11 +167,11 @@ class arm:
         rospy.Subscriber(self.__full_ros_namespace + '/state_joint_desired',
                          JointState, self.__state_joint_desired_callback)
         rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_desired',
-                         Pose, self.__position_cartesian_desired_callback)
+                         PoseStamped, self.__position_cartesian_desired_callback)
         rospy.Subscriber(self.__full_ros_namespace + '/state_joint_current',
                          JointState, self.__state_joint_current_callback)
         rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_current',
-                         Pose, self.__position_cartesian_current_callback)
+                         PoseStamped, self.__position_cartesian_current_callback)
         # create node
         # rospy.init_node('arm_api', anonymous = True)
         rospy.init_node('arm_api',anonymous = True, log_level = rospy.WARN)
@@ -207,7 +204,7 @@ class arm:
         """Callback for the cartesian desired position.
 
         :param data: the cartesian position desired"""
-        self.__position_cartesian_desired = posemath.fromMsg(data)
+        self.__position_cartesian_desired = posemath.fromMsg(data.pose)
 
     def __state_joint_current_callback(self, data):
         """Callback for the current joint position.
@@ -221,7 +218,7 @@ class arm:
         """Callback for the current cartesian position.
 
         :param data: The cartesian position current."""
-        self.__position_cartesian_current = posemath.fromMsg(data)
+        self.__position_cartesian_current = posemath.fromMsg(data.pose)
 
     def __dvrk_set_state(self, state, timeout = 5):
         """Simple set state with block.

@@ -110,7 +110,7 @@ classdef arm < handle
             self.position_desired = [];
             topic = strcat(self.ros_name, '/position_cartesian_desired');
             self.position_desired_subscriber = ...
-                rossubscriber(topic, rostype.geometry_msgs_Pose);
+                rossubscriber(topic, rostype.geometry_msgs_PoseStamped);
             self.position_desired_subscriber.NewMessageFcn = ...
                 @(sub, data)self.position_desired_callback(sub, data);
 
@@ -127,7 +127,7 @@ classdef arm < handle
             self.position_current = [];
             topic = strcat(self.ros_name, '/position_cartesian_current');
             self.position_current_subscriber = ...
-                rossubscriber(topic, rostype.geometry_msgs_Pose);
+                rossubscriber(topic, rostype.geometry_msgs_PoseStamped);
             self.position_current_subscriber.NewMessageFcn = ...
                 @(sub, data)self.position_current_callback(sub, data);
 
@@ -204,8 +204,8 @@ classdef arm < handle
             % published and store as property position_desired
 
             % convert idiotic ROS message type to homogeneous transforms
-            position = trvec2tform([pose.Position.X, pose.Position.Y, pose.Position.Z]);
-            orientation = quat2tform([pose.Orientation.W, pose.Orientation.X, pose.Orientation.Y, pose.Orientation.Z]);
+            position = trvec2tform([pose.Pose.Position.X, pose.Pose.Position.Y, pose.Pose.Position.Z]);
+            orientation = quat2tform([pose.Pose.Orientation.W, pose.Pose.Orientation.X, pose.Pose.Orientation.Y, pose.Pose.Orientation.Z]);
             % combine position and orientation
             self.position_desired = position * orientation;
         end
@@ -222,8 +222,8 @@ classdef arm < handle
             % position published and store as property position_current
 
             % convert idiotic ROS message type to homogeneous transforms
-            position = trvec2tform([pose.Position.X, pose.Position.Y, pose.Position.Z]);
-            orientation = quat2tform([pose.Orientation.W, pose.Orientation.X, pose.Orientation.Y, pose.Orientation.Z]);
+            position = trvec2tform([pose.Pose.Position.X, pose.Pose.Position.Y, pose.Pose.Position.Z]);
+            orientation = quat2tform([pose.Pose.Orientation.W, pose.Pose.Orientation.X, pose.Pose.Orientation.Y, pose.Pose.Orientation.Z]);
             % combine position and orientation
             self.position_current = position * orientation;
         end
