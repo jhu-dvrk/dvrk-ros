@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-05-23
 
-  (C) Copyright 2015 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2016 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -29,13 +29,15 @@ namespace dvrk {
     public:
         console(mtsROSBridge & bridge,
                 const std::string & ros_namespace,
-                mtsIntuitiveResearchKitConsole * mts_console);
+                mtsIntuitiveResearchKitConsole * mts_console,
+                const dvrk_topics_version::version version);
         void Configure(const std::string & jsonFile);
         void Connect(void);
     protected:
         std::string mBridgeName;
         std::string mNameSpace;
         mtsIntuitiveResearchKitConsole * mConsole;
+        dvrk_topics_version::version mVersion;
         std::list<std::string> mIOInterfaces;
     };
 }

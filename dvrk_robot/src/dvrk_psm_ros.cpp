@@ -5,7 +5,7 @@
   Author(s):  Adnan Munawar (WPI), Modified from original file from Zihan Chen
   Created on: 2014-03-07
 
-  (C) Copyright 2014-2015 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2014-2016 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -138,9 +138,10 @@ int main(int argc, char** argv)
     mtsROSBridge robotBridge("RobotBridge", rosPeriod, true);
 
     // populate interfaces
-    dvrk::add_topics_psm(robotBridge, "/dvrk/" + config_name, psm->GetName());
+    const dvrk_topics_version::version version = dvrk_topics_version::v1_3_0;
+    dvrk::add_topics_psm(robotBridge, "/dvrk/" + config_name, psm->GetName(), version);
     if (options.IsSet("io-ros")) {
-        dvrk::add_topics_io(robotBridge, "/dvrk/" + config_name + "/io", psm->GetName());
+        dvrk::add_topics_io(robotBridge, "/dvrk/" + config_name + "/io", psm->GetName(), version);
     }
     // add component and connect
     componentManager->AddComponent(&robotBridge);
