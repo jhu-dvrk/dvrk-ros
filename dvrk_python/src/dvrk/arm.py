@@ -419,7 +419,7 @@ class arm:
         rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian translation')
 
     def dmove_translation(self, delta_translation, interpolate=True):
-        """Incremental translation in cartesian space.
+        """Incremental translation (using PYKDL Vector or list of floats of size 3) in cartesian space.
 
         :param delta_translation: the incremental translation you want to make based on the current position, this is in terms of a  `PyKDL.Vector <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ or a list of floats of size 3
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
@@ -442,7 +442,7 @@ class arm:
             rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian translation')
 
     def dmove_rotation(self, delta_rotation, interpolate=True):
-        """Incremental rotation in cartesian plane.
+        """Incremental rotation (using PyKDL Rotation) in cartesian plane.
 
         :param delta_rotation: the incremental `PyKDL.Rotation <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ based upon the current position
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
@@ -457,7 +457,7 @@ class arm:
             rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian rotation')
 
     def dmove_frame(self, delta_frame, interpolate=True):
-        """Incremental move by Frame in cartesian plane.
+        """Incremental move (using PyKDL Frame) in cartesian plane.
 
         :param delta_frame: the incremental `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ based upon the current position
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
@@ -474,8 +474,10 @@ class arm:
     def move_translation(self, abs_translation, interpolate=True):
         """Absolute translation in cartesian space.
 
-        :param abs_translation: the absolute translation you want to make, this is in terms of a  `PyKDL.Vector <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ or a list of floats of size 3
+        :param delta_translation: the incremental translation you want to make based on the current position, this is in terms of a  `PyKDL.Vector <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ or a list of floats of size 3
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
+
+        
         rospy.loginfo(rospy.get_caller_id() + ' -> starting absolute move cartesian translation')
         # is this a legal translation input
         if(self.__check_input_type(abs_translation, [list,float,Vector])):
@@ -608,8 +610,8 @@ class arm:
     def dmove_joint_one(self, delta_pos, indices, interpolate=True):
         """Incremental index move of 1 joint in joint space.
 
-        :param delta_pos: the incremental amount in which you want to move index by, this is a numpy array
-        :param index: the joint you want to move, this is a list
+        :param delta_pos: the incremental amount in which you want to move index by, this is a float
+        :param index: the joint you want to move, this is an integer
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         if (type(delta_pos) is float and type(indices) is int):
             self.dmove_joint_some(numpy.array([delta_pos]), numpy.array([indices]), interpolate)
@@ -617,8 +619,8 @@ class arm:
     def dmove_joint_some(self, delta_pos, indices, interpolate = True):
         """Incremental index move of a series of joints in joint space.
 
-        :param delta_pos: the incremental amount in which you want to move index by, this is a numpy array
-        :param indices: the joints you want to move, this is a list of indices
+        :param delta_pos: the incremental amount in which you want to move index by, this is a numpy array corresponding to the number of indices
+        :param indices: the joints you want to move, this is a numpy array of indices
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting delta move joint index')
 
@@ -653,7 +655,7 @@ class arm:
     def move_joint(self, abs_pos, interpolate = True):
         """Absolute move in joint space.
 
-        :param abs_pos: the absolute position in which you want to move, this is a list
+        :param abs_pos: the absolute position in which you want to move, this is a numpy array
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
 
         if ((not(type(abs_pos) is numpy.ndarray))
@@ -669,7 +671,7 @@ class arm:
     def move_joint_one(self, abs_pos, indices, interpolate=True):
         """Absolute index move of 1 joint in joint space.
 
-        :param value: the incremental amount in which you want to move index by, this is a list
+        :param value: the absolute amount in which you want to move index by, this is a list
         :param index: the joint you want to move, this is a list
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         if(type(abs_pos) is float and type(indices) is int):
@@ -678,8 +680,8 @@ class arm:
     def move_joint_some(self, abs_pos, indices, interpolate=True):
         """Absolute index move of a series of joints in joint space.
 
-        :param value: the incremental amount in which you want to move index by, this is a list
-        :param index: the incremental joint you want to move, this is a list
+        :param value: the absolute amount in which you want to move index by, this is a list
+        :param index: the joint you want to move, this is a list
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting abs move joint index')
 
@@ -713,7 +715,7 @@ class arm:
     def __move_joint(self, abs_joint, interpolate = True):
         """Absolute move by vector in joint plane.
 
-        :param abs_joint: the absolute position of the joints in terms of a list
+        :param abs_joint: the absolute position of the joints in terms of a numpy array
         :param interpolate: if false the trajectory generator will be used; if true you can bypass the trajectory generator"""
         rospy.loginfo(rospy.get_caller_id() + ' -> starting absolute move joint vector')
         if (interpolate):

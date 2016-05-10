@@ -13,9 +13,11 @@ class psm(arm):
                                                       + '/set_jaw_position',
                                                       Float32, latch=True, queue_size = 1)
     def get_current_jaw_position(self):
+        "get the current angle of the jaw"
         return self._arm__position_joint_current[6]
 
     def get_desired_jaw_position(self):
+        "get the desired angle of the jaw"
         return self._arm__position_joint_desired[6]
 
     def close_jaw(self):
@@ -40,7 +42,9 @@ class psm(arm):
             print 'not a valid jaw position'
 
     def insert_tool(self, depth):
+        "insert the tools, by moving it to an absolute depth"
         self.move_joint_some([depth], [2])
 
     def dinsert_tool(self, depth):
+        "insert the tool, by moving it an additional depth"
         self.dmove_joint_some([depth], [2])
