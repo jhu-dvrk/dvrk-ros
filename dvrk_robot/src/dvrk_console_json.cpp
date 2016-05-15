@@ -29,6 +29,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsoleQt.h>
 
 #include <QApplication>
+#include <QIcon>
 #include <QLocale>
 #include <clocale>
 
@@ -114,6 +115,9 @@ int main(int argc, char ** argv)
         versionEnum = dvrk_topics_version::versionFromString(versionString);
     } catch (std::exception e) {
         std::cerr << "Compatibility mode " << versionString << " is invalid" << std::endl;
+        std::cerr << "Possible values are: ";
+        std::cerr << cmnData<std::vector<std::string> >::HumanReadable(dvrk_topics_version::versionVectorString());
+        std::cerr << std::endl;
         return -1;
     }
     std::cout << "Using compatibility mode: " << versionString << std::endl;
@@ -136,6 +140,7 @@ int main(int argc, char ** argv)
     if (hasQt) {
         QLocale::setDefault(QLocale::English);
         application = new QApplication(argc, argv);
+        application->setWindowIcon(QIcon(":/dVRK.svg"));
         consoleQt = new mtsIntuitiveResearchKitConsoleQt();
         consoleQt->Configure(console);
         consoleQt->Connect();

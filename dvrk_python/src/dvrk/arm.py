@@ -161,7 +161,9 @@ class arm:
         self.__set_wrench_spatial_pub = rospy.Publisher(self.__full_ros_namespace
                                                         + '/set_wrench_spatial',
                                                         Wrench, latch = True, queue_size = 1)
-
+        self.__set_gravity_compensation_pub = rospy.Publisher(self.__full_ros_namespace
+                                                              + '/set_gravity_compensation',
+                                                              Bool, latch = True, queue_size = 1)
         # subscribers
         rospy.Subscriber(self.__full_ros_namespace + '/robot_state',
                          String, self.__robot_state_cb)
@@ -722,6 +724,7 @@ class arm:
         m.data = absolute
         self.__set_wrench_body_orientation_absolute_pub.publish(m)
 
+
     def set_wrench_body_force(self, force):
         "Apply a wrench with force only (body), torque is null"
         if (not self.__dvrk_set_state('DVRK_EFFORT_CARTESIAN')):
@@ -734,3 +737,10 @@ class arm:
         w.torque.y = 0.0
         w.torque.z = 0.0
         self.__set_wrench_body_pub.publish(w)
+
+
+    def set_gravity_compensation(self, gravity_compensation):
+        "Turn on/off gravity compensation in cartesian effort mode"
+        g = Bool()
+        g.data = gravity_compensation
+        self.__set_gravity_compensation_pub.publish(g)

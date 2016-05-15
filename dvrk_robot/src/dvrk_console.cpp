@@ -64,10 +64,10 @@ dvrk::console::console(mtsROSBridge & bridge,
         }
     }
 
-    const mtsIntuitiveResearchKitConsole::TeleopList::iterator
-        teleopsEnd = mConsole->mTeleops.end();
-    mtsIntuitiveResearchKitConsole::TeleopList::iterator teleopIter;
-    for (teleopIter = mConsole->mTeleops.begin();
+    const mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator
+        teleopsEnd = mConsole->mTeleopsPSM.end();
+    mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator teleopIter;
+    for (teleopIter = mConsole->mTeleopsPSM.begin();
          teleopIter != teleopsEnd;
          ++teleopIter) {
         const std::string name = teleopIter->first;
@@ -149,10 +149,10 @@ void dvrk::console::Connect(void)
         }
     }
 
-    const mtsIntuitiveResearchKitConsole::TeleopList::iterator
-        teleopsEnd = mConsole->mTeleops.end();
-    mtsIntuitiveResearchKitConsole::TeleopList::iterator teleopIter;
-    for (teleopIter = mConsole->mTeleops.begin();
+    const mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator
+        teleopsEnd = mConsole->mTeleopsPSM.end();
+    mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator teleopIter;
+    for (teleopIter = mConsole->mTeleopsPSM.begin();
          teleopIter != teleopsEnd;
          ++teleopIter) {
         const std::string name = teleopIter->first;
