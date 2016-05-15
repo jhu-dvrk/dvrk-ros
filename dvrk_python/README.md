@@ -31,9 +31,57 @@ You should see one namespace per arm under `/dvrk`, e.g. `/dvrk/PSM1`, `/dvrk/MT
 
 Then in Python:
 ```python
-from dvrk_python.robot import *
-mtml = robot('MTML')
-mtml.home()
-mtml.get_current_joint_position()
-...
+from dvrk.psm import *
+# Create a Python proxy for PSM1, name must match ros namespace
+p = arm('PSM1')
+
+# You can home from Python
+p.home()
+
+# retrieve current info (numpy.array)
+p.get_current_joint_position()
+p.get_current_joint_velocity()
+p.get_current_joint_effort()
+
+# retrieve PID desired position and effort computed
+p.get_desired_joint_position()
+p.get_desired_joint_effort()
+
+# retrieve cartesian current and desired positions
+# PyKDL.Frame
+p.get_desired_position()
+p.get_current_position()
+
+# move in joint space
+# move is absolute (SI units)
+# dmove is relative
+
+# move a single joint, index starts at 0
+p.dmove_joint_one(-0.05, 2) # move 3rd joint
+p.move_joint_one(0.2, 0) # first joint
+
+# move multiple joints
+p.dmove_joint_some(numpy.array([-0.1, -0.1]), numpy.array([0, 1]))
+p.move_joint_some(numpy.array([0.0, 0.0]), numpy.array([0, 1]))
+
+# move all joints
+p.dmove_joint(numpy.array([0.0, 0.0, -0.05, 0.0, 0.0, 0.0, 0.0]))
+p.move_joint(numpy.array([0.0, 0.0, 0.10, 0.0, 0.0, 0.0, 0.0]))
+
+# move in cartesian space
+# there are only 2 methods available, dmove and move
+# both accept PyKDL Frame, Vector or Rotation
+p.dmove(PyKDL.Vector(0.0, 0.05, 0.0)) # 5 cm in Y direction 
+p.move(PyKDL.Vector(0.0, 0.0, -0.05))
+
+# save current orientation
+old_orientation = p.get_desired_position().R
+
+import math
+r = PyKDL.Rotation()
+r.DoRotX(math.pi * 0.25)
+p.dmove(r)
+
+p.move(old_orientation)
+
 ```
