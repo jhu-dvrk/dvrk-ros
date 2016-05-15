@@ -51,6 +51,8 @@ if (cisst_FOUND_AS_REQUIRED)
   # include_directories(include)
   include_directories (${catkin_INCLUDE_DIRS})
 
+  file (MAKE_DIRECTORY "${dvrk_robot_BINARY_DIR}/include")
+
   catkin_package (INCLUDE_DIRS include "${dvrk_robot_BINARY_DIR}/include"
                   LIBRARIES dvrk_utilities
                   CATKIN_DEPENDS cisst_msgs cisst_ros_bridge geometry_msgs roscpp std_msgs
