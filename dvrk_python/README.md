@@ -31,9 +31,9 @@ You should see one namespace per arm under `/dvrk`, e.g. `/dvrk/PSM1`, `/dvrk/MT
 
 Then in Python:
 ```python
-from dvrk.psm import *
+import dvrk
 # Create a Python proxy for PSM1, name must match ros namespace
-p = arm('PSM1')
+p = dvrk.psm('PSM1')
 
 # You can home from Python
 p.home()
@@ -61,6 +61,7 @@ p.dmove_joint_one(-0.05, 2) # move 3rd joint
 p.move_joint_one(0.2, 0) # first joint
 
 # move multiple joints
+import numpy
 p.dmove_joint_some(numpy.array([-0.1, -0.1]), numpy.array([0, 1]))
 p.move_joint_some(numpy.array([0.0, 0.0]), numpy.array([0, 1]))
 
@@ -71,11 +72,12 @@ p.move_joint(numpy.array([0.0, 0.0, 0.10, 0.0, 0.0, 0.0, 0.0]))
 # move in cartesian space
 # there are only 2 methods available, dmove and move
 # both accept PyKDL Frame, Vector or Rotation
+import PyKDL
 p.dmove(PyKDL.Vector(0.0, 0.05, 0.0)) # 5 cm in Y direction 
 p.move(PyKDL.Vector(0.0, 0.0, -0.05))
 
 # save current orientation
-old_orientation = p.get_desired_position().R
+old_orientation = p.get_desired_position().M
 
 import math
 r = PyKDL.Rotation()
