@@ -29,6 +29,6 @@ class mtm(arm):
         self.__lock_orientation_pub.publish(q);
 
     def unlock_orientation(self):
-        "Lock orientation"
+        "Unlock orientation"
         e = Empty()
         self.__unlock_orientation_pub.publish(e);
