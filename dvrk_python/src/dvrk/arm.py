@@ -250,8 +250,8 @@ class arm:
         return True
 
     def home(self):
-        """This method will provide power to the arm as will as home
-        the arm. This method requries the arm name."""
+        """This method will provide power to the arm and will home
+        the arm. """
         rospy.loginfo(rospy.get_caller_id() + ' -> start homing')
         self.__robot_state_event.clear()
         self.__set_robot_state_pub.publish('Home')
@@ -274,6 +274,9 @@ class arm:
         self.__dvrk_set_state('DVRK_UNINITIALIZED', 20)
 
     def get_robot_state(self):
+        """Get the robot state.
+        :returns: the robot state
+        :rtype: string"""
         return self.__robot_state
 
     def get_current_position(self):
@@ -470,11 +473,26 @@ class arm:
             self.move_frame(end_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing delta move cartesian frame')
 
+    def move(self, abs_input, interpolate=True):
+        """Absolute translation in cartesian space.
+
+        :param abs_input: the absolute translation you want to make
+        :param interpolate: see  :ref:`interpolate <interpolate>`"""
+        rospy.loginfo(rospy.get_caller_id() + ' -> starting absolute move cartesian translation')
+        # is this a legal translation input
+        if(self.__check_input_type(abs_input, [list, float, Vector, Rotation, Frame])):
+               if(self.__check_input_type(abs_input, [list, float, Vector])):
+                   self.move_translation(abs_input, interpolate)
+               elif(self.__check_input_type(abs_input, [Rotation])):
+                   self.move_rotation(abs_input, interpolate)
+               elif(self.__check_input_type(abs_input, [Frame])):
+                   self.move_frame(abs_input, interpolate)
+        rospy.loginfo(rospy.get_caller_id() + ' -> completing absolute move cartesian translation')
 
     def move_translation(self, abs_translation, interpolate=True):
         """Absolute translation in cartesian space.
 
-        :param delta_translation: the incremental translation you want to make based on the current position, this is in terms of a  `PyKDL.Vector <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ or a list of floats of size 3
+        :param abs_translation: the absolute translation you want to make based on the current position, this is in terms of a  `PyKDL.Vector <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ or a list of floats of size 3
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
 
         
@@ -497,24 +515,9 @@ class arm:
             self.move_frame(abs_frame, interpolate)
             rospy.loginfo(rospy.get_caller_id() + ' -> completing absolute move cartesian translation')
 
-    def move(self, abs_input, interpolate=True):
-        """Absolute translation in cartesian space.
-
-        :param abs_input: the absolute translation you want to make
-        :param interpolate: see  :ref:`interpolate <interpolate>`"""
-        rospy.loginfo(rospy.get_caller_id() + ' -> starting absolute move cartesian translation')
-        # is this a legal translation input
-        if(self.__check_input_type(abs_input, [list, float, Vector, Rotation, Frame])):
-               if(self.__check_input_type(abs_input, [list, float, Vector])):
-                   self.move_translation(abs_input, interpolate)
-               elif(self.__check_input_type(abs_input, [Rotation])):
-                   self.move_rotation(abs_input, interpolate)
-               elif(self.__check_input_type(abs_input, [Frame])):
-                   self.move_frame(abs_input, interpolate)
-        rospy.loginfo(rospy.get_caller_id() + ' -> completing absolute move cartesian translation')
 
     def move_rotation(self, abs_rotation, interpolate=True):
-        """Absolute rotation in cartesian plane.
+        """Absolute rotation in cartesian space.
 
         :param abs_rotation: the absolute `PyKDL.Rotation <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
@@ -530,7 +533,7 @@ class arm:
 
 
     def move_frame(self, abs_frame, interpolate=True):
-        """Absolute move by Frame in cartesian plane.
+        """Absolute move by PyKDL.Frame in Cartesian space.
 
         :param abs_frame: the absolute `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
@@ -593,7 +596,7 @@ class arm:
     def dmove_joint(self, delta_pos, interpolate= True):
         """Incremental move in joint space.
 
-        :param delta_pos: the incremental amount in which you want to move index by, this is a numpy array
+        :param delta_pos: the incremental amount in which you want to move index by, this is in terms of a numpy array
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         if ((not(type(delta_pos) is numpy.ndarray))
              or (not(delta_pos.dtype == numpy.float64))):
@@ -770,7 +773,10 @@ class arm:
         return True
 
     def set_wrench_spatial_force(self, force):
-        "Apply a wrench with force only (spatial), torque is null"
+        """Apply a wrench with force only (spatial), torque is null
+
+        :param force: the new force to set it to
+        """
         if (not self.__dvrk_set_state('DVRK_EFFORT_CARTESIAN')):
             return False
         w = Wrench()
@@ -783,7 +789,7 @@ class arm:
         self.__set_wrench_spatial_pub.publish(w)
 
     def set_wrench_body_orientation_absolute(self, absolute):
-        "Apply body wrench using body orientation (relative/False) or reference frame (absolute/True)"
+        """Apply body wrench using body orientation (relative/False) or reference frame (absolute/True)"""
         m = Bool()
         m.data = absolute
         self.__set_wrench_body_orientation_absolute_pub.publish(m)
