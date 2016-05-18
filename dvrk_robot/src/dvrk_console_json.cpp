@@ -115,6 +115,9 @@ int main(int argc, char ** argv)
         versionEnum = dvrk_topics_version::versionFromString(versionString);
     } catch (std::exception e) {
         std::cerr << "Compatibility mode " << versionString << " is invalid" << std::endl;
+        std::cerr << "Possible values are: ";
+        std::cerr << cmnData<std::vector<std::string> >::HumanReadable(dvrk_topics_version::versionVectorString());
+        std::cerr << std::endl;
         return -1;
     }
     std::cout << "Using compatibility mode: " << versionString << std::endl;
