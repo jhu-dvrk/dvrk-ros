@@ -31,9 +31,21 @@ You should see one namespace per arm under `/dvrk`, e.g. `/dvrk/PSM1`, `/dvrk/MT
 
 Then in Python:
 ```python
-from dvrk_python.robot import *
-mtml = robot('MTML')
-mtml.home()
-mtml.get_current_joint_position()
+from dvrk.arm import *
+p = arm('PSM1')
+p.home()
+# absolute joint move (all joints)
+p.move_joint(numpy.array([0.0, 0.0, 0.05, 0.0, 0.0, 0.0, 0.0]))
+# relative joint move (delta)
+p.dmove_joint(numpy.array([0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.0]))
+# relative (also available as absolute) joint move, single joint
+p.dmove_joint_one(0.01, 2) # first the value, second the joint index
+# cartesian commands also have absolute and relative version
+# the keyword cartesian is ommited
+# to translate only:
+p.dmove_translation(Vector(0.0, 0.01, 0.0))
+# all frame
+
+Arg, the code doesn't work ....   I need to fix this first!
 ...
 ```

@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2016 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -70,16 +70,17 @@ int main(int argc, char ** argv)
     // parse options
     cmnCommandLineOptions options;
     std::string jsonMainConfigFile;
-    std::string rosNamespace = "/dvrk/";
+    std::string rosNamespace = "/dvrk";
     double rosPeriod = 10.0 * cmn_ms;
     std::list<std::string> jsonIOConfigFiles;
+    std::string versionString = "v1_4_0";
 
     options.AddOptionOneValue("j", "json-config",
                               "json configuration file",
                               cmnCommandLineOptions::REQUIRED_OPTION, &jsonMainConfigFile);
 
     options.AddOptionOneValue("p", "ros-period",
-                              "period in seconds to read all arms/teleop components and publish (default 0.01, 10 ms, 100Hz)",
+                              "period in seconds to read all arms/teleop components and publish (default 0.01, 10 ms, 100Hz).  There is no point to have a period higher than the arm component's period",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &rosPeriod);
 
     options.AddOptionOneValue("n", "ros-namespace",
@@ -93,6 +94,10 @@ int main(int argc, char ** argv)
     options.AddOptionNoValue("t", "text-only",
                              "text only interface, do not create Qt widgets");
 
+    options.AddOptionOneValue("c", "compatibility",
+                              "compatibility mode, e.g. \"v1_3_0\", \"v1_4_0\"",
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &versionString);
+
     // check that all required options have been provided
     std::string errorMessage;
     if (!options.Parse(argc, argv, errorMessage)) {
@@ -102,11 +107,22 @@ int main(int argc, char ** argv)
     }
     std::string arguments;
     options.PrintParsedArguments(arguments);
-    std::cout << "Options provided:" << std::endl << arguments << std::endl;
+    std::cout << "Options provided:" << std::endl << arguments;
 
-    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
+    // check version mode
+    dvrk_topics_version::version versionEnum;
+    try {
+        versionEnum = dvrk_topics_version::versionFromString(versionString);
+    } catch (std::exception e) {
+        std::cerr << "Compatibility mode " << versionString << " is invalid" << std::endl;
+        return -1;
+    }
+    std::cout << "Using compatibility mode: " << versionString << std::endl;
 
     const bool hasQt = !options.IsSet("text-only");
+
+    // start creating components
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
 
     // console
     mtsIntuitiveResearchKitConsole * console = new mtsIntuitiveResearchKitConsole("console");
@@ -129,7 +145,8 @@ int main(int argc, char ** argv)
 
     // ros wrapper for arms and optionally IOs
     mtsROSBridge rosBridge("dVRKBridge", rosPeriod, true);
-    dvrk::console * consoleROS = new dvrk::console(rosBridge, rosNamespace, console);
+    dvrk::console * consoleROS = new dvrk::console(rosBridge, rosNamespace,
+                                                   console, versionEnum);
     // IOs
     const std::list<std::string>::const_iterator end = jsonIOConfigFiles.end();
     std::list<std::string>::const_iterator iter;
