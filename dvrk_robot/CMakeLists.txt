@@ -51,9 +51,9 @@ if (cisst_FOUND_AS_REQUIRED)
   # include_directories(include)
   include_directories (${catkin_INCLUDE_DIRS})
 
-  file (MAKE_DIRECTORY "${dvrk_robot_BINARY_DIR}/include")
+  file (MAKE_DIRECTORY "${CATKIN_DEVEL_PREFIX}/include")
 
-  catkin_package (INCLUDE_DIRS include "${dvrk_robot_BINARY_DIR}/include"
+  catkin_package (INCLUDE_DIRS include "${CATKIN_DEVEL_PREFIX}/include"
                   LIBRARIES dvrk_utilities
                   CATKIN_DEPENDS cisst_msgs cisst_ros_bridge geometry_msgs roscpp std_msgs
                   DEPENDS ${REQUIRED_CISST_LIBRARIES})
@@ -66,7 +66,7 @@ if (cisst_FOUND_AS_REQUIRED)
 
   include_directories (
     ${dvrk_robot_SOURCE_DIR}/include
-    ${dvrk_robot_BINARY_DIR}/include
+    ${CATKIN_DEVEL_PREFIX}/include
     ${sawRobotIO1394_INCLUDE_DIR}
     ${sawControllers_INCLUDE_DIR}
     ${sawConstraintController_INCLUDE_DIR}
@@ -81,7 +81,7 @@ if (cisst_FOUND_AS_REQUIRED)
     )
 
   cisst_data_generator (dvrk_utilities
-                        "${dvrk_robot_BINARY_DIR}/include" # where to save the file
+                        "${CATKIN_DEVEL_PREFIX}/include" # where to save the file
                         "dvrk_utilities/"    # sub directory for include
                         src/dvrk_topics_version.cdg)
 
