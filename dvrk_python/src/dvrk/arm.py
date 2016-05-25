@@ -101,7 +101,7 @@ from sensor_msgs.msg import JointState, Joy
 #    def preprocess(source):
 #        return source
 
-class arm:
+class arm(object):
     """Simple arm API wrapping around ROS messages
     """
 
