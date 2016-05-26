@@ -1,3 +1,16 @@
+#  Author(s):  Anton Deguet
+#  Created on: 2016-05-2016
+
+#   (C) Copyright 2016 Johns Hopkins University (JHU), All Rights Reserved.
+
+# --- begin cisst license - do not edit ---
+
+# This software is provided "as is" under an open source license, with
+# no warranty.  The complete license can be found in license.txt and
+# http://www.cisst.org/cisst/license.txt.
+
+# --- end cisst license ---
+
 """This class presents a arm api for the da Vinci Research Kit.
 Remember that for this program to work, you will need to import the
 arm class, this can be done by `from dvrk.arm import arm` as well as
