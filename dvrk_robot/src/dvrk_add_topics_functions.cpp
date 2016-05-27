@@ -113,10 +113,12 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     default:
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
             (arm_component_name, "GetStateJoint",
-             ros_namespace + "/state_joint_current", ros_namespace + "/current");
+             ros_namespace + "/state_joint_current",
+             ros_namespace + "/current");
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
             (arm_component_name, "GetStateJointDesired",
-             ros_namespace + "/state_joint_desired", ros_namespace + "/desired");
+             ros_namespace + "/state_joint_desired",
+             ros_namespace + "/desired");
         bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::PoseStamped>
             (arm_component_name, "GetPositionCartesianLocal",
              ros_namespace + "/position_cartesian_local_current",
@@ -133,6 +135,14 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
             (arm_component_name, "GetPositionCartesianDesired",
              ros_namespace + "/position_cartesian_desired",
              ros_namespace + "/desired");
+        bridge.AddPublisherFromCommandRead<prmVelocityCartesianGet, geometry_msgs::TwistStamped>
+            (arm_component_name, "GetVelocityCartesian",
+             ros_namespace + "/twist_body",
+             ros_namespace + "/current");
+        bridge.AddPublisherFromCommandRead<prmForceCartesianGet, geometry_msgs::WrenchStamped>
+            (arm_component_name, "GetWrenchBody",
+             ros_namespace + "/wrench_body",
+             ros_namespace + "/current");
         break;
     }
 
