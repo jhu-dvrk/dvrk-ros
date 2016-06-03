@@ -137,11 +137,11 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
              ros_namespace + "/desired");
         bridge.AddPublisherFromCommandRead<prmVelocityCartesianGet, geometry_msgs::TwistStamped>
             (arm_component_name, "GetVelocityCartesian",
-             ros_namespace + "/twist_body",
+             ros_namespace + "/twist_body_current",
              ros_namespace + "/current");
         bridge.AddPublisherFromCommandRead<prmForceCartesianGet, geometry_msgs::WrenchStamped>
             (arm_component_name, "GetWrenchBody",
-             ros_namespace + "/wrench_body",
+             ros_namespace + "/wrench_body_current",
              ros_namespace + "/current");
         break;
     }

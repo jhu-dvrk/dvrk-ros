@@ -42,6 +42,8 @@ classdef arm < handle
 
         position_desired        % Last received desired cartesian position
         position_current        % Last received current cartesian position
+        twist_body_current      % Last received current cartesian twist body
+        wrench_body_current     % Last received current cartesian wrench body
         position_joint_desired  % Last received desired joint position (PID input)
         effort_joint_desired    % Last received desired joint effort (PID output)
         position_joint_current  % Last received current joint position
@@ -58,6 +60,8 @@ classdef arm < handle
         position_desired_subscriber
         state_joint_desired_subscriber
         position_current_subscriber
+        twist_body_current_subscriber
+        wrench_body_current_subscriber
         state_joint_current_subscriber
         % publishers
         position_goal_joint_publisher
@@ -130,6 +134,22 @@ classdef arm < handle
                 rossubscriber(topic, rostype.geometry_msgs_PoseStamped);
             self.position_current_subscriber.NewMessageFcn = ...
                 @(sub, data)self.position_current_callback(sub, data);
+
+            % twist cartesian current
+            self.twist_body_current = [];
+            topic = strcat(self.ros_name, '/twist_body_current');
+            self.twist_body_current_subscriber = ...
+                rossubscriber(topic, rostype.geometry_msgs_TwistStamped);
+            self.twist_body_current_subscriber.NewMessageFcn = ...
+                @(sub, data)self.twist_body_current_callback(sub, data);
+
+            % wrench cartesian current
+            self.wrench_body_current = [];
+            topic = strcat(self.ros_name, '/wrench_body_current');
+            self.wrench_body_current_subscriber = ...
+                rossubscriber(topic, rostype.geometry_msgs_WrenchStamped);
+            self.wrench_body_current_subscriber.NewMessageFcn = ...
+                @(sub, data)self.wrench_body_current_callback(sub, data);
 
             % state joint current
             self.position_joint_current = [];
@@ -226,6 +246,24 @@ classdef arm < handle
             orientation = quat2tform([pose.Pose.Orientation.W, pose.Pose.Orientation.X, pose.Pose.Orientation.Y, pose.Pose.Orientation.Z]);
             % combine position and orientation
             self.position_current = position * orientation;
+        end
+        
+        function twist_body_current_callback(self, ~, twist) % second argument is subscriber, not used
+            % Callback used to retrieve the last measured cartesian
+            % twist published and store as property twist_body_current
+
+            % convert idiotic ROS message type to a single vector
+            self.twist_body_current = [twist.Twist.Linear.X, twist.Twist.Linear.Y, twist.Twist.Linear.Z, ...
+                                       twist.Twist.Angular.X, twist.Twist.Angular.Y, twist.Twist.Angular.Z];
+        end
+
+        function wrench_body_current_callback(self, ~, wrench) % second argument is subscriber, not used
+            % Callback used to retrieve the last measured cartesian
+            % position published and store as property position_current
+
+            % convert idiotic ROS message type to a single vector
+            self.wrench_body_current = [wrench.Wrench.Force.X, wrench.Wrench.Force.Y, wrench.Wrench.Force.Z, ...
+                                        wrench.Wrench.Torque.X, wrench.Wrench.Torque.Y, wrench.Wrench.Torque.Z];
         end
 
         function state_joint_current_callback(self, ~, jointState) % second argument is subscriber, not used

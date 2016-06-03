@@ -75,25 +75,20 @@ Arm API
 
 # sphinx-apidoc -F -A "Yijun Hu" -o doc src
 
-import rospy
+import copy
+import inspect
 import threading
 import math
-import sys
-import logging
-import time
-import inspect
-import code
-import IPython
-import math
-import numpy
 
+import rospy
+import numpy
 import PyKDL
 
 # we should probably not import the symbols and put them in current namespace
 from tf import transformations
 from tf_conversions import posemath
 from std_msgs.msg import String, Bool, Float32, Empty
-from geometry_msgs.msg import Pose, PoseStamped, Vector3, Quaternion, Wrench
+from geometry_msgs.msg import Pose, PoseStamped, Vector3, Quaternion, Wrench, WrenchStamped, TwistStamped
 from sensor_msgs.msg import JointState, Joy
 
 # from code import InteractiveConsole
@@ -146,6 +141,8 @@ class arm(object):
         self.__velocity_joint_current = numpy.array(0, dtype = numpy.float)
         self.__effort_joint_current = numpy.array(0, dtype = numpy.float)
         self.__position_cartesian_current = PyKDL.Frame()
+        self.__twist_body_current = numpy.zeros(6, dtype = numpy.float)
+        self.__wrench_body_current = numpy.zeros(6, dtype = numpy.float)
 
         # publishers
         frame = PyKDL.Frame()
@@ -190,13 +187,17 @@ class arm(object):
                          JointState, self.__state_joint_current_cb)
         rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_current',
                          PoseStamped, self.__position_cartesian_current_cb)
+        rospy.Subscriber(self.__full_ros_namespace + '/twist_body_current',
+                         TwistStamped, self.__twist_body_current_cb)
+        rospy.Subscriber(self.__full_ros_namespace + '/wrench_body_current',
+                         WrenchStamped, self.__wrench_body_current_cb)
+
         # create node
-        # rospy.init_node('arm_api', anonymous = True)
-        rospy.init_node('arm_api',anonymous = True, log_level = rospy.WARN)
+        rospy.init_node('arm_api', anonymous = True, log_level = rospy.WARN)
 
 
     def __robot_state_cb(self, data):
-        """Cb for arm state.
+        """Callback for arm state.
 
         :param data: the current arm state"""
         self.__robot_state = data.data
@@ -204,7 +205,7 @@ class arm(object):
 
 
     def __goal_reached_cb(self, data):
-        """Cb for the goal reached.
+        """Callback for the goal reached.
 
         :param data: the goal reached"""
         self.__goal_reached = data.data
@@ -212,7 +213,7 @@ class arm(object):
 
 
     def __state_joint_desired_cb(self, data):
-        """Cb for the joint desired position.
+        """Callback for the joint desired position.
 
         :param data: the `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_desired"""
         self.__position_joint_desired.resize(len(data.position))
@@ -222,14 +223,14 @@ class arm(object):
 
 
     def __position_cartesian_desired_cb(self, data):
-        """Cb for the cartesian desired position.
+        """Callback for the cartesian desired position.
 
         :param data: the cartesian position desired"""
         self.__position_cartesian_desired = posemath.fromMsg(data.pose)
 
 
     def __state_joint_current_cb(self, data):
-        """Cb for the current joint position.
+        """Callback for the current joint position.
 
         :param data: the `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_current"""
         self.__position_joint_current.resize(len(data.position))
@@ -241,14 +242,38 @@ class arm(object):
 
 
     def __position_cartesian_current_cb(self, data):
-        """Cb for the current cartesian position.
+        """Callback for the current cartesian position.
 
         :param data: The cartesian position current."""
         self.__position_cartesian_current = posemath.fromMsg(data.pose)
 
 
+    def __twist_body_current_cb(self, data):
+        """Callback for the current twist in body frame.
+
+        :param data: Twist."""
+        self.__twist_body_current[0] = data.twist.linear.x
+        self.__twist_body_current[1] = data.twist.linear.y
+        self.__twist_body_current[2] = data.twist.linear.z
+        self.__twist_body_current[3] = data.twist.angular.x
+        self.__twist_body_current[4] = data.twist.angular.y
+        self.__twist_body_current[5] = data.twist.angular.z
+
+
+    def __wrench_body_current_cb(self, data):
+        """Callback for the current wrench in body frame.
+
+        :param data: Wrench."""
+        self.__wrench_body_current[0] = data.wrench.force.x
+        self.__wrench_body_current[1] = data.wrench.force.y
+        self.__wrench_body_current[2] = data.wrench.force.z
+        self.__wrench_body_current[3] = data.wrench.torque.x
+        self.__wrench_body_current[4] = data.wrench.torque.y
+        self.__wrench_body_current[5] = data.wrench.torque.z
+
+
     def __dvrk_set_state(self, state, timeout = 5):
-        """Simple set state with block.
+        """Set state with block.
 
         :param state: the arm state
         :param timeout: the lenghth you want to wait for arm to change state
@@ -268,7 +293,7 @@ class arm(object):
 
     def home(self):
         """This method will provide power to the arm and will home
-        the arm. """
+        the arm."""
         self.__robot_state_event.clear()
         self.__set_robot_state_pub.publish('Home')
         counter = 10 # up to 10 transitions to get ready
@@ -284,7 +309,7 @@ class arm(object):
 
 
     def shutdown(self):
-        """Stops providing power to the arm."""
+        """Stop providing power to the arm."""
         self.__dvrk_set_state('DVRK_UNINITIALIZED', 20)
 
 
@@ -296,15 +321,38 @@ class arm(object):
 
 
     def get_current_position(self):
-        """Gets the :ref:`current cartesian position <currentvdesired>` of the arm in terms of cartesian space.
+        """Get the :ref:`current cartesian position <currentvdesired>` of the arm.
 
         :returns: the current position of the arm in cartesian space
         :rtype: `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_"""
         return self.__position_cartesian_current
 
 
+    def get_current_twist_body(self):
+        """Get the current cartesian velocity of the arm.  This
+        is based on the body jacobian, both linear and angular are
+        rotated to be defined in base frame.
+
+        :returns: the current position of the arm in cartesian space
+        :rtype: geometry_msgs.TwistStamped"""
+        return self.__twist_body_current
+
+
+    def get_current_wrench_body(self):
+        """Get the current cartesian force applied on arm.  This is
+        based on the body jacobian, both linear and angular are
+        rotated to be defined in base frame if the flag
+        wrench_body_orientation_absolute is set to True.  See method
+        set_wrench_body_orientation_absolute.
+
+        :returns: the current force applied to the arm in cartesian space
+        :rtype: geometry_msgs.WrenchStamped"""
+        return self.__wrench_body_current
+
+
     def get_current_joint_position(self):
-        """Gets the :ref:`current joint position <currentvdesired>` of the arm in terms of joint space.
+        """Get the :ref:`current joint position <currentvdesired>` of
+        the arm.
 
         :returns: the current position of the arm in joint space
         :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
@@ -312,7 +360,8 @@ class arm(object):
 
 
     def get_current_joint_velocity(self):
-        """Gets the :ref:`current joint velocity <currentvdesired>` of the arm in terms of joint space.
+        """Get the :ref:`current joint velocity <currentvdesired>` of
+        the arm.
 
         :returns: the current position of the arm in joint space
         :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
@@ -320,7 +369,8 @@ class arm(object):
 
 
     def get_current_joint_effort(self):
-        """Gets the :ref:`current joint effort <currentvdesired>` of the arm in terms of joint space.
+        """Get the :ref:`current joint effort <currentvdesired>` of
+        the arm.
 
         :returns: the current position of the arm in joint space
         :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
@@ -328,7 +378,7 @@ class arm(object):
 
 
     def get_desired_position(self):
-        """Get the :ref:`desired cartesian position <currentvdesired>` of the arm in terms of caretsian space.
+        """Get the :ref:`desired cartesian position <currentvdesired>` of the arm.
 
         :returns: the desired position of the arm in cartesian space
         :rtype: `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_"""
@@ -336,7 +386,8 @@ class arm(object):
 
 
     def get_desired_joint_position(self):
-        """Gets the :ref:`desired joint position <currentvdesired>` of the arm in terms of joint space.
+        """Get the :ref:`desired joint position <currentvdesired>` of
+        the arm.
 
         :returns: the desired position of the arm in joint space
         :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
@@ -344,7 +395,8 @@ class arm(object):
 
 
     def get_desired_joint_effort(self):
-        """Gets the :ref:`desired joint effort <currentvdesired>` of the arm in terms of joint space.
+        """Get the :ref:`desired joint effort <currentvdesired>` of
+        the arm.
 
         :returns: the desired effort of the arm in joint space
         :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
@@ -352,7 +404,7 @@ class arm(object):
 
 
     def get_joint_number(self):
-        """Gets the number of joints on the arm specified.
+        """Get the number of joints on the arm specified.
 
         :returns: the number of joints on the specified arm
         :rtype: int"""
@@ -361,7 +413,7 @@ class arm(object):
 
 
     def __check_input_type(self, input, type_list):
-        """check if the data input is a data type that is located in type_list
+        """Check if the data input is a data type that is located in type_list
 
         :param input: The data type that needs to be checked.
         :param type_list : A list of types to check input against.
