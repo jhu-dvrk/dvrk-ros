@@ -79,6 +79,8 @@ dvrk::console::console(mtsROSBridge & bridge,
     if (mConsole->mHasFootpedals) {
         dvrk::add_topics_footpedals(bridge, mNameSpace + "/footpedals", version);
     }
+
+    dvrk::add_topics_console(bridge, mNameSpace + "/console", version);
 }
 
 void dvrk::console::Configure(const std::string & jsonFile)
@@ -163,6 +165,9 @@ void dvrk::console::Connect(void)
     if (mConsole->mHasFootpedals) {
         dvrk::connect_bridge_footpedals(mBridgeName, mConsole->mIOComponentName);
     }
+
+    // connect console bridge
+    dvrk::connect_bridge_console(mBridgeName, mConsole->GetName());
 
     // ros wrappers for IO
     const std::list<std::string>::const_iterator end = mIOInterfaces.end();

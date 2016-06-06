@@ -18,6 +18,44 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <dvrk_utilities/dvrk_add_topics_functions.h>
 
+
+void dvrk::add_topics_console(mtsROSBridge & bridge,
+                              const std::string & ros_namespace,
+                              const dvrk_topics_version::version CMN_UNUSED(version))
+{
+    bridge.AddSubscriberToCommandVoid
+        ("Console", "PowerOff",
+         ros_namespace + "/power_off");
+    bridge.AddSubscriberToCommandVoid
+        ("Console", "Home",
+         ros_namespace + "/home");
+    bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
+        ("Console", "TeleopEnable",
+         ros_namespace + "/teleop/enable");
+    bridge.AddSubscriberToCommandWrite<double, std_msgs::Float32>
+        ("Console", "SetScale",
+         ros_namespace + "/teleop/set_scale");
+    bridge.AddPublisherFromEventWrite<double, std_msgs::Float32>
+        ("Console", "Scale",
+         ros_namespace + "/teleop/scale");
+}
+
+void dvrk::connect_bridge_console(mtsROSBridge & bridge,
+                                  const std::string & console_component_name)
+{
+    dvrk::connect_bridge_console(bridge.GetName(), console_component_name);
+}
+
+void dvrk::connect_bridge_console(const std::string & bridge_name,
+                                  const std::string & console_component_name)
+{
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
+    componentManager->Connect(bridge_name, "Console",
+                              console_component_name, "Main");
+}
+
+
+
 void dvrk::add_topics_footpedals(mtsROSBridge & bridge,
                                  const std::string & ros_namespace,
                                  const dvrk_topics_version::version version)
