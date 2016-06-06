@@ -75,7 +75,6 @@ Arm API
 
 # sphinx-apidoc -F -A "Yijun Hu" -o doc src
 
-import copy
 import inspect
 import threading
 import math
