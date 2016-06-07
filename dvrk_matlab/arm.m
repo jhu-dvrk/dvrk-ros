@@ -68,6 +68,7 @@ classdef arm < handle
         position_goal_publisher
         wrench_body_orientation_absolute_publisher
         wrench_body_publisher
+        gravity_compensation_publisher
     end
 
     methods
@@ -91,7 +92,7 @@ classdef arm < handle
             self.robot_state_subscriber = ...
                 rossubscriber(topic, rostype.std_msgs_String);
             self.robot_state_subscriber.NewMessageFcn = ...
-                @(sub, data)self.robot_state_callback(sub, data);
+                @(sub, data)self.robot_state_cb(sub, data);
             % timer for robot state event
             self.robot_state_timer = timer('ExecutionMode', 'singleShot', ...
                                            'Name', strcat(self.ros_name, '_robot_state'), ...
@@ -103,7 +104,7 @@ classdef arm < handle
             self.goal_reached_subscriber = ...
                 rossubscriber(topic, rostype.std_msgs_Bool);
             self.goal_reached_subscriber.NewMessageFcn = ...
-                @(sub, data)self.goal_reached_callback(sub, data);
+                @(sub, data)self.goal_reached_cb(sub, data);
             % timer for goal reached event
             self.goal_reached_timer = timer('ExecutionMode', 'singleShot', ...
                                            'Name', strcat(self.ros_name, '_goal_reached'), ...
@@ -118,7 +119,7 @@ classdef arm < handle
             self.position_desired_subscriber = ...
                 rossubscriber(topic, rostype.geometry_msgs_PoseStamped);
             self.position_desired_subscriber.NewMessageFcn = ...
-                @(sub, data)self.position_desired_callback(sub, data);
+                @(sub, data)self.position_desired_cb(sub, data);
 
             % state joint desired
             self.position_joint_desired = [];
@@ -127,7 +128,7 @@ classdef arm < handle
             self.state_joint_desired_subscriber = ...
                 rossubscriber(topic, rostype.sensor_msgs_JointState);
             self.state_joint_desired_subscriber.NewMessageFcn = ...
-                @(sub, data)self.state_joint_desired_callback(sub, data);
+                @(sub, data)self.state_joint_desired_cb(sub, data);
 
             % position cartesian current
             self.position_current = [];
@@ -135,7 +136,7 @@ classdef arm < handle
             self.position_current_subscriber = ...
                 rossubscriber(topic, rostype.geometry_msgs_PoseStamped);
             self.position_current_subscriber.NewMessageFcn = ...
-                @(sub, data)self.position_current_callback(sub, data);
+                @(sub, data)self.position_current_cb(sub, data);
 
             % twist cartesian current
             self.twist_body_current = [];
@@ -143,7 +144,7 @@ classdef arm < handle
             self.twist_body_current_subscriber = ...
                 rossubscriber(topic, rostype.geometry_msgs_TwistStamped);
             self.twist_body_current_subscriber.NewMessageFcn = ...
-                @(sub, data)self.twist_body_current_callback(sub, data);
+                @(sub, data)self.twist_body_current_cb(sub, data);
 
             % wrench cartesian current
             self.wrench_body_current = [];
@@ -151,7 +152,7 @@ classdef arm < handle
             self.wrench_body_current_subscriber = ...
                 rossubscriber(topic, rostype.geometry_msgs_WrenchStamped);
             self.wrench_body_current_subscriber.NewMessageFcn = ...
-                @(sub, data)self.wrench_body_current_callback(sub, data);
+                @(sub, data)self.wrench_body_current_cb(sub, data);
 
             % state joint current
             self.position_joint_current = [];
@@ -161,7 +162,7 @@ classdef arm < handle
             self.state_joint_current_subscriber = ...
                 rossubscriber(topic, rostype.sensor_msgs_JointState);
             self.state_joint_current_subscriber.NewMessageFcn = ...
-                @(sub, data)self.state_joint_current_callback(sub, data);
+                @(sub, data)self.state_joint_current_cb(sub, data);
 
             % ----------- publishers
             % state
@@ -170,18 +171,29 @@ classdef arm < handle
 
             % position goal joint
             topic = strcat(self.ros_name, '/set_position_goal_joint');
-            self.position_goal_joint_publisher = rospublisher(topic, rostype.sensor_msgs_JointState);
+            self.position_goal_joint_publisher = rospublisher(topic, ...
+                                                              rostype.sensor_msgs_JointState);
+
 
             % position goal cartesian
             topic = strcat(self.ros_name, '/set_position_goal_cartesian');
-            self.position_goal_publisher = rospublisher(topic, rostype.geometry_msgs_Pose);
+            self.position_goal_publisher = rospublisher(topic, ...
+                                                        rostype.geometry_msgs_Pose);
+
 
             % wrench cartesian
             topic = strcat(self.ros_name, '/set_wrench_body_orientation_absolute');
-            self.wrench_body_orientation_absolute_publisher = rospublisher(topic, rostype.std_msgs_Bool);
-            topic = strcat(self.ros_name, '/set_wrench_body');
-            self.wrench_body_publisher = rospublisher(topic, rostype.geometry_msgs_Wrench);
+            self.wrench_body_orientation_absolute_publisher = ...
+                rospublisher(topic, rostype.std_msgs_Bool);
 
+            topic = strcat(self.ros_name, '/set_wrench_body');
+            self.wrench_body_publisher = rospublisher(topic, ...
+                                                      rostype.geometry_msgs_Wrench);
+
+            % gravity compensation
+            topic = strcat(self.ros_name, '/set_gravity_compensation');
+            self.gravity_compensation_publisher = rospublisher(topic, ...
+                                                              rostype.std_msgs_Bool);
         end
 
 
@@ -205,7 +217,7 @@ classdef arm < handle
 
 
 
-        function robot_state_callback(self, ~, data) % second argument is subscriber, not used
+        function robot_state_cb(self, ~, data) % second argument is subscriber, not used
             % Method used internally when a new robot_state is published by
             % the controller.  We use a timer to synchronize the callback
             % and user code.
@@ -217,7 +229,7 @@ classdef arm < handle
             disp(strcat(self.robot_name, ': timeout robot state, current state is "', self.robot_state, '"'));
         end
 
-        function goal_reached_callback(self, ~, data) % second argument is subscriber, not used
+        function goal_reached_cb(self, ~, data) % second argument is subscriber, not used
             % Method used internally when a new goal_reached is published
             % by the controller.  We use a timer to synchronize the callback and user code.
             self.goal_reached = data.Data;
@@ -228,7 +240,7 @@ classdef arm < handle
             disp(strcat(self.robot_name, ': timeout robot state, current state is "', self.goal_reached, '"'));
         end
 
-        function position_desired_callback(self, ~, pose) % second argument is subscriber, not used
+        function position_desired_cb(self, ~, pose) % second argument is subscriber, not used
             % Callback used to retrieve the last desired cartesian position
             % published and store as property position_desired
 
@@ -239,14 +251,14 @@ classdef arm < handle
             self.position_desired = position * orientation;
         end
 
-        function state_joint_desired_callback(self, ~, jointState) % second argument is subscriber, not used
+        function state_joint_desired_cb(self, ~, jointState) % second argument is subscriber, not used
             % Callback used to retrieve the last desired joint
             % position/effort published and store as property position/effort_joint_desired
             self.position_joint_desired = jointState.Position;
             self.effort_joint_desired = jointState.Effort;
         end
 
-        function position_current_callback(self, ~, pose) % second argument is subscriber, not used
+        function position_current_cb(self, ~, pose) % second argument is subscriber, not used
             % Callback used to retrieve the last measured cartesian
             % position published and store as property position_current
 
@@ -257,7 +269,7 @@ classdef arm < handle
             self.position_current = position * orientation;
         end
 
-        function twist_body_current_callback(self, ~, twist) % second argument is subscriber, not used
+        function twist_body_current_cb(self, ~, twist) % second argument is subscriber, not used
             % Callback used to retrieve the last measured cartesian
             % twist published and store as property twist_body_current
 
@@ -266,7 +278,7 @@ classdef arm < handle
                                        twist.Twist.Angular.X, twist.Twist.Angular.Y, twist.Twist.Angular.Z];
         end
 
-        function wrench_body_current_callback(self, ~, wrench) % second argument is subscriber, not used
+        function wrench_body_current_cb(self, ~, wrench) % second argument is subscriber, not used
             % Callback used to retrieve the last measured cartesian
             % position published and store as property position_current
 
@@ -275,7 +287,7 @@ classdef arm < handle
                                         wrench.Wrench.Torque.X, wrench.Wrench.Torque.Y, wrench.Wrench.Torque.Z];
         end
 
-        function state_joint_current_callback(self, ~, jointState) % second argument is subscriber, not used
+        function state_joint_current_cb(self, ~, jointState) % second argument is subscriber, not used
             % Callback used to retrieve the last measured joint
             % position/velocity/effort
             % published and store as property position/velocity/effort_joint_current
@@ -546,6 +558,64 @@ classdef arm < handle
             result = self.move(goal);
             return
         end
+
+
+
+        function result = set_wrench_body_orientation_absolute(self, ...
+                                                              absolute)
+            orientation_message = rosmessage(self.wrench_body_orientation_absolute_publisher);
+            orientation_message.Data = absolute;
+            % send message
+            send(self.wrench_body_orientation_absolute_publisher, ...
+                 orientation_message);
+            result = true;
+        end
+
+
+
+        function result = set_wrench_body(self, wrench)
+            % Set wrench body, expects an array of 6 elements
+
+            % check if the array provided has the right length
+            if (length(wrench) == 6)
+                if self.set_state('DVRK_EFFORT_CARTESIAN')
+                    % prepare the ROS message
+                    wrench_message = rosmessage(self.wrench_body_publisher);
+                    wrench_message.Force.X = wrench(1);
+                    wrench_message.Force.Y = wrench(2);
+                    wrench_message.Force.Z = wrench(3);
+                    wrench_message.Torque.X = wrench(4);
+                    wrench_message.Torque.Y = wrench(5);
+                    wrench_message.Torque.Z = wrench(6);
+                    % send message
+                    send(self.wrench_body_publisher, ...
+                         wrench_message);
+                    result = true;
+                else
+                    % unable to set the desired state
+                    % set_state should already provide a message
+                    result = false;
+                end
+            else
+                result = false;
+                disp(strcat(self.robot_name, [': set_wrench_body, wrench does not have right '], ...
+                            ['size, expecting 6 but size of provided ' ...
+                             'array is '], int2str(length(joint_values))));
+            end
+        end
+
+
+
+        function result = set_gravity_compensation(self, ...
+                                                   gravity)
+            gravity_message = rosmessage(self.gravity_compensation_publisher);
+            gravity_message.Data = gravity;
+            % send message
+            send(self.gravity_compensation_publisher, ...
+                 gravity_message);
+            result = true;
+        end
+
 
     end % methods
 

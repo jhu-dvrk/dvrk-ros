@@ -13,7 +13,6 @@ classdef psm < arm
             self@arm(name);
 
             % ----------- publishers
-            % state
             topic = strcat(self.ros_name, '/set_jaw_position');
             self.jaw_position_publisher = rospublisher(topic, rostype.std_msgs_Float32);
         end
