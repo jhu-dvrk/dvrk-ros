@@ -55,7 +55,6 @@ classdef arm < handle
     properties (SetAccess = private)
         % subscribers
         robot_state_subscriber
-        robot_state_publisher
         goal_reached_subscriber
         position_desired_subscriber
         state_joint_desired_subscriber
@@ -64,8 +63,11 @@ classdef arm < handle
         wrench_body_current_subscriber
         state_joint_current_subscriber
         % publishers
+        robot_state_publisher
         position_goal_joint_publisher
         position_goal_publisher
+        wrench_body_orientation_absolute_publisher
+        wrench_body_publisher
     end
 
     methods
@@ -170,9 +172,16 @@ classdef arm < handle
             topic = strcat(self.ros_name, '/set_position_goal_joint');
             self.position_goal_joint_publisher = rospublisher(topic, rostype.sensor_msgs_JointState);
 
-            % position goal joint
+            % position goal cartesian
             topic = strcat(self.ros_name, '/set_position_goal_cartesian');
             self.position_goal_publisher = rospublisher(topic, rostype.geometry_msgs_Pose);
+
+            % wrench cartesian
+            topic = strcat(self.ros_name, '/set_wrench_body_orientation_absolute');
+            self.wrench_body_orientation_absolute_publisher = rospublisher(topic, rostype.std_msgs_Bool);
+            topic = strcat(self.ros_name, '/set_wrench_body');
+            self.wrench_body_publisher = rospublisher(topic, rostype.geometry_msgs_Wrench);
+
         end
 
 
@@ -247,7 +256,7 @@ classdef arm < handle
             % combine position and orientation
             self.position_current = position * orientation;
         end
-        
+
         function twist_body_current_callback(self, ~, twist) % second argument is subscriber, not used
             % Callback used to retrieve the last measured cartesian
             % twist published and store as property twist_body_current
