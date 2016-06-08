@@ -45,7 +45,6 @@ class potentiometer_calibration:
         self._serial_number = ""
         self._data_received = False # use pots to make sure the ROS topics are OK
         self._last_potentiometers = []
-        self._last_actuators = []
         self._last_joints = []
         self._robot_state = 'uninitialized'
         self._robot_state_event = threading.Event()
@@ -55,9 +54,6 @@ class potentiometer_calibration:
     def pot_callback(self, data):
         self._last_potentiometers[:] = data.position
         self._data_received = True
-
-    def actuators_callback(self, data):
-        self._last_actuators[:] = data.position
 
     def joints_callback(self, data):
         self._last_joints[:] = data.position
@@ -103,7 +99,6 @@ class potentiometer_calibration:
         rospy.Subscriber(ros_namespace + '/robot_state', String, self.robot_state_callback)
         rospy.Subscriber(ros_namespace + '/goal_reached', Bool, self.goal_reached_callback)
         rospy.Subscriber(ros_namespace +  '/io/analog_input_pos_si', JointState, self.pot_callback)
-        rospy.Subscriber(ros_namespace +  '/io/actuator_position', JointState, self.actuators_callback)
         rospy.Subscriber(ros_namespace +  '/io/joint_position', JointState, self.joints_callback)
 
         # create node
@@ -209,13 +204,13 @@ class potentiometer_calibration:
         print "The serial number found in the XML file is: ", self._serial_number
         print "Make sure the dvrk_console_json is using the same configuration file.  Serial number can be found in GUI tab \"IO\"."
         ok = raw_input("Press `c` and [enter] to continue\n")
-        if ok != "c": 
+        if ok != "c":
             sys.exit("Quitting")
 
         ######## scale calibration
         now = datetime.datetime.now()
         now_string = now.strftime("%Y-%m-%d-%H:%M")
-        
+
         if calibrate == "scales":
 
             print "Calibrating scales using encoders as reference"
@@ -259,16 +254,9 @@ class potentiometer_calibration:
                 for sample in range(nb_samples_per_position):
                     for axis in range(nb_axis):
                         average_potentiometer[axis].append(self._last_potentiometers[axis])
-                        # on MTM, there is coupling and potentiometers are on joints
-                        if arm_type == "MTM":
-                            average_encoder[axis].append(self._last_joints[axis])
-                        else:
-                            average_encoder[axis].append(self._last_actuators[axis])
-                    # log data based on arm types
-                    if arm_type == "MTM":
-                        writer.writerow(self._last_potentiometers + self._last_joints)
-                    else:
-                        writer.writerow(self._last_potentiometers + self._last_actuators)
+                        average_encoder[axis].append(self._last_joints[axis])
+                    # log data
+                    writer.writerow(self._last_potentiometers + self._last_joints)
                     time.sleep(sleep_time_between_samples)
                     samples_so_far = samples_so_far + 1
                     sys.stdout.write('\rProgress %02.1f%%' % (float(samples_so_far) / float(total_samples) * 100.0))
