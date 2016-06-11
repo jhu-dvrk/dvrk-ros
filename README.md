@@ -31,13 +31,5 @@ We use the catkin build tools, NOT catkin_make.  Please don't use catkin_make
   * kinematics model of MTM/PSM
 * dvrk_teleop  **[not maintained]**
   * dummy teleop component with a Qt GUI
- 
-# How to run the code
-* **simulation:** see dvrk_teleop/README.md for details
-* **robot:** see dvrk_robot/README.md for details 
 
-# List of Branches
-* master: current stable version
-* dev\_groovy: groovy development verison
-* catkin: catkin version 
 
