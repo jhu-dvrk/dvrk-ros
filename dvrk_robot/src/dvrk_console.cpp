@@ -111,7 +111,7 @@ void dvrk::console::Configure(const std::string & jsonFile)
         } else {
             mtsROSBridge * rosIOBridge = new mtsROSBridge(bridgeNamePrefix + name, period, true);
             dvrk::add_topics_io(*rosIOBridge,
-                                mNameSpace + name + "/io/",
+                                mNameSpace + "/" + name + "/io/",
                                 name, mVersion);
             componentManager->AddComponent(rosIOBridge);
             mIOInterfaces.push_back(name);

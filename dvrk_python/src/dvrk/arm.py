@@ -517,7 +517,7 @@ class arm(object):
         :param delta_frame: the incremental `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ based upon the current position
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         # add the incremental move to the current position, to get the ending frame
-        end_frame = self.__position_cartesian_desired * delta_frame
+        end_frame = delta_frame * self.__position_cartesian_desired
         return self.__move_frame(end_frame, interpolate)
 
 
