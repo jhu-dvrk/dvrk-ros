@@ -11,7 +11,7 @@
 
 # --- end cisst license ---
 
-__all__ = ["arm", "ecm", "mtm", "psm", "console"]
+__all__ = ["arm", "ecm", "mtm", "psm", "console", "suj"]
 
 # arm classes
 from arm import arm
@@ -21,3 +21,4 @@ from psm import psm
 
 # other
 from console import console
+from suj import suj

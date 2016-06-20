@@ -136,10 +136,12 @@ class arm(object):
         self.__position_joint_desired = numpy.array(0, dtype = numpy.float)
         self.__effort_joint_desired = numpy.array(0, dtype = numpy.float)
         self.__position_cartesian_desired = PyKDL.Frame()
+        self.__position_cartesian_local_desired = PyKDL.Frame()
         self.__position_joint_current = numpy.array(0, dtype = numpy.float)
         self.__velocity_joint_current = numpy.array(0, dtype = numpy.float)
         self.__effort_joint_current = numpy.array(0, dtype = numpy.float)
         self.__position_cartesian_current = PyKDL.Frame()
+        self.__position_cartesian_local_current = PyKDL.Frame()
         self.__twist_body_current = numpy.zeros(6, dtype = numpy.float)
         self.__wrench_body_current = numpy.zeros(6, dtype = numpy.float)
 
@@ -182,10 +184,14 @@ class arm(object):
                          JointState, self.__state_joint_desired_cb)
         rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_desired',
                          PoseStamped, self.__position_cartesian_desired_cb)
+        rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_local_desired',
+                         PoseStamped, self.__position_cartesian_local_desired_cb)
         rospy.Subscriber(self.__full_ros_namespace + '/state_joint_current',
                          JointState, self.__state_joint_current_cb)
         rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_current',
                          PoseStamped, self.__position_cartesian_current_cb)
+        rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_local_current',
+                         PoseStamped, self.__position_cartesian_local_current_cb)
         rospy.Subscriber(self.__full_ros_namespace + '/twist_body_current',
                          TwistStamped, self.__twist_body_current_cb)
         rospy.Subscriber(self.__full_ros_namespace + '/wrench_body_current',
@@ -228,6 +234,13 @@ class arm(object):
         self.__position_cartesian_desired = posemath.fromMsg(data.pose)
 
 
+    def __position_cartesian_local_desired_cb(self, data):
+        """Callback for the cartesian desired position.
+
+        :param data: the cartesian position desired"""
+        self.__position_cartesian_local_desired = posemath.fromMsg(data.pose)
+
+
     def __state_joint_current_cb(self, data):
         """Callback for the current joint position.
 
@@ -245,6 +258,13 @@ class arm(object):
 
         :param data: The cartesian position current."""
         self.__position_cartesian_current = posemath.fromMsg(data.pose)
+
+
+    def __position_cartesian_local_current_cb(self, data):
+        """Callback for the current cartesian position.
+
+        :param data: The cartesian position current."""
+        self.__position_cartesian_local_current = posemath.fromMsg(data.pose)
 
 
     def __twist_body_current_cb(self, data):
@@ -327,6 +347,14 @@ class arm(object):
         return self.__position_cartesian_current
 
 
+    def get_current_position_local(self):
+        """Get the :ref:`current cartesian position <currentvdesired>` of the arm.
+
+        :returns: the current position of the arm in cartesian space
+        :rtype: `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_"""
+        return self.__position_cartesian_local_current
+
+
     def get_current_twist_body(self):
         """Get the current cartesian velocity of the arm.  This
         is based on the body jacobian, both linear and angular are
@@ -382,6 +410,14 @@ class arm(object):
         :returns: the desired position of the arm in cartesian space
         :rtype: `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_"""
         return self.__position_cartesian_desired
+
+
+    def get_desired_position_local(self):
+        """Get the :ref:`desired cartesian position <currentvdesired>` of the arm.
+
+        :returns: the desired position of the arm in cartesian space
+        :rtype: `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_"""
+        return self.__position_cartesian_local_desired
 
 
     def get_desired_joint_position(self):
