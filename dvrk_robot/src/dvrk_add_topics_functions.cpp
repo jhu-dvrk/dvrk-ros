@@ -181,6 +181,10 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
             (arm_component_name, "GetWrenchBody",
              ros_namespace + "/wrench_body_current",
              ros_namespace + "/current");
+        bridge.AddPublisherFromCommandRead<vctDoubleMat, std_msgs::Float64MultiArray>
+            (arm_component_name, "GetJacobianSpatial",
+             ros_namespace + "/jacobian_spatial",
+             ros_namespace);
         break;
     }
 
