@@ -84,7 +84,7 @@ sources from github and build it.  Assuming your Catkin workspace is
 in `~/catkin` and you're using the Catkin Python build tools:
 
 ```sh
-cd ~/catkin/src
+cd ~/catkin_ws/src
 git clone https://github.com/ros-drivers/gscam
 catkin build
 ```
