@@ -86,3 +86,26 @@ p.dmove(r)
 
 p.move(old_orientation)
 ```
+
+To apply wrenches on MTMs, start ipython and type the following commands while holding the MTM (otherwise the arm will start moving and might bang itself against the console and get damaged).
+
+```python
+# load and define the MTM
+from dvrk import mtm
+m = mtm('MTML')
+
+# When True, force direction is constant.  Otherwise force direction defined in gripper coordinate system
+m.set_wrench_body_orientation_absolute(True)
+
+# about 2N force in y direction
+m.set_wrench_body_force((0.0, 2.0, 0.0))
+
+# lock the MTM wrist orientation
+m.lock_orientation_as_is()
+
+# turn gravity compensation on/off
+m.set_gravity_compensation(True)
+
+# turn off forces
+m.set_wrench_body_force((0.0, 0.0, 0.0))
+```
