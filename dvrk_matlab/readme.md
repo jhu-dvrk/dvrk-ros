@@ -43,6 +43,8 @@ You will need Matlab 2015a or higher with the Robotic System Toolbox: http://www
 Notes
 =====
 
+* There are also classes derived from `arm.m` for arm specific features, e.g. `mtm.m`, `psm.m`.
+* If you're using two computers on the same subnet, make sure your resolv.conf or whatever file is used to resolve the full computer name is set so you can ping each computer using the short name (e.g. don't ping lcsr-dv-stereo.hwcampus.jhu.edu, ping lcsr-dv-stereo).  Otherwise, ROS might show you the topics but will still not be able to publish or subscribe
 * If you modify the `arm.m` file, send us a pull request or use the dVRK google group to let us know.  Your contributions are always welcome!
 * The current code doesn't do a great job at cleaning up.  You might have to use `rosshutdown` and delete your robot instances manually.
 * To create 4x4 matrices, take a look at the matlab commands `axang2tform`, `eul2tform`, ...

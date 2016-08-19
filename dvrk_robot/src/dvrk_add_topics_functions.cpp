@@ -168,6 +168,12 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
         bridge.AddPublisherFromCommandRead<prmForceCartesianGet, geometry_msgs::WrenchStamped>
             (arm_component_name, "GetWrenchBody",
              ros_namespace + "/wrench_body_current");
+        bridge.AddPublisherFromCommandRead<vctDoubleMat, std_msgs::Float64MultiArray>
+            (arm_component_name, "GetJacobianBody",
+             ros_namespace + "/jacobian_body");
+        bridge.AddPublisherFromCommandRead<vctDoubleMat, std_msgs::Float64MultiArray>
+            (arm_component_name, "GetJacobianSpatial",
+             ros_namespace + "/jacobian_spatial");
         break;
     }
 
