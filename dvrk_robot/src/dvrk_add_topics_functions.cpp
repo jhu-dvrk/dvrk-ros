@@ -178,6 +178,9 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     }
 
     // write
+    bridge.AddSubscriberToCommandWrite<prmPositionCartesianSet, geometry_msgs::Pose>
+        (arm_component_name, "SetBaseFrame",
+         ros_namespace + "/set_base_frame");
     bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
         (arm_component_name, "SetRobotControlState",
          ros_namespace + "/set_robot_state");
