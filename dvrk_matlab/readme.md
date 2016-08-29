@@ -22,7 +22,7 @@ Matlab multithreading support is not fantastic.  These wrappers use
 callbacks assuming that at one point or another Matlab will dequeue
 the ROS messages.  This is unfortunately not the case if you hog the
 CPU using a loop and perform continuous computations.  So if you have
-a loop, make sure you add plenty of sleep/pause to make sure the ROS
+a loop, make sure you add plenty of sleep/pause so the ROS
 callbacks get called.
 
 Even worse, if you create your own ROS subscribers and use the
