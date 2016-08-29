@@ -288,6 +288,9 @@ void dvrk::add_topics_psm(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandWrite<double, std_msgs::Float32>
         (psm_component_name, "SetJawPosition", ros_namespace + "/set_jaw_position");
 
+    bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
+        (psm_component_name, "SetToolPresent", ros_namespace + "/set_tool_present");
+
     // events
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
         (psm_component_name, "ManipClutch", ros_namespace + "/manip_clutch");

@@ -15,6 +15,24 @@ It also handles data conversion from ROS messages (Poses to 4x4
 homogeneous transformations) as well as timer based wait for blocking
 commands (i.e. wait for state transitions and end of trajectories).
 
+Warning
+=======
+
+Matlab multithreading support is not fantastic.  These wrappers use
+callbacks assuming that at one point or another Matlab will dequeue
+the ROS messages.  This is unfortunately not the case if you hog the
+CPU using a loop and perform continuous computations.  So if you have
+a loop, make sure you add plenty of sleep/pause to make sure the ROS
+callbacks get called.
+
+Even worse, if you create your own ROS subscribers and use the
+`receive` command, this messes up with the callback since it is a
+blocking command.
+
+We don't have a good fix for now, if you find some tricks or even
+better a proper fix to improve the situation please let us know using
+either the github issues or the dVRK google group.
+
 Usage
 =====
 
@@ -44,7 +62,7 @@ Notes
 =====
 
 * There are also classes derived from `arm.m` for arm specific features, e.g. `mtm.m`, `psm.m`.
-* If you're using two computers on the same subnet, make sure your resolv.conf or whatever file is used to resolve the full computer name is set so you can ping each computer using the short name (e.g. don't ping lcsr-dv-stereo.hwcampus.jhu.edu, ping lcsr-dv-stereo).  Otherwise, ROS might show you the topics but will still not be able to publish or subscribe
+* If you're using two computers on the same subnet, make sure your resolv.conf or whatever file is used to resolve the full computer name is set so you can ping each computer using the short name (e.g. don't ping lcsr-dv-stereo.hwcampus.jhu.edu, ping lcsr-dv-stereo).  Otherwise, ROS might show you the topics but will still not be able to publish or subscribe.  On some systems you might even have to hard code the IP addresses of the remote host on both the "client" and "server" in the `hosts` file (google will tell you where to find the equivalent of `/etc/hosts` on different OSs).
 * If you modify the `arm.m` file, send us a pull request or use the dVRK google group to let us know.  Your contributions are always welcome!
 * The current code doesn't do a great job at cleaning up.  You might have to use `rosshutdown` and delete your robot instances manually.
 * To create 4x4 matrices, take a look at the matlab commands `axang2tform`, `eul2tform`, ...

@@ -5,6 +5,7 @@ classdef psm < arm
     properties (SetAccess = private)
         % publishers
         jaw_position_publisher
+        tool_present_publisher
     end
 
     methods
@@ -15,6 +16,10 @@ classdef psm < arm
             % ----------- publishers
             topic = strcat(self.ros_name, '/set_jaw_position');
             self.jaw_position_publisher = rospublisher(topic, rostype.std_msgs_Float32);
+
+            topic = strcat(self.ros_name, '/set_tool_present');
+            self.tool_present_publisher = rospublisher(topic, rostype.std_msgs_Bool);
+
         end
 
 
@@ -60,6 +65,15 @@ classdef psm < arm
             result = self.dmove_joint_one(depth, int8(3));
         end
 
+        function result = set_tool_present(self, ...
+					   tp)
+            tp_message = rosmessage(self.tool_present_publisher);
+            tp_message.Data = tp;
+            % send message
+            send(self.tool_present_publisher, ...
+                 tp_message);
+            result = true;
+        end
 
     end % methods
 

@@ -23,7 +23,10 @@ class psm(arm):
         # publishers
         self.__set_jaw_position_pub = rospy.Publisher(self._arm__full_ros_namespace
                                                       + '/set_jaw_position',
-                                                      Float32, latch=True, queue_size = 1)
+                                                      Float32, latch = True, queue_size = 1)
+        self.__set_tool_present_pub = rospy.Publisher(self._arm__full_ros_namespace
+                                                      + '/set_tool_present',
+                                                      Bool, latch = True, queue_size = 1)
 
 
     def get_current_jaw_position(self):
@@ -68,3 +71,10 @@ class psm(arm):
     def dinsert_tool(self, depth):
         "insert the tool, by moving it an additional depth"
         return self.dmove_joint_one(depth, 2)
+
+
+    def set_tool_present(self, tool_present):
+        "Set tool inserted.  To be used only for custom tools that can't be detected automatically"
+        ti = Bool()
+        ti.data = tool_present
+        self.__set_tool_present_pub.publish(ti)
