@@ -1,5 +1,5 @@
 #  Author(s):  Anton Deguet
-#  Created on: 2016-05-2016
+#  Created on: 2016-05
 
 #   (C) Copyright 2016 Johns Hopkins University (JHU), All Rights Reserved.
 
@@ -11,7 +11,7 @@
 
 # --- end cisst license ---
 
-__all__ = ["arm", "ecm", "mtm", "psm", "console", "suj"]
+__all__ = ["arm", "ecm", "mtm", "psm", "suj", "console", "teleop_psm"]
 
 # arm classes
 from arm import arm
@@ -20,5 +20,6 @@ from mtm import mtm
 from psm import psm
 
 # other
-from console import console
 from suj import suj
+from console import console
+from teleop_psm import teleop_psm

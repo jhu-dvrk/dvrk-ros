@@ -1,5 +1,5 @@
 #  Author(s):  Anton Deguet
-#  Created on: 2016-05-2016
+#  Created on: 2016-05
 
 #   (C) Copyright 2016 Johns Hopkins University (JHU), All Rights Reserved.
 

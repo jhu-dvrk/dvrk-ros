@@ -1,5 +1,5 @@
 #  Author(s):  Anton Deguet
-#  Created on: 2016-05-2016
+#  Created on: 2016-05
 
 #   (C) Copyright 2016 Johns Hopkins University (JHU), All Rights Reserved.
 
@@ -19,7 +19,7 @@ class console(object):
     """Simple dVRK console API wrapping around ROS messages
     """
 
-    # initialize the arm
+    # initialize the console
     def __init__(self, console_namespace = '/dvrk/console'):
         # base class constructor in separate method so it can be called in derived classes
         self.__init_console(console_namespace)

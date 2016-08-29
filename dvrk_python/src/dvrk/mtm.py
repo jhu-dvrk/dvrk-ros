@@ -1,5 +1,5 @@
 #  Author(s):  Anton Deguet
-#  Created on: 2016-05-2016
+#  Created on: 2016-05
 
 #   (C) Copyright 2016 Johns Hopkins University (JHU), All Rights Reserved.
 
@@ -36,7 +36,7 @@ class mtm(arm):
 
 
     def lock_orientation(self, orientation):
-        "Lock orientation"
+        """Lock orientation, expect a PyKDL rotation matrix (PyKDL.Rotation)"""
         q = Quaternion()
         q.x, q.y, q.z, q.w = orientation.GetQuaternion()
         self.__lock_orientation_pub.publish(q);

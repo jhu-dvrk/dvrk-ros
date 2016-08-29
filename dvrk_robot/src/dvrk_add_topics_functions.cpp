@@ -402,6 +402,9 @@ void dvrk::add_topics_teleop(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandWrite<double, std_msgs::Float32>
         (teleop_component_name, "SetScale",
          ros_namespace + "/set_scale");
+    bridge.AddSubscriberToCommandWrite<vctMatRot3, geometry_msgs::Quaternion>
+        (teleop_component_name, "SetRegistrationRotation",
+         ros_namespace + "/set_registration_rotation");
 }
 
 void dvrk::connect_bridge_teleop(mtsROSBridge & bridge,
