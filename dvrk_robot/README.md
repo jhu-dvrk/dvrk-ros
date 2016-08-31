@@ -2,8 +2,7 @@ dvrk robot
 ==========
 
 This package contains programs, which fires real robot, publishes and
-subscribes ROS topics.  You can either run individual PIDs for any MTM
-or PSM or run the whole system in TeleOp mode.
+subscribes ROS topics.
 
 # Depends  
 * ciss-ros 
@@ -34,19 +33,3 @@ One can also simulate one or more arms using the field `simulation` in your cons
 
 The best way to figure how to use the ROS topics is to look at the
 files dvrk_python/src/robot.py and dvrk_matlab/robot.m.
-
-**set robot state to HOME**  
-rostopic pub -1 /dvrk_mtm/set_robot_state std_msgs/String Home
-
-**set robot state to Gravity Compensation**  
-rostopic pub -1 /dvrk_mtm/set_robot_state std_msgs/String Gravity
-
-### Topic Names: 
-https://github.com/jhu-dvrk/dvrk-ros/wiki/ROS-Topic-Interface
-
-# Note
-With this package, you no longer need the programs such as
-* sawIntuitiveResearchKitQtPID -i ... -a ... -n ....
-* sawIntuitiveResearchKitQtTeleOperationJSON -j two-arms.json
-
-

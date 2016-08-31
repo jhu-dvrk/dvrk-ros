@@ -1,0 +1,30 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+
+  <!-- Set this to your camera's name -->
+  <arg name="left_cam_name" default="$(arg rig_name)_left"/>
+  <arg name="left_cam_device" default="/dev/video0"/>
+  <arg name="left_cam_info" default="package://dvrk_robot/data/$(arg left_cam_name).ini"/>
+  <arg name="right_cam_name" default="$(arg rig_name)_right"/>
+  <arg name="right_cam_device" default="/dev/video1"/>
+  <arg name="right_cam_info" default="package://dvrk_robot/data/$(arg right_cam_name)_right.ini"/>
+  <arg name="rect" default = "true"/>
+
+  <!-- camera driver node -->
+  <include file="$(find dvrk_robot)/launch/gscam_mono.launch" ns="$(arg rig_name)/left">
+    <arg name="cam_name" value="$(arg left_cam_name)"/>
+    <arg name="dev_name" value="$(arg left_cam_device)"/>
+    <arg name="cam_info" value="$(arg left_cam_info)"/>
+    <arg name="rect" value = "$(arg rect)"/>
+  </include>
+
+  <!-- camera driver node -->
+  <include file="$(find dvrk_robot)/launch/gscam_mono.launch" ns="$(arg rig_name)/right">
+    <arg name="cam_name" value="$(arg right_cam_name)"/>
+    <arg name="dev_name" value="$(arg right_cam_device)"/>
+    <arg name="cam_info" value="$(arg right_cam_info)"/>
+    <arg name="rect" value = "$(arg rect)"/>
+  </include>
+
+</launch>

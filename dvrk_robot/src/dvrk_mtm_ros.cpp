@@ -5,7 +5,7 @@
   Author(s):  Zihan Chen
   Created on: 2013-07-15
 
-  (C) Copyright 2013-2015 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2013-2016 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -131,8 +131,9 @@ int main(int argc, char** argv)
     mtsROSBridge robotBridge("RobotBridge", rosPeriod, true);
 
     // populate interfaces
-    dvrk::add_topics_mtm(robotBridge, "/dvrk/" + config_name, mtm->GetName());
-    dvrk::add_topics_footpedals(robotBridge, "/dvrk/" + config_name + "/footpedals");
+    const dvrk_topics_version::version version = dvrk_topics_version::v1_3_0;
+    dvrk::add_topics_mtm(robotBridge, "/dvrk/" + config_name, mtm->GetName(), version);
+    dvrk::add_topics_footpedals(robotBridge, "/dvrk/" + config_name + "/footpedals", version);
 
     // add component
     componentManager->AddComponent(&robotBridge);

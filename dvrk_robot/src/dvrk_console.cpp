@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2016 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -25,9 +25,11 @@ const std::string bridgeNamePrefix = "dVRKIOBridge";
 
 dvrk::console::console(mtsROSBridge & bridge,
                        const std::string & ros_namespace,
-                       mtsIntuitiveResearchKitConsole * mts_console):
+                       mtsIntuitiveResearchKitConsole * mts_console,
+                       const dvrk_topics_version::version version):
     mNameSpace(ros_namespace),
-    mConsole(mts_console)
+    mConsole(mts_console),
+    mVersion(version)
 {
     mBridgeName = bridge.GetName();
 
@@ -42,41 +44,43 @@ dvrk::console::console(mtsROSBridge & bridge,
         switch (armIter->second->mType) {
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
-            dvrk::add_topics_mtm(bridge, mNameSpace + "/" + name, name);
+            dvrk::add_topics_mtm(bridge, mNameSpace + "/" + name, name, version);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
-            dvrk::add_topics_ecm(bridge, mNameSpace + "/" + name, name);
+            dvrk::add_topics_ecm(bridge, mNameSpace + "/" + name, name, version);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
-            dvrk::add_topics_psm(bridge, mNameSpace + "/" + name, name);
+            dvrk::add_topics_psm(bridge, mNameSpace + "/" + name, name, version);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
-            dvrk::add_topics_suj(bridge, mNameSpace + "/SUJ/PSM1", "PSM1");
-            dvrk::add_topics_suj(bridge, mNameSpace + "/SUJ/PSM2", "PSM2");
-            dvrk::add_topics_suj(bridge, mNameSpace + "/SUJ/PSM3", "PSM3");
-            dvrk::add_topics_suj(bridge, mNameSpace + "/SUJ/ECM", "ECM");
+            dvrk::add_topics_suj(bridge, mNameSpace + "/SUJ/PSM1", "PSM1", version);
+            dvrk::add_topics_suj(bridge, mNameSpace + "/SUJ/PSM2", "PSM2", version);
+            dvrk::add_topics_suj(bridge, mNameSpace + "/SUJ/PSM3", "PSM3", version);
+            dvrk::add_topics_suj(bridge, mNameSpace + "/SUJ/ECM", "ECM", version);
         default:
             break;
         }
     }
 
-    const mtsIntuitiveResearchKitConsole::TeleopList::iterator
-        teleopsEnd = mConsole->mTeleops.end();
-    mtsIntuitiveResearchKitConsole::TeleopList::iterator teleopIter;
-    for (teleopIter = mConsole->mTeleops.begin();
+    const mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator
+        teleopsEnd = mConsole->mTeleopsPSM.end();
+    mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator teleopIter;
+    for (teleopIter = mConsole->mTeleopsPSM.begin();
          teleopIter != teleopsEnd;
          ++teleopIter) {
         const std::string name = teleopIter->first;
         std::string topic_name = teleopIter->first;
         std::replace(topic_name.begin(), topic_name.end(), '-', '_');
-        dvrk::add_topics_teleop(bridge, mNameSpace + "/" + topic_name, name);
+        dvrk::add_topics_teleop(bridge, mNameSpace + "/" + topic_name, name, version);
     }
 
     if (mConsole->mHasFootpedals) {
-        dvrk::add_topics_footpedals(bridge, mNameSpace + "/footpedals");
+        dvrk::add_topics_footpedals(bridge, mNameSpace + "/footpedals", version);
     }
+
+    dvrk::add_topics_console(bridge, mNameSpace + "/console", version);
 }
 
 void dvrk::console::Configure(const std::string & jsonFile)
@@ -107,8 +111,8 @@ void dvrk::console::Configure(const std::string & jsonFile)
         } else {
             mtsROSBridge * rosIOBridge = new mtsROSBridge(bridgeNamePrefix + name, period, true);
             dvrk::add_topics_io(*rosIOBridge,
-                                mNameSpace + name + "/io/",
-                                name);
+                                mNameSpace + "/" + name + "/io/",
+                                name, mVersion);
             componentManager->AddComponent(rosIOBridge);
             mIOInterfaces.push_back(name);
         }
@@ -147,10 +151,10 @@ void dvrk::console::Connect(void)
         }
     }
 
-    const mtsIntuitiveResearchKitConsole::TeleopList::iterator
-        teleopsEnd = mConsole->mTeleops.end();
-    mtsIntuitiveResearchKitConsole::TeleopList::iterator teleopIter;
-    for (teleopIter = mConsole->mTeleops.begin();
+    const mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator
+        teleopsEnd = mConsole->mTeleopsPSM.end();
+    mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator teleopIter;
+    for (teleopIter = mConsole->mTeleopsPSM.begin();
          teleopIter != teleopsEnd;
          ++teleopIter) {
         const std::string name = teleopIter->first;
@@ -161,6 +165,9 @@ void dvrk::console::Connect(void)
     if (mConsole->mHasFootpedals) {
         dvrk::connect_bridge_footpedals(mBridgeName, mConsole->mIOComponentName);
     }
+
+    // connect console bridge
+    dvrk::connect_bridge_console(mBridgeName, mConsole->GetName());
 
     // ros wrappers for IO
     const std::list<std::string>::const_iterator end = mIOInterfaces.end();

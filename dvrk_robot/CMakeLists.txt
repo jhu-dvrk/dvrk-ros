@@ -10,6 +10,7 @@
 # --- end cisst license ---
 
 cmake_minimum_required (VERSION 2.8.3)
+
 project (dvrk_robot)
 
 ## find catkin macros and libraries
@@ -41,29 +42,31 @@ set (REQUIRED_CISST_LIBRARIES
      cisstQt
      )
 
-find_package (cisst REQUIRED ${REQUIRED_CISST_LIBRARIES})
+find_package (cisst 1.0.8 REQUIRED ${REQUIRED_CISST_LIBRARIES})
 
 if (cisst_FOUND_AS_REQUIRED)
 
   include (${CISST_USE_FILE})
 
-
   # include_directories(include)
   include_directories (${catkin_INCLUDE_DIRS})
 
-  catkin_package (INCLUDE_DIRS include
+  file (MAKE_DIRECTORY "${CATKIN_DEVEL_PREFIX}/include")
+
+  catkin_package (INCLUDE_DIRS include "${CATKIN_DEVEL_PREFIX}/include"
                   LIBRARIES dvrk_utilities
                   CATKIN_DEPENDS cisst_msgs cisst_ros_bridge geometry_msgs roscpp std_msgs
                   DEPENDS ${REQUIRED_CISST_LIBRARIES})
 
   # sawRobotIO1394 has been compiled within cisst, we should find it automatically
-  cisst_find_saw_component (sawRobotIO1394          1.3.0 REQUIRED)
-  cisst_find_saw_component (sawIntuitiveResearchKit 1.3.0 REQUIRED)
-  cisst_find_saw_component (sawControllers          1.3.0 REQUIRED)
-  cisst_find_saw_component (sawConstraintController REQUIRED)
+  find_package (sawRobotIO1394          1.4.0 REQUIRED)
+  find_package (sawControllers          1.4.0 REQUIRED)
+  find_package (sawConstraintController 1.1.0 REQUIRED)
+  find_package (sawIntuitiveResearchKit 1.4.0 REQUIRED)
 
   include_directories (
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${dvrk_robot_SOURCE_DIR}/include
+    ${CATKIN_DEVEL_PREFIX}/include
     ${sawRobotIO1394_INCLUDE_DIR}
     ${sawControllers_INCLUDE_DIR}
     ${sawConstraintController_INCLUDE_DIR}
@@ -77,11 +80,19 @@ if (cisst_FOUND_AS_REQUIRED)
     ${sawIntuitiveResearchKit_LIBRARY_DIR}
     )
 
+  cisst_data_generator (dvrk_utilities
+                        "${CATKIN_DEVEL_PREFIX}/include" # where to save the file
+                        "dvrk_utilities/"    # sub directory for include
+                        src/dvrk_topics_version.cdg)
+
   add_library (dvrk_utilities
                include/dvrk_utilities/dvrk_add_topics_functions.h
                src/dvrk_add_topics_functions.cpp
                include/dvrk_utilities/dvrk_console.h
-               src/dvrk_console.cpp)
+               src/dvrk_console.cpp
+               ${dvrk_utilities_CISST_DG_SRCS}
+               ${dvrk_utilities_CISST_DG_HDRS})
+
     target_link_libraries (
       dvrk_utilities
       ${sawRobotIO1394_LIBRARIES}

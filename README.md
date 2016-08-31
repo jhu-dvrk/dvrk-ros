@@ -11,15 +11,14 @@ We use the catkin build tools, NOT catkin_make.  Please don't use catkin_make
 # List of Packages:
 * dvrk_robot **[maintained]** 
   * Main file to start dVRK (`dvrk_console_json`), publish & subscribe ros topics
-  * Lauch files to start RViz with geometric simulation
+  * Launch files to start RViz with geometric simulation
 * dvrk_model **[maintained]**
   * CAD models & meshes
   * RViz configs
   * Launch files
 * dvrk_python **[maintained]**
   * Python classes using ROS topics
-  * Simple API to control any dVRK arm
-  * No support for console (yet)
+  * Simple API to control any dVRK arm as well as console and teleoperation components
 * dvrk_matlab **[maintained, missing some features]**
   * Matlab classes using ROS topics
   * Requires Robotics Toolkit (2015a and above), any OS (Windows, Mac, Linux)
@@ -31,13 +30,5 @@ We use the catkin build tools, NOT catkin_make.  Please don't use catkin_make
   * kinematics model of MTM/PSM
 * dvrk_teleop  **[not maintained]**
   * dummy teleop component with a Qt GUI
- 
-# How to run the code
-* **simulation:** see dvrk_teleop/README.md for details
-* **robot:** see dvrk_robot/README.md for details 
 
-# List of Branches
-* master: current stable version
-* dev\_groovy: groovy development verison
-* catkin: catkin version 
 

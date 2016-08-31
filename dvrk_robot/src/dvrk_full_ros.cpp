@@ -6,7 +6,7 @@
   Author(s):  Zihan Chen, Anton Deguet
   Created on: 2013-02-07
 
-  (C) Copyright 2013-2015 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2013-2016 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -354,11 +354,12 @@ int main(int argc, char ** argv)
     mtsROSBridge rosBridge("RobotBridge", 20 * cmn_ms, true, false);
 
     // populate interfaces
-    dvrk::add_topics_mtm(rosBridge, "/dvrk/MTMR", "MTMR");
-    dvrk::add_topics_mtm(rosBridge, "/dvrk/MTML", "MTML");
-    dvrk::add_topics_psm(rosBridge, "/dvrk/PSM1", "PSM1");
-    dvrk::add_topics_psm(rosBridge, "/dvrk/PSM2", "PSM2");
-    dvrk::add_topics_footpedals(rosBridge, "/dvrk/footpedals");
+    const dvrk_topics_version::version version = dvrk_topics_version::v1_3_0;
+    dvrk::add_topics_mtm(rosBridge, "/dvrk/MTMR", "MTMR", version);
+    dvrk::add_topics_mtm(rosBridge, "/dvrk/MTML", "MTML", version);
+    dvrk::add_topics_psm(rosBridge, "/dvrk/PSM1", "PSM1", version);
+    dvrk::add_topics_psm(rosBridge, "/dvrk/PSM2", "PSM2", version);
+    dvrk::add_topics_footpedals(rosBridge, "/dvrk/footpedals", version);
 
     componentManager->AddComponent(&rosBridge);
 
@@ -398,4 +399,3 @@ int main(int argc, char ** argv)
 
     return 0;
 }
-
