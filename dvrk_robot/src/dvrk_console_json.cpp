@@ -147,7 +147,9 @@ int main(int argc, char ** argv)
     }
 
     // ros wrapper for arms and optionally IOs
-    mtsROSBridge rosBridge("dVRKBridge", rosPeriod, true);
+    std::string bridgeName = "sawIntuitiveResearchKit" + rosNamespace;
+    std::replace(bridgeName.begin(), bridgeName.end(), '/', '_');
+    mtsROSBridge rosBridge(bridgeName, rosPeriod, true);
     dvrk::console * consoleROS = new dvrk::console(rosBridge, rosNamespace,
                                                    console, versionEnum);
     // IOs
