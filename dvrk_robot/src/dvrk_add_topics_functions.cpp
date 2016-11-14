@@ -196,6 +196,9 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandWrite<prmPositionCartesianSet, geometry_msgs::Pose>
         (arm_component_name, "SetPositionGoalCartesian",
          ros_namespace + "/set_position_goal_cartesian");
+    bridge.AddSubscriberToCommandWrite<prmForceTorqueJointSet, sensor_msgs::JointState>
+        (arm_component_name, "SetEffortJoint",
+         ros_namespace + "/set_effort_joint");
     bridge.AddSubscriberToCommandWrite<prmForceCartesianSet, geometry_msgs::Wrench>
         (arm_component_name, "SetWrenchBody",
          ros_namespace + "/set_wrench_body");
