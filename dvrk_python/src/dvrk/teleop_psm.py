@@ -13,7 +13,7 @@
 
 import rospy
 
-from std_msgs.msg import Bool, Float32, Empty
+from std_msgs.msg import Bool, Float32, Empty, String
 from geometry_msgs.msg import Quaternion
 
 class teleop_psm(object):
@@ -40,9 +40,12 @@ class teleop_psm(object):
         self.__set_scale_pub = rospy.Publisher(self.__full_ros_namespace
                                                + '/set_scale',
                                                Float32, latch = True, queue_size = 1)
-        self.__set_registration_rotation = rospy.Publisher(self.__full_ros_namespace
-                                                           + '/set_registration_rotation',
-                                                           Quaternion, latch = True, queue_size = 1)
+        self.__set_registration_rotation_pub = rospy.Publisher(self.__full_ros_namespace
+                                                               + '/set_registration_rotation',
+                                                               Quaternion, latch = True, queue_size = 1)
+        self.__set_desired_state_pub = rospy.Publisher(self.__full_ros_namespace
+                                                       + '/set_desired_state',
+                                                       String, latch = True, queue_size = 1)
 
         # subscribers
         rospy.Subscriber(self.__full_ros_namespace
@@ -69,4 +72,10 @@ class teleop_psm(object):
         """Expect a PyKDL rotation matrix (PyKDL.Rotation)"""
         q = Quaternion()
         q.x, q.y, q.z, q.w = rotation.GetQuaternion()
-        self.__set_registration_rotation.publish(q)
+        self.__set_registration_rotation_pub.publish(q)
+
+    def enable(self):
+        self.__set_desired_state_pub.publish('ENABLED')
+
+    def disable(self):
+        self.__set_desired_state_pub.publish('DISABLED')
