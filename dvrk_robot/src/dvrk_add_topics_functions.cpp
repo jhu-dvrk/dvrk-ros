@@ -182,8 +182,8 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
         (arm_component_name, "SetBaseFrame",
          ros_namespace + "/set_base_frame");
     bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
-        (arm_component_name, "SetRobotControlState",
-         ros_namespace + "/set_robot_state");
+        (arm_component_name, "SetDesiredState",
+         ros_namespace + "/set_desired_state");
     bridge.AddSubscriberToCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
         (arm_component_name, "SetPositionJoint",
          ros_namespace + "/set_position_joint");
@@ -222,7 +222,9 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
         (arm_component_name, "Status", ros_namespace + "/status");
 
     bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
-        (arm_component_name, "RobotState", ros_namespace + "/robot_state");
+        (arm_component_name, "CurrentState", ros_namespace + "/current_state");
+    bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
+        (arm_component_name, "DesiredState", ros_namespace + "/desired_state");
     bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
         (arm_component_name, "GoalReached", ros_namespace + "/goal_reached");
 
