@@ -11,8 +11,8 @@ classdef arm < handle
     % add the word `joint`.  `move` stands for moves using absolute
     % positions while `dmove` are always relative to the current desired
     % position as reported by the dVRK C++ console application (i.e. last desired command).
-    %   r.position_desired   % contains 4x4 homogeneous transform
-    %   r.position_current   % actual 4x4 for the reported position based
+    %   r.get_position_desired()   % contains 4x4 homogeneous transform
+    %   r.get_position_current()   % actual 4x4 for the reported position based
     %   on encoders
     %
     % To move a single joint, be careful with radians and meters.  Also,
