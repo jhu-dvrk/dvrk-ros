@@ -375,7 +375,7 @@ classdef arm < handle
             % generator
 
             % check if the array provided has the right length
-            if length(joint_values) == length(self.position_joint_current)
+            if length(joint_values) == length(self.get_state_joint_current())
                 if self.set_state('DVRK_POSITION_GOAL_JOINT')
                     % prepare the ROS message
                     joint_message = rosmessage(self.position_goal_joint_publisher);
@@ -481,7 +481,7 @@ classdef arm < handle
                             ': dmove_joint_one, joint_value must be a real number'));
                 return;
             end
-            goal = self.get_position_joint_desired();
+            goal = self.get_state_joint_desired();
             goal(joint_index) = goal(joint_index) + joint_value;
             result = self.move_joint(goal);
         end
@@ -498,7 +498,7 @@ classdef arm < handle
                             ': dmove_joint, joint_values must be a real array'));
                 return;
             end
-            if length(joint_values) ~= length(self.position_joint_current)
+            if length(joint_values) ~= length(self.get_state_joint_current())
                 result = false;
                 disp(strcat(self.robot_name, ...
                             [': dmove_joint, joint_values does not have right ' ...
@@ -506,7 +506,7 @@ classdef arm < handle
                             int2str(length(joint_values))));
                 return
             end
-            goal = self.get_position_joint_desired();
+            goal = self.get_state_joint_desired();
             goal = goal + joint_values';
             result = self.move_joint(goal);
         end
@@ -530,7 +530,7 @@ classdef arm < handle
                             ': move_joint_one, joint_value must be a real number'));
                 return;
             end
-            goal = self.get_position_joint_desired();
+            goal = self.get_state_joint_desired();
             goal(joint_index) = joint_value;
             result = self.move_joint(goal);
         end
@@ -602,9 +602,10 @@ classdef arm < handle
                 end
             else
                 result = false;
-                disp(strcat(self.robot_name, [': set_wrench_body, wrench does not have right '], ...
-                            ['size, expecting 6 but size of provided ' ...
-                             'array is '], int2str(length(joint_values))));
+                disp(strcat(self.robot_name, ...
+                            ': set_wrench_body, wrench does not have right ', ...
+                            'size, expecting 6 but size of provided array is ', ...
+                            int2str(length(joint_values))));
             end
         end
 
