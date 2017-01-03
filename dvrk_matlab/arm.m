@@ -252,10 +252,11 @@ classdef arm < handle
            timestamp = self.ros_time_to_secs(msg);
         end
 
-        function [position, effort, timestamp] = get_state_joint_desired(self)
+        function [position, velocity, effort, timestamp] = get_state_joint_desired(self)
             % Accessor used to retrieve the last desired joint position/effort
             msg = self.state_joint_desired_subscriber.LatestMessage;
             position = msg.Position;
+            velocity = msg.Velocity;
             effort = msg.Effort;
             timestamp = self.ros_time_to_secs(msg);
         end
@@ -274,10 +275,11 @@ classdef arm < handle
            timestamp = self.ros_time_to_secs(msg);
         end
 
-        function [position, effort, timestamp] = get_state_joint_current(self)
+        function [position, velocity, effort, timestamp] = get_state_joint_current(self)
             % Accessor used to retrieve the last desired joint position/effort
             msg = self.state_joint_current_subscriber.LatestMessage;
             position = msg.Position;
+            velocity = msg.Velocity;
             effort = msg.Effort;
             timestamp = self.ros_time_to_secs(msg);
         end
