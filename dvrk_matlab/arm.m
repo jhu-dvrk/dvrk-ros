@@ -54,6 +54,8 @@ classdef arm < handle
         twist_body_current_subscriber
         wrench_body_current_subscriber
         state_joint_current_subscriber
+        jacobian_spatial_subscriber
+        jacobian_body_subscriber
         % publishers
         robot_state_publisher
         position_goal_joint_publisher
@@ -144,6 +146,16 @@ classdef arm < handle
             topic = strcat(self.ros_name, '/state_joint_current');
             self.state_joint_current_subscriber = ...
                 rossubscriber(topic, rostype.sensor_msgs_JointState);
+            
+            % jacobian spatial
+            topic = strcat(self.ros_name, '/jacobian_spatial');
+            self.jacobian_spatial_subscriber = ...
+                rossubscriber(topic, rostype.std_msgs_Float64MultiArray);
+            
+            % jacobian body
+            topic = strcat(self.ros_name, '/jacobian_body');
+            self.jacobian_body_subscriber = ...
+                rossubscriber(topic, rostype.std_msgs_Float64MultiArray);
 
             % ----------- publishers
             % state
@@ -302,7 +314,17 @@ classdef arm < handle
             timestamp = self.ros_time_to_secs(msg);
         end
 
-
+        function jacobian = get_jacobian_spatial(self)
+            % Accessor used to retrieve the last jacobian
+            msg = self.jacobian_spatial_subscriber.LatestMessage;
+            jacobian = reshape(msg.Data, msg.Layout.Dim(2,1).Size, msg.Layout.Dim(1,1).Size)';
+        end
+        
+        function jacobian = get_jacobian_body(self)
+            % Accessor used to retrieve the last jacobian
+            msg = self.jacobian_body_subscriber.LatestMessage;
+            jacobian = reshape(msg.Data, msg.Layout.Dim(2,1).Size, msg.Layout.Dim(1,1).Size)';
+        end
 
 
         function result = set_state(self, state_as_string)
