@@ -55,8 +55,8 @@ if (cisst_FOUND_AS_REQUIRED)
 
   catkin_package (INCLUDE_DIRS include "${CATKIN_DEVEL_PREFIX}/include"
                   LIBRARIES dvrk_utilities
-                  CATKIN_DEPENDS cisst_msgs cisst_ros_bridge geometry_msgs roscpp std_msgs
-                  DEPENDS ${REQUIRED_CISST_LIBRARIES})
+                  CATKIN_DEPENDS cisst_msgs cisst_ros_bridge geometry_msgs roscpp std_msgs)
+
 
   # sawRobotIO1394 has been compiled within cisst, we should find it automatically
   find_package (sawRobotIO1394          1.4.0 REQUIRED)

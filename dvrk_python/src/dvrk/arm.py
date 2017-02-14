@@ -163,6 +163,9 @@ class arm(object):
         self.__set_position_goal_cartesian_pub = rospy.Publisher(self.__full_ros_namespace
                                                                  + '/set_position_goal_cartesian',
                                                                  Pose, latch = True, queue_size = 1)
+        self.__set_effort_joint_pub = rospy.Publisher(self.__full_ros_namespace
+                                                      + '/set_effort_joint',
+                                                      JointState, latch = True, queue_size = 1)
         self.__set_wrench_body_pub = rospy.Publisher(self.__full_ros_namespace
                                                      + '/set_wrench_body',
                                                      Wrench, latch = True, queue_size = 1)
@@ -798,6 +801,22 @@ class arm(object):
         self.__goal_reached_event.wait(20) # 1 minute at most
         if not self.__goal_reached:
             return False
+        return True
+
+
+    def set_effort_joint(self, effort):
+        if (not self.__dvrk_set_state('DVRK_EFFORT_JOINT')):
+            return False
+        if ((not(type(effort) is numpy.ndarray))
+            or (not(effort.dtype == numpy.float64))):
+            print "effort must be an array of floats"
+            return False
+        if (not(effort.size == self.get_joint_number())):
+            print "effort must be an array of size", self.get_joint_number()
+            return False
+        joint_state = JointState()
+        joint_state.effort[:] = effort.flat
+        self.__set_effort_joint_pub.publish(joint_state)
         return True
 
 

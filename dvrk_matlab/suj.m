@@ -8,8 +8,8 @@ classdef suj < handle
     % add the word `joint`.  `move` stands for moves using absolute
     % positions while `dmove` are always relative to the current desired
     % position as reported by the dVRK C++ console application (i.e. last desired command).
-    %   r.position_desired   % contains 4x4 homogeneous transform
-    %   r.position_current   % actual 4x4 for the reported position based
+    %   r.get_position_desired()   % contains 4x4 homogeneous transform
+    %   r.get_position_current()   % actual 4x4 for the reported position based
     %   on encoders
 
     % settings that are not supposed to change after constructor
@@ -17,14 +17,6 @@ classdef suj < handle
         ros_namespace % namespace for this arm, should contain head/tail / (default is /dvrk/SUJ)
         robot_name    % name of robot, e.g. PSM1, ECM.  Must match ROS topics namespace
         ros_name      % full ROS namespace, i.e. ros_name + robot_name (e.g. /dvrk/SUJ/PSM1)
-    end
-
-    % values set by this class, can be read by others
-    properties (SetAccess = protected)
-        position_desired        % Last received desired cartesian position
-        position_current        % Last received current cartesian position
-        position_local_desired  % Last received desired cartesian position
-        position_local_current  % Last received current cartesian position
     end
 
     % only this class methods can view/modify
@@ -54,36 +46,24 @@ classdef suj < handle
             % ----------- subscribers
 
             % position cartesian desired
-            self.position_desired = [];
             topic = strcat(self.ros_name, '/position_cartesian_desired');
             self.position_desired_subscriber = ...
                 rossubscriber(topic, rostype.geometry_msgs_PoseStamped);
-            self.position_desired_subscriber.NewMessageFcn = ...
-                @(sub, data)self.position_desired_cb(sub, data);
 
             % position cartesian local desired
-            self.position_local_desired = [];
             topic = strcat(self.ros_name, '/position_cartesian_local_desired');
             self.position_local_desired_subscriber = ...
                 rossubscriber(topic, rostype.geometry_msgs_PoseStamped);
-            self.position_local_desired_subscriber.NewMessageFcn = ...
-                @(sub, data)self.position_local_desired_cb(sub, data);
 
             % position cartesian current
-            self.position_current = [];
             topic = strcat(self.ros_name, '/position_cartesian_current');
             self.position_current_subscriber = ...
                 rossubscriber(topic, rostype.geometry_msgs_PoseStamped);
-            self.position_current_subscriber.NewMessageFcn = ...
-                @(sub, data)self.position_current_cb(sub, data);
 
             % position cartesian local current
-            self.position_local_current = [];
             topic = strcat(self.ros_name, '/position_cartesian_local_current');
             self.position_local_current_subscriber = ...
                 rossubscriber(topic, rostype.geometry_msgs_PoseStamped);
-            self.position_local_current_subscriber.NewMessageFcn = ...
-                @(sub, data)self.position_local_current_cb(sub, data);
 
         end
 
@@ -97,48 +77,46 @@ classdef suj < handle
             self.position_local_current_subscriber.NewMessageFcn = @(a, b, c)[];
         end
 
-        function position_desired_cb(self, ~, pose) % second argument is subscriber, not used
-            % Callback used to retrieve the last desired cartesian position
-            % published and store as property position_desired
 
-            % convert idiotic ROS message type to homogeneous transforms
-            position = trvec2tform([pose.Pose.Position.X, pose.Pose.Position.Y, pose.Pose.Position.Z]);
-            orientation = quat2tform([pose.Pose.Orientation.W, pose.Pose.Orientation.X, pose.Pose.Orientation.Y, pose.Pose.Orientation.Z]);
-            % combine position and orientation
-            self.position_desired = position * orientation;
+
+        function seconds = ros_time_to_secs(~,pose_msg)
+            % Convert awkward rostime into a single double
+            seconds = double(pose_msg.Header.Stamp.Sec)+double(pose_msg.Header.Stamp.Nsec)*10^-9;
         end
 
-        function position_local_desired_cb(self, ~, pose) % second argument is subscriber, not used
-            % Callback used to retrieve the last desired cartesian position
-            % published and store as property position_local_desired
-
-            % convert idiotic ROS message type to homogeneous transforms
-            position = trvec2tform([pose.Pose.Position.X, pose.Pose.Position.Y, pose.Pose.Position.Z]);
-            orientation = quat2tform([pose.Pose.Orientation.W, pose.Pose.Orientation.X, pose.Pose.Orientation.Y, pose.Pose.Orientation.Z]);
-            % combine position and orientation
-            self.position_local_desired = position * orientation;
+        function frame = ros_pose_to_frame(~,pose_msg)
+           % convert idiotic ROS message type to homogeneous transforms
+           position = trvec2tform([pose_msg.Pose.Position.X, pose_msg.Pose.Position.Y, pose_msg.Pose.Position.Z]);
+           orientation = quat2tform([pose_msg.Pose.Orientation.W, pose_msg.Pose.Orientation.X, pose_msg.Pose.Orientation.Y, pose_msg.Pose.Orientation.Z]);
+           frame = position*orientation;
         end
 
-        function position_current_cb(self, ~, pose) % second argument is subscriber, not used
-            % Callback used to retrieve the last measured cartesian
-            % position published and store as property position_current
-
-            % convert idiotic ROS message type to homogeneous transforms
-            position = trvec2tform([pose.Pose.Position.X, pose.Pose.Position.Y, pose.Pose.Position.Z]);
-            orientation = quat2tform([pose.Pose.Orientation.W, pose.Pose.Orientation.X, pose.Pose.Orientation.Y, pose.Pose.Orientation.Z]);
-            % combine position and orientation
-            self.position_current = position * orientation;
+        function [frame, timestamp] = get_position_desired(self)
+           % Accessor used to retrieve the last desired cartesian position
+           msg = self.position_desired_subscriber.LatestMessage;
+           frame = self.ros_pose_to_frame(msg);
+           timestamp = self.ros_time_to_secs(msg);
         end
 
-        function position_local_current_cb(self, ~, pose) % second argument is subscriber, not used
-            % Callback used to retrieve the last measured cartesian
-            % position published and store as property position_local_current
+        function [frame, timestamp] = get_position_local_desired(self)
+           % Accessor used to retrieve the last desired cartesian position
+           msg = self.position_local_desired_subscriber.LatestMessage;
+           frame = self.ros_pose_to_frame(msg);
+           timestamp = self.ros_time_to_secs(msg);
+        end
 
-            % convert idiotic ROS message type to homogeneous transforms
-            position = trvec2tform([pose.Pose.Position.X, pose.Pose.Position.Y, pose.Pose.Position.Z]);
-            orientation = quat2tform([pose.Pose.Orientation.W, pose.Pose.Orientation.X, pose.Pose.Orientation.Y, pose.Pose.Orientation.Z]);
-            % combine position and orientation
-            self.position_local_current = position * orientation;
+        function [frame, timestamp] = get_position_current(self)
+           % Accessor used to retrieve the last current cartesian position
+           msg = self.position_current_subscriber.LatestMessage;
+           timestamp = self.ros_time_to_secs(msg);
+           frame = self.ros_pose_to_frame(msg);
+        end
+
+        function [frame, timestamp] = get_position_local_current(self)
+           % Accessor used to retrieve the last desired cartesian position
+           msg = self.position_local_current_subscriber.LatestMessage;
+           frame = self.ros_pose_to_frame(msg);
+           timestamp = self.ros_time_to_secs(msg);
         end
 
     end % methods
