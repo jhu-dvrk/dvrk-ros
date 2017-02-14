@@ -211,11 +211,11 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
 
 
     // events
-    bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
+    bridge.AddPublisherFromEventWrite<mtsMessage, std_msgs::String>
         (arm_component_name, "Error", ros_namespace + "/error");
-    bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
+    bridge.AddPublisherFromEventWrite<mtsMessage, std_msgs::String>
         (arm_component_name, "Warning", ros_namespace + "/warning");
-    bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
+    bridge.AddPublisherFromEventWrite<mtsMessage, std_msgs::String>
         (arm_component_name, "Status", ros_namespace + "/status");
 
     bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
