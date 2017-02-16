@@ -11,8 +11,8 @@ classdef arm < handle
     % add the word `joint`.  `move` stands for moves using absolute
     % positions while `dmove` are always relative to the current desired
     % position as reported by the dVRK C++ console application (i.e. last desired command).
-    %   r.position_desired   % contains 4x4 homogeneous transform
-    %   r.position_current   % actual 4x4 for the reported position based
+    %   r.get_position_desired()   % contains 4x4 homogeneous transform
+    %   r.get_position_current()   % actual 4x4 for the reported position based
     %   on encoders
     %
     % To move a single joint, be careful with radians and meters.  Also,
@@ -39,18 +39,6 @@ classdef arm < handle
         robot_state_timer       % Timer used to wait for new robot states
         goal_reached            % Event to indicate if trajectory goal is reached
         goal_reached_timer      % Timer to block on trajectory
-
-        position_desired        % Last received desired cartesian position
-        position_current        % Last received current cartesian position
-        position_local_desired  % Last received desired cartesian position
-        position_local_current  % Last received current cartesian position
-        twist_body_current      % Last received current cartesian twist body
-        wrench_body_current     % Last received current cartesian wrench body
-        position_joint_desired  % Last received desired joint position (PID input)
-        effort_joint_desired    % Last received desired joint effort (PID output)
-        position_joint_current  % Last received current joint position
-        velocity_joint_current  % Last received current joint velocity
-        effort_joint_current    % Last received current joint effort
     end
 
     % only this class methods can view/modify
@@ -66,6 +54,8 @@ classdef arm < handle
         twist_body_current_subscriber
         wrench_body_current_subscriber
         state_joint_current_subscriber
+        jacobian_spatial_subscriber
+        jacobian_body_subscriber
         % publishers
         robot_state_publisher
         position_goal_joint_publisher
@@ -118,71 +108,54 @@ classdef arm < handle
             self.goal_reached_timer.TimerFcn = { @self.goal_reached_timout };
 
             % position cartesian desired
-            self.position_desired = [];
             topic = strcat(self.ros_name, '/position_cartesian_desired');
             self.position_desired_subscriber = ...
                 rossubscriber(topic, rostype.geometry_msgs_PoseStamped);
-            self.position_desired_subscriber.NewMessageFcn = ...
-                @(sub, data)self.position_desired_cb(sub, data);
 
             % position cartesian local desired
-            self.position_local_desired = [];
             topic = strcat(self.ros_name, '/position_cartesian_local_desired');
             self.position_local_desired_subscriber = ...
                 rossubscriber(topic, rostype.geometry_msgs_PoseStamped);
-            self.position_local_desired_subscriber.NewMessageFcn = ...
-                @(sub, data)self.position_local_desired_cb(sub, data);
 
             % state joint desired
-            self.position_joint_desired = [];
-            self.effort_joint_desired = [];
             topic = strcat(self.ros_name, '/state_joint_desired');
             self.state_joint_desired_subscriber = ...
                 rossubscriber(topic, rostype.sensor_msgs_JointState);
-            self.state_joint_desired_subscriber.NewMessageFcn = ...
-                @(sub, data)self.state_joint_desired_cb(sub, data);
 
             % position cartesian current
-            self.position_current = [];
             topic = strcat(self.ros_name, '/position_cartesian_current');
             self.position_current_subscriber = ...
                 rossubscriber(topic, rostype.geometry_msgs_PoseStamped);
-            self.position_current_subscriber.NewMessageFcn = ...
-                @(sub, data)self.position_current_cb(sub, data);
 
             % position cartesian local current
-            self.position_local_current = [];
             topic = strcat(self.ros_name, '/position_cartesian_local_current');
             self.position_local_current_subscriber = ...
                 rossubscriber(topic, rostype.geometry_msgs_PoseStamped);
-            self.position_local_current_subscriber.NewMessageFcn = ...
-                @(sub, data)self.position_local_current_cb(sub, data);
 
             % twist cartesian current
-            self.twist_body_current = [];
             topic = strcat(self.ros_name, '/twist_body_current');
             self.twist_body_current_subscriber = ...
                 rossubscriber(topic, rostype.geometry_msgs_TwistStamped);
-            self.twist_body_current_subscriber.NewMessageFcn = ...
-                @(sub, data)self.twist_body_current_cb(sub, data);
 
             % wrench cartesian current
-            self.wrench_body_current = [];
             topic = strcat(self.ros_name, '/wrench_body_current');
             self.wrench_body_current_subscriber = ...
                 rossubscriber(topic, rostype.geometry_msgs_WrenchStamped);
-            self.wrench_body_current_subscriber.NewMessageFcn = ...
-                @(sub, data)self.wrench_body_current_cb(sub, data);
 
             % state joint current
-            self.position_joint_current = [];
-            self.velocity_joint_current = [];
-            self.effort_joint_current = [];
             topic = strcat(self.ros_name, '/state_joint_current');
             self.state_joint_current_subscriber = ...
                 rossubscriber(topic, rostype.sensor_msgs_JointState);
-            self.state_joint_current_subscriber.NewMessageFcn = ...
-                @(sub, data)self.state_joint_current_cb(sub, data);
+            
+            % jacobian spatial
+            topic = strcat(self.ros_name, '/jacobian_spatial');
+            self.jacobian_spatial_subscriber = ...
+                rossubscriber(topic, rostype.std_msgs_Float64MultiArray);
+            
+            % jacobian body
+            topic = strcat(self.ros_name, '/jacobian_body');
+            self.jacobian_body_subscriber = ...
+                rossubscriber(topic, rostype.std_msgs_Float64MultiArray);
 
             % ----------- publishers
             % state
@@ -241,7 +214,7 @@ classdef arm < handle
 
         function robot_state_cb(self, ~, data) % second argument is subscriber, not used
             % Method used internally when a new robot_state is published by
-            % the controller.  We use a timer to synchronize the callback
+            % the controller. We use a timer to synchronize the callback
             % and user code.
             self.robot_state = data.Data;
             stop(self.robot_state_timer);
@@ -262,85 +235,96 @@ classdef arm < handle
             disp(strcat(self.robot_name, ': timeout robot state, current state is "', self.goal_reached, '"'));
         end
 
-        function position_desired_cb(self, ~, pose) % second argument is subscriber, not used
-            % Callback used to retrieve the last desired cartesian position
-            % published and store as property position_desired
 
-            % convert idiotic ROS message type to homogeneous transforms
-            position = trvec2tform([pose.Pose.Position.X, pose.Pose.Position.Y, pose.Pose.Position.Z]);
-            orientation = quat2tform([pose.Pose.Orientation.W, pose.Pose.Orientation.X, pose.Pose.Orientation.Y, pose.Pose.Orientation.Z]);
-            % combine position and orientation
-            self.position_desired = position * orientation;
+
+
+        function seconds = ros_time_to_secs(~,pose_msg)
+            % Convert awkward rostime into a single double
+            seconds = double(pose_msg.Header.Stamp.Sec)+double(pose_msg.Header.Stamp.Nsec)*10^-9;
         end
 
-        function position_local_desired_cb(self, ~, pose) % second argument is subscriber, not used
-            % Callback used to retrieve the last desired cartesian position
-            % published and store as property position_local_desired
-
-            % convert idiotic ROS message type to homogeneous transforms
-            position = trvec2tform([pose.Pose.Position.X, pose.Pose.Position.Y, pose.Pose.Position.Z]);
-            orientation = quat2tform([pose.Pose.Orientation.W, pose.Pose.Orientation.X, pose.Pose.Orientation.Y, pose.Pose.Orientation.Z]);
-            % combine position and orientation
-            self.position_local_desired = position * orientation;
+        function frame = ros_pose_to_frame(~,pose_msg)
+           % convert idiotic ROS message type to homogeneous transforms
+           position = trvec2tform([pose_msg.Pose.Position.X, pose_msg.Pose.Position.Y, pose_msg.Pose.Position.Z]);
+           orientation = quat2tform([pose_msg.Pose.Orientation.W, pose_msg.Pose.Orientation.X, pose_msg.Pose.Orientation.Y, pose_msg.Pose.Orientation.Z]);
+           frame = position*orientation;
         end
 
-        function state_joint_desired_cb(self, ~, jointState) % second argument is subscriber, not used
-            % Callback used to retrieve the last desired joint
-            % position/effort published and store as property position/effort_joint_desired
-            self.position_joint_desired = jointState.Position;
-            self.effort_joint_desired = jointState.Effort;
+        function [frame, timestamp] = get_position_desired(self)
+           % Accessor used to retrieve the last desired cartesian position
+           msg = self.position_desired_subscriber.LatestMessage;
+           frame = self.ros_pose_to_frame(msg);
+           timestamp = self.ros_time_to_secs(msg);
         end
 
-        function position_current_cb(self, ~, pose) % second argument is subscriber, not used
-            % Callback used to retrieve the last measured cartesian
-            % position published and store as property position_current
-
-            % convert idiotic ROS message type to homogeneous transforms
-            position = trvec2tform([pose.Pose.Position.X, pose.Pose.Position.Y, pose.Pose.Position.Z]);
-            orientation = quat2tform([pose.Pose.Orientation.W, pose.Pose.Orientation.X, pose.Pose.Orientation.Y, pose.Pose.Orientation.Z]);
-            % combine position and orientation
-            self.position_current = position * orientation;
+        function [frame, timestamp] = get_position_local_desired(self)
+           % Accessor used to retrieve the last desired cartesian position
+           msg = self.position_local_desired_subscriber.LatestMessage;
+           frame = self.ros_pose_to_frame(msg);
+           timestamp = self.ros_time_to_secs(msg);
         end
 
-        function position_local_current_cb(self, ~, pose) % second argument is subscriber, not used
-            % Callback used to retrieve the last measured cartesian
-            % position published and store as property position_local_current
-
-            % convert idiotic ROS message type to homogeneous transforms
-            position = trvec2tform([pose.Pose.Position.X, pose.Pose.Position.Y, pose.Pose.Position.Z]);
-            orientation = quat2tform([pose.Pose.Orientation.W, pose.Pose.Orientation.X, pose.Pose.Orientation.Y, pose.Pose.Orientation.Z]);
-            % combine position and orientation
-            self.position_local_current = position * orientation;
+        function [position, velocity, effort, timestamp] = get_state_joint_desired(self)
+            % Accessor used to retrieve the last desired joint position/effort
+            msg = self.state_joint_desired_subscriber.LatestMessage;
+            position = msg.Position;
+            velocity = msg.Velocity;
+            effort = msg.Effort;
+            timestamp = self.ros_time_to_secs(msg);
         end
 
-        function twist_body_current_cb(self, ~, twist) % second argument is subscriber, not used
-            % Callback used to retrieve the last measured cartesian
-            % twist published and store as property twist_body_current
+        function [frame, timestamp] = get_position_current(self)
+           % Accessor used to retrieve the last current cartesian position
+           msg = self.position_current_subscriber.LatestMessage;
+           timestamp = self.ros_time_to_secs(msg);
+           frame = self.ros_pose_to_frame(msg);
+        end
 
+        function [frame, timestamp] = get_position_local_current(self)
+           % Accessor used to retrieve the last desired cartesian position
+           msg = self.position_local_current_subscriber.LatestMessage;
+           frame = self.ros_pose_to_frame(msg);
+           timestamp = self.ros_time_to_secs(msg);
+        end
+
+        function [position, velocity, effort, timestamp] = get_state_joint_current(self)
+            % Accessor used to retrieve the last desired joint position/effort
+            msg = self.state_joint_current_subscriber.LatestMessage;
+            position = msg.Position;
+            velocity = msg.Velocity;
+            effort = msg.Effort;
+            timestamp = self.ros_time_to_secs(msg);
+        end
+
+        function [wrench, timestamp] = get_wrench_current(self)
+           % Accessor used to retrieve the last measured cartesian
+           msg = self.wrench_body_current_subscriber.LatestMessage;
+           % convert idiotic ROS message type to a single vector
+           wrench = [msg.Wrench.Force.X, msg.Wrench.Force.Y, msg.Wrench.Force.Z, ...
+                     msg.Wrench.Torque.X, msg.Wrench.Torque.Y, msg.Wrench.Torque.Z];
+           timestamp = self.ros_time_to_secs(msg);
+        end
+
+        function [twist, timestamp] = get_twist_body_current(self)
+            % Accessor used to retrieve the last measured cartesian
+            msg = self.twist_body_current_subscriber.LatestMessage;
             % convert idiotic ROS message type to a single vector
-            self.twist_body_current = [twist.Twist.Linear.X, twist.Twist.Linear.Y, twist.Twist.Linear.Z, ...
-                                       twist.Twist.Angular.X, twist.Twist.Angular.Y, twist.Twist.Angular.Z];
+            twist = [msg.Twist.Linear.X, msg.Twist.Linear.Y, msg.Twist.Linear.Z, ...
+                     msg.Twist.Angular.X, msg.Twist.Angular.Y, msg.Twist.Angular.Z];
+            timestamp = self.ros_time_to_secs(msg);
         end
 
-        function wrench_body_current_cb(self, ~, wrench) % second argument is subscriber, not used
-            % Callback used to retrieve the last measured cartesian
-            % position published and store as property position_current
-
-            % convert idiotic ROS message type to a single vector
-            self.wrench_body_current = [wrench.Wrench.Force.X, wrench.Wrench.Force.Y, wrench.Wrench.Force.Z, ...
-                                        wrench.Wrench.Torque.X, wrench.Wrench.Torque.Y, wrench.Wrench.Torque.Z];
+        function jacobian = get_jacobian_spatial(self)
+            % Accessor used to retrieve the last jacobian
+            msg = self.jacobian_spatial_subscriber.LatestMessage;
+            jacobian = reshape(msg.Data, msg.Layout.Dim(2,1).Size, msg.Layout.Dim(1,1).Size)';
         end
-
-        function state_joint_current_cb(self, ~, jointState) % second argument is subscriber, not used
-            % Callback used to retrieve the last measured joint
-            % position/velocity/effort
-            % published and store as property position/velocity/effort_joint_current
-            self.position_joint_current = jointState.Position;
-            self.velocity_joint_current = jointState.Velocity;
-            self.effort_joint_current = jointState.Effort;
+        
+        function jacobian = get_jacobian_body(self)
+            % Accessor used to retrieve the last jacobian
+            msg = self.jacobian_body_subscriber.LatestMessage;
+            jacobian = reshape(msg.Data, msg.Layout.Dim(2,1).Size, msg.Layout.Dim(1,1).Size)';
         end
-
-
 
 
         function result = set_state(self, state_as_string)
@@ -415,7 +399,7 @@ classdef arm < handle
             % generator
 
             % check if the array provided has the right length
-            if length(joint_values) == length(self.position_joint_current)
+            if length(joint_values) == length(self.get_state_joint_current())
                 if self.set_state('DVRK_POSITION_GOAL_JOINT')
                     % prepare the ROS message
                     joint_message = rosmessage(self.position_goal_joint_publisher);
@@ -521,7 +505,7 @@ classdef arm < handle
                             ': dmove_joint_one, joint_value must be a real number'));
                 return;
             end
-            goal = self.position_joint_desired;
+            goal = self.get_state_joint_desired();
             goal(joint_index) = goal(joint_index) + joint_value;
             result = self.move_joint(goal);
         end
@@ -538,7 +522,7 @@ classdef arm < handle
                             ': dmove_joint, joint_values must be a real array'));
                 return;
             end
-            if length(joint_values) ~= length(self.position_joint_current)
+            if length(joint_values) ~= length(self.get_state_joint_current())
                 result = false;
                 disp(strcat(self.robot_name, ...
                             [': dmove_joint, joint_values does not have right ' ...
@@ -546,7 +530,7 @@ classdef arm < handle
                             int2str(length(joint_values))));
                 return
             end
-            goal = self.position_joint_desired;
+            goal = self.get_state_joint_desired();
             goal = goal + joint_values';
             result = self.move_joint(goal);
         end
@@ -570,7 +554,7 @@ classdef arm < handle
                             ': move_joint_one, joint_value must be a real number'));
                 return;
             end
-            goal = self.position_joint_desired;
+            goal = self.get_state_joint_desired();
             goal(joint_index) = joint_value;
             result = self.move_joint(goal);
         end
@@ -581,7 +565,7 @@ classdef arm < handle
         function result = dmove_translation(self, translation)
             % Move incrementaly in cartesian space
             translationH = trvec2tform(translation);
-            goal = self.position_desired;
+            goal = self.get_position_desired();
             goal(1, 4) = goal(1, 4) + translationH(1, 4);
             goal(2, 4) = goal(2, 4) + translationH(2, 4);
             goal(3, 4) = goal(3, 4) + translationH(3, 4);
@@ -595,7 +579,7 @@ classdef arm < handle
         function result = move_translation(self, translation)
             % Move to absolute position in cartesian space
             translationH = trvec2tform(translation);
-            goal = self.position_desired;
+            goal = self.get_position_desired();
             goal(1, 4) = translationH(1, 4);
             goal(2, 4) = translationH(2, 4);
             goal(3, 4) = translationH(3, 4);
@@ -642,9 +626,10 @@ classdef arm < handle
                 end
             else
                 result = false;
-                disp(strcat(self.robot_name, [': set_wrench_body, wrench does not have right '], ...
-                            ['size, expecting 6 but size of provided ' ...
-                             'array is '], int2str(length(joint_values))));
+                disp(strcat(self.robot_name, ...
+                            ': set_wrench_body, wrench does not have right ', ...
+                            'size, expecting 6 but size of provided array is ', ...
+                            int2str(length(joint_values))));
             end
         end
 
