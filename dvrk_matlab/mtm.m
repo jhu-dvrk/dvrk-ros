@@ -25,7 +25,8 @@ classdef mtm < arm
 
 
         function result = lock_orientation_as_is(self)
-            current_orientation = self.position_current(1:3,1:3);
+            position_current = self.get_position_current();
+            current_orientation = position_current(1:3,1:3);
             self.lock_orientation(current_orientation);
             result = true;
         end
