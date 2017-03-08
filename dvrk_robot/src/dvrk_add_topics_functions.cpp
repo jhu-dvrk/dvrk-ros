@@ -251,9 +251,9 @@ void dvrk::add_topics_mtm(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandVoid
         (mtm_component_name, "UnlockOrientation",
          ros_namespace + "/unlock_orientation");
-    bridge.AddPublisherFromCommandRead<double, std_msgs::Float32>
-        (mtm_component_name, "GetGripperPosition",
-         ros_namespace + "/gripper_position_current");
+    bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
+        (mtm_component_name, "GetStateGripper",
+         ros_namespace + "/state_gripper_current");
     bridge.AddPublisherFromEventVoid
         (mtm_component_name, "GripperPinchEvent",
          ros_namespace + "/gripper_pinch_event");
