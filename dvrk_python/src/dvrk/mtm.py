@@ -20,6 +20,10 @@ class mtm(arm):
     def __init__(self, mtm_name, ros_namespace = '/dvrk/'):
         # first call base class constructor
         self._arm__init_arm(mtm_name, ros_namespace)
+
+        # gripper states
+        self.__position_gripper_current = 0.0
+
         # publishers
         self.__lock_orientation_pub = rospy.Publisher(self._arm__full_ros_namespace
                                                       + '/lock_orientation',
@@ -28,6 +32,17 @@ class mtm(arm):
                                                         + '/unlock_orientation',
                                                         Empty, latch=True, queue_size = 1)
 
+        # subscribers
+        rospy.Subscriber(self._arm__full_ros_namespace + '/state_gripper_current',
+                         JointState, self.__state_gripper_current_cb)
+
+
+    def __state_gripper_current_cb(self, data):
+        self.__position_gripper_current = data.position[0]
+
+    def get_current_gripper_position(self):
+        "get the current angle of the gripper"
+        return self.__position_gripper_current
 
     def lock_orientation_as_is(self):
         "Lock orientation based on current orientation"
