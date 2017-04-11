@@ -5,7 +5,7 @@
   Author(s):  Zihan Chen, Anton Deguet
   Created on: 2015-04-33
 
-  (C) Copyright 2015-2016 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2017 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -293,6 +293,14 @@ void dvrk::add_topics_psm(mtsROSBridge & bridge,
 
     bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (psm_component_name, "SetToolPresent", ros_namespace + "/set_tool_present");
+
+    bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
+        (psm_component_name, "GetStateJawDesired",
+         ros_namespace + "/state_jaw_desired");
+
+    bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
+        (psm_component_name, "GetStateJaw",
+         ros_namespace + "/state_jaw_current");
 
     // events
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
