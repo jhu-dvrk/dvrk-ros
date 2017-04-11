@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-05
 
-#   (C) Copyright 2016 Johns Hopkins University (JHU), All Rights Reserved.
+#   (C) Copyright 2016-2017 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -20,6 +20,14 @@ class psm(arm):
     def __init__(self, psm_name, ros_namespace = '/dvrk/'):
         # first call base class constructor
         self._arm__init_arm(psm_name, ros_namespace)
+
+        # jaw states
+        self.__position_jaw_desired = 0.0
+        self.__effort_jaw_desired = 0.0
+        self.__position_jaw_current = 0.0
+        self.__velocity_jaw_current = 0.0
+        self.__effort_jaw_current = 0.0
+
         # publishers
         self.__set_jaw_position_pub = rospy.Publisher(self._arm__full_ros_namespace
                                                       + '/set_jaw_position',
@@ -27,16 +35,44 @@ class psm(arm):
         self.__set_tool_present_pub = rospy.Publisher(self._arm__full_ros_namespace
                                                       + '/set_tool_present',
                                                       Bool, latch = True, queue_size = 1)
+        # subscribers
+        rospy.Subscriber(self._arm__full_ros_namespace + '/state_jaw_desired',
+                         JointState, self.__state_jaw_desired_cb)
+        rospy.Subscriber(self._arm__full_ros_namespace + '/state_jaw_current',
+                         JointState, self.__state_jaw_current_cb)
+
+
+    def __state_jaw_desired_cb(self, data):
+        self.__position_jaw_desired = data.position[0]
+        self.__effort_jaw_desired = data.effort[0]
+
+
+    def __state_jaw_current_cb(self, data):
+        self.__position_jaw_current = data.position[0]
+        self.__velocity_jaw_current = data.velocity[0]
+        self.__effort_jaw_current = data.effort[0]
 
 
     def get_current_jaw_position(self):
         "get the current angle of the jaw"
-        return self._arm__position_joint_current[6]
+        return self.__position_jaw_current
+
+    def get_current_jaw_velocity(self):
+        "get the current angular velocity of the jaw"
+        return self.__velocity_jaw_current
+
+    def get_current_jaw_effort(self):
+        "get the current torque applied to the jaw"
+        return self.__effort_jaw_current
 
 
     def get_desired_jaw_position(self):
         "get the desired angle of the jaw"
-        return self._arm__position_joint_desired[6]
+        return self.__position_jaw_desired
+
+    def get_desired_jaw_effort(self):
+        "get the desired torque to be applied to the jaw"
+        return self.__effort_jaw_desired
 
 
     def close_jaw(self):
