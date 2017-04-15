@@ -13,7 +13,9 @@
       <param name="rate" value="$(arg rate)"/>
       
       <rosparam param="source_list" subst_value="True">
-        [/dvrk/$(arg arm)/state_joint_current]
+          [/dvrk/$(arg arm)/state_joint_current,
+           /dvrk/$(arg arm)/state_jaw_current,
+           /dvrk/$(arg arm)/state_gripper_current]
       </rosparam>
 
       <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
