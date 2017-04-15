@@ -146,12 +146,12 @@ classdef arm < handle
             topic = strcat(self.ros_name, '/state_joint_current');
             self.state_joint_current_subscriber = ...
                 rossubscriber(topic, rostype.sensor_msgs_JointState);
-            
+
             % jacobian spatial
             topic = strcat(self.ros_name, '/jacobian_spatial');
             self.jacobian_spatial_subscriber = ...
                 rossubscriber(topic, rostype.std_msgs_Float64MultiArray);
-            
+
             % jacobian body
             topic = strcat(self.ros_name, '/jacobian_body');
             self.jacobian_body_subscriber = ...
@@ -238,80 +238,79 @@ classdef arm < handle
 
 
 
-        function seconds = ros_time_to_secs(~,pose_msg)
+        function seconds = ros_time_to_secs(~, stamp)
             % Convert awkward rostime into a single double
-            seconds = double(pose_msg.Header.Stamp.Sec)+double(pose_msg.Header.Stamp.Nsec)*10^-9;
+            seconds = double(stamp.Sec) + double(stamp.Nsec) * 10^-9;
         end
 
-        function frame = ros_pose_to_frame(~,pose_msg)
+        function frame = ros_pose_to_frame(~, pose)
            % convert idiotic ROS message type to homogeneous transforms
-           position = trvec2tform([pose_msg.Pose.Position.X, pose_msg.Pose.Position.Y, pose_msg.Pose.Position.Z]);
-           orientation = quat2tform([pose_msg.Pose.Orientation.W, pose_msg.Pose.Orientation.X, pose_msg.Pose.Orientation.Y, pose_msg.Pose.Orientation.Z]);
-           frame = position*orientation;
+           position = trvec2tform([pose.Position.X, pose.Position.Y, pose.Position.Z]);
+           orientation = quat2tform([pose.Orientation.W, pose.Orientation.X, pose.Orientation.Y, pose.Orientation.Z]);
+           frame = position * orientation;
+        end
+
+        function vector = ros_twist_to_vector(~, twist)
+            vector = [twist.Linear.X,  twist.Linear.Y,  twist.Linear.Z, ...
+                      twist.Angular.X, twist.Angular.Y, twist.Angular.Z];
+        end
+
+        function vector = ros_wrench_to_vector(~, wrench)
+           % convert idiotic ROS message type to a single vector
+           vector = [wrench.Force.X,  wrench.Force.Y,  wrench.Force.Z, ...
+                     wrench.Torque.X, wrench.Torque.Y, wrench.Torque.Z];
         end
 
         function [frame, timestamp] = get_position_desired(self)
            % Accessor used to retrieve the last desired cartesian position
-           msg = self.position_desired_subscriber.LatestMessage;
-           frame = self.ros_pose_to_frame(msg);
-           timestamp = self.ros_time_to_secs(msg);
+           frame = self.ros_pose_to_frame(self.position_desired_subscriber.LatestMessage.Pose);
+           timestamp = self.ros_time_to_secs(self.position_desired_subscriber.LatestMessage.Header.Stamp);
         end
 
         function [frame, timestamp] = get_position_local_desired(self)
-           % Accessor used to retrieve the last desired cartesian position
-           msg = self.position_local_desired_subscriber.LatestMessage;
-           frame = self.ros_pose_to_frame(msg);
-           timestamp = self.ros_time_to_secs(msg);
+           % Accessor used to retrieve the last desired local cartesian position
+           frame = self.ros_pose_to_frame(self.position_local_desired_subscriber.LatestMessage.Pose);
+           timestamp = self.ros_time_to_secs(self.position_local_desired_subscriber.LatestMessage.Header.Stamp);
         end
 
         function [position, velocity, effort, timestamp] = get_state_joint_desired(self)
             % Accessor used to retrieve the last desired joint position/effort
-            msg = self.state_joint_desired_subscriber.LatestMessage;
-            position = msg.Position;
-            velocity = msg.Velocity;
-            effort = msg.Effort;
-            timestamp = self.ros_time_to_secs(msg);
+            position = self.state_joint_desired_subscriber.LatestMessage.Position;
+            velocity = self.state_joint_desired_subscriber.LatestMessage.Velocity;
+            effort = self.state_joint_desired_subscriber.LatestMessage.Effort;
+            timestamp = self.ros_time_to_secs(self.state_joint_desired_subscriber.LatestMessage.Header.Stamp);
         end
 
         function [frame, timestamp] = get_position_current(self)
            % Accessor used to retrieve the last current cartesian position
-           msg = self.position_current_subscriber.LatestMessage;
-           timestamp = self.ros_time_to_secs(msg);
-           frame = self.ros_pose_to_frame(msg);
+           frame = self.ros_pose_to_frame(self.position_current_subscriber.LatestMessage.Pose);
+           timestamp = self.ros_time_to_secs(self.position_current_subscriber.LatestMessage.Header.Stamp);
         end
 
         function [frame, timestamp] = get_position_local_current(self)
-           % Accessor used to retrieve the last desired cartesian position
-           msg = self.position_local_current_subscriber.LatestMessage;
-           frame = self.ros_pose_to_frame(msg);
-           timestamp = self.ros_time_to_secs(msg);
+           % Accessor used to retrieve the last current local cartesian position
+           frame = self.ros_pose_to_frame(self.position_local_current_subscriber.LatestMessage.Pose);
+           timestamp = self.ros_time_to_secs(self.position_local_current_subscriber.LatestMessage.Header.Stamp);
         end
 
         function [position, velocity, effort, timestamp] = get_state_joint_current(self)
-            % Accessor used to retrieve the last desired joint position/effort
-            msg = self.state_joint_current_subscriber.LatestMessage;
-            position = msg.Position;
-            velocity = msg.Velocity;
-            effort = msg.Effort;
-            timestamp = self.ros_time_to_secs(msg);
-        end
-
-        function [wrench, timestamp] = get_wrench_current(self)
-           % Accessor used to retrieve the last measured cartesian
-           msg = self.wrench_body_current_subscriber.LatestMessage;
-           % convert idiotic ROS message type to a single vector
-           wrench = [msg.Wrench.Force.X, msg.Wrench.Force.Y, msg.Wrench.Force.Z, ...
-                     msg.Wrench.Torque.X, msg.Wrench.Torque.Y, msg.Wrench.Torque.Z];
-           timestamp = self.ros_time_to_secs(msg);
+            % Accessor used to retrieve the last measured joint position/velocity/effort
+            position = self.state_joint_current_subscriber.LatestMessage.Position;
+            velocity = self.state_joint_current_subscriber.LatestMessage.Velocity;
+            effort = self.state_joint_current_subscriber.LatestMessage.Effort;
+            timestamp = self.ros_time_to_secs(self.state_joint_current_subscriber.LatestMessage.Header.Stamp);
         end
 
         function [twist, timestamp] = get_twist_body_current(self)
-            % Accessor used to retrieve the last measured cartesian
-            msg = self.twist_body_current_subscriber.LatestMessage;
-            % convert idiotic ROS message type to a single vector
-            twist = [msg.Twist.Linear.X, msg.Twist.Linear.Y, msg.Twist.Linear.Z, ...
-                     msg.Twist.Angular.X, msg.Twist.Angular.Y, msg.Twist.Angular.Z];
-            timestamp = self.ros_time_to_secs(msg);
+            % Accessor used to retrieve the last measured cartesian velocity
+            twist = self.ros_twist_to_vector(self.twist_body_current_subscriber.LatestMessage.Twist);
+            timestamp = self.ros_time_to_secs(self.twist_body_current_subscriber.LatestMessage.Header.Stamp);
+        end
+
+        function [wrench, timestamp] = get_wrench_current(self)
+            % Accessor used to retrieve the last measured cartesian wrench
+            wrench = self.ros_wrench_to_vector(self.wrench_body_current_subscriber.LatestMessage.Wrench);
+            timestamp = self.ros_time_to_secs(self.wrench_body_current_subscriber.LatestMessage.Header.Stamp);
         end
 
         function jacobian = get_jacobian_spatial(self)
@@ -319,7 +318,7 @@ classdef arm < handle
             msg = self.jacobian_spatial_subscriber.LatestMessage;
             jacobian = reshape(msg.Data, msg.Layout.Dim(2,1).Size, msg.Layout.Dim(1,1).Size)';
         end
-        
+
         function jacobian = get_jacobian_body(self)
             % Accessor used to retrieve the last jacobian
             msg = self.jacobian_body_subscriber.LatestMessage;
