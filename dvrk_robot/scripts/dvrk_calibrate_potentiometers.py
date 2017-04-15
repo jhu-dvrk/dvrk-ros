@@ -2,6 +2,7 @@
 
 # Authors: Nick Eusman, Anton Deguet
 # Date: 2015-09-24
+# Copyright JHU 2015-2017
 
 # Todo:
 # - test calibrating 3rd offset on PSM?
@@ -290,27 +291,14 @@ class potentiometer_calibration:
             writer.writerow(header)
 
             # messages
+            print("Please hold/clamp your arm in zero position.");
             if arm_type == "PSM":
-                print "Calibrating offsets using calibration plate, this allows to calibrate the last 4 potentiometers.  The first 3 will remain unchanged."
-            else:
-                print("Since there is no calibration template for ECM/MTM, you need to manually place and constrain the arm in zero position!")
+                print("For a PSM, you need to hold at least the last 4 joints in zero position.  If you don't have a way to constrain the first 3 joints, you can still just calibrate the last 4.  This program will ask you later if you want to save all PSM joint offsets");
             raw_input("Press [enter] to continue")
-            raw_input("To start with some initial values, you first need to \"home\" the robot.  When homed, press [enter]")
-            raw_input("The robot will now go in \"idle\" mode, i.e. turn PID off.  Press [enter]")
-            self.set_state_block('DVRK_UNINITIALIZED')
-            if arm_type == "PSM":
-                raw_input("Place the plate over the final four joints and hit [enter]")
             nb_samples = 10 * nb_samples_per_position
             for sample in range(nb_samples):
-                if arm_type == "PSM":
-                    for axis in range(3, nb_axis):
-                        average_offsets[axis].append(self._last_potentiometers[axis] * r2d)
-                    for axis in range(0, 3):
-                        average_offsets[axis].append(0.0)
-                else:
-                    for axis in range(nb_axis):
-                        average_offsets[axis].append(self._last_potentiometers[axis] * r2d)
-
+                for axis in range(nb_axis):
+                    average_offsets[axis].append(self._last_potentiometers[axis] * r2d)
                 writer.writerow(self._last_potentiometers)
                 time.sleep(sleep_time_between_samples)
                 sys.stdout.write('\rProgress %02.1f%%' % (float(sample) / float(nb_samples) * 100.0))
@@ -345,8 +333,23 @@ class potentiometer_calibration:
 
                 # display
                 print " %d    | % 04.6f | % 04.6f | % 04.6f " % (index, oldOffset, newOffset, offsets[index])
-                # replace values
-                xmlVoltsToPosSI[index].attrib["Offset"] = str(newOffset)
+
+            if arm_type == "PSM":
+                all = raw_input("Do you want to save all joint offsets or just the last 4, press 'a' followed by [enter] to save all");
+                if all == "a":
+                    print "This program will save ALL new PSM offsets"
+                    for axis in range(nb_axis):
+                        # replace values
+                        xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffset)
+                else:
+                    print "This program will only save the last 4 PSM offsets"
+                    for axis in range(3, nb_axis):
+                        # replace values
+                        xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffset)
+            else:
+                for axis in range(nb_axis):
+                    # replace values
+                    xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffset)
 
         save = raw_input("To save this in new file press 'y' followed by [enter]\n")
         if save == "y":

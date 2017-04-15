@@ -5,7 +5,7 @@ This package contains programs, which fires real robot, publishes and
 subscribes ROS topics.
 
 # Depends  
-* ciss-ros 
+* cisst-ros 
 
 IMPORTANT: You first need to make sure you have all your configuration
 files ready, very likely in
