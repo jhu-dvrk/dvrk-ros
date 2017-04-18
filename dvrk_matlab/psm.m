@@ -3,6 +3,9 @@ classdef psm < arm
 
     % only this class methods can view/modify
     properties (SetAccess = private)
+        % subscribers
+        state_jaw_desired_subscriber
+        state_jaw_current_subscriber
         % publishers
         jaw_position_publisher
         tool_present_publisher
@@ -13,6 +16,17 @@ classdef psm < arm
         function self = psm(name)
             self@arm(name);
 
+            % ----------- subscribers
+            % state jaw desired
+            topic = strcat(self.ros_name, '/state_jaw_desired');
+            self.state_jaw_desired_subscriber = ...
+                rossubscriber(topic, rostype.sensor_msgs_JointState);
+
+            % state jaw current
+            topic = strcat(self.ros_name, '/state_jaw_current');
+            self.state_jaw_current_subscriber = ...
+                rossubscriber(topic, rostype.sensor_msgs_JointState);
+
             % ----------- publishers
             topic = strcat(self.ros_name, '/set_jaw_position');
             self.jaw_position_publisher = rospublisher(topic, rostype.std_msgs_Float32);
@@ -20,6 +34,24 @@ classdef psm < arm
             topic = strcat(self.ros_name, '/set_tool_present');
             self.tool_present_publisher = rospublisher(topic, rostype.std_msgs_Bool);
 
+        end
+
+
+        function [position, velocity, effort, timestamp] = get_state_jaw_desired(self)
+            % Accessor used to retrieve the last desired jaw position/effort
+            position = self.state_jaw_desired_subscriber.LatestMessage.Position;
+            velocity = self.state_jaw_desired_subscriber.LatestMessage.Velocity;
+            effort = self.state_jaw_desired_subscriber.LatestMessage.Effort;
+            timestamp = self.ros_time_to_secs(self.state_jaw_desired_subscriber.LatestMessage.Header.Stamp);
+        end
+
+
+        function [position, velocity, effort, timestamp] = get_state_jaw_current(self)
+            % Accessor used to retrieve the last current jaw position/effort
+            position = self.state_jaw_current_subscriber.LatestMessage.Position;
+            velocity = self.state_jaw_current_subscriber.LatestMessage.Velocity;
+            effort = self.state_jaw_current_subscriber.LatestMessage.Effort;
+            timestamp = self.ros_time_to_secs(self.state_jaw_current_subscriber.LatestMessage.Header.Stamp);
         end
 
 
@@ -65,8 +97,7 @@ classdef psm < arm
             result = self.dmove_joint_one(depth, int8(3));
         end
 
-        function result = set_tool_present(self, ...
-					   tp)
+        function result = set_tool_present(self, tp)
             tp_message = rosmessage(self.tool_present_publisher);
             tp_message.Data = tp;
             % send message

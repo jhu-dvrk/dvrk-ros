@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="dvrk_psm" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- sca  -->
+  <xacro:macro name="psm_tool_snake" params="prefix">
+
+
+
+    <!-- joint 6: Outer wrist pitch1 joint -->
+    <joint name="outer_wrist_pitch1" type="revolute">
+      <parent link="${prefix}tool_wrist_shaft_link"/>
+      <child link="${prefix}tool_snake_disc1_link"/>
+      <axis xyz="0 0 1"/>
+      <origin rpy="-1.5708 -1.5708 0" xyz="0.0 0 0"/>      
+      <limit lower="-1.3963" upper="1.3963" velocity=".4" effort="1000"/>
+    </joint>
+
+    <!-- link 6: tool_snake_disc1_link -->
+    <link name="${prefix}tool_snake_disc1_link">
+      <visual>
+        <origin rpy="1.5708 0 0" xyz="0.0027 0 0"/>      
+        <geometry>
+          <mesh filename="package://dvrk_model/meshes/psm/snake_tool/link_1.STL"/> 
+        </geometry>
+      </visual>
+    </link>
+
+    <!-- joint 7: Outer wrist yaw1 joint -->
+    <joint name="outer_wrist_yaw1" type="revolute">
+      <parent link="${prefix}tool_snake_disc1_link"/>
+      <child link="${prefix}tool_snake_disc2_link"/>
+      <axis xyz="0 0 1"/>
+      <origin rpy="-1.5708 0 0" xyz="0.0034 0 0"/> 
+      <limit lower="-1.3963" upper="1.3963" velocity=".4" effort="1000"/>
+    </joint>
+
+    <!-- link 7: tool_snake_disc2_link -->
+    <link name="${prefix}tool_snake_disc2_link">
+      <visual>
+        <origin rpy="1.5708 0 0" xyz="0.0027 0 0"/>
+        <geometry>
+          <mesh filename="package://dvrk_model/meshes/psm/snake_tool/link_2.STL"/> 
+        </geometry>
+      </visual>
+    </link>
+
+    <!-- joint 8: Outer wrist yaw2 joint -->
+    <joint name="outer_wrist_yaw2" type="revolute">
+      <parent link="${prefix}tool_snake_disc2_link"/>
+      <child link="${prefix}tool_snake_disc3_link"/>
+      <axis xyz="0 0 1"/>
+      <origin rpy="0 0 0" xyz="0.0034 0 0"/>
+      <limit lower="-1.3963" upper="1.3963" velocity=".4" effort="1000"/>
+    </joint>
+
+    <!-- link 8: tool_snake_disc3_link -->
+    <link name="${prefix}tool_snake_disc3_link">
+      <visual>
+        <origin rpy="1.5708 0 0" xyz="0.0027 0 0"/>
+        <geometry>
+          <mesh filename="package://dvrk_model/meshes/psm/snake_tool/link_3.STL"/> 
+        </geometry>
+      </visual>
+    </link>
+
+    <!-- joint 9: Outer wrist pitch2 joint -->
+    <joint name="outer_wrist_pitch2" type="revolute">
+      <parent link="${prefix}tool_snake_disc3_link"/>
+      <child link="${prefix}tool_snake_end_link"/>
+      <axis xyz="0 0 1"/>
+      <origin rpy="1.5708 -1.5708 0" xyz="0.0034 0 0"/>
+      <limit lower="-1.3963" upper="1.3963" velocity=".4" effort="1000"/>
+    </joint>
+
+    <!-- link 9: tool_snake_end_link -->
+    <link name="${prefix}tool_snake_end_link">
+      <visual>
+        <origin rpy="0 1.5708 0" xyz="0 -0.0027 0"/>
+        <geometry>
+          <mesh filename="package://dvrk_model/meshes/psm/snake_tool/link_4.STL"/> 
+        </geometry>
+      </visual>
+    </link>
+
+
+    <!-- Gripper  -->
+    <!-- joint 11-0: Outer open angle 1  -->
+    <joint name="jaw" type="revolute">
+      <parent link="${prefix}tool_snake_end_link"/>
+      <child link="${prefix}tool_wrist_snake_ee_link_0"/>      
+      <axis xyz="0 0 1"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <limit lower="0" upper="1.5707" velocity=".4" effort="1000"/>
+    </joint>
+
+    <!-- link 11-0: Outer open angle virtual -->
+    <link name="${prefix}tool_wrist_snake_ee_link_0">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0.0"/>
+        <geometry>          
+          <box size="0 0 0" />
+        </geometry>
+      </visual>
+    </link>
+
+    <!-- joint 11-1: Outer open angle 1  -->
+    <joint name="jaw_mimic_1" type="revolute">
+      <parent link="${prefix}tool_snake_end_link"/>
+      <child link="${prefix}tool_wrist_snake_ee_link_1"/>
+      <axis xyz="0 0 1"/>
+      <origin rpy="0 2.3562 0" xyz="0 -0.01 0"/>
+      <limit lower="-1.5707" upper="1.5707" velocity=".4" effort="1000"/>
+      <mimic joint="jaw" multiplier="0.5"/>
+    </joint>
+
+    <!-- link 11-1: Outer open angle link 1 -->
+    <link name="${prefix}tool_wrist_snake_ee_link_1">
+      <visual>
+        <origin rpy="-1.5708 -0.7854 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://dvrk_model/meshes/psm/snake_tool/gripper_2.STL"/> 
+        </geometry>
+      </visual>
+    </link>
+
+    <!-- joint 11-2: Outer open angle 2   -->
+    <joint name="jaw_mimic_2" type="revolute">
+      <parent link="${prefix}tool_snake_end_link"/>
+      <child link="${prefix}tool_wrist_snake_ee_link_2"/>
+      <axis xyz="0 0 1"/>
+      <origin rpy="0 2.3562 0" xyz="0 -0.01 0"/>
+      <limit lower="-1.5707" upper="1.5707" velocity=".4" effort="1000"/>
+      <mimic joint="jaw" multiplier="-0.5"/>
+    </joint>
+
+    <!-- link 11-2: Outer open angle link 2 -->
+    <link name="${prefix}tool_wrist_snake_ee_link_2">
+      <visual>
+        <origin rpy="-1.5708 2.3561 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://dvrk_model/meshes/psm/snake_tool/gripper_3.STL"/> 
+        </geometry>
+      </visual>
+    </link>
+
+
+  </xacro:macro>
+  
+</robot>

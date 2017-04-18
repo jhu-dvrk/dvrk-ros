@@ -3,7 +3,7 @@
   <arg name="arm" />   
   <arg name="config" />   
 
-  <arg name="model" default="$(find dvrk_model)/model/$(arg arm).urdf.xacro" />
+  <arg name="model" default="$(find dvrk_model)/model/$(arg arm)_Snake.urdf.xacro" />
   
   <node name="dvrk_$(arg arm)_node"
         pkg="dvrk_robot"
@@ -20,9 +20,7 @@
       <param name="rate" value="$(arg rate)"/>
       
       <rosparam param="source_list" subst_value="True">
-          [/dvrk/$(arg arm)/state_joint_current,
-           /dvrk/$(arg arm)/state_jaw_current,
-           /dvrk/$(arg arm)/state_gripper_current]
+        [/dvrk/$(arg arm)/state_joint_current]
       </rosparam>
 
       <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />

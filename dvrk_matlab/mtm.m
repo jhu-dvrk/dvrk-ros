@@ -3,6 +3,8 @@ classdef mtm < arm
 
     % only this class methods can view/modify
     properties (SetAccess = private)
+        % subscribers
+        state_gripper_current_subscriber
         % publishers
         lock_orientation_publisher
         unlock_orientation_publisher
@@ -13,6 +15,12 @@ classdef mtm < arm
         function self = mtm(name)
             self@arm(name);
 
+            % ----------- subscribers
+            % state gripper current
+            topic = strcat(self.ros_name, '/state_gripper_current');
+            self.state_gripper_current_subscriber = ...
+                rossubscriber(topic, rostype.sensor_msgs_JointState);
+
             % ----------- publishers
             topic = strcat(self.ros_name, '/lock_orientation');
             self.lock_orientation_publisher = rospublisher(topic, ...
@@ -22,6 +30,14 @@ classdef mtm < arm
                                                              rostype.std_msgs_Empty);
         end
 
+
+        function [position, velocity, effort, timestamp] = get_state_gripper_current(self)
+            % Accessor used to retrieve the last current gripper position/effort
+            position = self.state_gripper_current_subscriber.LatestMessage.Position;
+            velocity = self.state_gripper_current_subscriber.LatestMessage.Velocity;
+            effort = self.state_gripper_current_subscriber.LatestMessage.Effort;
+            timestamp = self.ros_time_to_secs(self.state_gripper_current_subscriber.LatestMessage.Header.Stamp);
+        end
 
 
         function result = lock_orientation_as_is(self)
