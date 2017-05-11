@@ -140,7 +140,7 @@ int main(int argc, char ** argv)
     if (hasQt) {
         QLocale::setDefault(QLocale::English);
         application = new QApplication(argc, argv);
-        application->setWindowIcon(QIcon(":/dVRK.svg"));
+        application->setWindowIcon(QIcon(":/dVRK.png"));
         consoleQt = new mtsIntuitiveResearchKitConsoleQt();
         consoleQt->Configure(console);
         consoleQt->Connect();
