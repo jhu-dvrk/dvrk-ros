@@ -17,6 +17,7 @@ http://www.cisst.org/cisst/license.txt.
 */
 
 #include <dvrk_utilities/dvrk_console.h>
+#include <cisstCommon/cmnStrings.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
 
 #include <json/json.h>
@@ -86,7 +87,11 @@ dvrk::console::console(mtsROSBridge & bridge,
          ++inputsIter) {
         std::string upperName = inputsIter->second.second;
         std::string lowerName = upperName;
+        // put everything lower case
         std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), tolower);
+        // replace +/- by strings
+        cmnStringReplaceAll(lowerName, "-", "_minus");
+        cmnStringReplaceAll(lowerName, "+", "_plus");
         bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
             (upperName, "Button", footPedalsNameSpace + lowerName);
     }
