@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2016 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2017 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -17,6 +17,7 @@ http://www.cisst.org/cisst/license.txt.
 */
 
 #include <dvrk_utilities/dvrk_console.h>
+#include <cisstCommon/cmnStrings.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
 
 #include <json/json.h>
@@ -76,8 +77,23 @@ dvrk::console::console(mtsROSBridge & bridge,
         dvrk::add_topics_teleop(bridge, mNameSpace + "/" + topic_name, name, version);
     }
 
-    if (mConsole->mHasFootpedals) {
-        dvrk::add_topics_footpedals(bridge, mNameSpace + "/footpedals", version);
+    // digital inputs
+    const std::string footPedalsNameSpace = mNameSpace + "/footpedals/";
+    typedef mtsIntuitiveResearchKitConsole::DInputSourceType DInputSourceType;
+    const DInputSourceType::const_iterator inputsEnd = mConsole->mDInputSources.end();
+    DInputSourceType::const_iterator inputsIter;
+    for (inputsIter = mConsole->mDInputSources.begin();
+         inputsIter != inputsEnd;
+         ++inputsIter) {
+        std::string upperName = inputsIter->second.second;
+        std::string lowerName = upperName;
+        // put everything lower case
+        std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), tolower);
+        // replace +/- by strings
+        cmnStringReplaceAll(lowerName, "-", "_minus");
+        cmnStringReplaceAll(lowerName, "+", "_plus");
+        bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
+            (upperName, "Button", footPedalsNameSpace + lowerName);
     }
 
     dvrk::add_topics_console(bridge, mNameSpace + "/console", version);
@@ -162,8 +178,15 @@ void dvrk::console::Connect(void)
     }
 
     // connect foot pedal, all arms use same
-    if (mConsole->mHasFootpedals) {
-        dvrk::connect_bridge_footpedals(mBridgeName, mConsole->mIOComponentName);
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
+    typedef mtsIntuitiveResearchKitConsole::DInputSourceType DInputSourceType;
+    const DInputSourceType::const_iterator inputsEnd = mConsole->mDInputSources.end();
+    DInputSourceType::const_iterator inputsIter;
+    for (inputsIter = mConsole->mDInputSources.begin();
+         inputsIter != inputsEnd;
+         ++inputsIter) {
+        componentManager->Connect(mBridgeName, inputsIter->second.second,
+                                  inputsIter->second.first, inputsIter->second.second);
     }
 
     // connect console bridge
