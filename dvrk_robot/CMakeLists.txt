@@ -61,7 +61,6 @@ if (cisst_FOUND_AS_REQUIRED)
   # sawRobotIO1394 has been compiled within cisst, we should find it automatically
   find_package (sawRobotIO1394          1.4.0 REQUIRED)
   find_package (sawControllers          1.4.0 REQUIRED)
-  find_package (sawConstraintController 1.1.0 REQUIRED)
   find_package (sawIntuitiveResearchKit 1.4.0 REQUIRED)
 
   include_directories (
@@ -69,14 +68,12 @@ if (cisst_FOUND_AS_REQUIRED)
     ${CATKIN_DEVEL_PREFIX}/include
     ${sawRobotIO1394_INCLUDE_DIR}
     ${sawControllers_INCLUDE_DIR}
-    ${sawConstraintController_INCLUDE_DIR}
     ${sawIntuitiveResearchKit_INCLUDE_DIR}
     )
 
   link_directories (
     ${sawRobotIO1394_LIBRARY_DIR}
     ${sawControllers_LIBRARY_DIR}
-    ${sawConstraintController_LIBRARY_DIR}
     ${sawIntuitiveResearchKit_LIBRARY_DIR}
     )
 
@@ -98,7 +95,6 @@ if (cisst_FOUND_AS_REQUIRED)
       ${sawRobotIO1394_LIBRARIES}
       ${sawIntuitiveResearchKit_LIBRARIES}
       ${sawControllers_LIBRARIES}
-      ${sawConstraintController_LIBRARIES}
     )
     cisst_target_link_libraries (dvrk_utilities ${REQUIRED_CISST_LIBRARIES})
 
@@ -110,7 +106,6 @@ if (cisst_FOUND_AS_REQUIRED)
       ${sawRobotIO1394_LIBRARIES}
       ${sawIntuitiveResearchKit_LIBRARIES}
       ${sawControllers_LIBRARIES}
-      ${sawConstraintController_LIBRARIES}
       ${catkin_LIBRARIES}
     )
     cisst_target_link_libraries (${_executable} ${REQUIRED_CISST_LIBRARIES})
