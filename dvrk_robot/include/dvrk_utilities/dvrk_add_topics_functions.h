@@ -5,7 +5,7 @@
   Author(s):  Zihan Chen, Anton Deguet
   Created on: 2015-05-23
 
-  (C) Copyright 2015-2016 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2017 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -70,6 +70,14 @@ namespace dvrk {
                         const std::string & ros_namespace,
                         const std::string & mtm_component_name,
                         const dvrk_topics_version::version version);
+
+    /*! This is a temporary fix until we have a standardized API for
+      all MTMs defined in cisst/SAW.  This will then be moved to
+      either cisst-ros or a new saw-ros library. */
+    void add_topics_mtm_generic(mtsROSBridge & bridge,
+                                const std::string & ros_namespace,
+                                const std::string & mtm_component_name,
+                                const dvrk_topics_version::version version);
 
     /*! This method connects all the required interfaces for an MTM
       arm, it must be used after add_topics_mtm. */
