@@ -86,7 +86,7 @@ import PyKDL
 # we should probably not import the symbols and put them in current namespace
 from tf import transformations
 from tf_conversions import posemath
-from std_msgs.msg import String, Bool, Float32, Empty
+from std_msgs.msg import String, Bool, Float32, Empty, Float64MultiArray
 from geometry_msgs.msg import Pose, PoseStamped, Vector3, Quaternion, Wrench, WrenchStamped, TwistStamped
 from sensor_msgs.msg import JointState, Joy
 
@@ -144,6 +144,8 @@ class arm(object):
         self.__position_cartesian_local_current = PyKDL.Frame()
         self.__twist_body_current = numpy.zeros(6, dtype = numpy.float)
         self.__wrench_body_current = numpy.zeros(6, dtype = numpy.float)
+        self.__jacobian_spatial = numpy.ndarray(0, dtype = numpy.float)
+        self.__jacobian_body = numpy.ndarray(0, dtype = numpy.float)
 
         # publishers
         frame = PyKDL.Frame()
@@ -199,6 +201,10 @@ class arm(object):
                          TwistStamped, self.__twist_body_current_cb)
         rospy.Subscriber(self.__full_ros_namespace + '/wrench_body_current',
                          WrenchStamped, self.__wrench_body_current_cb)
+        rospy.Subscriber(self.__full_ros_namespace + '/jacobian_spatial',
+                         Float64MultiArray, self.__jacobian_spatial_cb)
+        rospy.Subscriber(self.__full_ros_namespace + '/jacobian_body',
+                         Float64MultiArray, self.__jacobian_body_cb)
 
         # create node
         rospy.init_node('arm_api', anonymous = True, log_level = rospy.WARN)
@@ -293,6 +299,21 @@ class arm(object):
         self.__wrench_body_current[4] = data.wrench.torque.y
         self.__wrench_body_current[5] = data.wrench.torque.z
 
+    def __jacobian_spatial_cb(self, data):
+        """Callback for the Jacobian in spatial frame.
+
+        :param data: Jacobian."""
+        jacobian = numpy.asarray(data.data)
+        jacobian.shape = data.layout.dim[0].size, data.layout.dim[1].size
+        jacobian_spatial = jacobian
+
+    def __jacobian_body_cb(self, data):
+        """Callback for the Jacobian in spatial frame.
+
+        :param data: Jacobian."""
+        jacobian = numpy.asarray(data.data)
+        jacobian.shape = data.layout.dim[0].size, data.layout.dim[1].size
+        jacobian_body = jacobian
 
     def __dvrk_set_state(self, state, timeout = 5):
         """Set state with block.
