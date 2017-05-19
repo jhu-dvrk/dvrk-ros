@@ -305,7 +305,7 @@ class arm(object):
         :param data: Jacobian."""
         jacobian = numpy.asarray(data.data)
         jacobian.shape = data.layout.dim[0].size, data.layout.dim[1].size
-        jacobian_spatial = jacobian
+        self.__jacobian_spatial = jacobian
 
     def __jacobian_body_cb(self, data):
         """Callback for the Jacobian in spatial frame.
@@ -313,7 +313,7 @@ class arm(object):
         :param data: Jacobian."""
         jacobian = numpy.asarray(data.data)
         jacobian.shape = data.layout.dim[0].size, data.layout.dim[1].size
-        jacobian_body = jacobian
+        self.__jacobian_body = jacobian
 
     def __dvrk_set_state(self, state, timeout = 5):
         """Set state with block.
@@ -427,6 +427,19 @@ class arm(object):
         :rtype: `JointState <http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html>`_"""
         return self.__effort_joint_current
 
+    def get_jacobian_spatial(self):
+        """Get the :ref:`jacobian spatial` of the arm.
+
+        :returns: the jacobian spatial of the arm
+        :rtype: `Float64MultiArray <http://docs.ros.org/jade/api/std_msgs/html/msg/Float64MultiArray.html>`_"""
+        return self.__jacobian_spatial
+
+    def get_jacobian_body(self):
+        """Get the :ref:`jacobian body` of the arm.
+
+        :returns: the jacobian body of the arm
+        :rtype: `Float64MultiArray <http://docs.ros.org/jade/api/std_msgs/html/msg/Float64MultiArray.html>`_"""
+        return self.__jacobian_body
 
     def get_desired_position(self):
         """Get the :ref:`desired cartesian position <currentvdesired>` of the arm.
