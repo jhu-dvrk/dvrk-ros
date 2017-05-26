@@ -431,14 +431,14 @@ class arm(object):
         """Get the :ref:`jacobian spatial` of the arm.
 
         :returns: the jacobian spatial of the arm
-        :rtype: `Float64MultiArray <http://docs.ros.org/jade/api/std_msgs/html/msg/Float64MultiArray.html>`_"""
+        :rtype: `numpy.ndarray <https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html>`_"""
         return self.__jacobian_spatial
 
     def get_jacobian_body(self):
         """Get the :ref:`jacobian body` of the arm.
 
         :returns: the jacobian body of the arm
-        :rtype: `Float64MultiArray <http://docs.ros.org/jade/api/std_msgs/html/msg/Float64MultiArray.html>`_"""
+        :rtype: `numpy.ndarray <https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html>`_"""
         return self.__jacobian_body
 
     def get_desired_position(self):
