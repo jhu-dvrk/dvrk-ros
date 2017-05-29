@@ -310,19 +310,24 @@ void dvrk::add_topics_mtm_generic(mtsROSBridge & bridge,
 }
 
 void dvrk::connect_bridge_mtm(mtsROSBridge & bridge,
-                              const std::string & mtm_component_name)
+                              const std::string & arm_name,
+                              const std::string & mtm_component_name,
+                              const std::string & mtm_interface_name)
 {
-    dvrk::connect_bridge_mtm(bridge.GetName(), mtm_component_name);
+    dvrk::connect_bridge_mtm(bridge.GetName(), arm_name,
+                             mtm_component_name, mtm_interface_name);
 }
 
 void dvrk::connect_bridge_mtm(const std::string & bridge_name,
-                              const std::string & mtm_component_name)
+                              const std::string & arm_name,
+                              const std::string & mtm_component_name,
+                              const std::string & mtm_interface_name)
 {
     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
-    componentManager->Connect(bridge_name, mtm_component_name,
-                              mtm_component_name, "Robot");
-    componentManager->Connect(bridge_name, mtm_component_name + "-log",
-                              mtm_component_name, "Robot");
+    componentManager->Connect(bridge_name, arm_name,
+                              mtm_component_name, mtm_interface_name);
+    componentManager->Connect(bridge_name, arm_name + "-log",
+                              mtm_component_name, mtm_interface_name);
 }
 
 void dvrk::add_topics_psm(mtsROSBridge & bridge,
@@ -355,19 +360,24 @@ void dvrk::add_topics_psm(mtsROSBridge & bridge,
 }
 
 void dvrk::connect_bridge_psm(mtsROSBridge & bridge,
-                              const std::string & psm_component_name)
+                              const std::string & arm_name,
+                              const std::string & psm_component_name,
+                              const std::string & psm_interface_name)
 {
-    dvrk::connect_bridge_psm(bridge.GetName(), psm_component_name);
+    dvrk::connect_bridge_psm(bridge.GetName(), arm_name,
+                             psm_component_name, psm_interface_name);
 }
 
 void dvrk::connect_bridge_psm(const std::string & bridge_name,
-                              const std::string & psm_component_name)
+                              const std::string & arm_name,
+                              const std::string & psm_component_name,
+                              const std::string & psm_interface_name)
 {
     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
-    componentManager->Connect(bridge_name, psm_component_name,
-                              psm_component_name, "Robot");
-    componentManager->Connect(bridge_name, psm_component_name + "-log",
-                              psm_component_name, "Robot");
+    componentManager->Connect(bridge_name, arm_name,
+                              psm_component_name, psm_interface_name);
+    componentManager->Connect(bridge_name, arm_name + "-log",
+                              psm_component_name, psm_interface_name);
 }
 
 void dvrk::add_topics_ecm(mtsROSBridge & bridge,
@@ -395,19 +405,24 @@ void dvrk::add_topics_ecm(mtsROSBridge & bridge,
 }
 
 void dvrk::connect_bridge_ecm(mtsROSBridge & bridge,
-                              const std::string & ecm_component_name)
+                              const std::string & arm_name,
+                              const std::string & ecm_component_name,
+                              const std::string & ecm_interface_name)
 {
-    dvrk::connect_bridge_ecm(bridge.GetName(), ecm_component_name);
+    dvrk::connect_bridge_ecm(bridge.GetName(), arm_name,
+                             ecm_component_name, ecm_interface_name);
 }
 
 void dvrk::connect_bridge_ecm(const std::string & bridge_name,
-                              const std::string & ecm_component_name)
+                              const std::string & arm_name,
+                              const std::string & ecm_component_name,
+                              const std::string & ecm_interface_name)
 {
     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
-    componentManager->Connect(bridge_name, ecm_component_name,
-                              ecm_component_name, "Robot");
-    componentManager->Connect(bridge_name, ecm_component_name + "-log",
-                              ecm_component_name, "Robot");
+    componentManager->Connect(bridge_name, arm_name,
+                              ecm_component_name, ecm_interface_name);
+    componentManager->Connect(bridge_name, arm_name + "-log",
+                              ecm_component_name, ecm_interface_name);
 }
 
 void dvrk::add_topics_teleop(mtsROSBridge & bridge,

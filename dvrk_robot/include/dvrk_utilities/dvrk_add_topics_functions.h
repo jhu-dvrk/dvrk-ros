@@ -82,9 +82,13 @@ namespace dvrk {
     /*! This method connects all the required interfaces for an MTM
       arm, it must be used after add_topics_mtm. */
     void connect_bridge_mtm(mtsROSBridge & bridge,
-                            const std::string & mtm_component_name);
+                            const std::string & arm_name,
+                            const std::string & mtm_component_name,
+                            const std::string & mtm_interface_name);
     void connect_bridge_mtm(const std::string & bridge_name,
-                            const std::string & mtm_component_name);
+                            const std::string & arm_name,
+                            const std::string & mtm_component_name,
+                            const std::string & mtm_interface_name);
 
     /*! Add all the topics common to all arms (see add_topics_arm) as
       well as PSM specific topics. */
@@ -96,9 +100,13 @@ namespace dvrk {
     /*! This method connects all the required interfaces for a PSM
       arm, it must be used after add_topics_psm. */
     void connect_bridge_psm(mtsROSBridge & bridge,
-                            const std::string & psm_component_name);
+                            const std::string & arm_name,
+                            const std::string & psm_component_name,
+                            const std::string & psm_interface_name);
     void connect_bridge_psm(const std::string & bridge_name,
-                            const std::string & psm_component_name);
+                            const std::string & arm_name,
+                            const std::string & psm_component_name,
+                            const std::string & psm_interface_name);
 
     /*! Add all the topics common to all arms (see add_topics_arm) as
       well as ECM specific topics. */
@@ -110,10 +118,13 @@ namespace dvrk {
     /*! This method connects all the required interfaces for an ECM
       arm, it must be used after add_topics_ecm. */
     void connect_bridge_ecm(mtsROSBridge & bridge,
-                            const std::string & ecm_component_name);
+                            const std::string & arm_name,
+                            const std::string & ecm_component_name,
+                            const std::string & ecm_interface_name);
     void connect_bridge_ecm(const std::string & bridge_name,
-                            const std::string & ecm_component_name);
-
+                            const std::string & arm_name,
+                            const std::string & ecm_component_name,
+                            const std::string & ecm_interface_name);
 
     /*! Add all the topics related to tele-op component. */
     void add_topics_teleop(mtsROSBridge & bridge,

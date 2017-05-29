@@ -151,15 +151,21 @@ void dvrk::console::Connect(void)
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
-            dvrk::connect_bridge_mtm(mBridgeName, name);
+            dvrk::connect_bridge_mtm(mBridgeName, name,
+                                     armIter->second->ComponentName(),
+                                     armIter->second->InterfaceName());
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
-            dvrk::connect_bridge_ecm(mBridgeName, name);
+            dvrk::connect_bridge_ecm(mBridgeName, name,
+                                     armIter->second->ComponentName(),
+                                     armIter->second->InterfaceName());
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
-            dvrk::connect_bridge_psm(mBridgeName, name);
+            dvrk::connect_bridge_psm(mBridgeName, name,
+                                     armIter->second->ComponentName(),
+                                     armIter->second->InterfaceName());
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
             dvrk::connect_bridge_suj(mBridgeName, name, "PSM1");
