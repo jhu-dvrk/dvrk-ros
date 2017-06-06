@@ -211,7 +211,8 @@ int main(int argc, char ** argv)
 
     // Connect
     componentManager->AddComponent(&robotBridge);
-    dvrk::connect_bridge_ecm(robotBridge, arm->Name());
+    dvrk::connect_bridge_ecm(robotBridge, arm->Name(),
+                             arm->ComponentName(), arm->InterfaceName());
 
     //-------------- create the components ------------------
     io->CreateAndWait(2.0 * cmn_s); // this will also create the pids as they are in same thread

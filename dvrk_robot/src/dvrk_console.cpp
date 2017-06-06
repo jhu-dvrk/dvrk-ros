@@ -41,19 +41,22 @@ dvrk::console::console(mtsROSBridge & bridge,
          armIter != armEnd;
          ++armIter) {
         const std::string name = armIter->first;
-
+        const std::string armNameSpace = mNameSpace + "/" + name;
         switch (armIter->second->mType) {
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
-            dvrk::add_topics_mtm(bridge, mNameSpace + "/" + name, name, version);
+            dvrk::add_topics_mtm(bridge, armNameSpace, name, version);
+            break;
+        case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
+            dvrk::add_topics_mtm_generic(bridge, armNameSpace, name, version);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
-            dvrk::add_topics_ecm(bridge, mNameSpace + "/" + name, name, version);
+            dvrk::add_topics_ecm(bridge, armNameSpace, name, version);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
-            dvrk::add_topics_psm(bridge, mNameSpace + "/" + name, name, version);
+            dvrk::add_topics_psm(bridge, armNameSpace, name, version);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
             dvrk::add_topics_suj(bridge, mNameSpace + "/SUJ/PSM1", "PSM1", version);
@@ -147,15 +150,22 @@ void dvrk::console::Connect(void)
         switch (armIter->second->mType) {
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
-            dvrk::connect_bridge_mtm(mBridgeName, name);
+        case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
+            dvrk::connect_bridge_mtm(mBridgeName, name,
+                                     armIter->second->ComponentName(),
+                                     armIter->second->InterfaceName());
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
-            dvrk::connect_bridge_ecm(mBridgeName, name);
+            dvrk::connect_bridge_ecm(mBridgeName, name,
+                                     armIter->second->ComponentName(),
+                                     armIter->second->InterfaceName());
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
-            dvrk::connect_bridge_psm(mBridgeName, name);
+            dvrk::connect_bridge_psm(mBridgeName, name,
+                                     armIter->second->ComponentName(),
+                                     armIter->second->InterfaceName());
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
             dvrk::connect_bridge_suj(mBridgeName, name, "PSM1");
