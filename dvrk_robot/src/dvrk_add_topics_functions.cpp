@@ -279,6 +279,9 @@ void dvrk::add_topics_mtm_generic(mtsROSBridge & bridge,
     bridge.AddPublisherFromCommandRead<prmForceCartesianGet, geometry_msgs::WrenchStamped>
         (arm_component_name, "GetWrenchBody",
          ros_namespace + "/wrench_body_current");
+    bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
+        (arm_component_name, "GetStateGripper",
+         ros_namespace + "/state_gripper_current");
 
     // write
     bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
@@ -287,6 +290,9 @@ void dvrk::add_topics_mtm_generic(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandWrite<prmForceCartesianSet, geometry_msgs::Wrench>
         (arm_component_name, "SetWrenchBody",
          ros_namespace + "/set_wrench_body");
+    bridge.AddSubscriberToCommandWrite<prmForceTorqueJointSet, sensor_msgs::JointState>
+        (arm_component_name, "SetEffortGripper",
+         ros_namespace + "/set_effort_gripper");
     bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (arm_component_name, "SetGravityCompensation",
          ros_namespace + "/set_gravity_compensation");
