@@ -127,8 +127,9 @@ class arm(object):
         # data members, event based
         self.__arm_name = arm_name
         self.__ros_namespace = ros_namespace
-        self.__robot_state = 'uninitialized'
-        self.__robot_state_event = threading.Event()
+        self.__arm_current_state = ''
+        self.__arm_current_state_event = threading.Event()
+        self.__arm_desired_state = ''
         self.__goal_reached = False
         self.__goal_reached_event = threading.Event()
 
@@ -150,9 +151,9 @@ class arm(object):
         # publishers
         frame = PyKDL.Frame()
         self.__full_ros_namespace = self.__ros_namespace + self.__arm_name
-        self.__set_robot_state_pub = rospy.Publisher(self.__full_ros_namespace
-                                                     + '/set_robot_state',
-                                                     String, latch = True, queue_size = 1)
+        self.__set_arm_desired_state_pub = rospy.Publisher(self.__full_ros_namespace
+                                                           + '/set_desired_state',
+                                                           String, latch = True, queue_size = 1)
         self.__set_position_joint_pub = rospy.Publisher(self.__full_ros_namespace
                                                         + '/set_position_joint',
                                                         JointState, latch = True, queue_size = 1)
@@ -181,8 +182,10 @@ class arm(object):
                                                               + '/set_gravity_compensation',
                                                               Bool, latch = True, queue_size = 1)
         # subscribers
-        rospy.Subscriber(self.__full_ros_namespace + '/robot_state',
-                         String, self.__robot_state_cb)
+        rospy.Subscriber(self.__full_ros_namespace + '/current_state',
+                         String, self.__arm_current_state_cb)
+        rospy.Subscriber(self.__full_ros_namespace + '/desired_state',
+                         String, self.__arm_desired_state_cb)
         rospy.Subscriber(self.__full_ros_namespace + '/goal_reached',
                          Bool, self.__goal_reached_cb)
         rospy.Subscriber(self.__full_ros_namespace + '/state_joint_desired',
@@ -210,12 +213,19 @@ class arm(object):
         rospy.init_node('arm_api', anonymous = True, log_level = rospy.WARN)
 
 
-    def __robot_state_cb(self, data):
-        """Callback for arm state.
+    def __arm_current_state_cb(self, data):
+        """Callback for arm current state.
 
         :param data: the current arm state"""
-        self.__robot_state = data.data
-        self.__robot_state_event.set()
+        self.__arm_current_state = data.data
+        self.__arm_current_state_event.set()
+
+
+    def __arm_desired_state_cb(self, data):
+        """Callback for arm desired state.
+
+        :param data: the desired arm state"""
+        self.__arm_desired_state = data.data
 
 
     def __goal_reached_cb(self, data):
@@ -315,20 +325,20 @@ class arm(object):
         jacobian.shape = data.layout.dim[0].size, data.layout.dim[1].size
         self.__jacobian_body = jacobian
 
-    def __dvrk_set_state(self, state, timeout = 5):
+    def __set_desired_state(self, state, timeout = 5):
         """Set state with block.
 
-        :param state: the arm state
-        :param timeout: the lenghth you want to wait for arm to change state
+        :param state: the desired arm state
+        :param timeout: the amount of time you want to wait for arm to change state
         :return: whether or not the arm state has been successfuly set
         :rtype: Bool"""
-        if (self.__robot_state == state):
+        if (self.__arm_desired_state == state):
             return True
-        self.__robot_state_event.clear()
-        self.__set_robot_state_pub.publish(state)
-        self.__robot_state_event.wait(timeout)
+        self.__arm_current_state_event.clear()
+        self.__set_arm_desired_state_pub.publish(state)
+        self.__arm_current_state_event.wait(timeout)
         # if the state is not changed return False
-        if (self.__robot_state != state):
+        if (self.__arm_current_state != state):
             rospy.logfatal(rospy.get_caller_id() + ' -> failed to reach state ' + state)
             return False
         return True
@@ -337,30 +347,40 @@ class arm(object):
     def home(self):
         """This method will provide power to the arm and will home
         the arm."""
-        self.__robot_state_event.clear()
-        self.__set_robot_state_pub.publish('Home')
+        # if we already received a state
+        if (self.__arm_current_state == 'READY'):
+            return
+        self.__arm_current_state_event.clear()
+        self.__set_arm_desired_state_pub.publish('READY')
         counter = 10 # up to 10 transitions to get ready
         while (counter > 0):
-            self.__robot_state_event.wait(20) # give up to 20 secs for each transition
-            if (self.__robot_state != 'DVRK_READY'):
-                self.__robot_state_event.clear()
+            self.__arm_current_state_event.wait(20) # give up to 20 secs for each transition
+            if (self.__arm_current_state != 'READY'):
+                self.__arm_current_state_event.clear()
                 counter = counter - 1
             else:
                 counter = -1
-        if (self.__robot_state != 'DVRK_READY'):
-            rospy.logfatal(rospy.get_caller_id() + ' -> failed to reach state DVRK_READY')
+        if (self.__arm_current_state != 'READY'):
+            rospy.logfatal(rospy.get_caller_id() + ' -> failed to reach state READY')
 
 
     def shutdown(self):
         """Stop providing power to the arm."""
-        self.__dvrk_set_state('DVRK_UNINITIALIZED', 20)
+        self.__set_desired_state('UNINITIALIZED', 20)
 
 
-    def get_robot_state(self):
-        """Get the robot state.
-        :returns: the robot state
+    def get_arm_current_state(self):
+        """Get the arm current state.
+        :returns: the arm current state
         :rtype: string"""
-        return self.__robot_state
+        return self.__arm_current_state
+
+
+    def get_arm_desired_state(self):
+        """Get the arm desired state.
+        :returns: the arm desired state
+        :rtype: string"""
+        return self.__arm_desired_state
 
 
     def get_current_position(self):
@@ -615,8 +635,6 @@ class arm(object):
         :rtype: Bool"""
         # set in position cartesian mode
         end_position = posemath.toMsg(end_frame)
-        if (not self.__dvrk_set_state('DVRK_POSITION_CARTESIAN')):
-            return False
         # go to that position directly
         self.__set_position_cartesian_pub.publish(end_position)
         return True
@@ -630,8 +648,6 @@ class arm(object):
         :rtype: Bool"""
         # set in position cartesian mode
         end_position= posemath.toMsg(end_frame)
-        if (not self.__dvrk_set_state('DVRK_POSITION_GOAL_CARTESIAN')):
-            return False
         # go to that position by goal
         return self.__set_position_goal_cartesian_publish_and_wait(end_position)
 
@@ -801,8 +817,6 @@ class arm(object):
         :param end_joint: the list of joints in which you should conclude movement
         :returns: true if you had succesfully move
         :rtype: Bool"""
-        if not self.__dvrk_set_state('DVRK_POSITION_JOINT'):
-            return False
         # go to that position directly
         joint_state = JointState()
         joint_state.position[:] = end_joint.flat
@@ -816,8 +830,6 @@ class arm(object):
         :param end_joint: the list of joints in which you should conclude movement
         :returns: true if you had succesfully move
         :rtype: Bool"""
-        if (not self.__dvrk_set_state('DVRK_POSITION_GOAL_JOINT')):
-            return False
         joint_state = JointState()
         joint_state.position[:] = end_joint.flat
         return self.__set_position_goal_joint_publish_and_wait(joint_state)
@@ -839,8 +851,6 @@ class arm(object):
 
 
     def set_effort_joint(self, effort):
-        if (not self.__dvrk_set_state('DVRK_EFFORT_JOINT')):
-            return False
         if ((not(type(effort) is numpy.ndarray))
             or (not(effort.dtype == numpy.float64))):
             print "effort must be an array of floats"
@@ -859,8 +869,6 @@ class arm(object):
 
         :param force: the new force to set it to
         """
-        if (not self.__dvrk_set_state('DVRK_EFFORT_CARTESIAN')):
-            return False
         w = Wrench()
         w.force.x = force[0]
         w.force.y = force[1]
@@ -880,8 +888,6 @@ class arm(object):
 
     def set_wrench_body_force(self, force):
         "Apply a wrench with force only (body), torque is null"
-        if (not self.__dvrk_set_state('DVRK_EFFORT_CARTESIAN')):
-            return False
         w = Wrench()
         w.force.x = force[0]
         w.force.y = force[1]

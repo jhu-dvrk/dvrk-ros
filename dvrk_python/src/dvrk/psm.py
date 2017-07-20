@@ -43,14 +43,16 @@ class psm(arm):
 
 
     def __state_jaw_desired_cb(self, data):
-        self.__position_jaw_desired = data.position[0]
-        self.__effort_jaw_desired = data.effort[0]
+        if (len(data.position) == 1):
+            self.__position_jaw_desired = data.position[0]
+            self.__effort_jaw_desired = data.effort[0]
 
 
     def __state_jaw_current_cb(self, data):
-        self.__position_jaw_current = data.position[0]
-        self.__velocity_jaw_current = data.velocity[0]
-        self.__effort_jaw_current = data.effort[0]
+        if (len(data.position) == 1):
+            self.__position_jaw_current = data.position[0]
+            self.__velocity_jaw_current = data.velocity[0]
+            self.__effort_jaw_current = data.effort[0]
 
 
     def get_current_jaw_position(self):
@@ -77,22 +79,16 @@ class psm(arm):
 
     def close_jaw(self):
         "Close the tool jaw"
-        if (not self._arm__dvrk_set_state('DVRK_POSITION_GOAL_CARTESIAN')):
-            return False
         return self.__set_jaw_position_pub.publish(-20.0 * math.pi / 180.0)
 
 
     def open_jaw(self):
         "Open the tool jaw"
-        if (not self._arm__dvrk_set_state('DVRK_POSITION_GOAL_CARTESIAN')):
-            return False
         return self.__set_jaw_position_pub.publish(80.0 * math.pi / 180.0)
 
 
     def move_jaw(self, set_jaw):
         "Set the jaw tool to set_jaw"
-        if (not self._arm__dvrk_set_state('DVRK_POSITION_GOAL_CARTESIAN')):
-            return False
         if ((set_jaw >= -20.0 * math.pi / 180.0) and (set_jaw <= 80.0 * math.pi / 180.0)):
             return self.__set_jaw_position_pub.publish(set_jaw)
         else:

@@ -3,160 +3,85 @@
 # Author: Anton Deguet
 # Date: 2015-02-22
 
+# (C) Copyright 2015-2017 Johns Hopkins University (JHU), All Rights Reserved.
+
+# --- begin cisst license - do not edit ---
+
+# This software is provided "as is" under an open source license, with
+# no warranty.  The complete license can be found in license.txt and
+# http://www.cisst.org/cisst/license.txt.
+
+# --- end cisst license ---
+
 # Start a single arm using
-# > rosrun dvrk_robot dvrk_mtm_ros   // or dvrk_psm_ros or dvrk_mtm_ros
+# > rosrun dvrk_robot dvrk_console_json -j <console-file>
 
 # To communicate with the arm using ROS topics, see the python based example dvrk_arm_test.py:
-# > rosrun dvrk_robot dvrk_arm_test.py
+# > rosrun dvrk_robot dvrk_arm_test.py <arm-name>
 
-import rospy
-import threading
+import dvrk
 import math
 import sys
+import rospy
+import numpy
 
-from std_msgs.msg import String, Bool
-from geometry_msgs.msg import Pose
-from sensor_msgs.msg import JointState
-
-# example of application with callbacks for robot events
+# example of application using arm.py
 class example_application:
-
-    def __init__(self):
-        # data members, event based
-        self._robot_name = 'undefined'
-        self._robot_state = 'uninitialized'
-        self._robot_state_event = threading.Event()
-        self._goal_reached = False
-        self._goal_reached_event = threading.Event()
-
-        # continuous publish from dvrk_bridge
-        self._position_joint_desired = []
-        self._position_cartesian_desired = Pose()
-
-    # callbacks
-    def robot_state_callback(self, data):
-        rospy.loginfo(rospy.get_caller_id() + " -> current state is %s", data.data)
-        self._robot_state = data.data
-        self._robot_state_event.set()
-
-    def goal_reached_callback(self, data):
-        rospy.loginfo(rospy.get_caller_id() + " -> goal reached is %s", data.data)
-        self._goal_reached = data.data
-        self._goal_reached_event.set()
-
-    def position_joint_desired_callback(self, data):
-        self._position_joint_desired[:] = data.position
-
-    def position_cartesian_desired_callback(self, data):
-        self._position_cartesian_desired = data
 
     # configuration
     def configure(self, robot_name):
-        self._robot_name = robot_name
-        # publishers
-        ros_namespace = '/dvrk/' + self._robot_name
-        self.set_robot_state = rospy.Publisher(ros_namespace + '/set_robot_state', String, latch=True)
-        self.set_position_joint = rospy.Publisher(ros_namespace + '/set_position_joint', JointState, latch=True)
-        self.set_position_goal_joint = rospy.Publisher(ros_namespace + '/set_position_goal_joint', JointState, latch=True)
-        self.set_position_cartesian = rospy.Publisher(ros_namespace + '/set_position_cartesian', Pose, latch=True)
-        self.set_position_goal_cartesian = rospy.Publisher(ros_namespace + '/set_position_goal_cartesian', Pose, latch=True)
-        # subscribers
-        rospy.Subscriber(ros_namespace + '/robot_state', String, self.robot_state_callback)
-        rospy.Subscriber(ros_namespace + '/goal_reached', Bool, self.goal_reached_callback)
-        rospy.Subscriber(ros_namespace + '/position_joint_desired', JointState, self.position_joint_desired_callback)
-        rospy.Subscriber(ros_namespace + '/position_cartesian_desired', Pose, self.position_cartesian_desired_callback)
-        # create node
-        rospy.init_node('dvrk_arm_test', anonymous=True)
-        rospy.loginfo(rospy.get_caller_id() + ' -> started dvrk_arm_test')
-
-    # simple set state with block
-    def set_state_block(self, state, timeout = 60):
-        self._robot_state_event.clear()
-        self.set_robot_state.publish(state)
-        self._robot_state_event.wait(timeout)
-        if (self._robot_state != state):
-            rospy.logfatal(rospy.get_caller_id() + ' -> failed to reach state ' + state)
-            rospy.signal_shutdown('failed to reach desired state')
-            sys.exit(-1)
+        print rospy.get_caller_id(), ' -> configuring dvrk_arm_test for ', robot_name
+        self._arm = dvrk.arm(robot_name)
 
     # homing example
     def home(self):
-        rospy.loginfo(rospy.get_caller_id() + ' -> requesting homing')
-        self._robot_state_event.clear()
-        self.set_robot_state.publish('Home')
-        counter = 10 # up to 10 transitions to get ready
-        while (counter > 0):
-            self._robot_state_event.wait(60) # give up to 1 minute for each transition
-            if (self._robot_state != 'DVRK_READY'):
-                self._robot_state_event.clear()
-                counter = counter - 1
-                rospy.loginfo(rospy.get_caller_id() + ' -> waiting for state to be DVRK_READY')
-            else:
-                counter = -1
-        if (self._robot_state != 'DVRK_READY'):
-            rospy.logfatal(rospy.get_caller_id() + ' -> failed to reach state DVRK_READY')
-            rospy.signal_shutdown('failed to reach state DVRK_READY')
-            sys.exit(-1)
-        rospy.loginfo(rospy.get_caller_id() + ' <- homing complete')
+        print rospy.get_caller_id(), ' -> starting home'
+        self._arm.home()
+        # get current joints just to set size
+        goal = numpy.copy(self._arm.get_current_joint_position())
+        # go to zero position
+        goal.fill(0)
+        self._arm.move_joint(goal, interpolate = True)
 
     # direct joint control example
     def joint_direct(self):
-        rospy.loginfo(rospy.get_caller_id() + ' -> starting joint direct')
-        # set in position joint mode
-        self.set_state_block('DVRK_POSITION_JOINT')
+        print rospy.get_caller_id(), ' -> starting joint direct'
         # get current position
-        initial_joint_position = []
-        initial_joint_position[:] = self._position_joint_desired
-        rospy.loginfo(rospy.get_caller_id() + " -> testing direct joint position for 2 joints of %i", len(initial_joint_position))
+        initial_joint_position = numpy.copy(self._arm.get_current_joint_position())
+        print rospy.get_caller_id(), ' -> testing direct joint position for 2 joints of ', len(initial_joint_position)
         amplitude = math.radians(10.0) # +/- 10 degrees
         duration = 5  # seconds
         rate = 200 # aiming for 200 Hz
         samples = duration * rate
         # create a new goal starting with current position
-        goal = JointState()
-        goal.position[:] = initial_joint_position
+        goal = numpy.copy(initial_joint_position)
         for i in xrange(samples):
-            goal.position[0] = initial_joint_position[0] + amplitude *  math.sin(i * math.radians(360.0) / samples)
-            goal.position[1] = initial_joint_position[1] + amplitude *  math.sin(i * math.radians(360.0) / samples)
-            self.set_position_joint.publish(goal)
+            goal[0] = initial_joint_position[0] + amplitude *  math.sin(i * math.radians(360.0) / samples)
+            goal[1] = initial_joint_position[1] + amplitude *  math.sin(i * math.radians(360.0) / samples)
+            self._arm.move_joint(goal, interpolate = False)
             rospy.sleep(1.0 / rate)
-        rospy.loginfo(rospy.get_caller_id() + ' <- joint direct complete')
-
-    # wrapper around publisher/subscriber to manage events
-    def set_position_goal_joint_publish_and_wait(self, goal):
-        self._goal_reached_event.clear()
-        self._goal_reached = False
-        self.set_position_goal_joint.publish(goal)
-        self._goal_reached_event.wait(60) # 1 minute at most
-        if not self._goal_reached:
-            rospy.signal_shutdown('failed to reach goal')
-            sys.exit(-1)
+        print rospy.get_caller_id(), ' <- joint direct complete'
 
     # goal joint control example
     def joint_goal(self):
-        rospy.loginfo(rospy.get_caller_id() + ' -> starting joint goal')
-        # set in position joint mode
-        self.set_state_block('DVRK_POSITION_GOAL_JOINT')
+        print rospy.get_caller_id(), ' -> starting joint goal'
         # get current position
-        initial_joint_position = []
-        initial_joint_position[:] = self._position_joint_desired
-        rospy.loginfo(rospy.get_caller_id() + " -> testing goal joint position for 2 joints of %i", len(initial_joint_position))
+        initial_joint_position = numpy.copy(self._arm.get_current_joint_position())
+        print rospy.get_caller_id(), ' -> testing goal joint position for 2 joints of ', len(initial_joint_position)
         amplitude = math.radians(10.0)
         # create a new goal starting with current position
-        goal = JointState()
-        goal.position[:] = initial_joint_position
+        goal = numpy.copy(initial_joint_position)
         # first motion
-        goal.position[0] = initial_joint_position[0] + amplitude
-        goal.position[1] = initial_joint_position[1] - amplitude
-        self.set_position_goal_joint_publish_and_wait(goal)
+        goal[0] = initial_joint_position[0] + amplitude
+        goal[1] = initial_joint_position[1] - amplitude
+        self._arm.move_joint(goal, interpolate = True)
         # second motion
-        goal.position[0] = initial_joint_position[0] - amplitude
-        goal.position[1] = initial_joint_position[1] + amplitude
-        self.set_position_goal_joint_publish_and_wait(goal)
+        goal[0] = initial_joint_position[0] - amplitude
+        goal[1] = initial_joint_position[1] + amplitude
+        self._arm.move_joint(goal, interpolate = True)
         # back to initial position
-        goal.position[:] = initial_joint_position
-        self.set_position_goal_joint_publish_and_wait(goal)
-        rospy.loginfo(rospy.get_caller_id() + ' <- joint goal complete')
+        self._arm.move_joint(initial_joint_position, interpolate = True)
+        print rospy.get_caller_id(), ' <- joint goal complete'
 
     # utility to position tool/camera deep enough before cartesian examples
     def prepare_cartesian(self):
@@ -166,7 +91,7 @@ class example_application:
             # set in position joint mode
             self.set_state_block(state = 'DVRK_POSITION_GOAL_JOINT')
                 # create a new goal starting with current position
-            goal = JointState()
+            goal = numpy.array(0, dtype = numpy.float)
             goal.position[:] = initial_joint_position
             goal.position[0] = 0.0
             goal.position[1] = 0.0
@@ -180,7 +105,7 @@ class example_application:
 
     # direct cartesian control example
     def cartesian_direct(self):
-        rospy.loginfo(rospy.get_caller_id() + ' -> starting cartesian direct')
+        print rospy.get_caller_id(), ' -> starting cartesian direct'
         self.prepare_cartesian()
         # set in position cartesian mode
         self.set_state_block('DVRK_POSITION_CARTESIAN')
@@ -211,7 +136,7 @@ class example_application:
             if error > 0.002: # 2 mm
                 print 'Inverse kinematic error in position [', i, ']: ', error
             rospy.sleep(1.0 / rate)
-        rospy.loginfo(rospy.get_caller_id() + ' <- cartesian direct complete')
+        print rospy.get_caller_id(), ' <- cartesian direct complete'
 
     # wrapper around publisher/subscriber to manage events
     def set_position_goal_cartesian_publish_and_wait(self, goal):
@@ -225,7 +150,7 @@ class example_application:
 
     # direct cartesian control example
     def cartesian_goal(self):
-        rospy.loginfo(rospy.get_caller_id() + ' -> starting cartesian goal')
+        print rospy.get_caller_id(), ' -> starting cartesian goal'
         self.prepare_cartesian()
         # set in position cartesian mode
         self.set_state_block('DVRK_POSITION_GOAL_CARTESIAN')
@@ -266,20 +191,20 @@ class example_application:
         goal.position.x =  initial_cartesian_position.position.x
         goal.position.y =  initial_cartesian_position.position.y
         self.set_position_goal_cartesian_publish_and_wait(goal)
-        rospy.loginfo(rospy.get_caller_id() + ' <- cartesian goal complete')
+        print rospy.get_caller_id(), ' <- cartesian goal complete'
 
     # main method
     def run(self):
-        # self.home()
+        self.home()
         self.joint_direct()
         self.joint_goal()
-        self.cartesian_direct()
-        self.cartesian_goal()
+        # self.cartesian_direct()
+        # self.cartesian_goal()
 
 if __name__ == '__main__':
     try:
         if (len(sys.argv) != 2):
-            print sys.argv[0] + ' requires one argument, i.e. name of dVRK arm'
+            print sys.argv[0], ' requires one argument, i.e. name of dVRK arm'
         else:
             application = example_application()
             application.configure(sys.argv[1])
