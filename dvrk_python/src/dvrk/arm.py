@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-05
 
-#   (C) Copyright 2016 Johns Hopkins University (JHU), All Rights Reserved.
+#   (C) Copyright 2016-2017 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -342,6 +342,10 @@ class arm(object):
             rospy.logfatal(rospy.get_caller_id() + ' -> failed to reach state ' + state)
             return False
         return True
+
+
+    def name(self):
+        return self.__arm_name
 
 
     def home(self):
