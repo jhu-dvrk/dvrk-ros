@@ -5,7 +5,7 @@ function test_mtm_api(arm_name)
 
     % PSM specific api
     r = mtm(arm_name)
-    disp('---- Testing get_state_gripper_current')
+    disp('---- Testing get_state_gripper_current');
     [p, v, e, t] = r.get_state_gripper_current()
 
 end

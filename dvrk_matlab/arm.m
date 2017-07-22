@@ -82,7 +82,7 @@ classdef arm < handle
 
             % ----------- subscribers
             % state
-            topic = strcat(self.ros_name, '/robot_state');
+            topic = strcat(self.ros_name, '/current_state');
             self.robot_state_subscriber = ...
                 rossubscriber(topic, rostype.std_msgs_String);
             self.robot_state_subscriber.NewMessageFcn = ...
@@ -159,7 +159,7 @@ classdef arm < handle
 
             % ----------- publishers
             % state
-            topic = strcat(self.ros_name, '/set_robot_state');
+            topic = strcat(self.ros_name, '/set_desired_state');
             self.robot_state_publisher = rospublisher(topic, rostype.std_msgs_String);
 
             % position goal joint
@@ -326,47 +326,14 @@ classdef arm < handle
         end
 
 
-        function result = set_state(self, state_as_string)
-            % Set the robot state.  For homing, used the robot.home()
-            % method instead.  This is used internally to switch between
-            % the joint/cartesian and direct/trajectory modes
-
-            % first check that state is different
-            if strcmp(state_as_string, self.robot_state)
-                result = true;
-                return
-            end
-            % else, prepare message and send
-            message = rosmessage(self.robot_state_publisher);
-            message.Data = state_as_string;
-             % 5 seconds should be plenty for most state changes
-            self.robot_state_timer.StartDelay = 5.0;
-            start(self.robot_state_timer);
-            send(self.robot_state_publisher, message);
-            wait(self.robot_state_timer);
-            % after waiting, check what is current state to make sure it
-            % changed
-            result = strcmp(self.robot_state, state_as_string);
-            if not(result)
-                disp(strcat(self.robot_name, ...
-                            ': failed to reach state "', ...
-                            state_as_string, ...
-                            '", current state is "', ...
-                            self.robot_state, ...
-                            '"'));
-            end
-        end
-
-
-
 
         function home(self)
             % Home the robot.  This method will request power on, calibrate
             % and then go to home position.   For a PSM, this method will
-            % wait for the state DVRK_READY.  This state can only be
+            % wait for the state READY.  This state can only be
             % reached if the user inserts the sterile adapter and the tool
             message = rosmessage(self.robot_state_publisher);
-            message.Data = 'Home';
+            message.Data = 'READY';
             send(self.robot_state_publisher, message);
             counter = 21; % up to 20 * 3 seconds transitions to get ready
             self.robot_state_timer.StartDelay = 3.0;
@@ -375,11 +342,11 @@ classdef arm < handle
                 start(self.robot_state_timer);
                 wait(self.robot_state_timer);
                 counter = counter - 1;
-                homed = strcmp(self.robot_state, 'DVRK_READY');
+                homed = strcmp(self.robot_state, 'READY');
                 done = (counter == 0) | homed;
                 if (not(done))
                     disp(strcat(self.robot_name, ...
-                                ': waiting for state DVRK_READY, ', ...
+                                ': waiting for state READY, ', ...
                                 int2str(counter)))
                 end
             end
@@ -399,24 +366,18 @@ classdef arm < handle
 
             % check if the array provided has the right length
             if length(joint_values) == length(self.get_state_joint_current())
-                if self.set_state('DVRK_POSITION_GOAL_JOINT')
-                    % prepare the ROS message
-                    joint_message = rosmessage(self.position_goal_joint_publisher);
-                    joint_message.Position = joint_values;
-                    % reset goal reached value and timer
-                    self.goal_reached = false;
-                    start(self.goal_reached_timer);
-                    % send message
-                    send(self.position_goal_joint_publisher, ...
-                         joint_message);
-                    % wait for timer to be interrupted by goal_reached
-                    wait(self.goal_reached_timer);
-                    result = self.goal_reached;
-                else
-                    % unable to set the desired state
-                    % set_state should already provide a message
-                    result = false;
-                end
+                % prepare the ROS message
+                joint_message = rosmessage(self.position_goal_joint_publisher);
+                joint_message.Position = joint_values;
+                % reset goal reached value and timer
+                self.goal_reached = false;
+                start(self.goal_reached_timer);
+                % send message
+                send(self.position_goal_joint_publisher, ...
+                     joint_message);
+                % wait for timer to be interrupted by goal_reached
+                wait(self.goal_reached_timer);
+                result = self.goal_reached;
             else
                 result = false;
                 disp(strcat(self.robot_name, ...
@@ -455,33 +416,26 @@ classdef arm < handle
                return
             end
 
-            % actual move
-            if self.set_state('DVRK_POSITION_GOAL_CARTESIAN')
-                % prepare the ROS message
-                pose_message = rosmessage(self.position_goal_publisher);
-                % convert to ROS idiotic data type
-                pose_message.Position.X = frame(1, 4);
-                pose_message.Position.Y = frame(2, 4);
-                pose_message.Position.Z = frame(3, 4);
-                quaternion = tform2quat(frame);
-                pose_message.Orientation.W = quaternion(1);
-                pose_message.Orientation.X = quaternion(2);
-                pose_message.Orientation.Y = quaternion(3);
-                pose_message.Orientation.Z = quaternion(4);
-                % reset goal reached value and timer
-                self.goal_reached = false;
-                start(self.goal_reached_timer);
-                % send message
-                send(self.position_goal_publisher, ...
-                     pose_message);
-                % wait for timer to be interrupted by goal_reached
-                wait(self.goal_reached_timer);
-                result = self.goal_reached;
-            else
-                % unable to set the desired state
-                % set_state should already provide a message
-                result = false;
-            end
+            % prepare the ROS message
+            pose_message = rosmessage(self.position_goal_publisher);
+            % convert to ROS idiotic data type
+            pose_message.Position.X = frame(1, 4);
+            pose_message.Position.Y = frame(2, 4);
+            pose_message.Position.Z = frame(3, 4);
+            quaternion = tform2quat(frame);
+            pose_message.Orientation.W = quaternion(1);
+            pose_message.Orientation.X = quaternion(2);
+            pose_message.Orientation.Y = quaternion(3);
+            pose_message.Orientation.Z = quaternion(4);
+            % reset goal reached value and timer
+            self.goal_reached = false;
+            start(self.goal_reached_timer);
+            % send message
+            send(self.position_goal_publisher, ...
+                 pose_message);
+            % wait for timer to be interrupted by goal_reached
+            wait(self.goal_reached_timer);
+            result = self.goal_reached;
         end
 
 
@@ -605,24 +559,18 @@ classdef arm < handle
 
             % check if the array provided has the right length
             if (length(wrench) == 6)
-                if self.set_state('DVRK_EFFORT_CARTESIAN')
-                    % prepare the ROS message
-                    wrench_message = rosmessage(self.wrench_body_publisher);
-                    wrench_message.Force.X = wrench(1);
-                    wrench_message.Force.Y = wrench(2);
-                    wrench_message.Force.Z = wrench(3);
-                    wrench_message.Torque.X = wrench(4);
-                    wrench_message.Torque.Y = wrench(5);
-                    wrench_message.Torque.Z = wrench(6);
-                    % send message
-                    send(self.wrench_body_publisher, ...
-                         wrench_message);
-                    result = true;
-                else
-                    % unable to set the desired state
-                    % set_state should already provide a message
-                    result = false;
-                end
+                % prepare the ROS message
+                wrench_message = rosmessage(self.wrench_body_publisher);
+                wrench_message.Force.X = wrench(1);
+                wrench_message.Force.Y = wrench(2);
+                wrench_message.Force.Z = wrench(3);
+                wrench_message.Torque.X = wrench(4);
+                wrench_message.Torque.Y = wrench(5);
+                wrench_message.Torque.Z = wrench(6);
+                % send message
+                send(self.wrench_body_publisher, ...
+                      wrench_message);
+                result = true;
             else
                 result = false;
                 disp(strcat(self.robot_name, ...
