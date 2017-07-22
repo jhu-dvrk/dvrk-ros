@@ -128,16 +128,6 @@ class example_application:
             rospy.sleep(1.0 / rate)
         print rospy.get_caller_id(), ' <- cartesian direct complete'
 
-    # wrapper around publisher/subscriber to manage events
-    def set_position_goal_cartesian_publish_and_wait(self, goal):
-        self._goal_reached_event.clear()
-        self._goal_reached = False
-        self.set_position_goal_cartesian.publish(goal)
-        self._goal_reached_event.wait(60) # 1 minute at most
-        if not self._goal_reached:
-            rospy.signal_shutdown('failed to reach goal')
-            sys.exit(-1)
-
     # direct cartesian control example
     def cartesian_goal(self):
         print rospy.get_caller_id(), ' -> starting cartesian goal'
