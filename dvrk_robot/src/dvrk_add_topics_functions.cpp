@@ -285,7 +285,7 @@ void dvrk::add_topics_mtm_generic(mtsROSBridge & bridge,
 
     // write
     bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
-        (arm_component_name, "SetRobotControlState",
+        (arm_component_name, "SetDesiredState",
          ros_namespace + "/set_robot_state");
     bridge.AddSubscriberToCommandWrite<prmForceCartesianSet, geometry_msgs::Wrench>
         (arm_component_name, "SetWrenchBody",
@@ -306,7 +306,9 @@ void dvrk::add_topics_mtm_generic(mtsROSBridge & bridge,
         (arm_component_name, "Status", ros_namespace + "/status");
 
     bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
-        (arm_component_name, "RobotState", ros_namespace + "/robot_state");
+        (arm_component_name, "CurrentState", ros_namespace + "/current_state");
+    bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
+        (arm_component_name, "DesiredState", ros_namespace + "/desired_state");
 
     // messages
     bridge.AddLogFromEventWrite(arm_component_name + "-log", "Error",
