@@ -54,9 +54,9 @@ class suj(object):
                          PoseStamped, self.__position_cartesian_local_current_cb)
 
         # create node
-        try:
+        if not rospy.get_node_uri():
             rospy.init_node('suj_api', anonymous = True, log_level = rospy.WARN)
-        except rospy.ROSException:
+        else:
             rospy.logdebug(rospy.get_caller_id() + ' -> ROS already initialized')
 
 

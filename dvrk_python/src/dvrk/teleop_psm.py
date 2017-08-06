@@ -53,9 +53,9 @@ class teleop_psm(object):
                          Float32, self.__scale_cb)
 
         # create node
-        try:
+        if not rospy.get_node_uri():
             rospy.init_node('teleop_api', anonymous = True, log_level = rospy.WARN)
-        except rospy.ROSException:
+        else:
             rospy.logdebug(rospy.get_caller_id() + ' -> ROS already initialized')
 
 

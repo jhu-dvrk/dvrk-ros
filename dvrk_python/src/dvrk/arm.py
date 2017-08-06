@@ -210,9 +210,9 @@ class arm(object):
                          Float64MultiArray, self.__jacobian_body_cb)
 
         # create node
-        try:
+        if not rospy.get_node_uri():
             rospy.init_node('arm_api', anonymous = True, log_level = rospy.WARN)
-        except rospy.ROSException:
+        else:
             rospy.logdebug(rospy.get_caller_id() + ' -> ROS already initialized')
 
 
