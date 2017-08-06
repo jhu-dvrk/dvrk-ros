@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-05
 
-#   (C) Copyright 2016 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2016-2017 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -55,7 +55,10 @@ class console(object):
                          Float32, self.__teleop_scale_cb)
 
         # create node
-        rospy.init_node('arm_api', anonymous = True, log_level = rospy.WARN)
+        try:
+            rospy.init_node('console_api', anonymous = True, log_level = rospy.WARN)
+        except rospy.ROSException:
+            rospy.logdebug(rospy.get_caller_id() + ' -> ROS already initialized')
 
 
     def __teleop_scale_cb(self, data):
