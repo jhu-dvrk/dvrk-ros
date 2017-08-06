@@ -57,24 +57,18 @@ classdef psm < arm
 
         function result = move_jaw(self, jaw_angle)
             % Set the jaw angle
-            if self.set_state('DVRK_POSITION_GOAL_CARTESIAN')
-                % prepare the ROS message
-                jaw_message = rosmessage(self.jaw_position_publisher);
-                jaw_message.Data = jaw_angle;
-                % reset goal reached value and timer
-                self.goal_reached = false;
-                start(self.goal_reached_timer);
-                % send message
-                send(self.jaw_position_publisher, ...
-                         jaw_message)
-                % wait for timer to be interrupted by goal_reached
-                wait(self.goal_reached_timer);
-                result = self.goal_reached;
-            else
-                % unable to set the desired state
-                % set_state should already provide a message
-                result = false;
-            end
+            % prepare the ROS message
+            jaw_message = rosmessage(self.jaw_position_publisher);
+            jaw_message.Data = jaw_angle;
+            % reset goal reached value and timer
+            self.goal_reached = false;
+            start(self.goal_reached_timer);
+            % send message
+            send(self.jaw_position_publisher, ...
+                 jaw_message)
+            % wait for timer to be interrupted by goal_reached
+            wait(self.goal_reached_timer);
+            result = self.goal_reached;
         end
 
 
