@@ -84,9 +84,9 @@ class console(object):
         self.__teleop_enable_pub.publish(False)
 
 
-    def set_teleop_scale(self, scale):
+    def teleop_set_scale(self, scale):
         self.__teleop_set_scale_pub.publish(scale)
 
 
-    def get_teleop_scale(self):
+    def teleop_get_scale(self):
         return self.__teleop_scale
