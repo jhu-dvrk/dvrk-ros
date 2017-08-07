@@ -471,6 +471,8 @@ void dvrk::add_topics_teleop(mtsROSBridge & bridge,
     }
     bridge.AddPublisherFromEventWrite<double, std_msgs::Float32>
         (teleop_component_name, "Scale", ros_namespace + "/scale");
+    bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
+        (teleop_component_name, "Following", ros_namespace + "/following");
 
     // commands
     bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
