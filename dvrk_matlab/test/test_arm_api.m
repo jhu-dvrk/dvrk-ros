@@ -1,7 +1,7 @@
 % call methods to make sure they exist and don't trigger syntax errors
 function test_arm_api(arm_name)
     addpath('..')
-    r = arm(arm_name)
+    r = arm(arm_name);
     disp('---- Homing')
     r.home()
     disp('---- Desired cartesian');

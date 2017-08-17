@@ -44,25 +44,31 @@ classdef arm < handle
     % only this class methods can view/modify
     properties (SetAccess = private)
         % subscribers
-        robot_state_subscriber
-        goal_reached_subscriber
-        position_desired_subscriber
-        position_local_desired_subscriber
-        state_joint_desired_subscriber
-        position_current_subscriber
-        position_local_current_subscriber
-        twist_body_current_subscriber
-        wrench_body_current_subscriber
-        state_joint_current_subscriber
-        jacobian_spatial_subscriber
-        jacobian_body_subscriber
+        robot_state_subscriber;
+        goal_reached_subscriber;
+        position_desired_subscriber;
+        position_local_desired_subscriber;
+        state_joint_desired_subscriber;
+        position_current_subscriber;
+        position_local_current_subscriber;
+        twist_body_current_subscriber;
+        wrench_body_current_subscriber;
+        state_joint_current_subscriber;
+        jacobian_spatial_subscriber;
+        jacobian_body_subscriber;
         % publishers
-        robot_state_publisher
-        position_goal_joint_publisher
-        position_goal_publisher
-        wrench_body_orientation_absolute_publisher
-        wrench_body_publisher
-        gravity_compensation_publisher
+        robot_state_publisher;
+        position_goal_joint_publisher;
+        position_goal_publisher;
+        wrench_body_orientation_absolute_publisher;
+        wrench_body_publisher;
+        gravity_compensation_publisher;
+        % message placeholders
+        std_msgs_Bool;
+        std_msgs_String;
+        sensor_msgs_JointState;
+        geometry_msgs_Pose;
+        geometry_msgs_Wrench;
     end
 
     methods
@@ -186,7 +192,14 @@ classdef arm < handle
             % gravity compensation
             topic = strcat(self.ros_name, '/set_gravity_compensation');
             self.gravity_compensation_publisher = rospublisher(topic, ...
-                                                              rostype.std_msgs_Bool);
+                                                               rostype.std_msgs_Bool);
+
+            % one time creation of messages to prevent lookup and creation at each call
+            self.std_msgs_Bool = rosmessage(rostype.std_msgs_Bool);
+            self.std_msgs_String = rosmessage(rostype.std_msgs_String);
+            self.sensor_msgs_JointState = rosmessage(rostype.sensor_msgs_JointState);
+            self.geometry_msgs_Pose = rosmessage(rostype.geometry_msgs_Pose);
+            self.geometry_msgs_Wrench = rosmessage(rostype.geometry_msgs_Wrench);
         end
 
 
@@ -332,9 +345,9 @@ classdef arm < handle
             % and then go to home position.   For a PSM, this method will
             % wait for the state READY.  This state can only be
             % reached if the user inserts the sterile adapter and the tool
-            message = rosmessage(self.robot_state_publisher);
-            message.Data = 'READY';
-            send(self.robot_state_publisher, message);
+            self.std_msgs_String.Data = 'READY';
+            send(self.robot_state_publisher, ...
+                 self.std_msgs_String);
             counter = 21; % up to 20 * 3 seconds transitions to get ready
             self.robot_state_timer.StartDelay = 3.0;
             done = false;
@@ -367,14 +380,13 @@ classdef arm < handle
             % check if the array provided has the right length
             if length(joint_values) == length(self.get_state_joint_current())
                 % prepare the ROS message
-                joint_message = rosmessage(self.position_goal_joint_publisher);
-                joint_message.Position = joint_values;
+                self.sensor_msgs_JointState.Position = joint_values;
                 % reset goal reached value and timer
                 self.goal_reached = false;
                 start(self.goal_reached_timer);
                 % send message
                 send(self.position_goal_joint_publisher, ...
-                     joint_message);
+                     self.sensor_msgs_JointState);
                 % wait for timer to be interrupted by goal_reached
                 wait(self.goal_reached_timer);
                 result = self.goal_reached;
@@ -417,22 +429,20 @@ classdef arm < handle
             end
 
             % prepare the ROS message
-            pose_message = rosmessage(self.position_goal_publisher);
-            % convert to ROS idiotic data type
-            pose_message.Position.X = frame(1, 4);
-            pose_message.Position.Y = frame(2, 4);
-            pose_message.Position.Z = frame(3, 4);
+            self.geometry_msgs_Pose.Position.X = frame(1, 4);
+            self.geometry_msgs_Pose.Position.Y = frame(2, 4);
+            self.geometry_msgs_Pose.Position.Z = frame(3, 4);
             quaternion = tform2quat(frame);
-            pose_message.Orientation.W = quaternion(1);
-            pose_message.Orientation.X = quaternion(2);
-            pose_message.Orientation.Y = quaternion(3);
-            pose_message.Orientation.Z = quaternion(4);
+            self.geometry_msgs_Pose.Orientation.W = quaternion(1);
+            self.geometry_msgs_Pose.Orientation.X = quaternion(2);
+            self.geometry_msgs_Pose.Orientation.Y = quaternion(3);
+            self.geometry_msgs_Pose.Orientation.Z = quaternion(4);
             % reset goal reached value and timer
             self.goal_reached = false;
             start(self.goal_reached_timer);
             % send message
             send(self.position_goal_publisher, ...
-                 pose_message);
+                 self.geometry_msgs_Pose);
             % wait for timer to be interrupted by goal_reached
             wait(self.goal_reached_timer);
             result = self.goal_reached;
@@ -544,11 +554,10 @@ classdef arm < handle
 
         function result = set_wrench_body_orientation_absolute(self, ...
                                                               absolute)
-            orientation_message = rosmessage(self.wrench_body_orientation_absolute_publisher);
-            orientation_message.Data = absolute;
+            self.std_msgs_Bool.Data = absolute;
             % send message
             send(self.wrench_body_orientation_absolute_publisher, ...
-                 orientation_message);
+                 self.std_msgs_Bool);
             result = true;
         end
 
@@ -560,16 +569,15 @@ classdef arm < handle
             % check if the array provided has the right length
             if (length(wrench) == 6)
                 % prepare the ROS message
-                wrench_message = rosmessage(self.wrench_body_publisher);
-                wrench_message.Force.X = wrench(1);
-                wrench_message.Force.Y = wrench(2);
-                wrench_message.Force.Z = wrench(3);
-                wrench_message.Torque.X = wrench(4);
-                wrench_message.Torque.Y = wrench(5);
-                wrench_message.Torque.Z = wrench(6);
+                self.geometry_msgs_Wrench.Force.X = wrench(1);
+                self.geometry_msgs_Wrench.Force.Y = wrench(2);
+                self.geometry_msgs_Wrench.Force.Z = wrench(3);
+                self.geometry_msgs_Wrench.Torque.X = wrench(4);
+                self.geometry_msgs_Wrench.Torque.Y = wrench(5);
+                self.geometry_msgs_Wrench.Torque.Z = wrench(6);
                 % send message
                 send(self.wrench_body_publisher, ...
-                      wrench_message);
+                     self.geometry_msgs_Wrench);
                 result = true;
             else
                 result = false;
@@ -584,11 +592,10 @@ classdef arm < handle
 
         function result = set_gravity_compensation(self, ...
                                                    gravity)
-            gravity_message = rosmessage(self.gravity_compensation_publisher);
-            gravity_message.Data = gravity;
+            self.std_msgs_Bool.Data = gravity;
             % send message
             send(self.gravity_compensation_publisher, ...
-                 gravity_message);
+                 self.std_msgs_Bool);
             result = true;
         end
 

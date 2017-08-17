@@ -31,7 +31,7 @@ class psm(arm):
         # publishers
         self.__set_jaw_position_pub = rospy.Publisher(self._arm__full_ros_namespace
                                                       + '/set_jaw_position',
-                                                      Float32, latch = True, queue_size = 1)
+                                                      JointState, latch = True, queue_size = 1)
         self.__set_tool_present_pub = rospy.Publisher(self._arm__full_ros_namespace
                                                       + '/set_tool_present',
                                                       Bool, latch = True, queue_size = 1)
@@ -77,20 +77,31 @@ class psm(arm):
         return self.__effort_jaw_desired
 
 
-    def close_jaw(self):
+    def close_jaw(self, interpolate = True):
         "Close the tool jaw"
-        return self.__set_jaw_position_pub.publish(-20.0 * math.pi / 180.0)
+        return self.move_jaw(-20.0 * math.pi / 180.0, interpolate)
 
-
-    def open_jaw(self):
+    def open_jaw(self, interpolate = True):
         "Open the tool jaw"
-        return self.__set_jaw_position_pub.publish(80.0 * math.pi / 180.0)
+        return self.move_jaw(80.0 * math.pi / 180.0)
 
-
-    def move_jaw(self, set_jaw):
-        "Set the jaw tool to set_jaw"
-        if ((set_jaw >= -20.0 * math.pi / 180.0) and (set_jaw <= 80.0 * math.pi / 180.0)):
-            return self.__set_jaw_position_pub.publish(set_jaw)
+    def move_jaw(self, angle_radian, interpolate = True):
+        "Set the jaw tool to set_jaw in radians"
+        if ((angle_radian >= -20.0 * math.pi / 180.0) and (angle_radian <= 80.0 * math.pi / 180.0)):
+            # create payload
+            joint_state = JointState()
+            joint_state.position.append(angle_radian)
+            # check for interpolation
+            if (interpolate):
+                self._arm__goal_reached_event.clear()
+                self._arm__goal_reached = False
+                self.__set_jaw_position_pub.publish(joint_state)
+                self._arm__goal_reached_event.wait(20)
+                if not self._arm__goal_reached:
+                    return False
+                return True
+            else:
+                return self.__set_jaw_position_pub.publish(joint_state)
         else:
             print 'not a valid jaw position'
 

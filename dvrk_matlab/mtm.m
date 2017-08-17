@@ -4,10 +4,13 @@ classdef mtm < arm
     % only this class methods can view/modify
     properties (SetAccess = private)
         % subscribers
-        state_gripper_current_subscriber
+        state_gripper_current_subscriber;
         % publishers
-        lock_orientation_publisher
-        unlock_orientation_publisher
+        lock_orientation_publisher;
+        unlock_orientation_publisher;
+        % message placeholder
+        geometry_msgs_Quaternion = rostype.geometry_msgs_Quaternion;
+        std_msgs_Empty = rostype.std_msgs_Empty;
     end
 
     methods
@@ -28,6 +31,10 @@ classdef mtm < arm
             topic = strcat(self.ros_name, '/unlock_orientation');
             self.unlock_orientation_publisher = rospublisher(topic, ...
                                                              rostype.std_msgs_Empty);
+                                                         
+            % one time creation of messages to prevent lookup and creation at each call
+            self.std_msgs_Empty = rosmessage(rostype.std_msgs_Empty);
+            self.geometry_msgs_Quaternion = rosmessage(rostype.geometry_msgs_Quaternion);                          
         end
 
 
@@ -74,26 +81,24 @@ classdef mtm < arm
             end
 
             % prepare the ROS message
-            orientation_message = rosmessage(self.lock_orientation_publisher);
             % convert to ROS idiotic data type
             quaternion = rotm2quat(orientation_matrix);
-            orientation_message.W = quaternion(1);
-            orientation_message.X = quaternion(2);
-            orientation_message.Y = quaternion(3);
-            orientation_message.Z = quaternion(4);
+            self.geometry_msgs_Quaternion.W = quaternion(1);
+            self.geometry_msgs_Quaternion.X = quaternion(2);
+            self.geometry_msgs_Quaternion.Y = quaternion(3);
+            self.geometry_msgs_Quaternion.Z = quaternion(4);
             % send message
             send(self.lock_orientation_publisher, ...
-                 orientation_message);
+                 self.geometry_msgs_Quaternion);
             result = true;
         end
 
 
 
         function result = unlock_orientation(self)
-            unlock_message = rosmessage(self.unlock_orientation_publisher);
             % send message (empty)
             send(self.unlock_orientation_publisher, ...
-                 unlock_message);
+                 self.std_msgs_Empty);
             result = true;
         end
 

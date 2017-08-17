@@ -29,7 +29,7 @@ classdef psm < arm
 
             % ----------- publishers
             topic = strcat(self.ros_name, '/set_jaw_position');
-            self.jaw_position_publisher = rospublisher(topic, rostype.std_msgs_Float32);
+            self.jaw_position_publisher = rospublisher(topic, rostype.sensor_msgs_JointState);
 
             topic = strcat(self.ros_name, '/set_tool_present');
             self.tool_present_publisher = rospublisher(topic, rostype.std_msgs_Bool);
@@ -58,14 +58,13 @@ classdef psm < arm
         function result = move_jaw(self, jaw_angle)
             % Set the jaw angle
             % prepare the ROS message
-            jaw_message = rosmessage(self.jaw_position_publisher);
-            jaw_message.Data = jaw_angle;
+            self.sensor_msgs_JointState.Position = [jaw_angle];
             % reset goal reached value and timer
             self.goal_reached = false;
             start(self.goal_reached_timer);
             % send message
             send(self.jaw_position_publisher, ...
-                 jaw_message)
+                 self.sensor_msgs_JointState)
             % wait for timer to be interrupted by goal_reached
             wait(self.goal_reached_timer);
             result = self.goal_reached;
