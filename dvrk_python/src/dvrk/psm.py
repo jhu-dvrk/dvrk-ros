@@ -77,34 +77,32 @@ class psm(arm):
         return self.__effort_jaw_desired
 
 
-    def close_jaw(self, interpolate = True):
+    def close_jaw(self, interpolate = True, blocking = True):
         "Close the tool jaw"
-        return self.move_jaw(-20.0 * math.pi / 180.0, interpolate)
+        return self.move_jaw(-20.0 * math.pi / 180.0, interpolate, blocking)
 
-    def open_jaw(self, interpolate = True):
+    def open_jaw(self, interpolate = True, blocking = True):
         "Open the tool jaw"
-        return self.move_jaw(80.0 * math.pi / 180.0)
+        return self.move_jaw(80.0 * math.pi / 180.0, interpolate, blocking)
 
-    def move_jaw(self, angle_radian, interpolate = True):
+    def move_jaw(self, angle_radian, interpolate = True, blocking = True):
         "Set the jaw tool to set_jaw in radians"
-        if ((angle_radian >= -20.0 * math.pi / 180.0) and (angle_radian <= 80.0 * math.pi / 180.0)):
-            # create payload
-            joint_state = JointState()
-            joint_state.position.append(angle_radian)
-            # check for interpolation
-            if (interpolate):
+        # create payload
+        joint_state = JointState()
+        joint_state.position.append(angle_radian)
+        # check for interpolation
+        if interpolate:
+            if blocking:
                 self._arm__goal_reached_event.clear()
                 self._arm__goal_reached = False
-                self.__set_jaw_position_pub.publish(joint_state)
+            self.__set_jaw_position_pub.publish(joint_state)
+            if blocking:
                 self._arm__goal_reached_event.wait(20)
                 if not self._arm__goal_reached:
                     return False
-                return True
-            else:
-                return self.__set_jaw_position_pub.publish(joint_state)
+            return True
         else:
-            print 'not a valid jaw position'
-
+            return self.__set_jaw_position_pub.publish(joint_state)
 
     def insert_tool(self, depth):
         "insert the tool, by moving it to an absolute depth"
