@@ -18,7 +18,8 @@ import numpy
 
 from std_msgs.msg import String, Bool
 from sensor_msgs.msg import JointState
-from dvrk import arm
+
+import dvrk
 
 import xml.etree.ElementTree as ET
 
@@ -45,7 +46,6 @@ class potentiometer_calibration:
 
     def __init__(self, robot_name):
         self._robot_name = robot_name
-        self._arm = arm(robot_name)
         self._serial_number = ""
         self._data_received = False # use pots to make sure the ROS topics are OK
         self._last_potentiometers = []
@@ -145,6 +145,13 @@ class potentiometer_calibration:
             upper_joint_limits = [ 60.0 * d2r,  40.0 * d2r,  0.230,  80.0 * d2r]
             nb_axis = 4
 
+
+        if arm_type == "PSM":
+            this_arm = dvrk.psm(self._robot_name)
+        else:
+            this_arm = dvrk.arm(self._robot_name)
+
+
         # resize all arrays
         for axis in range(nb_axis):
             encoders.append([])
@@ -191,8 +198,6 @@ class potentiometer_calibration:
             # messages
             raw_input("To start with some initial values, you first need to \"home\" the robot.  When homed, press [enter]")
 
-            self._arm.home()
-
             if arm_type == "PSM":
                 raw_input("Since you are calibrating a PSM, make sure there is no tool inserted.  Please remove tool or calibration plate if any and press [enter]")
             if arm_type == "ECM":
@@ -208,7 +213,11 @@ class potentiometer_calibration:
                     average_potentiometer[axis] = []
 
                 # move and sleep
-                self._arm.move_joint(numpy.array(joint_goal))
+                if arm_type == "PSM":
+                    this_arm.move_jaw(joint_goal[6], blocking = False)
+                    this_arm.move_joint(numpy.array(joint_goal[0:6]))
+                else:
+                    this_arm.move_joint(numpy.array(joint_goal))
                 time.sleep(sleep_time_after_motion)
 
                 # collect nb_samples_per_position at current position to compute average
@@ -230,7 +239,14 @@ class potentiometer_calibration:
 
 
             # at the end, return to home position
-            self._arm.move_joint(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
+            if arm_type == "PSM":
+                this_arm.move_jaw(0.0, blocking = False)
+                this_arm.move_joint(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
+            elif arm_type == "MTM":
+                this_arm.move_joint(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
+            elif arm_type == "ECM":
+                this_arm.move_joint(numpy.array([0.0, 0.0, 0.0, 0.0]))
+
             # close file
             f.close()
 
@@ -251,7 +267,7 @@ class potentiometer_calibration:
             writer.writerow(header)
 
             # messages
-            print("Please hold/clamp your arm in zero position.");
+            print("Please home AND power off the robot first.  Then hold/clamp your arm in zero position.");
             if arm_type == "PSM":
                 print("For a PSM, you need to hold at least the last 4 joints in zero position.  If you don't have a way to constrain the first 3 joints, you can still just calibrate the last 4.  This program will ask you later if you want to save all PSM joint offsets");
             raw_input("Press [enter] to continue")
