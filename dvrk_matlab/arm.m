@@ -59,7 +59,9 @@ classdef arm < handle
         % publishers
         robot_state_publisher;
         position_goal_joint_publisher;
+        position_joint_publisher;
         position_goal_publisher;
+        position_publisher;
         wrench_body_orientation_absolute_publisher;
         wrench_body_publisher;
         gravity_compensation_publisher;
@@ -172,13 +174,17 @@ classdef arm < handle
             topic = strcat(self.ros_name, '/set_position_goal_joint');
             self.position_goal_joint_publisher = rospublisher(topic, ...
                                                               rostype.sensor_msgs_JointState);
-
+            topic = strcat(self.ros_name, '/set_position_joint');
+            self.position_joint_publisher = rospublisher(topic, ...
+                                                         rostype.sensor_msgs_JointState);
 
             % position goal cartesian
             topic = strcat(self.ros_name, '/set_position_goal_cartesian');
             self.position_goal_publisher = rospublisher(topic, ...
                                                         rostype.geometry_msgs_Pose);
-
+            topic = strcat(self.ros_name, '/set_position_cartesian');
+            self.position_publisher = rospublisher(topic, ...
+                                                   rostype.geometry_msgs_Pose);
 
             % wrench cartesian
             topic = strcat(self.ros_name, '/set_wrench_body_orientation_absolute');
@@ -373,23 +379,34 @@ classdef arm < handle
 
 
 
-        function result = move_joint(self, joint_values)
-            % Move to absolute joint value using trajectory
-            % generator
+        function result = move_joint(self, joint_values, interpolate)
+            % Move to absolute joint value
+
+            % default for interpolate is true
+            if nargin == 2
+                interpolate = true;
+            end
 
             % check if the array provided has the right length
             if length(joint_values) == length(self.get_state_joint_current())
                 % prepare the ROS message
                 self.sensor_msgs_JointState.Position = joint_values;
-                % reset goal reached value and timer
-                self.goal_reached = false;
-                start(self.goal_reached_timer);
-                % send message
-                send(self.position_goal_joint_publisher, ...
-                     self.sensor_msgs_JointState);
-                % wait for timer to be interrupted by goal_reached
-                wait(self.goal_reached_timer);
-                result = self.goal_reached;
+                if interpolate
+                    % reset goal reached value and timer
+                    self.goal_reached = false;
+                    start(self.goal_reached_timer);
+                    % send message
+                    send(self.position_goal_joint_publisher, ...
+                         self.sensor_msgs_JointState);
+                    % wait for timer to be interrupted by goal_reached
+                    wait(self.goal_reached_timer);
+                    result = self.goal_reached;
+                else
+                    % send message
+                    send(self.position_joint_publisher, ...
+                         self.sensor_msgs_JointState);
+                     result = true;
+                end
             else
                 result = false;
                 disp(strcat(self.robot_name, ...
@@ -402,9 +419,13 @@ classdef arm < handle
 
 
 
-        function result = move(self, frame)
-            % Move to absolute cartesian frame using trajectory
-            % generator
+        function result = move(self, frame, interpolate)
+            % Move to absolute cartesian frame
+
+            % default for interpolate is true
+            if nargin == 2
+                interpolate = true;
+            end
 
             if ~isreal(frame)
                 result = false;
@@ -437,25 +458,40 @@ classdef arm < handle
             self.geometry_msgs_Pose.Orientation.X = quaternion(2);
             self.geometry_msgs_Pose.Orientation.Y = quaternion(3);
             self.geometry_msgs_Pose.Orientation.Z = quaternion(4);
-            % reset goal reached value and timer
-            self.goal_reached = false;
-            start(self.goal_reached_timer);
-            % send message
-            send(self.position_goal_publisher, ...
-                 self.geometry_msgs_Pose);
-            % wait for timer to be interrupted by goal_reached
-            wait(self.goal_reached_timer);
-            result = self.goal_reached;
+
+            if interpolate
+                % reset goal reached value and timer
+                self.goal_reached = false;
+                start(self.goal_reached_timer);
+                % send message
+                send(self.position_goal_publisher, ...
+                     self.geometry_msgs_Pose);
+                % wait for timer to be interrupted by goal_reached
+                wait(self.goal_reached_timer);
+                result = self.goal_reached;
+            else
+                % send message
+                send(self.position_publisher, ...
+                     self.geometry_msgs_Pose);
+                result = true;
+            end
         end
 
 
 
 
-        function result = dmove_joint_one(self, joint_value, joint_index)
+        function result = dmove_joint_one(self, joint_value, joint_index, interpolate)
             % Move one single joint by increment, first argument is value
             % (radian or meter), second parameter is joint
             % index (index start at 1 for first joint).
             % Example: r.dmove_joint_one(-0.01, int8(3))
+
+            % default for interpolate is true
+            if nargin == 3
+                interpolate = true;
+            end
+
+
             if ~isinteger(joint_index)
                 result = false;
                 disp(strcat(self.robot_name, ...
@@ -470,15 +506,21 @@ classdef arm < handle
             end
             goal = self.get_state_joint_desired();
             goal(joint_index) = goal(joint_index) + joint_value;
-            result = self.move_joint(goal);
+            result = self.move_joint(goal, interpolate);
         end
 
 
 
 
-        function result = dmove_joint(self, joint_values)
+        function result = dmove_joint(self, joint_values, interpolate)
             % Move all joints by increment, joint value are provided in SI
             % units (radian or meter).  Example: r.dmove_joint([-0.01, -0.01, 0.0, 0.0, 0.0, 0.0, 0.0])
+
+            % default for interpolate is true
+            if nargin == 2
+                interpolate = true;
+            end
+
             if ~isfloat(joint_values)
                 result = false;
                 disp(strcat(self.robot_name, ...
@@ -495,16 +537,22 @@ classdef arm < handle
             end
             goal = self.get_state_joint_desired();
             goal = goal + joint_values';
-            result = self.move_joint(goal);
+            result = self.move_joint(goal, interpolate);
         end
 
 
 
 
-        function result = move_joint_one(self, joint_value, joint_index)
+        function result = move_joint_one(self, joint_value, joint_index, interpolate)
             % Move one single joint, first argument value (radian or meter), second parameter is
             % is joint index (index start at 1 for first joint).
             % Example: r.move_joint_one(-0.01, int8(3))
+
+            % default for interpolate is true
+            if nargin == 3
+                interpolate = true;
+            end
+
             if ~isinteger(joint_index)
                 result = false;
                 disp(strcat(self.robot_name, ...
@@ -519,34 +567,44 @@ classdef arm < handle
             end
             goal = self.get_state_joint_desired();
             goal(joint_index) = joint_value;
-            result = self.move_joint(goal);
+            result = self.move_joint(goal, interpolate);
         end
 
 
 
 
-        function result = dmove_translation(self, translation)
+        function result = dmove_translation(self, translation, interpolate)
+            % default for interpolate is true
+            if nargin == 2
+                interpolate = true;
+            end
+
             % Move incrementaly in cartesian space
             translationH = trvec2tform(translation);
             goal = self.get_position_desired();
             goal(1, 4) = goal(1, 4) + translationH(1, 4);
             goal(2, 4) = goal(2, 4) + translationH(2, 4);
             goal(3, 4) = goal(3, 4) + translationH(3, 4);
-            result = self.move(goal);
+            result = self.move(goal, interpolate);
             return
         end
 
 
 
 
-        function result = move_translation(self, translation)
+        function result = move_translation(self, translation, interpolate)
+            % default for interpolate is true
+            if nargin == 2
+                interpolate = true;
+            end
+
             % Move to absolute position in cartesian space
             translationH = trvec2tform(translation);
             goal = self.get_position_desired();
             goal(1, 4) = translationH(1, 4);
             goal(2, 4) = translationH(2, 4);
             goal(3, 4) = translationH(3, 4);
-            result = self.move(goal);
+            result = self.move(goal, interpolate);
             return
         end
 

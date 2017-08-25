@@ -31,10 +31,10 @@ classdef mtm < arm
             topic = strcat(self.ros_name, '/unlock_orientation');
             self.unlock_orientation_publisher = rospublisher(topic, ...
                                                              rostype.std_msgs_Empty);
-                                                         
+
             % one time creation of messages to prevent lookup and creation at each call
             self.std_msgs_Empty = rosmessage(rostype.std_msgs_Empty);
-            self.geometry_msgs_Quaternion = rosmessage(rostype.geometry_msgs_Quaternion);                          
+            self.geometry_msgs_Quaternion = rosmessage(rostype.geometry_msgs_Quaternion);
         end
 
 
