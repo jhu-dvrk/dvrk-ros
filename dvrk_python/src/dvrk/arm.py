@@ -537,7 +537,7 @@ class arm(object):
         return False
 
 
-    def dmove(self, delta_input, interpolate = True):
+    def dmove(self, delta_input, interpolate = True, blocking = True):
         """Incremental motion in cartesian space.
 
         :param delta_input: the incremental motion you want to make
@@ -546,14 +546,14 @@ class arm(object):
         # is this a legal translation input
         if (self.__check_input_type(delta_input, [PyKDL.Vector, PyKDL.Rotation, PyKDL.Frame])):
             if (type(delta_input) is PyKDL.Vector):
-                return self.__dmove_translation(delta_input, interpolate)
+                return self.__dmove_translation(delta_input, interpolate, blocking)
             elif (type(delta_input) is PyKDL.Rotation):
-                return self.__dmove_rotation(delta_input, interpolate)
+                return self.__dmove_rotation(delta_input, interpolate, blocking)
             elif (type(delta_input) is PyKDL.Frame):
-                return self.__dmove_frame(delta_input, interpolate)
+                return self.__dmove_frame(delta_input, interpolate, blocking)
 
 
-    def __dmove_translation(self, delta_translation, interpolate = True):
+    def __dmove_translation(self, delta_translation, interpolate = True, blocking = True):
         """Incremental translation (using PYKDL Vector) in cartesian space.
 
         :param delta_translation: the incremental translation you want to make based on the current position, this is in terms of a  `PyKDL.Vector <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_
@@ -561,10 +561,10 @@ class arm(object):
         # convert into a Frame
         delta_rotation = PyKDL.Rotation.Identity()
         delta_frame = PyKDL.Frame(delta_rotation, delta_translation)
-        return self.__dmove_frame(delta_frame, interpolate)
+        return self.__dmove_frame(delta_frame, interpolate, blocking)
 
 
-    def __dmove_rotation(self, delta_rotation, interpolate = True):
+    def __dmove_rotation(self, delta_rotation, interpolate = True, blocking = True):
         """Incremental rotation (using PyKDL Rotation) in cartesian plane.
 
         :param delta_rotation: the incremental `PyKDL.Rotation <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ based upon the current position
@@ -572,20 +572,20 @@ class arm(object):
         # convert into a Frame
         delta_vector = PyKDL.Vector(0.0, 0.0, 0.0)
         delta_frame = PyKDL.Frame(delta_rotation, delta_vector)
-        return self.__dmove_frame(delta_frame, interpolate)
+        return self.__dmove_frame(delta_frame, interpolate, blocking)
 
 
-    def __dmove_frame(self, delta_frame, interpolate = True):
+    def __dmove_frame(self, delta_frame, interpolate = True, blocking = True):
         """Incremental move (using PyKDL Frame) in cartesian plane.
 
         :param delta_frame: the incremental `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_ based upon the current position
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         # add the incremental move to the current position, to get the ending frame
         end_frame = delta_frame * self.__position_cartesian_desired
-        return self.__move_frame(end_frame, interpolate)
+        return self.__move_frame(end_frame, interpolate, blocking)
 
 
-    def move(self, abs_input, interpolate = True):
+    def move(self, abs_input, interpolate = True, blocking = True):
         """Absolute translation in cartesian space.
 
         :param abs_input: the absolute translation you want to make
@@ -593,14 +593,14 @@ class arm(object):
         # is this a legal translation input
         if (self.__check_input_type(abs_input, [PyKDL.Vector, PyKDL.Rotation, PyKDL.Frame])):
             if (type(abs_input) is PyKDL.Vector):
-                return self.__move_translation(abs_input, interpolate)
+                return self.__move_translation(abs_input, interpolate, blocking)
             elif (type(abs_input) is PyKDL.Rotation):
-                return self.__move_rotation(abs_input, interpolate)
+                return self.__move_rotation(abs_input, interpolate, blocking)
             elif (type(abs_input) is PyKDL.Frame):
-                return self.__move_frame(abs_input, interpolate)
+                return self.__move_frame(abs_input, interpolate, blocking)
 
 
-    def __move_translation(self, abs_translation, interpolate = True):
+    def __move_translation(self, abs_translation, interpolate = True, blocking = True):
         """Absolute translation in cartesian space.
 
         :param abs_translation: the absolute translation you want to make based on the current position, this is in terms of a  `PyKDL.Vector <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_
@@ -608,10 +608,10 @@ class arm(object):
         # convert into a Frame
         abs_rotation = self.__position_cartesian_desired.M
         abs_frame = PyKDL.Frame(abs_rotation, abs_translation)
-        return self.__move_frame(abs_frame, interpolate)
+        return self.__move_frame(abs_frame, interpolate, blocking)
 
 
-    def __move_rotation(self, abs_rotation, interpolate = True):
+    def __move_rotation(self, abs_rotation, interpolate = True, blocking = True):
         """Absolute rotation in cartesian space.
 
         :param abs_rotation: the absolute `PyKDL.Rotation <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_
@@ -619,17 +619,17 @@ class arm(object):
         # convert into a Frame
         abs_vector = self.__position_cartesian_desired.p
         abs_frame = PyKDL.Frame(abs_rotation, abs_vector)
-        return self.__move_frame(abs_frame, interpolate)
+        return self.__move_frame(abs_frame, interpolate, blocking)
 
 
-    def __move_frame(self, abs_frame, interpolate = True):
+    def __move_frame(self, abs_frame, interpolate = True, blocking = True):
         """Absolute move by PyKDL.Frame in Cartesian space.
 
         :param abs_frame: the absolute `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         # move based on value of interpolate
         if (interpolate):
-            return self.__move_cartesian_goal(abs_frame)
+            return self.__move_cartesian_goal(abs_frame, blocking)
         else:
             return self.__move_cartesian_direct(abs_frame)
 
@@ -647,7 +647,7 @@ class arm(object):
         return True
 
 
-    def __move_cartesian_goal(self, end_frame):
+    def __move_cartesian_goal(self, end_frame, blocking):
         """Move the arm to the end position by providing a goal for trajectory generator.
 
         :param end_frame: the ending `PyKDL.Frame <http://docs.ros.org/diamondback/api/kdl/html/python/geometric_primitives.html>`_
@@ -656,7 +656,11 @@ class arm(object):
         # set in position cartesian mode
         end_position= posemath.toMsg(end_frame)
         # go to that position by goal
-        return self.__set_position_goal_cartesian_publish_and_wait(end_position)
+        if blocking:
+            return self.__set_position_goal_cartesian_publish_and_wait(end_position)
+        else:
+            self.__set_position_goal_cartesian_pub.publish(end_position)
+        return True
 
 
     def __set_position_goal_cartesian_publish_and_wait(self, end_position):
@@ -676,7 +680,7 @@ class arm(object):
         return True
 
 
-    def dmove_joint(self, delta_pos, interpolate = True):
+    def dmove_joint(self, delta_pos, interpolate = True, blocking = True):
         """Incremental move in joint space.
 
         :param delta_pos: the incremental amount in which you want to move index by, this is in terms of a numpy array
@@ -691,22 +695,22 @@ class arm(object):
 
         abs_pos = numpy.array(self.__position_joint_desired)
         abs_pos = abs_pos+ delta_pos
-        return self.__move_joint(abs_pos, interpolate)
+        return self.__move_joint(abs_pos, interpolate, blocking)
 
 
-    def dmove_joint_one(self, delta_pos, indices, interpolate = True):
+    def dmove_joint_one(self, delta_pos, indices, interpolate = True, blocking = True):
         """Incremental index move of 1 joint in joint space.
 
         :param delta_pos: the incremental amount in which you want to move index by, this is a float
         :param index: the joint you want to move, this is an integer
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         if (type(delta_pos) is float and type(indices) is int):
-            return self.dmove_joint_some(numpy.array([delta_pos]), numpy.array([indices]), interpolate)
+            return self.dmove_joint_some(numpy.array([delta_pos]), numpy.array([indices]), interpolate, blocking)
         else:
             return False
 
 
-    def dmove_joint_some(self, delta_pos, indices, interpolate = True):
+    def dmove_joint_some(self, delta_pos, indices, interpolate = True, blocking = True):
         """Incremental index move of a series of joints in joint space.
 
         :param delta_pos: the incremental amount in which you want to move index by, this is a numpy array corresponding to the number of indices
@@ -740,10 +744,10 @@ class arm(object):
             abs_pos[indices[i]] = abs_pos[indices[i]] + delta_pos[i]
 
         # move accordingly
-        return self.__move_joint(abs_pos, interpolate)
+        return self.__move_joint(abs_pos, interpolate, blocking)
 
 
-    def move_joint(self, abs_pos, interpolate = True):
+    def move_joint(self, abs_pos, interpolate = True, blocking = True):
         """Absolute move in joint space.
 
         :param abs_pos: the absolute position in which you want to move, this is a numpy array
@@ -757,22 +761,22 @@ class arm(object):
             print "abs_pos must be an array of size", self.get_joint_number()
             return False
 
-        return self.__move_joint(abs_pos, interpolate)
+        return self.__move_joint(abs_pos, interpolate, blocking)
 
 
-    def move_joint_one(self, abs_pos, joint_index, interpolate = True):
+    def move_joint_one(self, abs_pos, joint_index, interpolate = True, blocking = True):
         """Absolute index move of 1 joint in joint space.
 
         :param value: the absolute amount in which you want to move index by, this is a list
         :param index: the joint you want to move, this is a list
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         if ((type(abs_pos) is float) and (type(joint_index) is int)):
-            return self.move_joint_some(numpy.array([abs_pos]), numpy.array([joint_index]), interpolate)
+            return self.move_joint_some(numpy.array([abs_pos]), numpy.array([joint_index]), interpolate, blocking)
         else:
             return False
 
 
-    def move_joint_some(self, abs_pos, indices, interpolate = True):
+    def move_joint_some(self, abs_pos, indices, interpolate = True, blocking = True):
         """Absolute index move of a series of joints in joint space.
 
         :param value: the absolute amount in which you want to move index by, this is a list
@@ -805,16 +809,16 @@ class arm(object):
             abs_pos_result[indices[i]] = abs_pos[i]
 
         # move accordingly
-        return self.__move_joint(abs_pos_result, interpolate)
+        return self.__move_joint(abs_pos_result, interpolate, blocking)
 
 
-    def __move_joint(self, abs_joint, interpolate = True):
+    def __move_joint(self, abs_joint, interpolate = True, blocking = True):
         """Absolute move by vector in joint plane.
 
         :param abs_joint: the absolute position of the joints in terms of a numpy array
         :param interpolate: if false the trajectory generator will be used; if true you can bypass the trajectory generator"""
         if (interpolate):
-            return self.__move_joint_goal(abs_joint)
+            return self.__move_joint_goal(abs_joint, blocking)
         else:
             return self.__move_joint_direct(abs_joint)
 
@@ -831,7 +835,7 @@ class arm(object):
         return True
 
 
-    def __move_joint_goal(self, end_joint):
+    def __move_joint_goal(self, end_joint, blocking):
         """Move the arm to the end vector by bypassing the trajectory generator.
 
         :param end_joint: the list of joints in which you should conclude movement
@@ -839,7 +843,11 @@ class arm(object):
         :rtype: Bool"""
         joint_state = JointState()
         joint_state.position[:] = end_joint.flat
-        return self.__set_position_goal_joint_publish_and_wait(joint_state)
+        if blocking:
+            return self.__set_position_goal_joint_publish_and_wait(joint_state)
+        else:
+            self.__set_position_goal_joint_pub.publish(joint_state)
+        return True
 
 
     def __set_position_goal_joint_publish_and_wait(self, end_position):

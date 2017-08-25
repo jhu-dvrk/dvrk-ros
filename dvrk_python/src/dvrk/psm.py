@@ -104,14 +104,14 @@ class psm(arm):
         else:
             return self.__set_jaw_position_pub.publish(joint_state)
 
-    def insert_tool(self, depth):
+    def insert_tool(self, depth, interpolate = True, blocking = True):
         "insert the tool, by moving it to an absolute depth"
-        return self.move_joint_one(depth, 2)
+        return self.move_joint_one(depth, 2, interpolate, blocking)
 
 
-    def dinsert_tool(self, depth):
+    def dinsert_tool(self, depth, interpolate = True, blocking = True):
         "insert the tool, by moving it an additional depth"
-        return self.dmove_joint_one(depth, 2)
+        return self.dmove_joint_one(depth, 2, interpolate, blocking)
 
 
     def set_tool_present(self, tool_present):
