@@ -55,7 +55,7 @@ Then:
 tvtime -d /dev/video1
 ```
 
-Once in `tvtime`, change the input to S-Video.  If you see a black
+Once in `tvtime`, change the input to S-Video by pressing `i` key.  If you see a black
 image, it's possible that you don't have enough light in front of your
 camera or endoscope.  If you happen to use a real da Vinci endoscope
 and CCUs (Camera Control Units), you can use the toggle switch
