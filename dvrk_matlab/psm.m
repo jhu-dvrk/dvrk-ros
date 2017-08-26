@@ -7,7 +7,8 @@ classdef psm < arm
         state_jaw_desired_subscriber
         state_jaw_current_subscriber
         % publishers
-        jaw_position_publisher
+        position_jaw_publisher
+        position_goal_jaw_publisher
         tool_present_publisher
     end
 
@@ -28,8 +29,11 @@ classdef psm < arm
                 rossubscriber(topic, rostype.sensor_msgs_JointState);
 
             % ----------- publishers
-            topic = strcat(self.ros_name, '/set_jaw_position');
-            self.jaw_position_publisher = rospublisher(topic, rostype.sensor_msgs_JointState);
+            topic = strcat(self.ros_name, '/set_position_jaw');
+            self.position_jaw_publisher = rospublisher(topic, rostype.sensor_msgs_JointState);
+
+            topic = strcat(self.ros_name, '/set_position_goal_jaw');
+            self.position_goal_jaw_publisher = rospublisher(topic, rostype.sensor_msgs_JointState);
 
             topic = strcat(self.ros_name, '/set_tool_present');
             self.tool_present_publisher = rospublisher(topic, rostype.std_msgs_Bool);
@@ -55,19 +59,32 @@ classdef psm < arm
         end
 
 
-        function result = move_jaw(self, jaw_angle)
+        function result = move_jaw(self, jaw_angle, interpolate)
             % Set the jaw angle
+
+	    % default for interpolate is true
+            if nargin == 2
+                interpolate = true;
+            end
+
             % prepare the ROS message
             self.sensor_msgs_JointState.Position = [jaw_angle];
-            % reset goal reached value and timer
-            self.goal_reached = false;
-            start(self.goal_reached_timer);
-            % send message
-            send(self.jaw_position_publisher, ...
-                 self.sensor_msgs_JointState)
-            % wait for timer to be interrupted by goal_reached
-            wait(self.goal_reached_timer);
-            result = self.goal_reached;
+            if interpolate
+                % reset goal reached value and timer
+                self.goal_reached = false;
+                start(self.goal_reached_timer);
+                % send message
+                send(self.position_goal_jaw_publisher, ...
+                     self.sensor_msgs_JointState)
+                % wait for timer to be interrupted by goal_reached
+                wait(self.goal_reached_timer);
+                result = self.goal_reached;
+            else
+                % send message
+                send(self.position_jaw_publisher, ...
+                     self.sensor_msgs_JointState)
+                result = true;
+            end
         end
 
 

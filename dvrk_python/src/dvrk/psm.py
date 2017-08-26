@@ -29,9 +29,12 @@ class psm(arm):
         self.__effort_jaw_current = 0.0
 
         # publishers
-        self.__set_jaw_position_pub = rospy.Publisher(self._arm__full_ros_namespace
-                                                      + '/set_jaw_position',
+        self.__set_position_jaw_pub = rospy.Publisher(self._arm__full_ros_namespace
+                                                      + '/set_position_jaw',
                                                       JointState, latch = True, queue_size = 1)
+        self.__set_position_goal_jaw_pub = rospy.Publisher(self._arm__full_ros_namespace
+                                                           + '/set_position_goal_jaw',
+                                                           JointState, latch = True, queue_size = 1)
         self.__set_tool_present_pub = rospy.Publisher(self._arm__full_ros_namespace
                                                       + '/set_tool_present',
                                                       Bool, latch = True, queue_size = 1)
@@ -95,14 +98,14 @@ class psm(arm):
             if blocking:
                 self._arm__goal_reached_event.clear()
                 self._arm__goal_reached = False
-            self.__set_jaw_position_pub.publish(joint_state)
+            self.__set_position_goal_jaw_pub.publish(joint_state)
             if blocking:
                 self._arm__goal_reached_event.wait(20)
                 if not self._arm__goal_reached:
                     return False
             return True
         else:
-            return self.__set_jaw_position_pub.publish(joint_state)
+            return self.__set_position_jaw_pub.publish(joint_state)
 
     def insert_tool(self, depth, interpolate = True, blocking = True):
         "insert the tool, by moving it to an absolute depth"

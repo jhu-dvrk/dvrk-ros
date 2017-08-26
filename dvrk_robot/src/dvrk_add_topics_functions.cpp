@@ -351,7 +351,10 @@ void dvrk::add_topics_psm(mtsROSBridge & bridge,
 
     // psm specific API
     bridge.AddSubscriberToCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
-        (psm_component_name, "SetJawPosition", ros_namespace + "/set_jaw_position");
+        (psm_component_name, "SetPositionJaw", ros_namespace + "/set_position_jaw");
+
+    bridge.AddSubscriberToCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
+        (psm_component_name, "SetPositionGoalJaw", ros_namespace + "/set_position_goal_jaw");
 
     bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (psm_component_name, "SetToolPresent", ros_namespace + "/set_tool_present");
