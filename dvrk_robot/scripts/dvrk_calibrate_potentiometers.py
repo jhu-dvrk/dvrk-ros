@@ -196,13 +196,13 @@ class potentiometer_calibration:
             writer.writerow(header)
 
             # messages
-            raw_input("To start with some initial values, you first need to \"home\" the robot.  When homed, press [enter]")
+            raw_input("To start with some initial values, you first need to \"home\" the robot.  When homed, press [enter]\n")
 
             if arm_type == "PSM":
-                raw_input("Since you are calibrating a PSM, make sure there is no tool inserted.  Please remove tool or calibration plate if any and press [enter]")
+                raw_input("Since you are calibrating a PSM, make sure there is no tool inserted.  Please remove tool or calibration plate if any and press [enter]\n")
             if arm_type == "ECM":
-                raw_input("Since you are calibrating an ECM, remove the endoscope and press [enter]")
-            raw_input("The robot will make LARGE MOVEMENTS, please hit [enter] to continue once it is safe to proceed")
+                raw_input("Since you are calibrating an ECM, remove the endoscope and press [enter]\n")
+            raw_input("The robot will make LARGE MOVEMENTS, please hit [enter] to continue once it is safe to proceed\n")
 
             for position in range(nb_joint_positions):
                 # create joint goal
@@ -270,7 +270,7 @@ class potentiometer_calibration:
             print("Please home AND power off the robot first.  Then hold/clamp your arm in zero position.");
             if arm_type == "PSM":
                 print("For a PSM, you need to hold at least the last 4 joints in zero position.  If you don't have a way to constrain the first 3 joints, you can still just calibrate the last 4.  This program will ask you later if you want to save all PSM joint offsets");
-            raw_input("Press [enter] to continue")
+            raw_input("Press [enter] to continue\n")
             nb_samples = 10 * nb_samples_per_position
             for sample in range(nb_samples):
                 for axis in range(nb_axis):
@@ -300,32 +300,33 @@ class potentiometer_calibration:
                 xmlVoltsToPosSI[index].attrib["Scale"] = str(newScale)
 
         if calibrate == "offsets":
+            newOffsets = []
             print "index | old offset  | new offset | correction"
             for index in range(nb_axis):
                 # find existing values
                 oldOffset = float(xmlVoltsToPosSI[index].attrib["Offset"])
                 # compute new values
-                newOffset = oldOffset - offsets[index]
+                newOffsets.append(oldOffset - offsets[index])
 
                 # display
-                print " %d    | % 04.6f | % 04.6f | % 04.6f " % (index, oldOffset, newOffset, offsets[index])
+                print " %d    | % 04.6f | % 04.6f | % 04.6f " % (index, oldOffset, newOffsets[index], offsets[index])
 
             if arm_type == "PSM":
-                all = raw_input("Do you want to save all joint offsets or just the last 4, press 'a' followed by [enter] to save all");
+                all = raw_input("Do you want to save all joint offsets or just the last 4, press 'a' followed by [enter] to save all\n");
                 if all == "a":
                     print "This program will save ALL new PSM offsets"
                     for axis in range(nb_axis):
                         # replace values
-                        xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffset)
+                        xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffsets[axis])
                 else:
                     print "This program will only save the last 4 PSM offsets"
                     for axis in range(3, nb_axis):
                         # replace values
-                        xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffset)
+                        xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffsets[axis])
             else:
                 for axis in range(nb_axis):
                     # replace values
-                    xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffset)
+                    xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffsets[axis])
 
         save = raw_input("To save this in new file press 'y' followed by [enter]\n")
         if save == "y":
