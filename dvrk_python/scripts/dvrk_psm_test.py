@@ -17,7 +17,7 @@
 # > rosrun dvrk_robot dvrk_console_json -j <console-file>
 
 # To communicate with the arm using ROS topics, see the python based example dvrk_arm_test.py:
-# > rosrun dvrk_robot dvrk_arm_test.py <arm-name>
+# > rosrun dvrk_python dvrk_arm_test.py <arm-name>
 
 import dvrk
 import math
