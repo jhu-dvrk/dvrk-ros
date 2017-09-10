@@ -211,6 +211,9 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (arm_component_name, "SetGravityCompensation",
          ros_namespace + "/set_gravity_compensation");
+    bridge.AddSubscriberToCommandWrite<prmCartesianImpedanceGains, cisst_msgs::prmCartesianImpedanceGains>
+        (arm_component_name, "SetCartesianImpedanceGains",
+         ros_namespace + "/set_cartesian_impedance_gains");
 
 
     // events
