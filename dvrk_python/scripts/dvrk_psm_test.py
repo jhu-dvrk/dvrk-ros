@@ -59,16 +59,16 @@ class example_application:
     def jaw_goal(self):
         print rospy.get_caller_id(), ' -> starting jaw goal'
         # try to open and close with the cartesian part of the arm in different modes
-        print rospy.get_caller_id(), ' -> close and open without other move command'
-        raw_input("Press Enter to continue...")
+        print rospy.get_caller_id(), '   -> close and open without other move command'
+        raw_input("    Press Enter to continue...")
         self.arm.home()
         self.arm.close_jaw()
         self.arm.open_jaw()
         self.arm.close_jaw()
         self.arm.open_jaw()
         # try to open and close with a joint goal
-        print rospy.get_caller_id(), ' -> close and open with joint move command'
-        raw_input("Press Enter to continue...")
+        print rospy.get_caller_id(), '   -> close and open with joint move command'
+        raw_input("    Press Enter to continue...")
         self.arm.home()
         self.arm.close_jaw(blocking = False)
         self.arm.insert_tool(0.1)
@@ -79,8 +79,8 @@ class example_application:
         self.arm.open_jaw()
         self.arm.insert_tool(0.15)
 
-        print rospy.get_caller_id(), ' -> close and open with cartesian move command'
-        raw_input("Press Enter to continue...")
+        print rospy.get_caller_id(), '   -> close and open with cartesian move command'
+        raw_input("    Press Enter to continue...")
 
         # try to open and close with a cartesian goal
         self.prepare_cartesian()
@@ -112,8 +112,8 @@ class example_application:
     def jaw_direct(self):
         print rospy.get_caller_id(), ' -> starting jaw direct'
         # try to open and close directly, needs interpolation
-        print rospy.get_caller_id(), ' -> close and open without other move command'
-        raw_input("Press Enter to continue...")
+        print rospy.get_caller_id(), '   -> close and open without other move command'
+        raw_input("    Press Enter to continue...")
         self.arm.move_jaw(math.radians(30.0))
         # assume we start at 30 the move +/- 30
         amplitude = math.radians(30.0)
@@ -132,7 +132,7 @@ class example_application:
         self.home()
         self.jaw_goal()
         self.jaw_direct()
-
+        self.jaw_goal() # just to make sure we can transition back to trajectory mode
 
 
 if __name__ == '__main__':
