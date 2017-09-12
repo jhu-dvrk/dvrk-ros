@@ -580,6 +580,29 @@ void dvrk::connect_bridge_suj(const std::string & bridge_name,
 
 void dvrk::add_topics_io(mtsROSBridge & bridge,
                          const std::string & ros_namespace,
+                         const dvrk_topics_version::version CMN_UNUSED(version))
+{
+    bridge.AddPublisherFromCommandRead<mtsIntervalStatistics, cisst_msgs::mtsIntervalStatistics>
+        ("io", "GetPeriodStatistics",
+         ros_namespace + "/period_statistics");
+}
+
+void dvrk::connect_bridge_io(mtsROSBridge & bridge,
+                             const std::string & io_component_name)
+{
+    dvrk::connect_bridge_io(bridge.GetName(), io_component_name);
+}
+
+void dvrk::connect_bridge_io(const std::string & bridge_name,
+                             const std::string & io_component_name)
+{
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
+    componentManager->Connect(bridge_name, "io",
+                              io_component_name, "Configuration");
+}
+
+void dvrk::add_topics_io(mtsROSBridge & bridge,
+                         const std::string & ros_namespace,
                          const std::string & arm_name,
                          const dvrk_topics_version::version CMN_UNUSED(version))
 {

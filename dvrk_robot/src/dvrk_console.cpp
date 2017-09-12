@@ -34,6 +34,10 @@ dvrk::console::console(mtsROSBridge & bridge,
 {
     mBridgeName = bridge.GetName();
 
+    if (mConsole->mHasIO) {
+        dvrk::add_topics_io(bridge, mNameSpace + "/io", version);
+    }
+
     const mtsIntuitiveResearchKitConsole::ArmList::iterator
         armEnd = mConsole->mArms.end();
     mtsIntuitiveResearchKitConsole::ArmList::iterator armIter;
@@ -140,6 +144,10 @@ void dvrk::console::Configure(const std::string & jsonFile)
 
 void dvrk::console::Connect(void)
 {
+    if (mConsole->mHasIO) {
+        dvrk::connect_bridge_io(mBridgeName, mConsole->mIOComponentName);
+    }
+
     const mtsIntuitiveResearchKitConsole::ArmList::iterator
         armEnd = mConsole->mArms.end();
     mtsIntuitiveResearchKitConsole::ArmList::iterator armIter;
