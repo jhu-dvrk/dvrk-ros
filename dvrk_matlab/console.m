@@ -16,6 +16,7 @@ classdef console < handle
         teleop_scale_subscriber
         % publishers
         power_off_publisher
+        power_on_publisher
         home_publisher
         teleop_enable_publisher
         teleop_set_scale_publisher
@@ -43,6 +44,10 @@ classdef console < handle
             % power off
             topic = strcat(self.ros_namespace, '/power_off');
             self.power_off_publisher = rospublisher(topic, rostype.std_msgs_Empty);
+
+            % power on
+            topic = strcat(self.ros_namespace, '/power_on');
+            self.power_on_publisher = rospublisher(topic, rostype.std_msgs_Empty);
 
             % home
             topic = strcat(self.ros_namespace, '/home');
@@ -72,6 +77,11 @@ classdef console < handle
         function power_off(self)
             message = rosmessage(self.power_off_publisher);
             send(self.power_off_publisher, message);
+        end
+
+        function power_on(self)
+            message = rosmessage(self.power_on_publisher);
+            send(self.power_on_publisher, message);
         end
 
         function home(self)

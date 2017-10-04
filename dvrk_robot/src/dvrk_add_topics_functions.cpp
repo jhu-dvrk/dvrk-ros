@@ -27,6 +27,9 @@ void dvrk::add_topics_console(mtsROSBridge & bridge,
         ("Console", "PowerOff",
          ros_namespace + "/power_off");
     bridge.AddSubscriberToCommandVoid
+        ("Console", "PowerOn",
+         ros_namespace + "/power_on");
+    bridge.AddSubscriberToCommandVoid
         ("Console", "Home",
          ros_namespace + "/home");
     bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>

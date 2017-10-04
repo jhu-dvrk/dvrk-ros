@@ -39,6 +39,9 @@ class console(object):
         self.__power_off_pub = rospy.Publisher(self.__console_namespace
                                                + '/power_off',
                                                Empty, latch = True, queue_size = 1)
+        self.__power_on_pub = rospy.Publisher(self.__console_namespace
+                                              + '/power_on',
+                                              Empty, latch = True, queue_size = 1)
         self.__home_pub = rospy.Publisher(self.__console_namespace
                                           + '/home',
                                           Empty, latch = True, queue_size = 1)
@@ -70,6 +73,10 @@ class console(object):
 
     def power_off(self):
         self.__power_off_pub.publish()
+
+
+    def power_on(self):
+        self.__power_on_pub.publish()
 
 
     def home(self):
