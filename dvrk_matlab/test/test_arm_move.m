@@ -1,10 +1,15 @@
 % call methods to make sure they exist and don't trigger syntax errors
+% this test program will make the arm move!
 function test_arm_move(arm_name)
     addpath('..');
     r = arm(arm_name);
 
     disp('---- Homing');
     r.home();
+
+    %%%% for direct moves
+    rate = 200; % aiming for 200 Hz
+    ros_rate = rosrate(rate);
 
     %%%% joint position move
     disp('---- Joint goal move');
@@ -35,14 +40,15 @@ function test_arm_move(arm_name)
     % wiggle first two joints, matlab index starts at 1
     amplitude = deg2rad(10.0);
     duration = 10.0; % seconds
-    rate = 200; % aiming for 200 Hz
     samples = duration * rate;
     % create a new goal starting with current position
     goal = p;
+    reset(ros_rate);
     for i = 0:samples
     	goal(1) = p(1) + amplitude *  sin(i * deg2rad(360.0) / samples);
         goal(2) = p(2) + amplitude *  sin(i * deg2rad(360.0) / samples);
         r.move_joint(goal, false); % false -> do not interpolate
+        waitfor(ros_rate);
     end
 
     %%%% cartesian position move
@@ -77,14 +83,15 @@ function test_arm_move(arm_name)
     end
     amplitude = 0.03; % 3 cm
     duration = 10.0; % seconds
-    rate = 200; % aiming for 200 Hz
     samples = duration * rate;
     % create a new goal starting with current position
     p = r.get_position_desired();
     goal = p;
+    reset(ros_rate);
     for i = 0:samples
     	goal(1:2, 4) = p(1:2, 4) + amplitude *  sin(i * deg2rad(360.0) / samples);
         r.move(goal, false); % false -> do not interpolate
+        waitfor(ros_rate);
     end
 
 end
