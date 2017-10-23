@@ -48,11 +48,11 @@ same order, e.g. first the left channel and then the right channel.
 To test each channel one after another:
 
 ```sh
-tvtime -d /dev/video0
+tvtime -Ld /dev/video0
 ```
 Then:
 ```sh
-tvtime -d /dev/video1
+tvtime -Ld /dev/video1
 ```
 
 Once in `tvtime`, change the input to S-Video.  If you see a black
