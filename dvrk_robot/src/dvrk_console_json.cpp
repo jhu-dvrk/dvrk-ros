@@ -147,8 +147,11 @@ int main(int argc, char ** argv)
     }
 
     // ros wrapper for arms and optionally IOs
-    std::string bridgeName = "sawIntuitiveResearchKit" + rosNamespace;
+    std::string bridgeName = "sawIntuitiveResearchKit" + rosNamespace + "_" + jsonMainConfigFile;
+    bridgeName = ros::names::clean(bridgeName);
     std::replace(bridgeName.begin(), bridgeName.end(), '/', '_');
+    std::replace(bridgeName.begin(), bridgeName.end(), '-', '_');
+    std::replace(bridgeName.begin(), bridgeName.end(), '.', '_');
     mtsROSBridge rosBridge(bridgeName, rosPeriod, true);
     dvrk::console * consoleROS = new dvrk::console(rosBridge, rosNamespace,
                                                    console, versionEnum);
