@@ -40,8 +40,10 @@ class example_application:
         self.arm.home()
         # get current joints just to set size
         goal = numpy.copy(self.arm.get_current_joint_position())
-        # go to zero position
+        # go to zero position, for PSM and ECM make sure 3rd joint is past cannula
         goal.fill(0)
+        if ((self.arm.name() == 'PSM1') or (self.arm.name() == 'PSM2') or (self.arm.name() == 'PSM3') or (self.arm.name() == 'ECM')):
+            goal[2] = 0.12
         self.arm.move_joint(goal, interpolate = True)
 
     # direct joint control example

@@ -40,8 +40,9 @@ class example_application:
         self.arm.home()
         # get current joints just to set size
         goal = numpy.copy(self.arm.get_current_joint_position())
-        # go to zero position
+        # go to zero position, except for insert joint so we can't break tool in cannula
         goal.fill(0)
+        goal[2] = 0.12
         self.arm.move_joint(goal, interpolate = True)
 
     # utility to position tool/camera deep enough before cartesian examples
