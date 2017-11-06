@@ -17,6 +17,9 @@ function test_arm_move(arm_name)
     p = r.get_state_joint_desired();
     joints_home = p;
     joints_home(:) = 0.0;
+    if (strcmp(arm_name, 'ECM') || strncmp(arm_name, 'PSM', 3))
+        joints_home(3) = 0.12;
+    end
     r.move_joint(joints_home);
     % wiggle first two joints, matlab index starts at 1
     amplitude = deg2rad(5.0);
