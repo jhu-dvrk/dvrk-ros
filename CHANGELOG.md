@@ -1,6 +1,45 @@
 Change log
 ==========
 
+1.5.0 (2017-xx-xx)
+==================
+
+* API changes:
+  * dvrk_robot:
+    * Update to match new arm state machine
+    * Joint commands are now using joints for kinematics only.  On PSM, jaw is not the last joint anymore, it has its separate topics
+    * PSM jaw and MTM gripper now use joint state to report position/velocity/effort
+    * Better support for console/footpedals events
+  * Python:
+    * Added blocking/non blocking flag for move commands using trajectory generation
+  * Matlab:
+    * Added flag to send direct move commands (vs. trajectory goals)
+    * Removed all callbacks since these tended to block the interpreter, now use getters to get latest value received.  Getters return timestamp as well.
+    * Added ecm.m, console.m and teleop_psm.m
+    * Code factorization for all conversion methods
+  * Models/URDF:
+    * PSM now subscribes to joint state for jaw to control last joint
+    * Added crude models for 5mm tools
+    * Fixed some xacro warnings
+* Deprecated features:
+  * None
+* New features:
+  * dvrk_robot:
+    * Teleop now has an event to track if PSM is folowing master
+    * SUJ publishes joint state
+    * Publishes io interval statistics
+    * Added topics for cartesian impedance controller + examples
+    * Support for some topics when using generic MTMs (Falcon/ForceDimension)
+  * Python:
+    * Added test/example programs in dvrk_python/scripts
+    * Added subscribers for jacobians, set effort joint
+  * Matlab:
+    * Added test/example programs in dvrk_matlab/test
+    * Added subscribers for jacobians, set effort joint
+* Bug fixes:
+  * dvrk_calibrate_potentiometers now uses arm.py
+
+
 1.4.0 (2016-08-31)
 ==================
 
