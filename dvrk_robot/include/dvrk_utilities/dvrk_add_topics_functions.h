@@ -108,6 +108,21 @@ namespace dvrk {
                             const std::string & psm_component_name,
                             const std::string & psm_interface_name);
 
+    /*! Add all the IO topics for physical dVRK PSMs. */
+    void add_topics_psm_io(mtsROSBridge & bridge,
+                           const std::string & ros_namespace,
+                           const std::string & arm_name,
+                           const dvrk_topics_version::version version);
+
+    /*! This method connects all the required interfaces for the PSM's
+        IOs, it must be used after add_topics_psm_io. */
+    void connect_bridge_psm_io(mtsROSBridge & bridge,
+                               const std::string & arm_name,
+                               const std::string & io_component_name);
+    void connect_bridge_psm_io(const std::string & bridge_name,
+                               const std::string & arm_name,
+                               const std::string & io_component_name);
+
     /*! Add all the topics common to all arms (see add_topics_arm) as
       well as ECM specific topics. */
     void add_topics_ecm(mtsROSBridge & bridge,
@@ -125,6 +140,21 @@ namespace dvrk {
                             const std::string & arm_name,
                             const std::string & ecm_component_name,
                             const std::string & ecm_interface_name);
+
+    /*! Add all the IO topics for physical dVRK ECMs. */
+    void add_topics_ecm_io(mtsROSBridge & bridge,
+                           const std::string & ros_namespace,
+                           const std::string & arm_name,
+                           const dvrk_topics_version::version version);
+
+    /*! This method connects all the required interfaces for the ECM's
+        IOs, it must be used after add_topics_ecm_io. */
+    void connect_bridge_ecm_io(mtsROSBridge & bridge,
+                               const std::string & arm_name,
+                               const std::string & io_component_name);
+    void connect_bridge_ecm_io(const std::string & bridge_name,
+                               const std::string & arm_name,
+                               const std::string & io_component_name);
 
     /*! Add all the topics related to tele-op component. */
     void add_topics_teleop(mtsROSBridge & bridge,
