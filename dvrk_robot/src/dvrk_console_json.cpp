@@ -58,7 +58,7 @@ int main(int argc, char ** argv)
     cmnLogger::SetMask(CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskDefaultLog(CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskFunction(CMN_LOG_ALLOW_ALL);
-    cmnLogger::SetMaskClass("mtsIntuitiveResearchKit", CMN_LOG_ALLOW_ALL);
+    cmnLogger::SetMaskClassMatching("mtsIntuitiveResearchKit", CMN_LOG_ALLOW_ALL);
     cmnLogger::AddChannel(std::cerr, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
 
     // ---- WARNING: hack to remove ros args ----
@@ -140,14 +140,19 @@ int main(int argc, char ** argv)
     if (hasQt) {
         QLocale::setDefault(QLocale::English);
         application = new QApplication(argc, argv);
-        application->setWindowIcon(QIcon(":/dVRK.svg"));
+        application->setWindowIcon(QIcon(":/dVRK.png"));
         consoleQt = new mtsIntuitiveResearchKitConsoleQt();
         consoleQt->Configure(console);
         consoleQt->Connect();
     }
 
     // ros wrapper for arms and optionally IOs
-    mtsROSBridge rosBridge("dVRKBridge", rosPeriod, true);
+    std::string bridgeName = "sawIntuitiveResearchKit" + rosNamespace + "_" + jsonMainConfigFile;
+    bridgeName = ros::names::clean(bridgeName);
+    std::replace(bridgeName.begin(), bridgeName.end(), '/', '_');
+    std::replace(bridgeName.begin(), bridgeName.end(), '-', '_');
+    std::replace(bridgeName.begin(), bridgeName.end(), '.', '_');
+    mtsROSBridge rosBridge(bridgeName, rosPeriod, true);
     dvrk::console * consoleROS = new dvrk::console(rosBridge, rosNamespace,
                                                    console, versionEnum);
     // IOs

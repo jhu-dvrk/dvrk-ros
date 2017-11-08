@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-08
 
-#   (C) Copyright 2016 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2016-2017 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -13,7 +13,7 @@
 
 import rospy
 
-from std_msgs.msg import Bool, Float32, Empty
+from std_msgs.msg import Bool, Float32, Empty, String
 from geometry_msgs.msg import Quaternion
 
 class teleop_psm(object):
@@ -40,9 +40,12 @@ class teleop_psm(object):
         self.__set_scale_pub = rospy.Publisher(self.__full_ros_namespace
                                                + '/set_scale',
                                                Float32, latch = True, queue_size = 1)
-        self.__set_registration_rotation = rospy.Publisher(self.__full_ros_namespace
-                                                           + '/set_registration_rotation',
-                                                           Quaternion, latch = True, queue_size = 1)
+        self.__set_registration_rotation_pub = rospy.Publisher(self.__full_ros_namespace
+                                                               + '/set_registration_rotation',
+                                                               Quaternion, latch = True, queue_size = 1)
+        self.__set_desired_state_pub = rospy.Publisher(self.__full_ros_namespace
+                                                       + '/set_desired_state',
+                                                       String, latch = True, queue_size = 1)
 
         # subscribers
         rospy.Subscriber(self.__full_ros_namespace
@@ -50,7 +53,10 @@ class teleop_psm(object):
                          Float32, self.__scale_cb)
 
         # create node
-        rospy.init_node('teleop_api', anonymous = True, log_level = rospy.WARN)
+        if not rospy.get_node_uri():
+            rospy.init_node('teleop_api', anonymous = True, log_level = rospy.WARN)
+        else:
+            rospy.logdebug(rospy.get_caller_id() + ' -> ROS already initialized')
 
 
     def __scale_cb(self, data):
@@ -69,4 +75,10 @@ class teleop_psm(object):
         """Expect a PyKDL rotation matrix (PyKDL.Rotation)"""
         q = Quaternion()
         q.x, q.y, q.z, q.w = rotation.GetQuaternion()
-        self.__set_registration_rotation.publish(q)
+        self.__set_registration_rotation_pub.publish(q)
+
+    def enable(self):
+        self.__set_desired_state_pub.publish('ENABLED')
+
+    def disable(self):
+        self.__set_desired_state_pub.publish('DISABLED')

@@ -2,6 +2,7 @@
 
 # Authors: Nick Eusman, Anton Deguet
 # Date: 2015-09-24
+# Copyright JHU 2015-2017
 
 # Todo:
 # - test calibrating 3rd offset on PSM?
@@ -13,9 +14,12 @@ import math
 import sys
 import csv
 import datetime
+import numpy
 
 from std_msgs.msg import String, Bool
 from sensor_msgs.msg import JointState
+
+import dvrk
 
 import xml.etree.ElementTree as ET
 
@@ -46,64 +50,20 @@ class potentiometer_calibration:
         self._data_received = False # use pots to make sure the ROS topics are OK
         self._last_potentiometers = []
         self._last_joints = []
-        self._robot_state = 'uninitialized'
-        self._robot_state_event = threading.Event()
-        self._goal_reached = False
-        self._goal_reached_event = threading.Event()
+        ros_namespace = '/dvrk/' + self._robot_name
+        rospy.Subscriber(ros_namespace +  '/io/analog_input_pos_si', JointState, self.pot_callback)
+        rospy.Subscriber(ros_namespace +  '/io/joint_position', JointState, self.joints_callback)
 
     def pot_callback(self, data):
         self._last_potentiometers[:] = data.position
         self._data_received = True
 
     def joints_callback(self, data):
+        self._data_received = True
         self._last_joints[:] = data.position
 
-    def robot_state_callback(self, data):
-        self._robot_state = data.data
-        self._robot_state_event.set()
-
-    def goal_reached_callback(self, data):
-        self._goal_reached = data.data
-        self._goal_reached_event.set()
-
-    def set_position_goal_joint(self, goal):
-        self._goal_reached_event.clear()
-        self._goal_reached = False
-        joint_state = JointState()
-        joint_state.position[:] = goal
-        self._set_position_goal_joint_publisher.publish(joint_state)
-        self._goal_reached_event.wait(180) # 3 minutes at most
-        if not self._goal_reached:
-            rospy.signal_shutdown('failed to reach goal')
-            sys.exit(-1)
-
-    def set_state_block(self, state, timeout = 60):
-        self._robot_state_event.clear()
-        self.set_robot_state.publish(state)
-        self._robot_state_event.wait(timeout)
-        if (self._robot_state != state):
-            rospy.logfatal(rospy.get_caller_id() + ' -> failed to reach state ' + state)
-            rospy.signal_shutdown('failed to reach desired state')
-            sys.exit(-1)
 
     def run(self, calibrate, filename):
-        ros_namespace = '/dvrk/' + self._robot_name
-        self.set_robot_state = rospy.Publisher(ros_namespace + '/set_robot_state',
-                                               String, latch = True, queue_size = 1)
-        self._set_position_goal_joint_publisher = rospy.Publisher(ros_namespace
-                                                                  + '/set_position_goal_joint',
-                                                                  JointState, latch = True, queue_size = 1)
-        self._set_robot_state_publisher = rospy.Publisher(ros_namespace
-                                                          + '/set_robot_state',
-                                                          String, latch = True, queue_size = 1)
-        rospy.Subscriber(ros_namespace + '/robot_state', String, self.robot_state_callback)
-        rospy.Subscriber(ros_namespace + '/goal_reached', Bool, self.goal_reached_callback)
-        rospy.Subscriber(ros_namespace +  '/io/analog_input_pos_si', JointState, self.pot_callback)
-        rospy.Subscriber(ros_namespace +  '/io/joint_position', JointState, self.joints_callback)
-
-        # create node
-        rospy.init_node('dvrk_calibrate_potentiometers', anonymous = True)
-
         nb_joint_positions = 20 # number of positions between limits
         nb_samples_per_position = 500 # number of values collected at each position
         total_samples = nb_joint_positions * nb_samples_per_position
@@ -185,6 +145,13 @@ class potentiometer_calibration:
             upper_joint_limits = [ 60.0 * d2r,  40.0 * d2r,  0.230,  80.0 * d2r]
             nb_axis = 4
 
+
+        if arm_type == "PSM":
+            this_arm = dvrk.psm(self._robot_name)
+        else:
+            this_arm = dvrk.arm(self._robot_name)
+
+
         # resize all arrays
         for axis in range(nb_axis):
             encoders.append([])
@@ -196,6 +163,7 @@ class potentiometer_calibration:
             range_of_motion_joint.append(math.fabs(upper_joint_limits[axis] - lower_joint_limits[axis]))
 
         # Check that everything is working
+        time.sleep(2.0) # to make sure some data has arrived
         if not self._data_received:
             print "It seems the console for ", self._robot_name, " is not started or is not publishing the IO topics"
             print "Make sure you use \"rosrun dvrk_robot dvrk_console_json\" with the -i option"
@@ -228,15 +196,13 @@ class potentiometer_calibration:
             writer.writerow(header)
 
             # messages
-            raw_input("To start with some initial values, you first need to \"home\" the robot.  When homed, press [enter]")
-            if arm_type == "PSM":
-                raw_input("Since you are calibrating a PSM, make sure there is no tool inserted.  Please remove tool or calibration plate if any and press [enter]")
-            if arm_type == "ECM":
-                raw_input("Since you are calibrating an ECM, remove the endoscope and press [enter]")
-            raw_input("The robot will make LARGE MOVEMENTS, please hit [enter] to continue once it is safe to proceed")
+            raw_input("To start with some initial values, you first need to \"home\" the robot.  When homed, press [enter]\n")
 
-            # set in proper mode for joint control
-            self.set_state_block('DVRK_POSITION_GOAL_JOINT')
+            if arm_type == "PSM":
+                raw_input("Since you are calibrating a PSM, make sure there is no tool inserted.  Please remove tool or calibration plate if any and press [enter]\n")
+            if arm_type == "ECM":
+                raw_input("Since you are calibrating an ECM, remove the endoscope and press [enter]\n")
+            raw_input("The robot will make LARGE MOVEMENTS, please hit [enter] to continue once it is safe to proceed\n")
 
             for position in range(nb_joint_positions):
                 # create joint goal
@@ -247,7 +213,11 @@ class potentiometer_calibration:
                     average_potentiometer[axis] = []
 
                 # move and sleep
-                self.set_position_goal_joint(joint_goal)
+                if arm_type == "PSM":
+                    this_arm.move_jaw(joint_goal[6], blocking = False)
+                    this_arm.move_joint(numpy.array(joint_goal[0:6]))
+                else:
+                    this_arm.move_joint(numpy.array(joint_goal))
                 time.sleep(sleep_time_after_motion)
 
                 # collect nb_samples_per_position at current position to compute average
@@ -269,7 +239,14 @@ class potentiometer_calibration:
 
 
             # at the end, return to home position
-            self.set_position_goal_joint([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+            if arm_type == "PSM":
+                this_arm.move_jaw(0.0, blocking = False)
+                this_arm.move_joint(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
+            elif arm_type == "MTM":
+                this_arm.move_joint(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
+            elif arm_type == "ECM":
+                this_arm.move_joint(numpy.array([0.0, 0.0, 0.0, 0.0]))
+
             # close file
             f.close()
 
@@ -290,27 +267,14 @@ class potentiometer_calibration:
             writer.writerow(header)
 
             # messages
+            print("Please home AND power off the robot first.  Then hold/clamp your arm in zero position.");
             if arm_type == "PSM":
-                print "Calibrating offsets using calibration plate, this allows to calibrate the last 4 potentiometers.  The first 3 will remain unchanged."
-            else:
-                print("Since there is no calibration template for ECM/MTM, you need to manually place and constrain the arm in zero position!")
-            raw_input("Press [enter] to continue")
-            raw_input("To start with some initial values, you first need to \"home\" the robot.  When homed, press [enter]")
-            raw_input("The robot will now go in \"idle\" mode, i.e. turn PID off.  Press [enter]")
-            self.set_state_block('DVRK_UNINITIALIZED')
-            if arm_type == "PSM":
-                raw_input("Place the plate over the final four joints and hit [enter]")
+                print("For a PSM, you need to hold at least the last 4 joints in zero position.  If you don't have a way to constrain the first 3 joints, you can still just calibrate the last 4.  This program will ask you later if you want to save all PSM joint offsets");
+            raw_input("Press [enter] to continue\n")
             nb_samples = 10 * nb_samples_per_position
             for sample in range(nb_samples):
-                if arm_type == "PSM":
-                    for axis in range(3, nb_axis):
-                        average_offsets[axis].append(self._last_potentiometers[axis] * r2d)
-                    for axis in range(0, 3):
-                        average_offsets[axis].append(0.0)
-                else:
-                    for axis in range(nb_axis):
-                        average_offsets[axis].append(self._last_potentiometers[axis] * r2d)
-
+                for axis in range(nb_axis):
+                    average_offsets[axis].append(self._last_potentiometers[axis] * r2d)
                 writer.writerow(self._last_potentiometers)
                 time.sleep(sleep_time_between_samples)
                 sys.stdout.write('\rProgress %02.1f%%' % (float(sample) / float(nb_samples) * 100.0))
@@ -336,17 +300,33 @@ class potentiometer_calibration:
                 xmlVoltsToPosSI[index].attrib["Scale"] = str(newScale)
 
         if calibrate == "offsets":
+            newOffsets = []
             print "index | old offset  | new offset | correction"
             for index in range(nb_axis):
                 # find existing values
                 oldOffset = float(xmlVoltsToPosSI[index].attrib["Offset"])
                 # compute new values
-                newOffset = oldOffset - offsets[index]
+                newOffsets.append(oldOffset - offsets[index])
 
                 # display
-                print " %d    | % 04.6f | % 04.6f | % 04.6f " % (index, oldOffset, newOffset, offsets[index])
-                # replace values
-                xmlVoltsToPosSI[index].attrib["Offset"] = str(newOffset)
+                print " %d    | % 04.6f | % 04.6f | % 04.6f " % (index, oldOffset, newOffsets[index], offsets[index])
+
+            if arm_type == "PSM":
+                all = raw_input("Do you want to save all joint offsets or just the last 4, press 'a' followed by [enter] to save all\n");
+                if all == "a":
+                    print "This program will save ALL new PSM offsets"
+                    for axis in range(nb_axis):
+                        # replace values
+                        xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffsets[axis])
+                else:
+                    print "This program will only save the last 4 PSM offsets"
+                    for axis in range(3, nb_axis):
+                        # replace values
+                        xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffsets[axis])
+            else:
+                for axis in range(nb_axis):
+                    # replace values
+                    xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffsets[axis])
 
         save = raw_input("To save this in new file press 'y' followed by [enter]\n")
         if save == "y":

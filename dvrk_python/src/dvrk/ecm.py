@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-05
 
-#   (C) Copyright 2016 Johns Hopkins University (JHU), All Rights Reserved.
+#   (C) Copyright 2016-2017 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -22,11 +22,11 @@ class ecm(arm):
         self._arm__init_arm(ecm_name, ros_namespace)
 
 
-    def insert_endoscope(self, depth):
+    def insert_endoscope(self, depth, interpolate = True, blocking = True):
         "insert the endoscope, by moving it to an absolute depth"
-        return self.move_joint_one(depth, 2)
+        return self.move_joint_one(depth, 2, interpolate, blocking)
 
 
-    def dinsert_endoscope(self, depth):
+    def dinsert_endoscope(self, depth, interpolate = True, blocking = True):
         "insert the endoscope, by moving it an additional depth"
-        return self.dmove_joint_one(depth, 2)
+        return self.dmove_joint_one(depth, 2, interpolate, blocking)

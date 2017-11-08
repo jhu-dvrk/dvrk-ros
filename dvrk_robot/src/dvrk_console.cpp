@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2016 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2017 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -17,6 +17,7 @@ http://www.cisst.org/cisst/license.txt.
 */
 
 #include <dvrk_utilities/dvrk_console.h>
+#include <cisstCommon/cmnStrings.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
 
 #include <json/json.h>
@@ -33,6 +34,10 @@ dvrk::console::console(mtsROSBridge & bridge,
 {
     mBridgeName = bridge.GetName();
 
+    if (mConsole->mHasIO) {
+        dvrk::add_topics_io(bridge, mNameSpace + "/io", version);
+    }
+
     const mtsIntuitiveResearchKitConsole::ArmList::iterator
         armEnd = mConsole->mArms.end();
     mtsIntuitiveResearchKitConsole::ArmList::iterator armIter;
@@ -40,19 +45,32 @@ dvrk::console::console(mtsROSBridge & bridge,
          armIter != armEnd;
          ++armIter) {
         const std::string name = armIter->first;
-
+        const std::string armNameSpace = mNameSpace + "/" + name;
         switch (armIter->second->mType) {
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
-            dvrk::add_topics_mtm(bridge, mNameSpace + "/" + name, name, version);
+            dvrk::add_topics_mtm(bridge, armNameSpace, name, version);
+            break;
+        case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
+            dvrk::add_topics_mtm_generic(bridge, armNameSpace, name, version);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
-            dvrk::add_topics_ecm(bridge, mNameSpace + "/" + name, name, version);
+            dvrk::add_topics_ecm(bridge, armNameSpace, name, version);
+            if (armIter->second->mSimulation
+                == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
+                dvrk::add_topics_ecm_io(bridge, armNameSpace,
+                                        name, version);
+            }
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
-            dvrk::add_topics_psm(bridge, mNameSpace + "/" + name, name, version);
+            dvrk::add_topics_psm(bridge, armNameSpace, name, version);
+            if (armIter->second->mSimulation
+                == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
+                dvrk::add_topics_psm_io(bridge, armNameSpace,
+                                        name, version);
+            }
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
             dvrk::add_topics_suj(bridge, mNameSpace + "/SUJ/PSM1", "PSM1", version);
@@ -76,8 +94,23 @@ dvrk::console::console(mtsROSBridge & bridge,
         dvrk::add_topics_teleop(bridge, mNameSpace + "/" + topic_name, name, version);
     }
 
-    if (mConsole->mHasFootpedals) {
-        dvrk::add_topics_footpedals(bridge, mNameSpace + "/footpedals", version);
+    // digital inputs
+    const std::string footPedalsNameSpace = mNameSpace + "/footpedals/";
+    typedef mtsIntuitiveResearchKitConsole::DInputSourceType DInputSourceType;
+    const DInputSourceType::const_iterator inputsEnd = mConsole->mDInputSources.end();
+    DInputSourceType::const_iterator inputsIter;
+    for (inputsIter = mConsole->mDInputSources.begin();
+         inputsIter != inputsEnd;
+         ++inputsIter) {
+        std::string upperName = inputsIter->second.second;
+        std::string lowerName = upperName;
+        // put everything lower case
+        std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), tolower);
+        // replace +/- by strings
+        cmnStringReplaceAll(lowerName, "-", "_minus");
+        cmnStringReplaceAll(lowerName, "+", "_plus");
+        bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
+            (upperName, "Button", footPedalsNameSpace + lowerName);
     }
 
     dvrk::add_topics_console(bridge, mNameSpace + "/console", version);
@@ -121,6 +154,10 @@ void dvrk::console::Configure(const std::string & jsonFile)
 
 void dvrk::console::Connect(void)
 {
+    if (mConsole->mHasIO) {
+        dvrk::connect_bridge_io(mBridgeName, mConsole->mIOComponentName);
+    }
+
     const mtsIntuitiveResearchKitConsole::ArmList::iterator
         armEnd = mConsole->mArms.end();
     mtsIntuitiveResearchKitConsole::ArmList::iterator armIter;
@@ -131,15 +168,32 @@ void dvrk::console::Connect(void)
         switch (armIter->second->mType) {
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
-            dvrk::connect_bridge_mtm(mBridgeName, name);
+        case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
+            dvrk::connect_bridge_mtm(mBridgeName, name,
+                                     armIter->second->ComponentName(),
+                                     armIter->second->InterfaceName());
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
-            dvrk::connect_bridge_ecm(mBridgeName, name);
+            dvrk::connect_bridge_ecm(mBridgeName, name,
+                                     armIter->second->ComponentName(),
+                                     armIter->second->InterfaceName());
+            if (armIter->second->mSimulation
+                == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
+                dvrk::connect_bridge_ecm_io(mBridgeName, name,
+                                            armIter->second->IOComponentName());
+            }
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
-            dvrk::connect_bridge_psm(mBridgeName, name);
+            dvrk::connect_bridge_psm(mBridgeName, name,
+                                     armIter->second->ComponentName(),
+                                     armIter->second->InterfaceName());
+            if (armIter->second->mSimulation
+                == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
+                dvrk::connect_bridge_psm_io(mBridgeName, name,
+                                            armIter->second->IOComponentName());
+            }
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
             dvrk::connect_bridge_suj(mBridgeName, name, "PSM1");
@@ -162,8 +216,15 @@ void dvrk::console::Connect(void)
     }
 
     // connect foot pedal, all arms use same
-    if (mConsole->mHasFootpedals) {
-        dvrk::connect_bridge_footpedals(mBridgeName, mConsole->mIOComponentName);
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
+    typedef mtsIntuitiveResearchKitConsole::DInputSourceType DInputSourceType;
+    const DInputSourceType::const_iterator inputsEnd = mConsole->mDInputSources.end();
+    DInputSourceType::const_iterator inputsIter;
+    for (inputsIter = mConsole->mDInputSources.begin();
+         inputsIter != inputsEnd;
+         ++inputsIter) {
+        componentManager->Connect(mBridgeName, inputsIter->second.second,
+                                  inputsIter->second.first, inputsIter->second.second);
     }
 
     // connect console bridge

@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-05
 
-#   (C) Copyright 2016 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2016-2017 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -39,6 +39,9 @@ class console(object):
         self.__power_off_pub = rospy.Publisher(self.__console_namespace
                                                + '/power_off',
                                                Empty, latch = True, queue_size = 1)
+        self.__power_on_pub = rospy.Publisher(self.__console_namespace
+                                              + '/power_on',
+                                              Empty, latch = True, queue_size = 1)
         self.__home_pub = rospy.Publisher(self.__console_namespace
                                           + '/home',
                                           Empty, latch = True, queue_size = 1)
@@ -55,7 +58,10 @@ class console(object):
                          Float32, self.__teleop_scale_cb)
 
         # create node
-        rospy.init_node('arm_api', anonymous = True, log_level = rospy.WARN)
+        if not rospy.get_node_uri():
+            rospy.init_node('console_api', anonymous = True, log_level = rospy.WARN)
+        else:
+            rospy.logdebug(rospy.get_caller_id() + ' -> ROS already initialized')
 
 
     def __teleop_scale_cb(self, data):
@@ -67,6 +73,10 @@ class console(object):
 
     def power_off(self):
         self.__power_off_pub.publish()
+
+
+    def power_on(self):
+        self.__power_on_pub.publish()
 
 
     def home(self):
@@ -81,9 +91,9 @@ class console(object):
         self.__teleop_enable_pub.publish(False)
 
 
-    def set_teleop_scale(self, scale):
+    def teleop_set_scale(self, scale):
         self.__teleop_set_scale_pub.publish(scale)
 
 
-    def get_teleop_scale(self):
+    def teleop_get_scale(self):
         return self.__teleop_scale

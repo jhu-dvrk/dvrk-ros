@@ -55,7 +55,7 @@ Then:
 tvtime -Ld /dev/video1
 ```
 
-Once in `tvtime`, change the input to S-Video.  If you see a black
+Once in `tvtime`, change the input to S-Video by pressing `i` key.  If you see a black
 image, it's possible that you don't have enough light in front of your
 camera or endoscope.  If you happen to use a real da Vinci endoscope
 and CCUs (Camera Control Units), you can use the toggle switch
@@ -75,7 +75,7 @@ from the cables to the endoscope or the endoscope itself.
 `gscam` is a ROS node using the `gstreamer` library.  The gstreamer
 library supports a few frame grabbers including the Hauppage one.  The
 gstreamer developement library can be installed using `apt-get install
-libgstreamer0.10-dev`.
+libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev gstreamer0.10-plugins-good`.
 
 The gscam node is part of ROS Hydro but hasn't made it to ROS Indigo
 yet (as of March 2016).  If you have ROS Hydro, use `apt-get` to

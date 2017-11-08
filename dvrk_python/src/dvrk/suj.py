@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-05
 
-#   (C) Copyright 2016 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2016-2017 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -54,7 +54,11 @@ class suj(object):
                          PoseStamped, self.__position_cartesian_local_current_cb)
 
         # create node
-        rospy.init_node('arm_api', anonymous = True, log_level = rospy.WARN)
+        if not rospy.get_node_uri():
+            rospy.init_node('suj_api', anonymous = True, log_level = rospy.WARN)
+        else:
+            rospy.logdebug(rospy.get_caller_id() + ' -> ROS already initialized')
+
 
     def __position_cartesian_desired_cb(self, data):
         """Callback for the cartesian desired position.
