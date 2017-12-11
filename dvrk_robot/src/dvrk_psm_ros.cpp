@@ -145,10 +145,10 @@ int main(int argc, char** argv)
     }
     // add component and connect
     componentManager->AddComponent(&robotBridge);
-    dvrk::connect_bridge_psm(robotBridge, psm->GetName(),
+    dvrk::connect_bridge_psm(robotBridge.GetName(), psm->GetName(),
                              psm->GetName(), "Robot");
     if (options.IsSet("io-ros")) {
-        dvrk::connect_bridge_io(robotBridge, io->GetName(), psm->GetName());
+        dvrk::connect_bridge_io(robotBridge.GetName(), io->GetName(), psm->GetName());
     }
 
     // organize all widgets in a tab widget

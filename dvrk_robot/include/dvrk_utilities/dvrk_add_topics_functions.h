@@ -34,8 +34,6 @@ namespace dvrk {
 
     /*! This method connects all the required interfaces for the
       console, it must be used after add_topics_console. */
-    void connect_bridge_console(mtsROSBridge & bridge,
-                                const std::string & console_component_name);
     void connect_bridge_console(const std::string & bridge_name,
                                 const std::string & console_component_name);
 
@@ -52,8 +50,6 @@ namespace dvrk {
 
     /*! This method connects all the required interfaces for the foot
       pedals, it must be used after add_topics_footpedals. */
-    void connect_bridge_footpedals(mtsROSBridge & bridge,
-                                   const std::string & io_component_name);
     void connect_bridge_footpedals(const std::string & bridge_name,
                                    const std::string & io_component_name);
 
@@ -81,10 +77,6 @@ namespace dvrk {
 
     /*! This method connects all the required interfaces for an MTM
       arm, it must be used after add_topics_mtm. */
-    void connect_bridge_mtm(mtsROSBridge & bridge,
-                            const std::string & arm_name,
-                            const std::string & mtm_component_name,
-                            const std::string & mtm_interface_name);
     void connect_bridge_mtm(const std::string & bridge_name,
                             const std::string & arm_name,
                             const std::string & mtm_component_name,
@@ -99,10 +91,6 @@ namespace dvrk {
 
     /*! This method connects all the required interfaces for a PSM
       arm, it must be used after add_topics_psm. */
-    void connect_bridge_psm(mtsROSBridge & bridge,
-                            const std::string & arm_name,
-                            const std::string & psm_component_name,
-                            const std::string & psm_interface_name);
     void connect_bridge_psm(const std::string & bridge_name,
                             const std::string & arm_name,
                             const std::string & psm_component_name,
@@ -116,9 +104,6 @@ namespace dvrk {
 
     /*! This method connects all the required interfaces for the PSM's
         IOs, it must be used after add_topics_psm_io. */
-    void connect_bridge_psm_io(mtsROSBridge & bridge,
-                               const std::string & arm_name,
-                               const std::string & io_component_name);
     void connect_bridge_psm_io(const std::string & bridge_name,
                                const std::string & arm_name,
                                const std::string & io_component_name);
@@ -132,10 +117,6 @@ namespace dvrk {
 
     /*! This method connects all the required interfaces for an ECM
       arm, it must be used after add_topics_ecm. */
-    void connect_bridge_ecm(mtsROSBridge & bridge,
-                            const std::string & arm_name,
-                            const std::string & ecm_component_name,
-                            const std::string & ecm_interface_name);
     void connect_bridge_ecm(const std::string & bridge_name,
                             const std::string & arm_name,
                             const std::string & ecm_component_name,
@@ -149,9 +130,6 @@ namespace dvrk {
 
     /*! This method connects all the required interfaces for the ECM's
         IOs, it must be used after add_topics_ecm_io. */
-    void connect_bridge_ecm_io(mtsROSBridge & bridge,
-                               const std::string & arm_name,
-                               const std::string & io_component_name);
     void connect_bridge_ecm_io(const std::string & bridge_name,
                                const std::string & arm_name,
                                const std::string & io_component_name);
@@ -164,8 +142,6 @@ namespace dvrk {
 
     /*! This method connects all the required interfaces for a teleop
       component, it must be used after add_topics_teleop. */
-    void connect_bridge_teleop(mtsROSBridge & bridge,
-                               const std::string & teleop_component_name);
     void connect_bridge_teleop(const std::string & bridge_name,
                                const std::string & teleop_component_name);
 
@@ -177,9 +153,6 @@ namespace dvrk {
 
     /*! This method connects all the required interfaces for a SUJ
         component, it must be used after add_topics_suj. */
-    void connect_bridge_suj(mtsROSBridge & bridge,
-                            const std::string & suj_component_name,
-                            const std::string & arm_name);
     void connect_bridge_suj(const std::string & bridge_name,
                             const std::string & suj_component_name,
                             const std::string & arm_name);
@@ -192,8 +165,6 @@ namespace dvrk {
 
     /*! This method connects all the required interfaces for IOs, it
       must be used after add_topics_io. */
-    void connect_bridge_io(mtsROSBridge & bridge,
-                           const std::string & io_component_name);
     void connect_bridge_io(const std::string & bridge_name,
                            const std::string & io_component_name);
 
@@ -210,9 +181,6 @@ namespace dvrk {
 
     /*! This method connects all the required interfaces for an arm
       IOs, it must be used after add_topics_io. */
-    void connect_bridge_io(mtsROSBridge & bridge,
-                           const std::string & io_component_name,
-                           const std::string & arm_name);
     void connect_bridge_io(const std::string & bridge_name,
                            const std::string & io_component_name,
                            const std::string & arm_name);

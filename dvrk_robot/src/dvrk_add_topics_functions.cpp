@@ -43,12 +43,6 @@ void dvrk::add_topics_console(mtsROSBridge & bridge,
          ros_namespace + "/teleop/scale");
 }
 
-void dvrk::connect_bridge_console(mtsROSBridge & bridge,
-                                  const std::string & console_component_name)
-{
-    dvrk::connect_bridge_console(bridge.GetName(), console_component_name);
-}
-
 void dvrk::connect_bridge_console(const std::string & bridge_name,
                                   const std::string & console_component_name)
 {
@@ -56,8 +50,6 @@ void dvrk::connect_bridge_console(const std::string & bridge_name,
     componentManager->Connect(bridge_name, "Console",
                               console_component_name, "Main");
 }
-
-
 
 void dvrk::add_topics_footpedals(mtsROSBridge & bridge,
                                  const std::string & ros_namespace,
@@ -89,12 +81,6 @@ void dvrk::add_topics_footpedals(mtsROSBridge & bridge,
             ("Cam-", "Button", ros_namespace + "/camera_minus");
         break;
     }
-}
-
-void dvrk::connect_bridge_footpedals(mtsROSBridge & bridge,
-                                     const std::string & io_component_name)
-{
-    dvrk::connect_bridge_footpedals(bridge.GetName(), io_component_name);
 }
 
 void dvrk::connect_bridge_footpedals(const std::string & bridge_name,
@@ -325,15 +311,6 @@ void dvrk::add_topics_mtm_generic(mtsROSBridge & bridge,
                                 mtsROSEventWriteLog::ROS_LOG_INFO);
 }
 
-void dvrk::connect_bridge_mtm(mtsROSBridge & bridge,
-                              const std::string & arm_name,
-                              const std::string & mtm_component_name,
-                              const std::string & mtm_interface_name)
-{
-    dvrk::connect_bridge_mtm(bridge.GetName(), arm_name,
-                             mtm_component_name, mtm_interface_name);
-}
-
 void dvrk::connect_bridge_mtm(const std::string & bridge_name,
                               const std::string & arm_name,
                               const std::string & mtm_component_name,
@@ -378,15 +355,6 @@ void dvrk::add_topics_psm(mtsROSBridge & bridge,
         (psm_component_name, "ManipClutch", ros_namespace + "/manip_clutch");
 }
 
-void dvrk::connect_bridge_psm(mtsROSBridge & bridge,
-                              const std::string & arm_name,
-                              const std::string & psm_component_name,
-                              const std::string & psm_interface_name)
-{
-    dvrk::connect_bridge_psm(bridge.GetName(), arm_name,
-                             psm_component_name, psm_interface_name);
-}
-
 void dvrk::connect_bridge_psm(const std::string & bridge_name,
                               const std::string & arm_name,
                               const std::string & psm_component_name,
@@ -412,14 +380,6 @@ void dvrk::add_topics_psm_io(mtsROSBridge & bridge,
         (arm_name + "-Adapter", "Button", ros_namespace + "/io/adapter");
     bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
         (arm_name + "-Tool", "Button", ros_namespace + "/io/tool");
-}
-
-void dvrk::connect_bridge_psm_io(mtsROSBridge & bridge,
-                                 const std::string & arm_name,
-                                 const std::string & io_component_name)
-{
-    dvrk::connect_bridge_psm_io(bridge.GetName(), arm_name,
-                                io_component_name);
 }
 
 void dvrk::connect_bridge_psm_io(const std::string & bridge_name,
@@ -466,15 +426,6 @@ void dvrk::add_topics_ecm(mtsROSBridge & bridge,
     }
 }
 
-void dvrk::connect_bridge_ecm(mtsROSBridge & bridge,
-                              const std::string & arm_name,
-                              const std::string & ecm_component_name,
-                              const std::string & ecm_interface_name)
-{
-    dvrk::connect_bridge_ecm(bridge.GetName(), arm_name,
-                             ecm_component_name, ecm_interface_name);
-}
-
 void dvrk::connect_bridge_ecm(const std::string & bridge_name,
                               const std::string & arm_name,
                               const std::string & ecm_component_name,
@@ -496,14 +447,6 @@ void dvrk::add_topics_ecm_io(mtsROSBridge & bridge,
         (arm_name + "-ManipClutch", "Button", ros_namespace + "/io/manip_clutch");
     bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
         (arm_name + "-SUJClutch", "Button", ros_namespace + "/io/suj_clutch");
-}
-
-void dvrk::connect_bridge_ecm_io(mtsROSBridge & bridge,
-                                 const std::string & arm_name,
-                                 const std::string & io_component_name)
-{
-    dvrk::connect_bridge_ecm_io(bridge.GetName(), arm_name,
-                                io_component_name);
 }
 
 void dvrk::connect_bridge_ecm_io(const std::string & bridge_name,
@@ -577,12 +520,6 @@ void dvrk::add_topics_teleop(mtsROSBridge & bridge,
          ros_namespace + "/set_registration_rotation");
 }
 
-void dvrk::connect_bridge_teleop(mtsROSBridge & bridge,
-                                 const std::string & teleop_component_name)
-{
-    dvrk::connect_bridge_teleop(bridge.GetName(), teleop_component_name);
-}
-
 void dvrk::connect_bridge_teleop(const std::string & bridge_name,
                                  const std::string & teleop_component_name)
 {
@@ -642,13 +579,6 @@ void dvrk::add_topics_suj(mtsROSBridge & bridge,
                                 mtsROSEventWriteLog::ROS_LOG_INFO);
 }
 
-void dvrk::connect_bridge_suj(mtsROSBridge & bridge,
-                              const std::string & suj_component_name,
-                              const std::string & arm_name)
-{
-    dvrk::connect_bridge_suj(bridge.GetName(), suj_component_name, arm_name);
-}
-
 void dvrk::connect_bridge_suj(const std::string & bridge_name,
                               const std::string & suj_component_name,
                               const std::string & arm_name)
@@ -667,12 +597,6 @@ void dvrk::add_topics_io(mtsROSBridge & bridge,
     bridge.AddPublisherFromCommandRead<mtsIntervalStatistics, cisst_msgs::mtsIntervalStatistics>
         ("io", "GetPeriodStatistics",
          ros_namespace + "/period_statistics");
-}
-
-void dvrk::connect_bridge_io(mtsROSBridge & bridge,
-                             const std::string & io_component_name)
-{
-    dvrk::connect_bridge_io(bridge.GetName(), io_component_name);
 }
 
 void dvrk::connect_bridge_io(const std::string & bridge_name,
@@ -697,13 +621,6 @@ void dvrk::add_topics_io(mtsROSBridge & bridge,
     bridge.AddPublisherFromCommandRead<prmPositionJointGet, sensor_msgs::JointState>
         (arm_name + "-io", "GetPositionActuator",
          ros_namespace + "/actuator_position");
-}
-
-void dvrk::connect_bridge_io(mtsROSBridge & bridge,
-                             const std::string & io_component_name,
-                             const std::string & arm_name)
-{
-    dvrk::connect_bridge_io(bridge.GetName(), io_component_name, arm_name);
 }
 
 void dvrk::connect_bridge_io(const std::string & bridge_name,

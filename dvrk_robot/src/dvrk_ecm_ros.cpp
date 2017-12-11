@@ -211,7 +211,7 @@ int main(int argc, char ** argv)
 
     // Connect
     componentManager->AddComponent(&robotBridge);
-    dvrk::connect_bridge_ecm(robotBridge, arm->Name(),
+    dvrk::connect_bridge_ecm(robotBridge.GetName(), arm->Name(),
                              arm->ComponentName(), arm->InterfaceName());
 
     //-------------- create the components ------------------

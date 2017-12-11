@@ -368,7 +368,7 @@ int main(int argc, char ** argv)
     componentManager->Connect(rosBridge.GetName(), "MTMR", "MTMR", "Robot");
     componentManager->Connect(rosBridge.GetName(), "PSM1", "PSM1", "Robot");
     componentManager->Connect(rosBridge.GetName(), "PSM2", "PSM2", "Robot");
-    dvrk::connect_bridge_footpedals(rosBridge, "io");
+    dvrk::connect_bridge_footpedals(rosBridge.GetName(), "io");
 
     ///////////////////////////////////////////////////////////////////
 
