@@ -184,6 +184,21 @@ namespace dvrk {
     void connect_bridge_io(const std::string & bridge_name,
                            const std::string & io_component_name,
                            const std::string & arm_name);
+
+    void add_tf_arm(mtsROSBridge & tf_bridge,
+                    const std::string & arm_name);
+    
+    void connect_tf_arm(const std::string & tf_bridge_name,
+                        const std::string & arm_name,
+                        const std::string & arm_component_name,
+                        const std::string & arm_interface_name);
+
+    void add_tf_suj(mtsROSBridge & tf_bridge,
+                    const std::string & arm_name);
+    
+    void connect_tf_suj(const std::string & tf_bridge_name,
+                        const std::string & suj_component_name,
+                        const std::string & arm_name);
 }
 
 #endif // _dvrk_add_topics_functions_h

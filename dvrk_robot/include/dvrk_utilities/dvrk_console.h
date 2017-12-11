@@ -27,7 +27,8 @@ namespace dvrk {
     class console
     {
     public:
-        console(mtsROSBridge & bridge,
+        console(mtsROSBridge * bridge,
+                mtsROSBridge * tf_bridge,
                 const std::string & ros_namespace,
                 mtsIntuitiveResearchKitConsole * mts_console,
                 const dvrk_topics_version::version version);
@@ -35,6 +36,7 @@ namespace dvrk {
         void Connect(void);
     protected:
         std::string mBridgeName;
+        std::string mTfBridgeName;
         std::string mNameSpace;
         mtsIntuitiveResearchKitConsole * mConsole;
         dvrk_topics_version::version mVersion;

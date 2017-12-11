@@ -631,3 +631,34 @@ void dvrk::connect_bridge_io(const std::string & bridge_name,
     componentManager->Connect(bridge_name, arm_name + "-io",
                               io_component_name, arm_name);
 }
+
+void dvrk::add_tf_arm(mtsROSBridge & tf_bridge,
+                      const std::string & arm_name)
+{
+    tf_bridge.Addtf2BroadcasterFromCommandRead(arm_name, "GetPositionCartesian");
+}
+
+void dvrk::connect_tf_arm(const std::string & tf_bridge_name,
+                          const std::string & arm_name,
+                          const std::string & arm_component_name,
+                          const std::string & arm_interface_name)
+{
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
+    componentManager->Connect(tf_bridge_name, arm_name,
+                              arm_component_name, arm_interface_name);
+}
+
+void dvrk::add_tf_suj(mtsROSBridge & tf_bridge,
+                      const std::string & arm_name)
+{
+    tf_bridge.Addtf2BroadcasterFromCommandRead(arm_name + "-suj", "GetPositionCartesian");
+}
+
+void dvrk::connect_tf_suj(const std::string & tf_bridge_name,
+                          const std::string & suj_component_name,
+                          const std::string & arm_name)
+{
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
+    componentManager->Connect(tf_bridge_name, arm_name + "-suj",
+                              suj_component_name, arm_name);
+}

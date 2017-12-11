@@ -14,7 +14,6 @@ no warranty.  The complete license can be found in license.txt and
 http://www.cisst.org/cisst/license.txt.
 
 --- end cisst license ---
-
 */
 
 // system
@@ -72,6 +71,7 @@ int main(int argc, char ** argv)
     std::string jsonMainConfigFile;
     std::string rosNamespace = "/dvrk";
     double rosPeriod = 10.0 * cmn_ms;
+    double tfPeriod = 10.0 * cmn_ms;    
     std::list<std::string> jsonIOConfigFiles;
     std::string versionString = "v1_4_0";
 
@@ -79,13 +79,17 @@ int main(int argc, char ** argv)
                               "json configuration file",
                               cmnCommandLineOptions::REQUIRED_OPTION, &jsonMainConfigFile);
 
+    options.AddOptionOneValue("n", "ros-namespace",
+                              "ROS namespace to prefix all topics, must have start and end \"/\" (default /dvrk/)",
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &rosNamespace);
+
     options.AddOptionOneValue("p", "ros-period",
                               "period in seconds to read all arms/teleop components and publish (default 0.01, 10 ms, 100Hz).  There is no point to have a period higher than the arm component's period",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &rosPeriod);
 
-    options.AddOptionOneValue("n", "ros-namespace",
-                              "ROS namespace to prefix all topics, must have start and end \"/\" (default /dvrk/)",
-                              cmnCommandLineOptions::OPTIONAL_OPTION, &rosNamespace);
+    options.AddOptionOneValue("P", "tf-ros-period",
+                              "period in seconds to read all components and broadcast tf2 (default 0.01, 10 ms, 100Hz).  There is no point to have a period higher than the arm component's period",
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &tfPeriod);
 
     options.AddOptionMultipleValues("i", "ros-io-config",
                                     "json config file to configure ROS bridges to collect low level data (IO)",
@@ -152,8 +156,10 @@ int main(int argc, char ** argv)
     std::replace(bridgeName.begin(), bridgeName.end(), '/', '_');
     std::replace(bridgeName.begin(), bridgeName.end(), '-', '_');
     std::replace(bridgeName.begin(), bridgeName.end(), '.', '_');
-    mtsROSBridge rosBridge(bridgeName, rosPeriod, true);
-    dvrk::console * consoleROS = new dvrk::console(rosBridge, rosNamespace,
+    mtsROSBridge * rosBridge = new mtsROSBridge(bridgeName, rosPeriod, true);
+    mtsROSBridge * tfBridge = new mtsROSBridge(bridgeName + "_tf2", tfPeriod, true);
+    
+    dvrk::console * consoleROS = new dvrk::console(rosBridge, tfBridge, rosNamespace,
                                                    console, versionEnum);
     // IOs
     const std::list<std::string>::const_iterator end = jsonIOConfigFiles.end();
@@ -164,7 +170,8 @@ int main(int argc, char ** argv)
         fileExists("ROS IO JSON configuration file", *iter);
         consoleROS->Configure(*iter);
     }
-    componentManager->AddComponent(&rosBridge);
+    componentManager->AddComponent(rosBridge);
+    componentManager->AddComponent(tfBridge);
     consoleROS->Connect();
 
     //-------------- create the components ------------------
