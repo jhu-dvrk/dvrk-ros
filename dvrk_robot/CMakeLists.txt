@@ -30,6 +30,7 @@ find_package (catkin REQUIRED
 set (REQUIRED_CISST_LIBRARIES
      cisstCommon
      cisstCommonXML
+     cisstCommonQt
      cisstVector
      cisstVectorQt
      cisstOSAbstraction
