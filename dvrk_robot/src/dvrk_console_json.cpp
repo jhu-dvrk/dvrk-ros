@@ -24,6 +24,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstCommon/cmnPath.h>
 #include <cisstCommon/cmnCommandLineOptions.h>
 #include <cisstCommon/cmnGetChar.h>
+#include <cisstCommon/cmnQt.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsoleQt.h>
 
@@ -145,6 +146,7 @@ int main(int argc, char ** argv)
         QLocale::setDefault(QLocale::English);
         application = new QApplication(argc, argv);
         application->setWindowIcon(QIcon(":/dVRK.png"));
+        cmnQt::QApplicationExitsOnCtrlC();
         consoleQt = new mtsIntuitiveResearchKitConsoleQt();
         consoleQt->Configure(console);
         consoleQt->Connect();
@@ -156,8 +158,8 @@ int main(int argc, char ** argv)
     std::replace(bridgeName.begin(), bridgeName.end(), '/', '_');
     std::replace(bridgeName.begin(), bridgeName.end(), '-', '_');
     std::replace(bridgeName.begin(), bridgeName.end(), '.', '_');
-    mtsROSBridge * rosBridge = new mtsROSBridge(bridgeName, rosPeriod, true);
-    mtsROSBridge * tfBridge = new mtsROSBridge(bridgeName + "_tf2", tfPeriod, true);
+    mtsROSBridge * rosBridge = new mtsROSBridge(bridgeName, rosPeriod, true, false); // spin, don't catch sigint
+    mtsROSBridge * tfBridge = new mtsROSBridge(bridgeName + "_tf2", tfPeriod, true, false);
     
     dvrk::console * consoleROS = new dvrk::console(rosBridge, tfBridge, rosNamespace,
                                                    console, versionEnum);
