@@ -72,7 +72,7 @@ int main(int argc, char ** argv)
     std::string jsonMainConfigFile;
     std::string rosNamespace = "/dvrk";
     double rosPeriod = 10.0 * cmn_ms;
-    double tfPeriod = 10.0 * cmn_ms;    
+    double tfPeriod = 20.0 * cmn_ms;    
     std::list<std::string> jsonIOConfigFiles;
     std::string versionString = "v1_4_0";
 
@@ -89,7 +89,7 @@ int main(int argc, char ** argv)
                               cmnCommandLineOptions::OPTIONAL_OPTION, &rosPeriod);
 
     options.AddOptionOneValue("P", "tf-ros-period",
-                              "period in seconds to read all components and broadcast tf2 (default 0.01, 10 ms, 100Hz).  There is no point to have a period higher than the arm component's period",
+                              "period in seconds to read all components and broadcast tf2 (default 0.02, 20 ms, 50Hz).  There is no point to have a period higher than the arm component's period",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &tfPeriod);
 
     options.AddOptionMultipleValues("i", "ros-io-config",
