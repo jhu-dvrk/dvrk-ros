@@ -933,7 +933,7 @@ class arm(object):
         self.__set_gravity_compensation_pub.publish(g)
 
 # Unregister all publishers and subscribers for this instance
-    def disconnect(self, verbose=False):
+    def unregister(self, verbose=False):
         for sub in self.__sub_list:
             sub.unregister()
         if verbose:
