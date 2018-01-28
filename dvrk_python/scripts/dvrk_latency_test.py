@@ -94,7 +94,7 @@ class DvrkLatencyTest(Stats):
             raise ValueError('num_arms cannot be negative or greater than {}'.format(max_num))
 
 
-def main():
+def test_load():
     lat_test = DvrkLatencyTest()
     for i in range(1, lat_test.maxArms + 1):
         n_arms = i % (lat_test.maxArms+1)
@@ -102,9 +102,8 @@ def main():
         time.sleep(3)
         lat_test.relieve_arm_load(delay=0.5)
         time.sleep(2)
-        lat_test.disconnect()
         time.sleep(1)
-
+    lat_test.disconnect()
 
 if __name__ == '__main__':
-    main()
+    test_load()
