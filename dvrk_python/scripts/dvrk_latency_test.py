@@ -12,7 +12,8 @@ class Stats(object):
     def __init__(self):
         rospy.init_node('dvrk_load_test')
         self._rate = rospy.Rate(1000)
-        self._userDataScale = 10
+        self._userDataScale = 1
+        self._userData = 0
         self._active = True
 
         self._stat_msg = StatsMsg
@@ -27,11 +28,11 @@ class Stats(object):
         self._pubThread.start()
 
     def set_user_data(self, n_arms):
-        self._stat_msg.UserData = n_arms * self._userDataScale
+        self._userData = n_arms * self._userDataScale
         pass
 
     def clear_user_data(self):
-        self._stat_msg.UserData = 0
+        self._userData = 0
         pass
 
     def disconnect(self):
@@ -39,6 +40,7 @@ class Stats(object):
 
     def _ros_cb(self, data):
         self._stat_msg = data
+        self._stat_msg.UserData = self._userData
         pass
 
     def _run_pub(self):
