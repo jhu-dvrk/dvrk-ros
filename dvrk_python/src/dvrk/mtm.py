@@ -32,9 +32,11 @@ class mtm(arm):
                                                         + '/unlock_orientation',
                                                         Empty, latch=True, queue_size = 1)
 
+        self._arm__pub_list.extend([self.__lock_orientation_pub,
+                               self.__unlock_orientation_pub])
         # subscribers
-        rospy.Subscriber(self._arm__full_ros_namespace + '/state_gripper_current',
-                         JointState, self.__state_gripper_current_cb)
+        self._arm__sub_list.extend([rospy.Subscriber(self._arm__full_ros_namespace + '/state_gripper_current',
+                         JointState, self.__state_gripper_current_cb)])
 
 
     def __state_gripper_current_cb(self, data):

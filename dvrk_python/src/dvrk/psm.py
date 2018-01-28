@@ -38,11 +38,16 @@ class psm(arm):
         self.__set_tool_present_pub = rospy.Publisher(self._arm__full_ros_namespace
                                                       + '/set_tool_present',
                                                       Bool, latch = True, queue_size = 1)
+
+        self._arm__pub_list.extend([self.__set_position_jaw_pub,
+                               self.__set_position_goal_jaw_pub,
+                               self.__set_tool_present_pub])
         # subscribers
+        self._arm__sub_list.extend([
         rospy.Subscriber(self._arm__full_ros_namespace + '/state_jaw_desired',
-                         JointState, self.__state_jaw_desired_cb)
+                         JointState, self.__state_jaw_desired_cb),
         rospy.Subscriber(self._arm__full_ros_namespace + '/state_jaw_current',
-                         JointState, self.__state_jaw_current_cb)
+                         JointState, self.__state_jaw_current_cb)])
 
 
     def __state_jaw_desired_cb(self, data):

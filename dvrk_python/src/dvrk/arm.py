@@ -148,8 +148,8 @@ class arm(object):
         self.__jacobian_spatial = numpy.ndarray(0, dtype = numpy.float)
         self.__jacobian_body = numpy.ndarray(0, dtype = numpy.float)
 
-        self.sub_list = []
-        self.pub_list = []
+        self.__sub_list = []
+        self.__pub_list = []
 
         # publishers
         frame = PyKDL.Frame()
@@ -184,43 +184,43 @@ class arm(object):
         self.__set_gravity_compensation_pub = rospy.Publisher(self.__full_ros_namespace
                                                               + '/set_gravity_compensation',
                                                               Bool, latch = True, queue_size = 1)
-        self.pub_list = (self.__set_arm_desired_state_pub,
-                         self.__set_position_joint_pub,
-                         self.__set_position_goal_joint_pub,
-                         self.__set_position_cartesian_pub,
-                         self.__set_position_goal_cartesian_pub,
-                         self.__set_effort_joint_pub,
-                         self.__set_wrench_body_pub,
-                         self.__set_wrench_body_orientation_absolute_pub,
-                         self.__set_wrench_spatial_pub,
-                         self.__set_gravity_compensation_pub)
+        self.__pub_list = [self.__set_arm_desired_state_pub,
+                           self.__set_position_joint_pub,
+                           self.__set_position_goal_joint_pub,
+                           self.__set_position_cartesian_pub,
+                           self.__set_position_goal_cartesian_pub,
+                           self.__set_effort_joint_pub,
+                           self.__set_wrench_body_pub,
+                           self.__set_wrench_body_orientation_absolute_pub,
+                           self.__set_wrench_spatial_pub,
+                           self.__set_gravity_compensation_pub]
         # subscribers
-        self.sub_list = (rospy.Subscriber(self.__full_ros_namespace + '/current_state',
-                                          String, self.__arm_current_state_cb),
-                         rospy.Subscriber(self.__full_ros_namespace + '/desired_state',
+        self.__sub_list = [rospy.Subscriber(self.__full_ros_namespace + '/current_state',
+                                            String, self.__arm_current_state_cb),
+                           rospy.Subscriber(self.__full_ros_namespace + '/desired_state',
                                           String, self.__arm_desired_state_cb),
-                         rospy.Subscriber(self.__full_ros_namespace + '/goal_reached',
+                           rospy.Subscriber(self.__full_ros_namespace + '/goal_reached',
                                           Bool, self.__goal_reached_cb),
-                         rospy.Subscriber(self.__full_ros_namespace + '/state_joint_desired',
+                           rospy.Subscriber(self.__full_ros_namespace + '/state_joint_desired',
                                           JointState, self.__state_joint_desired_cb),
-                         rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_desired',
+                           rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_desired',
                                           PoseStamped, self.__position_cartesian_desired_cb),
-                         rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_local_desired',
+                           rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_local_desired',
                                           PoseStamped, self.__position_cartesian_local_desired_cb),
-                         rospy.Subscriber(self.__full_ros_namespace + '/state_joint_current',
+                           rospy.Subscriber(self.__full_ros_namespace + '/state_joint_current',
                                           JointState, self.__state_joint_current_cb),
-                         rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_current',
+                           rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_current',
                                           PoseStamped, self.__position_cartesian_current_cb),
-                         rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_local_current',
+                           rospy.Subscriber(self.__full_ros_namespace + '/position_cartesian_local_current',
                                           PoseStamped, self.__position_cartesian_local_current_cb),
-                         rospy.Subscriber(self.__full_ros_namespace + '/twist_body_current',
+                           rospy.Subscriber(self.__full_ros_namespace + '/twist_body_current',
                                           TwistStamped, self.__twist_body_current_cb),
-                         rospy.Subscriber(self.__full_ros_namespace + '/wrench_body_current',
+                           rospy.Subscriber(self.__full_ros_namespace + '/wrench_body_current',
                                           WrenchStamped, self.__wrench_body_current_cb),
-                         rospy.Subscriber(self.__full_ros_namespace + '/jacobian_spatial',
+                           rospy.Subscriber(self.__full_ros_namespace + '/jacobian_spatial',
                                           Float64MultiArray, self.__jacobian_spatial_cb),
-                         rospy.Subscriber(self.__full_ros_namespace + '/jacobian_body',
-                                          Float64MultiArray, self.__jacobian_body_cb))
+                           rospy.Subscriber(self.__full_ros_namespace + '/jacobian_body',
+                                          Float64MultiArray, self.__jacobian_body_cb)]
 
         # create node
         if not rospy.get_node_uri():
@@ -934,12 +934,12 @@ class arm(object):
 
 # Unregister all publishers and subscribers for this instance
     def disconnect(self, verbose=False):
-        for sub in self.sub_list:
+        for sub in self.__sub_list:
             sub.unregister()
         if verbose:
-            print 'Unregistered {} subs for {}'.format(self.sub_list.__len__(), self.__arm_name)
+            print 'Unregistered {} subs for {}'.format(self.__sub_list.__len__(), self.__arm_name)
 
-        for pub in self.pub_list:
+        for pub in self.__pub_list:
             pub.unregister()
         if verbose:
-            print 'Unregistered {} pubs for {}'.format(self.pub_list.__len__(), self.__arm_name)
+            print 'Unregistered {} pubs for {}'.format(self.__pub_list.__len__(), self.__arm_name)
