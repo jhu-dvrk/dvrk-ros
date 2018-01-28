@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2016 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2018 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -158,9 +158,17 @@ int main(int argc, char ** argv)
     std::replace(bridgeName.begin(), bridgeName.end(), '/', '_');
     std::replace(bridgeName.begin(), bridgeName.end(), '-', '_');
     std::replace(bridgeName.begin(), bridgeName.end(), '.', '_');
+#if 0 // old implementation
     mtsROSBridge * rosBridge = new mtsROSBridge(bridgeName, rosPeriod, true, false); // spin, don't catch sigint
     mtsROSBridge * tfBridge = new mtsROSBridge(bridgeName + "_tf2", tfPeriod, true, false);
-    
+#else // testing with a single and separate bridge to do ros spin at high rate
+    mtsROSBridge * rosBridge = new mtsROSBridge(bridgeName, rosPeriod, false, false); // spin, don't catch sigint
+    mtsROSBridge * tfBridge = new mtsROSBridge(bridgeName + "_tf2", tfPeriod, false, false);
+
+    // separate thread to spin
+    mtsROSBridge * spinBridge = new mtsROSBridge(bridgeName + "_spin", 0.1 * cmn_ms, true, false);
+    componentManager->AddComponent(spinBridge);
+#endif
     dvrk::console * consoleROS = new dvrk::console(rosBridge, tfBridge, rosNamespace,
                                                    console, versionEnum);
     // IOs
@@ -174,6 +182,8 @@ int main(int argc, char ** argv)
     }
     componentManager->AddComponent(rosBridge);
     componentManager->AddComponent(tfBridge);
+    rosBridge->PublishIntervalStatistics(rosNamespace + "/rosBridge");
+    tfBridge->PublishIntervalStatistics(rosNamespace + "/tfBridge");
     consoleROS->Connect();
 
     //-------------- create the components ------------------
