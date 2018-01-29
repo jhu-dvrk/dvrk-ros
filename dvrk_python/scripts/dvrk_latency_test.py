@@ -6,6 +6,7 @@ import rospy
 import time
 from threading import Thread
 from cisst_msgs.msg import mtsIntervalStatistics as StatsMsg
+import sys
 
 
 class Stats(object):
@@ -96,16 +97,27 @@ class DvrkLatencyTest(Stats):
             raise ValueError('num_arms cannot be negative or greater than {}'.format(max_num))
 
 
-def test_load():
+def test_load(dt = 0.5):
     lat_test = DvrkLatencyTest()
     for i in range(1, lat_test.maxArms + 1):
         n_arms = i % (lat_test.maxArms+1)
-        lat_test.create_arm_load(n_arms, delay=0.5)
+        lat_test.create_arm_load(n_arms, delay=dt)
         time.sleep(3)
-        lat_test.relieve_arm_load(delay=0.5)
-        time.sleep(2)
-        time.sleep(1)
+        lat_test.relieve_arm_load(delay=dt)
+        time.sleep(3)
     lat_test.disconnect()
 
+
 if __name__ == '__main__':
-    test_load()
+    args = sys.argv
+    if args.__len__() > 1:
+        dt_str = args[1]
+        try:
+            float(dt_str)
+        except ValueError:
+            raise ValueError('Expecting a number, got string {}'.format(dt_str))
+        dt = float(dt_str)
+        print dt
+        if not 0 <= dt <= 10:
+            raise ValueError('Delay between loading arms should be between {} : {}'.format(0.0, 10.0))
+        test_load(dt)
