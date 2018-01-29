@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Author: Adnan Munawar
 # Testing Robot IO Loading with varying ROS Communication Load
 
@@ -7,24 +9,70 @@ import time
 from threading import Thread
 from cisst_msgs.msg import mtsIntervalStatistics as StatsMsg
 import sys
+import rosbag
+import datetime
+import os
 
 
 class Stats(object):
     def __init__(self):
-        rospy.init_node('dvrk_load_test')
-        self._rate = rospy.Rate(1000)
+        rospy.init_node('dvrk_roscomm_load_test')
+        self._rate = rospy.Rate(100)
         self._userDataScale = 1
         self._userData = 0
         self._active = True
+        self._dir_name = 'bag'
+        if not os.path.exists(self._dir_name):
+            os.mkdir(self._dir_name)
+        self._bag_name = self._dir_name + '/latency_test:' + datetime.datetime.now().strftime("(%Y-%m-%d)(%H:%M:%S)") + '.bag'
+        self._bag = rosbag.Bag(self._bag_name, 'w')
 
-        self._stat_msg = StatsMsg
-        self._statsTopicPubStr = '/dvrk/rosBridge/period_statistics/user'
-        self._statsTopicSubStr = '/dvrk/rosBridge/period_statistics'
+        self._pub_stat_msg = StatsMsg()
+        self._io_stat_msg  = StatsMsg()
+        self._tf_stat_msg  = StatsMsg()
+        self._spin_stat_msg = StatsMsg()
 
-        self._pub = rospy.Publisher(self._statsTopicPubStr, StatsMsg, queue_size=10)
-        self._sub = rospy.Subscriber(self._statsTopicSubStr, StatsMsg, self._ros_cb, queue_size=10, tcp_nodelay=True)
+        _name_space       = '/dvrk/'
+        _cisst_msg_suffix = '/period_statistics'
+        _user_msg_suffix  = '/eval'
+        _msg_name_dict    = {'pub' : 'pubBridge',
+                             'io'  : 'io'       ,
+                             'tf'  : 'tfBridge' ,
+                             'spin': 'spinBridge'}
 
-        self._pubThread = Thread(target=self._run_pub)
+        self._pubBridgeStatsTopicPubStr  = _name_space + _msg_name_dict['pub']  + _user_msg_suffix
+        self._ioBridgeStatsTopicPubStr   = _name_space + _msg_name_dict['io']   + _user_msg_suffix
+        self._tfBridgeStatsTopicPubStr   = _name_space + _msg_name_dict['tf']   + _user_msg_suffix
+        self._spinBridgeStatsTopicPubStr = _name_space + _msg_name_dict['spin'] + _user_msg_suffix
+
+        self._pubBridgeStatsTopicSubStr  = _name_space + _msg_name_dict['pub']  + _cisst_msg_suffix
+        self._ioBridgeStatsTopicSubStr   = _name_space + _msg_name_dict['io']   + _cisst_msg_suffix
+        self._tfBridgeStatsTopicSubStr   = _name_space + _msg_name_dict['tf']   + _cisst_msg_suffix
+        self._spinBridgeStatsTopicSubStr = _name_space + _msg_name_dict['spin'] + _cisst_msg_suffix
+
+        self._pubBpub  = rospy.Publisher(self._pubBridgeStatsTopicPubStr, StatsMsg,  queue_size=10)
+        self._ioBpub   = rospy.Publisher(self._ioBridgeStatsTopicPubStr, StatsMsg,   queue_size=10)
+        self._tfBpub   = rospy.Publisher(self._tfBridgeStatsTopicPubStr, StatsMsg,   queue_size=10)
+        self._spinBpub = rospy.Publisher(self._spinBridgeStatsTopicPubStr, StatsMsg, queue_size=10)
+
+        self._pub_dict = {self._pub_stat_msg  : self._pubBpub,
+                          self._io_stat_msg   : self._ioBpub ,
+                          self._tf_stat_msg   : self._tfBpub ,
+                          self._spin_stat_msg : self._spinBpub
+                          }
+
+        self._pubBsub  = rospy.Subscriber(self._pubBridgeStatsTopicSubStr, StatsMsg,
+                                        self._pubB_cb, queue_size=10, tcp_nodelay=True)
+        self._ioBsub   = rospy.Subscriber(self._ioBridgeStatsTopicSubStr, StatsMsg,
+                                        self._ioB_cb, queue_size=10, tcp_nodelay=True)
+        self._tfBsub   = rospy.Subscriber(self._tfBridgeStatsTopicSubStr, StatsMsg,
+                                        self._tfB_cb, queue_size=10, tcp_nodelay=True)
+        self._spinBsub = rospy.Subscriber(self._spinBridgeStatsTopicSubStr, StatsMsg,
+                                        self._spinB_cb, queue_size=10, tcp_nodelay=True)
+
+        self._sub_list = [self._pubBsub, self._ioBsub, self._tfBsub, self._spinBsub]
+
+        self._pubThread = Thread(target=self._run_pubs)
         self._pubThread.daemon = True
         self._pubThread.start()
 
@@ -38,15 +86,37 @@ class Stats(object):
 
     def disconnect(self):
         self._active = False
+        self._bag.close()
 
-    def _ros_cb(self, data):
-        self._stat_msg = data
-        self._stat_msg.UserData = self._userData
-        pass
+    def _pubB_cb(self, data):
+        if self._active:
+            self._pub_stat_msg = data
+            self._pub_stat_msg.UserData = self._userData
 
-    def _run_pub(self):
+    def _ioB_cb(self, data):
+        if self._active:
+            self._io_stat_msg = data
+            self._io_stat_msg.UserData = self._userData
+
+    def _tfB_cb(self, data):
+        if self._active:
+            self._tf_stat_msg = data
+            self._tf_stat_msg.UserData = self._userData
+
+    def _spinB_cb(self, data):
+        if self._active:
+            self._spin_stat_msg = data
+            self._spin_stat_msg.UserData = self._userData
+
+    def _run_pubs(self):
         while not rospy.is_shutdown() and self._active:
-            self._pub.publish(self._stat_msg)
+            for msg, pub in self._pub_dict.iteritems():
+                pub.publish(msg)
+            self._bag.write(self._pubBridgeStatsTopicPubStr, self._pub_stat_msg)
+            self._bag.write(self._ioBridgeStatsTopicPubStr, self._io_stat_msg)
+            self._bag.write(self._tfBridgeStatsTopicPubStr, self._tf_stat_msg)
+            self._bag.write(self._spinBridgeStatsTopicPubStr, self._spin_stat_msg)
+
             self._rate.sleep()
 
 
@@ -102,14 +172,15 @@ def test_load(dt = 0.5):
     for i in range(1, lat_test.maxArms + 1):
         n_arms = i % (lat_test.maxArms+1)
         lat_test.create_arm_load(n_arms, delay=dt)
-        time.sleep(3)
+        time.sleep(dt*1)
         lat_test.relieve_arm_load(delay=dt)
-        time.sleep(3)
+        time.sleep(dt*1)
     lat_test.disconnect()
 
 
 if __name__ == '__main__':
     args = sys.argv
+    dt = 0.5
     if args.__len__() > 1:
         dt_str = args[1]
         try:
@@ -120,4 +191,4 @@ if __name__ == '__main__':
         print dt
         if not 0 <= dt <= 10:
             raise ValueError('Delay between loading arms should be between {} : {}'.format(0.0, 10.0))
-        test_load(dt)
+    test_load(dt)
