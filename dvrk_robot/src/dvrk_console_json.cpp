@@ -72,7 +72,7 @@ int main(int argc, char ** argv)
     std::string jsonMainConfigFile;
     std::string rosNamespace = "/dvrk";
     double rosPeriod = 10.0 * cmn_ms;
-    double tfPeriod = 20.0 * cmn_ms;    
+    double tfPeriod = 20.0 * cmn_ms;
     std::list<std::string> jsonIOConfigFiles;
     std::string versionString = "v1_4_0";
 
@@ -158,17 +158,19 @@ int main(int argc, char ** argv)
     std::replace(bridgeName.begin(), bridgeName.end(), '/', '_');
     std::replace(bridgeName.begin(), bridgeName.end(), '-', '_');
     std::replace(bridgeName.begin(), bridgeName.end(), '.', '_');
-#if 0 // old implementation
-    mtsROSBridge * rosBridge = new mtsROSBridge(bridgeName, rosPeriod, true, false); // spin, don't catch sigint
-    mtsROSBridge * tfBridge = new mtsROSBridge(bridgeName + "_tf2", tfPeriod, true, false);
-#else // testing with a single and separate bridge to do ros spin at high rate
-    mtsROSBridge * rosBridge = new mtsROSBridge(bridgeName, rosPeriod, false, false); // spin, don't catch sigint
-    mtsROSBridge * tfBridge = new mtsROSBridge(bridgeName + "_tf2", tfPeriod, false, false);
 
-    // separate thread to spin
+    // bridge to publish topics
+    mtsROSBridge * rosBridge = new mtsROSBridge(bridgeName, rosPeriod, false, false); // don't spin, don't catch sigint
+    rosBridge->AddIntervalStatisticsInterface();
+    // bridge for tf
+    mtsROSBridge * tfBridge = new mtsROSBridge(bridgeName + "_tf2", tfPeriod, false, false);
+    tfBridge->AddIntervalStatisticsInterface();
+    // separate thread to spin, i.e. subscribe
     mtsROSBridge * spinBridge = new mtsROSBridge(bridgeName + "_spin", 0.1 * cmn_ms, true, false);
-    componentManager->AddComponent(spinBridge);
-#endif
+    spinBridge->AddIntervalStatisticsInterface();
+    // bridge to publish stats
+    mtsROSBridge * statsBridge = new mtsROSBridge(bridgeName + "_stats", 10.0 * cmn_ms, false, false);
+
     dvrk::console * consoleROS = new dvrk::console(rosBridge, tfBridge, rosNamespace,
                                                    console, versionEnum);
     // IOs
@@ -182,8 +184,13 @@ int main(int argc, char ** argv)
     }
     componentManager->AddComponent(rosBridge);
     componentManager->AddComponent(tfBridge);
-    rosBridge->PublishIntervalStatistics(rosNamespace + "/rosBridge");
-    tfBridge->PublishIntervalStatistics(rosNamespace + "/tfBridge");
+    componentManager->AddComponent(spinBridge);
+    componentManager->AddComponent(statsBridge);
+
+    statsBridge->AddIntervalStatisticsPublisher(rosNamespace + "/pubBridge", rosBridge->GetName());
+    statsBridge->AddIntervalStatisticsPublisher(rosNamespace + "/tfBridge", tfBridge->GetName());
+    statsBridge->AddIntervalStatisticsPublisher(rosNamespace + "/spinBridge", spinBridge->GetName());
+
     consoleROS->Connect();
 
     //-------------- create the components ------------------
