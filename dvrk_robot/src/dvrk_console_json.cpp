@@ -169,7 +169,7 @@ int main(int argc, char ** argv)
     mtsROSBridge * spinBridge = new mtsROSBridge(bridgeName + "_spin", 0.1 * cmn_ms, true, false);
     spinBridge->AddIntervalStatisticsInterface();
     // bridge to publish stats
-    mtsROSBridge * statsBridge = new mtsROSBridge(bridgeName + "_stats", 10.0 * cmn_ms, false, false);
+    mtsROSBridge * statsBridge = new mtsROSBridge(bridgeName + "_stats", 200.0 * cmn_ms, false, false);
 
     dvrk::console * consoleROS = new dvrk::console(rosBridge, tfBridge, rosNamespace,
                                                    console, versionEnum);
