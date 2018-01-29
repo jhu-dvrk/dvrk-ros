@@ -597,6 +597,12 @@ void dvrk::add_topics_io(mtsROSBridge & bridge,
     bridge.AddPublisherFromCommandRead<mtsIntervalStatistics, cisst_msgs::mtsIntervalStatistics>
         ("io", "GetPeriodStatistics",
          ros_namespace + "/period_statistics");
+    bridge.AddPublisherFromCommandRead<mtsIntervalStatistics, cisst_msgs::mtsIntervalStatistics>
+        ("io", "GetPeriodStatisticsRead",
+         ros_namespace + "/period_statistics_read");
+    bridge.AddPublisherFromCommandRead<mtsIntervalStatistics, cisst_msgs::mtsIntervalStatistics>
+        ("io", "GetPeriodStatisticsWrite",
+         ros_namespace + "/period_statistics_write");
 }
 
 void dvrk::connect_bridge_io(const std::string & bridge_name,
