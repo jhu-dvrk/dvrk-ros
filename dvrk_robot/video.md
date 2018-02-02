@@ -106,15 +106,20 @@ catkin build
 
 ### Using gscam
 
-To start the `gscam` node, we provide a couple of ROS launch scripts.  For a stereo system with the USB frame grabbers, use:
+To start the `gscam` node, we provide a couple of ROS launch scripts.
 
+For a stereo system with the USB frame grabbers, use:
 ```sh
 roslaunch dvrk_robot gscam_stereo.launch rig_name:=jhu_daVinci
 ```
-
 Where `jhu_daVinci` is a name you want to give to your camera rig.  This name will be used to define the ROS namespace for all the data published.  It is also used to define a directory to save the results of your camera calibration or load said camera calibration (i.e. `dvrk_robot/data/<rig_name>`).  If you don't have a calibration for your rig, you can still render both video channels using the ROS topics:
   * `/jhu_daVinci/left/image_raw`
   * `/jhu_daVinci/right/image_raw`
+
+For a system with a Decklink Duo, the `gscam_config` in a launch script would look like:
+```xml
+    <param name="gscam_config" value="decklinkvideosrc connection=sdi device-number=0 ! videoconvert"/>
+```
 
 ## (rqt_)image_view
 
