@@ -555,6 +555,9 @@ void dvrk::add_topics_suj(mtsROSBridge & bridge,
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
             (arm_name + "-suj", "GetStateJoint",
              ros_namespace + "/state_joint_current");
+        bridge.AddSubscriberToCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
+            (arm_name + "-suj", "SetPositionJoint",
+             ros_namespace + "/set_position_joint");
         bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::PoseStamped>
             (arm_name + "-suj", "PositionCartesian",
              ros_namespace + "/position_cartesian_current");
