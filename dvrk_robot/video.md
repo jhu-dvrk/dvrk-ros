@@ -1,13 +1,11 @@
 Video pipeline
 ==============
 
-This describes a fairly low cost setup that can be used with the
-dVRK/HRSV display (High Resolution Stereo Video).  We use a couple of
-cheap USB frame grabbers along with a graphic card with two spare
-video outputs.  The software relies heavily on ROS tools to grab and
-display the stereo video.  Some lag is to be expected.
+This describes a fairly low cost setup that can be used with the dVRK/HRSV display (High Resolution Stereo Video).  We use a couple of cheap USB frame grabbers for the analog videos from SD cameras.   For HD systems, we tested a Balckmagic DeckLink Duo with dual SDI inputs.   For displaying the video back, we just use a graphic card with two spare video outputs.  The software relies heavily on ROS tools to grab and display the stereo video.  Some lag is to be expected.
 
 # Hardware
+
+## USB frame grabbers
 
 The frame grabbers we use most often are Hauppage USB Live 2:
  * Manufacturer: http://www.hauppauge.com/site/products/data_usblive2.html
@@ -68,20 +66,37 @@ If the video is still not working, the problem likely comes from your
 S-video cables.  If the color bars show correctly, the problem comes
 from the cables to the endoscope or the endoscope itself.
 
+## Blackmagic DeckLink Duo
+
+You first need to install the drivers from Blackmagic, see https://www.blackmagicdesign.com/support/family/capture-and-playback   The drivers are included in the package "Desktop Video".  Once you've downloaded the binaries and extracted the files from Blackmagic, follow the instructions on their ReadMe.txt.   For 64 bits Ubuntu system, install the `.deb` files in subfolder `deb/x86_64`.
+
+To test if the drivers are working and the cards are working, use gstreamer 1.0 or greater.  On Ubuntu 16.04 you can install gstreamer 1.0 or 0.1.   Make sure you install the 1.0 packages.   Once installed, you can use a few command lines to test the drivers:
+  * `gst-inspect-1.0 decklinkvideosrc` will show you the different parameters for the Decklink gstreamer plugin
+  * `gst-launch-1.0` can be used to launch the streamer and pipe it to see the video live on the computer.   For example, we used `gst-launch-1.0 -v decklinkvideosrc mode=0 connection=sdi device-number=0 ! videoconvert ! autovideosink`.
+    * `mode=0` is for auto detection and is optional
+    * `connection=sdi` is to force to use an SDI input if your card has different types of inputs.  This is optional.
+    * `device-number=0` is to select which input to use if you have multiple inputs
+  * On a Decklink Duo, we found that one can see the stereo video using two text terminals:
+    * `gst-launch-1.0 decklinkvideosrc device-number=0 ! videoconvert ! autovideosink`
+    * `gst-launch-1.0 decklinkvideosrc device-number=1 ! videoconvert ! autovideosink`
+
 # Software
 
 ## gscam
 
 `gscam` is a ROS node using the `gstreamer` library.  The gstreamer
 library supports a few frame grabbers including the Hauppage one.  The
-gstreamer developement library can be installed using `apt-get install
-libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev gstreamer0.10-plugins-good`.
+gstreamer developement library can be installed using `apt-get install`.  Make sure you install gstreamer 1.0, not 0.1.
 
-The gscam node is part of ROS Hydro but hasn't made it to ROS Indigo
-yet (as of March 2016).  If you have ROS Hydro, use `apt-get` to
-install it.  If you're using a more recent version of ROS, get the
-sources from github and build it.  Assuming your Catkin workspace is
-in `~/catkin` and you're using the Catkin Python build tools:
+### ROS Ubuntu packages
+
+Use `apt install` to install gscam!   The package name should be `ros-<distro>-gscam`.   It will install all the required dependencies for you.
+
+### Manual compilation
+
+**This is not recommended anymore, there are now ROS packages for gstreamer, just use them!**
+
+The gscam node is part of ROS Hydro but hasn't made it to ROS Indigo yet (as of March 2016).  If you have ROS Hydro (also Kinetic and Lunar!), use `apt-get` to install it.  If you're using a more recent version of ROS, get the sources from github and build it.  Assuming your Catkin workspace is in `~/catkin` and you're using the Catkin Python build tools:
 
 ```sh
 cd ~/catkin_ws/src
@@ -89,15 +104,22 @@ git clone https://github.com/ros-drivers/gscam
 catkin build
 ```
 
-To start the `gscam` node, we provide a couple of ROS launch scripts.  For a stereo system, use:
+### Using gscam
 
+To start the `gscam` node, we provide a couple of ROS launch scripts.
+
+For a stereo system with the USB frame grabbers, use:
 ```sh
 roslaunch dvrk_robot gscam_stereo.launch rig_name:=jhu_daVinci
 ```
-
 Where `jhu_daVinci` is a name you want to give to your camera rig.  This name will be used to define the ROS namespace for all the data published.  It is also used to define a directory to save the results of your camera calibration or load said camera calibration (i.e. `dvrk_robot/data/<rig_name>`).  If you don't have a calibration for your rig, you can still render both video channels using the ROS topics:
   * `/jhu_daVinci/left/image_raw`
   * `/jhu_daVinci/right/image_raw`
+
+For a system with a Decklink Duo, the `gscam_config` in a launch script would look like:
+```xml
+    <param name="gscam_config" value="decklinkvideosrc connection=sdi device-number=0 ! videoconvert"/>
+```
 
 ## (rqt_)image_view
 
