@@ -1,5 +1,5 @@
 #
-# (C) Copyright 2015-2016 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2015-2018 Johns Hopkins University (JHU), All Rights Reserved.
 #
 # --- begin cisst license - do not edit ---
 #
@@ -96,6 +96,7 @@ if (cisst_FOUND_AS_REQUIRED)
       ${sawRobotIO1394_LIBRARIES}
       ${sawIntuitiveResearchKit_LIBRARIES}
       ${sawControllers_LIBRARIES}
+      ${catkin_LIBRARIES}
     )
     cisst_target_link_libraries (dvrk_utilities ${REQUIRED_CISST_LIBRARIES})
 

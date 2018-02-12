@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2017 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2018 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -17,6 +17,8 @@ http://www.cisst.org/cisst/license.txt.
 */
 
 #include <dvrk_utilities/dvrk_console.h>
+#include <cisst_ros_bridge/mtsROSBridge.h>
+
 #include <cisstCommon/cmnStrings.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
 
@@ -24,8 +26,8 @@ http://www.cisst.org/cisst/license.txt.
 
 const std::string bridgeNamePrefix = "dVRKIOBridge";
 
-dvrk::console::console(mtsROSBridge * bridge,
-                       mtsROSBridge * tf_bridge,
+dvrk::console::console(const double & publish_rate_in_seconds,
+                       const double & tf_rate_in_seconds,
                        const std::string & ros_namespace,
                        mtsIntuitiveResearchKitConsole * mts_console,
                        const dvrk_topics_version::version version):
@@ -33,11 +35,42 @@ dvrk::console::console(mtsROSBridge * bridge,
     mConsole(mts_console),
     mVersion(version)
 {
-    mBridgeName = bridge->GetName();
+    // start creating components
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
+
+    // create all ROS bridges
+    std::string bridgeName = "sawIntuitiveResearchKit" + ros_namespace;
+    bridgeName = ros::names::clean(bridgeName);
+    std::replace(bridgeName.begin(), bridgeName.end(), '/', '_');
+    std::replace(bridgeName.begin(), bridgeName.end(), '-', '_');
+    std::replace(bridgeName.begin(), bridgeName.end(), '.', '_');
+
+    // publish bridge
+    mtsROSBridge * pub_bridge = new mtsROSBridge(bridgeName, publish_rate_in_seconds, false, false); // don't spin, don't catch sigint
+    pub_bridge->AddIntervalStatisticsInterface();
+    // bridge for tf
+    mtsROSBridge * tf_bridge = new mtsROSBridge(bridgeName + "_tf2", tf_rate_in_seconds, false, false);
+    tf_bridge->AddIntervalStatisticsInterface();
+    // separate thread to spin, i.e. subscribe
+    mtsROSBridge * spin_bridge = new mtsROSBridge(bridgeName + "_spin", 0.1 * cmn_ms, true, false);
+    spin_bridge->AddIntervalStatisticsInterface();
+    // bridge to publish stats
+    mtsROSBridge * stats_bridge = new mtsROSBridge(bridgeName + "_stats", 200.0 * cmn_ms, false, false);
+
+    componentManager->AddComponent(pub_bridge);
+    componentManager->AddComponent(tf_bridge);
+    componentManager->AddComponent(spin_bridge);
+    componentManager->AddComponent(stats_bridge);
+
+    stats_bridge->AddIntervalStatisticsPublisher(ros_namespace + "/publishers", pub_bridge->GetName());
+    stats_bridge->AddIntervalStatisticsPublisher(ros_namespace + "/tf_broadcast", tf_bridge->GetName());
+    stats_bridge->AddIntervalStatisticsPublisher(ros_namespace + "/spin", spin_bridge->GetName());
+
+    mBridgeName = pub_bridge->GetName();
     mTfBridgeName = tf_bridge->GetName();
 
     if (mConsole->mHasIO) {
-        dvrk::add_topics_io(*bridge, mNameSpace + "/io", version);
+        dvrk::add_topics_io(*pub_bridge, mNameSpace + "/io", version);
     }
 
     const mtsIntuitiveResearchKitConsole::ArmList::iterator
@@ -52,28 +85,28 @@ dvrk::console::console(mtsROSBridge * bridge,
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
             dvrk::add_tf_arm(*tf_bridge, name);
-            dvrk::add_topics_mtm(*bridge, armNameSpace, name, version);
+            dvrk::add_topics_mtm(*pub_bridge, armNameSpace, name, version);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
-            dvrk::add_topics_mtm_generic(*bridge, armNameSpace, name, version);
+            dvrk::add_topics_mtm_generic(*pub_bridge, armNameSpace, name, version);
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
             dvrk::add_tf_arm(*tf_bridge, name);
-            dvrk::add_topics_ecm(*bridge, armNameSpace, name, version);
+            dvrk::add_topics_ecm(*pub_bridge, armNameSpace, name, version);
             if (armIter->second->mSimulation
                 == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
-                dvrk::add_topics_ecm_io(*bridge, armNameSpace,
+                dvrk::add_topics_ecm_io(*pub_bridge, armNameSpace,
                                         name, version);
             }
             break;
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
             dvrk::add_tf_arm(*tf_bridge, name);
-            dvrk::add_topics_psm(*bridge, armNameSpace, name, version);
+            dvrk::add_topics_psm(*pub_bridge, armNameSpace, name, version);
             if (armIter->second->mSimulation
                 == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
-                dvrk::add_topics_psm_io(*bridge, armNameSpace,
+                dvrk::add_topics_psm_io(*pub_bridge, armNameSpace,
                                         name, version);
             }
             break;
@@ -82,10 +115,10 @@ dvrk::console::console(mtsROSBridge * bridge,
             dvrk::add_tf_suj(*tf_bridge, "PSM2");
             dvrk::add_tf_suj(*tf_bridge, "PSM3");
             dvrk::add_tf_suj(*tf_bridge, "ECM");
-            dvrk::add_topics_suj(*bridge, mNameSpace + "/SUJ/PSM1", "PSM1", version);
-            dvrk::add_topics_suj(*bridge, mNameSpace + "/SUJ/PSM2", "PSM2", version);
-            dvrk::add_topics_suj(*bridge, mNameSpace + "/SUJ/PSM3", "PSM3", version);
-            dvrk::add_topics_suj(*bridge, mNameSpace + "/SUJ/ECM", "ECM", version);
+            dvrk::add_topics_suj(*pub_bridge, mNameSpace + "/SUJ/PSM1", "PSM1", version);
+            dvrk::add_topics_suj(*pub_bridge, mNameSpace + "/SUJ/PSM2", "PSM2", version);
+            dvrk::add_topics_suj(*pub_bridge, mNameSpace + "/SUJ/PSM3", "PSM3", version);
+            dvrk::add_topics_suj(*pub_bridge, mNameSpace + "/SUJ/ECM", "ECM", version);
         default:
             break;
         }
@@ -100,7 +133,7 @@ dvrk::console::console(mtsROSBridge * bridge,
         const std::string name = teleopIter->first;
         std::string topic_name = teleopIter->first;
         std::replace(topic_name.begin(), topic_name.end(), '-', '_');
-        dvrk::add_topics_teleop(*bridge, mNameSpace + "/" + topic_name, name, version);
+        dvrk::add_topics_teleop(*pub_bridge, mNameSpace + "/" + topic_name, name, version);
     }
 
     // digital inputs
@@ -118,11 +151,11 @@ dvrk::console::console(mtsROSBridge * bridge,
         // replace +/- by strings
         cmnStringReplaceAll(lowerName, "-", "_minus");
         cmnStringReplaceAll(lowerName, "+", "_plus");
-        bridge->AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
+        pub_bridge->AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
             (upperName, "Button", footPedalsNameSpace + lowerName);
     }
 
-    dvrk::add_topics_console(*bridge, mNameSpace + "/console", version);
+    dvrk::add_topics_console(*pub_bridge, mNameSpace + "/console", version);
 }
 
 void dvrk::console::Configure(const std::string & jsonFile)
