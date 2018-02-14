@@ -648,6 +648,9 @@ void dvrk::add_topics_suj(mtsROSBridge & bridge,
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
             (arm_name + "-suj", "GetStateJoint",
              ros_namespace + "/measured_js");
+        bridge.AddSubscriberToCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
+            (arm_name + "-suj", "SetPositionJoint",
+             ros_namespace + "/servo_jp");
         bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::TransformStamped>
             (arm_name + "-suj", "PositionCartesianLocal",
              ros_namespace + "/local/measured_cp");
