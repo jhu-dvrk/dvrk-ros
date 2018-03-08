@@ -5,7 +5,7 @@
   Author(s):  Zihan Chen, Anton Deguet
   Created on: 2015-04-33
 
-  (C) Copyright 2015-2017 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2018 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -635,14 +635,8 @@ void dvrk::add_topics_suj(mtsROSBridge & bridge,
             (arm_name + "-suj", "PositionCartesian",
              ros_namespace + "/position_cartesian_current");
         bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::Pose>
-            (arm_name + "-suj", "PositionCartesianDesired",
-             ros_namespace + "/position_cartesian_desired");
-        bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::Pose>
             (arm_name + "-suj", "PositionCartesianLocal",
              ros_namespace + "/position_cartesian_local_current");
-        bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::Pose>
-            (arm_name + "-suj", "PositionCartesianLocalDesired",
-             ros_namespace + "/position_cartesian_local_desired");
         break;
     case dvrk_topics_version::crtk_alpha:
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
@@ -655,13 +649,7 @@ void dvrk::add_topics_suj(mtsROSBridge & bridge,
             (arm_name + "-suj", "PositionCartesianLocal",
              ros_namespace + "/local/measured_cp");
         bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::TransformStamped>
-            (arm_name + "-suj", "PositionCartesianLocalDesired",
-             ros_namespace + "/local/servoed_cp");
-        bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::TransformStamped>
             (arm_name + "-suj", "PositionCartesian",
-             ros_namespace + "/measured_cp");
-        bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::TransformStamped>
-            (arm_name + "-suj", "PositionCartesianDesired",
              ros_namespace + "/measured_cp");
         break;
     default:
@@ -675,14 +663,8 @@ void dvrk::add_topics_suj(mtsROSBridge & bridge,
             (arm_name + "-suj", "PositionCartesian",
              ros_namespace + "/position_cartesian_current");
         bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::PoseStamped>
-            (arm_name + "-suj", "PositionCartesianDesired",
-             ros_namespace + "/position_cartesian_desired");
-        bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::PoseStamped>
             (arm_name + "-suj", "PositionCartesianLocal",
              ros_namespace + "/position_cartesian_local_current");
-        bridge.AddPublisherFromEventWrite<prmPositionCartesianGet, geometry_msgs::PoseStamped>
-            (arm_name + "-suj", "PositionCartesianLocalDesired",
-             ros_namespace + "/position_cartesian_local_desired");
         break;
     }
 

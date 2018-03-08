@@ -8,7 +8,6 @@ classdef suj < handle
     % add the word `joint`.  `move` stands for moves using absolute
     % positions while `dmove` are always relative to the current desired
     % position as reported by the dVRK C++ console application (i.e. last desired command).
-    %   r.get_position_desired()   % contains 4x4 homogeneous transform
     %   r.get_position_current()   % actual 4x4 for the reported position based
     %   on encoders
 
@@ -22,8 +21,6 @@ classdef suj < handle
     % only this class methods can view/modify
     properties (SetAccess = private)
         % subscribers
-        position_desired_subscriber
-        position_local_desired_subscriber
         position_current_subscriber
         position_local_current_subscriber
     end
@@ -45,16 +42,6 @@ classdef suj < handle
 
             % ----------- subscribers
 
-            % position cartesian desired
-            topic = strcat(self.ros_name, '/position_cartesian_desired');
-            self.position_desired_subscriber = ...
-                rossubscriber(topic, rostype.geometry_msgs_PoseStamped);
-
-            % position cartesian local desired
-            topic = strcat(self.ros_name, '/position_cartesian_local_desired');
-            self.position_local_desired_subscriber = ...
-                rossubscriber(topic, rostype.geometry_msgs_PoseStamped);
-
             % position cartesian current
             topic = strcat(self.ros_name, '/position_cartesian_current');
             self.position_current_subscriber = ...
@@ -71,8 +58,6 @@ classdef suj < handle
         function delete(self)
             % hack to disable callbacks from subscribers
             % there might be a better way to remove the subscriber itself
-            self.position_desired_subscriber.NewMessageFcn = @(a, b, c)[];
-            self.position_local_desired_subscriber.NewMessageFcn = @(a, b, c)[];
             self.position_current_subscriber.NewMessageFcn = @(a, b, c)[];
             self.position_local_current_subscriber.NewMessageFcn = @(a, b, c)[];
         end
@@ -91,20 +76,6 @@ classdef suj < handle
            frame = position*orientation;
         end
 
-        function [frame, timestamp] = get_position_desired(self)
-           % Accessor used to retrieve the last desired cartesian position
-           msg = self.position_desired_subscriber.LatestMessage;
-           frame = self.ros_pose_to_frame(msg);
-           timestamp = self.ros_time_to_secs(msg);
-        end
-
-        function [frame, timestamp] = get_position_local_desired(self)
-           % Accessor used to retrieve the last desired cartesian position
-           msg = self.position_local_desired_subscriber.LatestMessage;
-           frame = self.ros_pose_to_frame(msg);
-           timestamp = self.ros_time_to_secs(msg);
-        end
-
         function [frame, timestamp] = get_position_current(self)
            % Accessor used to retrieve the last current cartesian position
            msg = self.position_current_subscriber.LatestMessage;
@@ -113,7 +84,7 @@ classdef suj < handle
         end
 
         function [frame, timestamp] = get_position_local_current(self)
-           % Accessor used to retrieve the last desired cartesian position
+           % Accessor used to retrieve the last current local cartesian position
            msg = self.position_local_current_subscriber.LatestMessage;
            frame = self.ros_pose_to_frame(msg);
            timestamp = self.ros_time_to_secs(msg);
