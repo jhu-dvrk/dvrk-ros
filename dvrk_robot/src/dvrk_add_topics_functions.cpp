@@ -138,31 +138,31 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
              ros_namespace + "/measured_js");
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
             (arm_component_name, "GetStateJointDesired",
-             ros_namespace + "/servoed_js");
+             ros_namespace + "/setpoint_js");
         bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::TransformStamped>
             (arm_component_name, "GetPositionCartesianLocal",
              ros_namespace + "/local/measured_cp");
         bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::TransformStamped>
             (arm_component_name, "GetPositionCartesianLocalDesired",
-             ros_namespace + "/local/servoed_cp");
+             ros_namespace + "/local/setpoint_cp");
         bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::TransformStamped>
             (arm_component_name, "GetPositionCartesian",
              ros_namespace + "/measured_cp");
         bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::TransformStamped>
             (arm_component_name, "GetPositionCartesianDesired",
-             ros_namespace + "/servoed_cp");
+             ros_namespace + "/setpoint_cp");
         bridge.AddPublisherFromCommandRead<prmVelocityCartesianGet, geometry_msgs::TwistStamped>
             (arm_component_name, "GetVelocityCartesian",
              ros_namespace + "/measured_cv");
         bridge.AddPublisherFromCommandRead<prmForceCartesianGet, geometry_msgs::WrenchStamped>
             (arm_component_name, "GetWrenchBody",
-             ros_namespace + "/wrench_body_curren");
+             ros_namespace + "/body/measured_cf");
         bridge.AddPublisherFromCommandRead<vctDoubleMat, std_msgs::Float64MultiArray>
             (arm_component_name, "GetJacobianBody",
-             ros_namespace + "/jacobian_body");
+             ros_namespace + "/body/jacobian");
         bridge.AddPublisherFromCommandRead<vctDoubleMat, std_msgs::Float64MultiArray>
             (arm_component_name, "GetJacobianSpatial",
-             ros_namespace + "/jacobian_spatial");
+             ros_namespace + "/spatial/jacobian");
         break;
     default:
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
@@ -225,7 +225,10 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
              ros_namespace + "/servo_jf");
         bridge.AddSubscriberToCommandWrite<prmForceCartesianSet, geometry_msgs::WrenchStamped>
             (arm_component_name, "SetWrenchBody",
-             ros_namespace + "/servo_cf");
+             ros_namespace + "/body/servo_cf");
+        bridge.AddSubscriberToCommandWrite<prmForceCartesianSet, geometry_msgs::WrenchStamped>
+            (arm_component_name, "SetWrenchSpatial",
+             ros_namespace + "/spatial/servo_cf");
         break;
     default:
         bridge.AddSubscriberToCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
@@ -417,7 +420,7 @@ void dvrk::add_topics_psm(mtsROSBridge & bridge,
              ros_namespace + "/jaw/move_jp");
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
             (psm_component_name, "GetStateJawDesired",
-             ros_namespace + "/jaw/servoed_js");
+             ros_namespace + "/jaw/setpoint_js");
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
             (psm_component_name, "GetStateJaw",
              ros_namespace + "/jaw/measured_js");
