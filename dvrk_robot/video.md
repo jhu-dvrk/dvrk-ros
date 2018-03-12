@@ -88,6 +88,8 @@ To test if the drivers are working and the cards are working, use gstreamer 1.0 
 library supports a few frame grabbers including the Hauppage one.  The
 gstreamer developement library can be installed using `apt-get install`.  Make sure you install gstreamer 1.0, not 0.1.
 
+**Important note:** `gscam` binaries provided with ROS kinetic use gstreamer 0.1 so you should **not** install these using `apt`.  Instead, download the source from github and compile in your catkin workspace.  See https://github.com/ros-drivers/gscam.  As of March 2018, the readme on gscam/github are a bit confusing since they still indicate that gstreamer 1.x support is experimental but they provide instructions to compile with gstreamer 1.x.   So, make sure you compile for 1.x version.
+
 ### ROS Ubuntu packages
 
 Use `apt install` to install gscam!   The package name should be `ros-<distro>-gscam`.   It will install all the required dependencies for you.
