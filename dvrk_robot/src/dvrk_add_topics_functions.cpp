@@ -249,15 +249,15 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
         bridge.AddSubscriberToCommandWrite<prmForceCartesianSet, geometry_msgs::Wrench>
             (arm_component_name, "SetWrenchBody",
              ros_namespace + "/set_wrench_body");
+        bridge.AddSubscriberToCommandWrite<prmForceCartesianSet, geometry_msgs::Wrench>
+            (arm_component_name, "SetWrenchSpatial",
+             ros_namespace + "/set_wrench_spatial");
         break;
     }
 
     bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (arm_component_name, "SetWrenchBodyOrientationAbsolute",
          ros_namespace + "/set_wrench_body_orientation_absolute");
-    bridge.AddSubscriberToCommandWrite<prmForceCartesianSet, geometry_msgs::Wrench>
-        (arm_component_name, "SetWrenchSpatial",
-         ros_namespace + "/set_wrench_spatial");
     bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (arm_component_name, "SetGravityCompensation",
          ros_namespace + "/set_gravity_compensation");
