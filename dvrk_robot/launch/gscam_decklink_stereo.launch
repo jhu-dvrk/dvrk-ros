@@ -1,0 +1,23 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+
+  <!-- Set this to your camera's name -->
+  <arg name="left_camera_name" default="$(arg rig_name)_left"/>
+  <arg name="left_cam_device" default="1"/>
+  <arg name="right_camera_name" default="$(arg rig_name)_right"/>
+  <arg name="right_cam_device" default="0"/>
+
+  <!-- camera driver node -->
+  <include file="$(find dvrk_robot)/launch/gscam_decklink.launch" ns="$(arg rig_name)/left">
+    <arg name="camera_name" value="$(arg left_camera_name)"/>
+    <arg name="device" value="$(arg left_cam_device)"/>
+  </include>
+
+  <!-- camera driver node -->
+  <include file="$(find dvrk_robot)/launch/gscam_decklink.launch" ns="$(arg rig_name)/right">
+    <arg name="camera_name" value="$(arg right_camera_name)"/>
+    <arg name="device" value="$(arg right_cam_device)"/>
+  </include>
+
+</launch>
