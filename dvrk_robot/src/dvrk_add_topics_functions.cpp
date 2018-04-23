@@ -442,6 +442,10 @@ void dvrk::add_topics_psm(mtsROSBridge & bridge,
     }
 
     bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
+        (psm_component_name, "SetAdapterPresent",
+         ros_namespace + "/set_adapter_present");
+
+    bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (psm_component_name, "SetToolPresent",
          ros_namespace + "/set_tool_present");
 
