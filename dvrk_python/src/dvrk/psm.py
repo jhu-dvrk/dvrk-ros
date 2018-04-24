@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-05
 
-#   (C) Copyright 2016-2017 Johns Hopkins University (JHU), All Rights Reserved.
+#   (C) Copyright 2016-2018 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -35,13 +35,17 @@ class psm(arm):
         self.__set_position_goal_jaw_pub = rospy.Publisher(self._arm__full_ros_namespace
                                                            + '/set_position_goal_jaw',
                                                            JointState, latch = True, queue_size = 1)
+        self.__set_effort_jaw_pub = rospy.Publisher(self._arm__full_ros_namespace
+                                                    + '/set_effort_jaw',
+                                                    JointState, latch = True, queue_size = 1)
         self.__set_tool_present_pub = rospy.Publisher(self._arm__full_ros_namespace
                                                       + '/set_tool_present',
                                                       Bool, latch = True, queue_size = 1)
 
         self._arm__pub_list.extend([self.__set_position_jaw_pub,
-                               self.__set_position_goal_jaw_pub,
-                               self.__set_tool_present_pub])
+                                    self.__set_position_goal_jaw_pub,
+                                    self.__set_effort_jaw_pub,
+                                    self.__set_tool_present_pub])
         # subscribers
         self._arm__sub_list.extend([
         rospy.Subscriber(self._arm__full_ros_namespace + '/state_jaw_desired',
@@ -111,6 +115,12 @@ class psm(arm):
             return True
         else:
             return self.__set_position_jaw_pub.publish(joint_state)
+
+    def set_effort_jaw(self, effort):
+        # create payload
+        joint_state = JointState()
+        joint_state.effort.append(effort)
+        return self.__set_effort_jaw_pub.publish(joint_state)
 
     def insert_tool(self, depth, interpolate = True, blocking = True):
         "insert the tool, by moving it to an absolute depth"

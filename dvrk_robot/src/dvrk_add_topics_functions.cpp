@@ -418,6 +418,9 @@ void dvrk::add_topics_psm(mtsROSBridge & bridge,
         bridge.AddSubscriberToCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
             (psm_component_name, "SetPositionGoalJaw",
              ros_namespace + "/jaw/move_jp");
+        bridge.AddSubscriberToCommandWrite<prmForceTorqueJointSet, sensor_msgs::JointState>
+            (psm_component_name, "SetEffortJaw",
+             ros_namespace + "/jaw/servo_jf");
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
             (psm_component_name, "GetStateJawDesired",
              ros_namespace + "/jaw/setpoint_js");
@@ -432,6 +435,9 @@ void dvrk::add_topics_psm(mtsROSBridge & bridge,
         bridge.AddSubscriberToCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
             (psm_component_name, "SetPositionGoalJaw",
              ros_namespace + "/set_position_goal_jaw");
+        bridge.AddSubscriberToCommandWrite<prmForceTorqueJointSet, sensor_msgs::JointState>
+            (psm_component_name, "SetEffortJaw",
+             ros_namespace + "/set_effort_jaw");
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
             (psm_component_name, "GetStateJawDesired",
              ros_namespace + "/state_jaw_desired");
