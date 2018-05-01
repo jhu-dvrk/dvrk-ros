@@ -98,6 +98,18 @@ class example_application:
         effort_joint[0] = 0.5
         self.arm.set_effort_joint(effort_joint)
 
+        print rospy.get_caller_id(), '   -> arm will now apply sine wave forces on first two joints'
+        raw_input("    Press Enter to continue...")
+        duration = 10  # seconds
+        rate = 200 # aiming for 200 Hz
+        samples = duration * rate
+        # create a new goal starting with current position
+        for i in xrange(samples):
+            effort_joint[0] = 1.0 *  math.sin(i * math.radians(360.0) / samples)
+            effort_joint[1] = 1.0 *  math.sin(i * math.radians(360.0) / samples)
+            rospy.sleep(1.0 / rate)
+            self.arm.set_effort_joint(effort_joint)
+
         print rospy.get_caller_id(), '   -> arm will now go limp'
         raw_input("    Press Enter to continue...")
         effort_joint.fill(0.0)
