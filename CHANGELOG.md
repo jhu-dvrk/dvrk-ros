@@ -1,6 +1,30 @@
 Change log
 ==========
 
+1.6.0 (2018-05-16)
+==================
+
+* API changes:
+  * None
+* Deprecated features:
+  * None
+* New features:
+  * dvrk_robot:
+    * Add tf2 support
+    * Multiple threads used, one for publishers, one for tf2 and one for subscribers.  This reduces latency on all subscribers
+    * Publishes interval statistics for IO component as well as ROS bridges
+    * SUJ joint state subscriber when in simulation mode
+    * Added psm `set_effort_jaw` subscriber
+  * Python:
+    * Added PSM effort test program
+    * Added cartesian impedance MTM test program
+  * dVRK logo available in STL format for RViz and Gazebo
+  * video.md: added some documentation and launch files for DeckLink frame grabbers
+* Bug fixes:
+  * Fixed missing latch on event publishers
+  * `dvrk_console_json` should now quit on ctrl+c
+
+
 1.5.0 (2017-11-07)
 ==================
 
