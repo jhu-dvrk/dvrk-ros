@@ -43,7 +43,7 @@ set (REQUIRED_CISST_LIBRARIES
      cisstQt
      )
 
-find_package (cisst 1.0.9 REQUIRED ${REQUIRED_CISST_LIBRARIES})
+find_package (cisst 1.0.10 REQUIRED ${REQUIRED_CISST_LIBRARIES})
 
 if (cisst_FOUND_AS_REQUIRED)
 
@@ -60,9 +60,9 @@ if (cisst_FOUND_AS_REQUIRED)
 
 
   # sawRobotIO1394 has been compiled within cisst, we should find it automatically
-  find_package (sawRobotIO1394          1.5.0 REQUIRED)
-  find_package (sawControllers          1.5.0 REQUIRED)
-  find_package (sawIntuitiveResearchKit 1.5.0 REQUIRED)
+  find_package (sawRobotIO1394          1.6.0 REQUIRED)
+  find_package (sawControllers          1.6.0 REQUIRED)
+  find_package (sawIntuitiveResearchKit 1.6.0 REQUIRED)
 
   include_directories (
     ${dvrk_robot_SOURCE_DIR}/include

@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <package>
   <name>dvrk_model</name>
-  <version>1.5.0</version>
+  <version>1.6.0</version>
   <description>The dvrk_model package</description>
 
-  <maintainer email="zihan@jhu.edu">Zihan Chen</maintainer>
+  <maintainer email="anton.deguet@jhu.edu">Anton Deguet</maintainer>
   <license>CISST</license>
 
   <author email="zihan.chen@jhu.edu">Zihan Chen</author>
