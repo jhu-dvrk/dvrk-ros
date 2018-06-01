@@ -5,9 +5,9 @@
   <xacro:include filename="$(find dvrk_model)/model/mtm.urdf.xacro"/>
 
   <link name="world"/>
-  <xacro:mtm_right 
-      prefix="$(arg prefix)"
+  <xacro:mtm_right
+      prefix="MTMR_"
       parent_link="world"
       xyz="0.25 0.0 1.0" rpy="0.0 0.0 0.0"/>
-  
+
 </robot>

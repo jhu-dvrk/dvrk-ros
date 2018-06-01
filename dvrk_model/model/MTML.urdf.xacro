@@ -6,8 +6,8 @@
 
   <link name="world"/>
   <xacro:mtm_left
-      prefix="$(arg prefix)"
+      prefix="MTML_"
       parent_link="world"
       xyz="-0.25 0.0 1.0" rpy="0.0 0.0 0.0"/>
-  
+
 </robot>
