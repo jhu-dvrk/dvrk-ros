@@ -35,12 +35,21 @@ void dvrk::add_topics_console(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         ("Console", "TeleopEnable",
          ros_namespace + "/teleop/enable");
+    bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
+        ("Console", "CycleTeleopPSMByMTM",
+         ros_namespace + "/teleop/cycle_teleop_psm_by_mtm");
     bridge.AddSubscriberToCommandWrite<double, std_msgs::Float32>
         ("Console", "SetScale",
          ros_namespace + "/teleop/set_scale");
     bridge.AddPublisherFromEventWrite<double, std_msgs::Float32>
         ("Console", "Scale",
          ros_namespace + "/teleop/scale");
+    bridge.AddPublisherFromEventWrite<prmKeyValue, diagnostic_msgs::KeyValue>
+        ("Console", "TeleopPSMSelected",
+         ros_namespace + "/teleop/teleop_psm_selected");
+    bridge.AddPublisherFromEventWrite<prmKeyValue, diagnostic_msgs::KeyValue>
+        ("Console", "TeleopPSMUnselected",
+         ros_namespace + "/teleop/teleop_psm_unselected");
 }
 
 void dvrk::connect_bridge_console(const std::string & bridge_name,
