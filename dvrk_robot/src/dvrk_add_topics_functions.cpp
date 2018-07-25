@@ -38,6 +38,9 @@ void dvrk::add_topics_console(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
         ("Console", "CycleTeleopPSMByMTM",
          ros_namespace + "/teleop/cycle_teleop_psm_by_mtm");
+    bridge.AddSubscriberToCommandWrite<prmKeyValue, diagnostic_msgs::KeyValue>
+        ("Console", "SelectTeleopPSM",
+         ros_namespace + "/teleop/select_teleop_psm");
     bridge.AddSubscriberToCommandWrite<double, std_msgs::Float32>
         ("Console", "SetScale",
          ros_namespace + "/teleop/set_scale");
