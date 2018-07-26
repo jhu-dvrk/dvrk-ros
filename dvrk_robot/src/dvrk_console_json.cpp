@@ -25,6 +25,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstCommon/cmnCommandLineOptions.h>
 #include <cisstCommon/cmnGetChar.h>
 #include <cisstCommon/cmnQt.h>
+#include <cisstOSAbstraction/osaGetTime.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsoleQt.h>
 
@@ -60,6 +61,12 @@ int main(int argc, char ** argv)
     cmnLogger::SetMaskFunction(CMN_LOG_ALLOW_ALL);
     cmnLogger::SetMaskClassMatching("mtsIntuitiveResearchKit", CMN_LOG_ALLOW_ALL);
     cmnLogger::AddChannel(std::cerr, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
+    // add log file with date so logs don't get overwritten
+    std::string currentDateTime;
+    osaGetDateTimeString(currentDateTime);
+    std::ofstream logFileStream(std::string("cisstLog-" + currentDateTime + ".txt").c_str());
+    cmnLogger::AddChannel(logFileStream);
+    cmnLogger::HaltDefaultLog(); // stop log to default cisstLog.txt
 
     // ---- WARNING: hack to remove ros args ----
     ros::V_string argout;
@@ -189,6 +196,7 @@ int main(int argc, char ** argv)
 
     // stop all logs
     cmnLogger::Kill();
+    cmnLogger::RemoveChannel(logFileStream);
 
     delete console;
     if (hasQt) {
