@@ -1,0 +1,41 @@
+<launch>
+
+  <!-- Set this to your camera's name -->
+  <arg name="rig_name" default="jhu_daVinci"/>
+  <arg name="left_camera_name" default="$(arg rig_name)_left"/>
+  <arg name="left_cam_device" default="1"/>
+  <arg name="right_camera_name" default="$(arg rig_name)_right"/>
+  <arg name="right_cam_device" default="0"/>
+  
+  <!-- camera driver nodes -->
+  <include file="$(find dvrk_robot)/launch/gscam_decklink.launch" ns="$(arg rig_name)/left">
+    <arg name="camera_name" value="$(arg left_camera_name)"/>
+    <arg name="device" value="$(arg left_cam_device)"/>
+  </include>
+  <include file="$(find dvrk_robot)/launch/gscam_decklink.launch" ns="$(arg rig_name)/right">
+    <arg name="camera_name" value="$(arg right_camera_name)"/>
+    <arg name="device" value="$(arg right_cam_device)"/>
+  </include>
+
+  <!-- display video using simple ros image_view -->
+  <node name="dvrk_$(arg left_camera_name)_view"
+	pkg="image_view"
+	type="image_view"
+	args="image:=/$(arg rig_name)/left/decklink/camera/image_raw"/>
+  <node name="dvrk_$(arg right_camera_name)_view"
+	pkg="image_view"
+	type="image_view"
+	args="image:=/$(arg rig_name)/right/decklink/camera/image_raw"/>
+
+  <!-- Start the dVRK console -->
+  <node name="dvrk_node"
+        pkg="dvrk_robot"
+        type="dvrk_console_json"        
+        args="-j $(find dvrk_config)/jhu-daVinci/console-SUJ-ECM-MTMR-PSM1-MTML-PSM2-PSM3-Teleop.json"                     
+        output="screen"/>
+
+  <!-- camera driver nodes -->
+
+  </launch>
+
+
