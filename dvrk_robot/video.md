@@ -68,9 +68,14 @@ from the cables to the endoscope or the endoscope itself.
 
 ## Blackmagic DeckLink Duo
 
-You first need to install the drivers from Blackmagic, see https://www.blackmagicdesign.com/support/family/capture-and-playback   The drivers are included in the package "Desktop Video".  Once you've downloaded the binaries and extracted the files from Blackmagic, follow the instructions on their ReadMe.txt.   For 64 bits Ubuntu system, install the `.deb` files in subfolder `deb/x86_64`.
+You first need to install the drivers from Blackmagic, see https://www.blackmagicdesign.com/support/family/capture-and-playback   The drivers are included in the package "Desktop Video".  Once you've downloaded the binaries and extracted the files from Blackmagic, follow the instructions on their ReadMe.txt.   For 64 bits Ubuntu system, install the `.deb` files in subfolder `deb/x86_64`.   If your card is old, the DeckLink install might ask to run the BlackMagic firmware updater, i.e. something like `BlackmagicFirmwareUpdater update 0`.  After you reboot, check with `dmesg | grep -i black` to see if the card is recognized.  If the driver is working properly, the devices will show up under `/dev/blackmagic`.
 
-To test if the drivers are working and the cards are working, use gstreamer 1.0 or greater.  On Ubuntu 16.04 you can install gstreamer 1.0 or 0.1.   Make sure you install the 1.0 packages.   Once installed, you can use a few command lines to test the drivers:
+To test if the drivers are working and the cards are working, use gstreamer 1.0 or greater.  On Ubuntu 16.04/18.04 both gstreamer 1.0 and 0.1 are available.   Make sure you ONLY install the 1.0 packages.   You will also need the proper gstreamer plugins installed:
+```sh
+  sudo apt install gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad 
+```
+
+Once gstreamer is installed, you can use a few command lines to test the drivers:
   * `gst-inspect-1.0 decklinkvideosrc` will show you the different parameters for the Decklink gstreamer plugin
   * `gst-launch-1.0` can be used to launch the streamer and pipe it to see the video live on the computer.   For example, we used `gst-launch-1.0 -v decklinkvideosrc mode=0 connection=sdi device-number=0 ! videoconvert ! autovideosink`.
     * `mode=0` is for auto detection and is optional
