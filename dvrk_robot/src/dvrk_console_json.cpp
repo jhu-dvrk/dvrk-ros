@@ -81,7 +81,7 @@ int main(int argc, char ** argv)
     double rosPeriod = 10.0 * cmn_ms;
     double tfPeriod = 20.0 * cmn_ms;
     std::list<std::string> jsonIOConfigFiles;
-    std::string versionString = "v1_4_0";
+    std::string versionString = "crtk_alpha";
 
     options.AddOptionOneValue("j", "json-config",
                               "json configuration file",
