@@ -304,6 +304,9 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
         (arm_component_name, "GoalReached",
          ros_namespace + "/goal_reached");
+    bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
+        (arm_component_name, "IsMoving",
+         ros_namespace + "/is_moving");
 
     // messages
     bridge.AddLogFromEventWrite(arm_component_name + "-log", "Error",
