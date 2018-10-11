@@ -48,7 +48,7 @@ Theory of dVRK GC can be found in [here](https://github.com/CUHK-BRME/dvrk-ros-1
 
 ### 3. Prerequisite Setting Wizard
 
-After calling MAIN() function in matlab, the program will step into Prerquisite Setting Wizard automatically. The wizard program is to set user's neccesary customized parameters of dvrk. It is of great importance because dvrk might be install in different scenarios and it might hit environment if you just use default setting. [Prerequisite Setting Wizard](https://github.com/CUHK-BRME/dvrk_Gravity_Compensation/wiki/Prerequisite-Setting) before running MATLAB scripts.
+After calling MAIN() function in matlab, the program will step into Prerquisite Setting Wizard automatically. The wizard program is to set user's neccesary customized parameters of dvrk. It is of great importance because dvrk might be install in different scenarios and it might hit environment if you just use default setting. [Prerequisite Setting Wizard](https://github.com/CUHK-BRME/dvrk-ros-1/wiki/Prerequisite-Setting) before running MATLAB scripts.
 
 ## 4. Contact
 Feel free to contact us.  
