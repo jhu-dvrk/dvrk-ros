@@ -57,10 +57,23 @@ function [GC_controllers,output_data_struct] = gc_demo(GC_ARM)
             disp(sprintf('Some collecing data for MTMR is missing, please check the folder or restart the program.'));
         end
     else
-        GC_controllers = GC_controller(GC_ARM,...
-                                       GC_controller_config_json_str,...
-                                       output_dynamic_matrix,...
-                                       output_lse_config.fit_method,...
-                                       output_lse_config.g_constant);
+        while(true)
+            [is_test_pass,GC_Controllers] = GC_controller(GC_ARM,...
+                                           GC_controller_config_json_str,...
+                                           output_dynamic_matrix,...
+                                           output_lse_config.fit_method,...
+                                           output_lse_config.g_constant);
+            if is_test_pass
+                break
+            else
+                input_str = '';
+                while(~strcmp(input_str,'y') & ~strcmp(input_str,'n'))
+                    input_str = input(sprintf('Do you want to restart the gc controller and controller test? y--yes, n--no [y/n]:  '),'s');
+                end
+                if input_str == 'n'
+                   return
+                end    
+            end
+        end
     end
 end
