@@ -1,4 +1,4 @@
-function [GC_controllers,output_data_struct] = gc_demo(GC_ARM)
+function [GC_Controllers,output_data_struct] = gc_demo(GC_ARM)
 %  Institute: The Chinese University of Hong Kong
 %  Author(s):  Hongbin LIN, Vincent Hui, Samuel Au
 %  Created on: 2018-10-05

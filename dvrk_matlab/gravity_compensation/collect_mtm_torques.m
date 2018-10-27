@@ -43,12 +43,12 @@ function joint_data_list = collect_mtm_torques(config,mtm_arm, is_path_planning,
 
                 for i=1:sample_size
                     mtm_arm.move_joint(joint_trajectory(:,i));
-                    %pause(1);
+                    pause(0.2);
                     for j=1:sample_num
                         [position, velocity, desired_effort(:,i,j)] = mtm_arm.get_state_joint_desired();
                         [current_position(:,i,j), velocity, effort] = mtm_arm.get_state_joint_current();
                         %pause(0.1);
-                    end    
+                    end 
                     disp(sprintf('Moving Train Joint, Joint%d, to angle %d',config.Train_Joint_No, int32(rad2deg(joint_trajectory(config.Train_Joint_No,i)))));
                 end
                 if exist(config.pos_data_path)~=7
@@ -89,7 +89,7 @@ function joint_data_list = collect_mtm_torques(config,mtm_arm, is_path_planning,
                 disp(sprintf('Start to collect Torque data of Theta Joint, Joint%d, with angle %d by negative direction',config.Theta_Joint_No, Theta));
                 for i=1:sample_size
                     mtm_arm.move_joint(joint_trajectory(:,i));
-                    %pause(1);
+                    pause(0.2);
                     for j=1:sample_num
                         [position, velocity, desired_effort(:,i,j)] = mtm_arm.get_state_joint_desired();
                         [current_position(:,i,j), velocity, effort] = mtm_arm.get_state_joint_current();
