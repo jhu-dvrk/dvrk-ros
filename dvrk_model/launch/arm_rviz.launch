@@ -8,7 +8,7 @@
   <arg name="rviz" default="true"/>
   
   <group ns="/dvrk/$(arg arm)">
-      <param name="robot_description" command="rosrun xacro xacro.py $(arg model) prefix:=$(arg arm)_"/>
+      <param name="robot_description" command="rosrun xacro xacro $(arg model) prefix:=$(arg arm)_"/>
       <param name="use_gui" value="$(arg gui)"/>
       <param name="rate" value="$(arg rate)"/>
       <rosparam param="source_list" subst_value="True">

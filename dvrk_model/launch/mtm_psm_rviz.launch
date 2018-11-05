@@ -7,7 +7,7 @@
     <arg name="rate" default="200" />
     
     <param name="robot_description"
-           command="rosrun xacro xacro.py $(arg model)"/>
+           command="rosrun xacro xacro $(arg model)"/>
     <param name="use_gui" value="$(arg gui)"/>
     <param name="rate" value="$(arg rate)"/>
 
@@ -29,7 +29,7 @@
     <arg name="gui" default="true" />
     <arg name="rate" default="200" />
 
-    <param name="robot_description" command="rosrun xacro xacro.py $(arg model)"/>
+    <param name="robot_description" command="rosrun xacro xacro $(arg model)"/>
     <param name="use_gui" value="$(arg gui)"/>
     <param name="rate" value="$(arg rate)"/>
 
