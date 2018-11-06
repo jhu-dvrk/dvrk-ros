@@ -3,6 +3,7 @@
 # Author: Adnan Munawar
 # Testing Robot IO Loading with varying ROS Communication Load
 
+from __future__ import print_function
 from dvrk import arm, psm, mtm, ecm
 import rospy
 import time
@@ -143,7 +144,7 @@ class DvrkLatencyTest(Stats):
             self.activeArms.append(arm_irfc)
             cnt += 1
             self.set_user_data(self.activeArms.__len__())
-            print 'Connecting ROS Client for {}'.format(arm_irfc.name())
+            print('Connecting ROS Client for {}'.format(arm_irfc.name()))
             time.sleep(delay)
             if cnt == n_arms:
                 break
@@ -159,7 +160,7 @@ class DvrkLatencyTest(Stats):
             arm_irfc = self.activeArms.pop()
             arm_irfc.unregister()
             self.set_user_data(self.activeArms.__len__())
-            print 'Disconnecting ROS Client for {}'.format(arm_irfc.name())
+            print('Disconnecting ROS Client for {}'.format(arm_irfc.name()))
             time.sleep(delay)
 
     def _is_narm_valid(self, n_arms, max_num=6, min_num=0):
@@ -188,7 +189,7 @@ if __name__ == '__main__':
         except ValueError:
             raise ValueError('Expecting a number, got string {}'.format(dt_str))
         dt = float(dt_str)
-        print dt
+        print(dt)
         if not 0 <= dt <= 10:
             raise ValueError('Delay between loading arms should be between {} : {}'.format(0.0, 10.0))
     test_load(dt)
