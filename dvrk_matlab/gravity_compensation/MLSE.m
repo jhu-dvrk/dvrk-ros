@@ -41,10 +41,10 @@ function [is_MTM_lse_finish, output_dynamic_matrix, output_lse_config] = MLSE(GC
                             setting_LSE(arm_name,LSE_json_str,input_data_root_path);
          
        % It will go through from Joint6 to Joint1.
-%         LSE_MTM_one_joint(config_lse_joint6);
-%         LSE_MTM_one_joint(config_lse_joint5, config_lse_joint6);
-%         LSE_MTM_one_joint(config_lse_joint4, config_lse_joint5);
-%         LSE_MTM_one_joint(config_lse_joint3 ,config_lse_joint4);
+        LSE_MTM_one_joint(config_lse_joint6);
+        LSE_MTM_one_joint(config_lse_joint5, config_lse_joint6);
+        LSE_MTM_one_joint(config_lse_joint4, config_lse_joint5);
+        LSE_MTM_one_joint(config_lse_joint3 ,config_lse_joint4);
         LSE_MTM_one_joint(config_lse_joint2 ,config_lse_joint3);
         MTML_output_dynamic_matrix = LSE_MTM_one_joint(config_lse_joint1 ,config_lse_joint2);
         
@@ -61,10 +61,10 @@ function [is_MTM_lse_finish, output_dynamic_matrix, output_lse_config] = MLSE(GC
                             setting_LSE(arm_name,LSE_json_str,input_data_root_path);
          
        % It will go through from Joint6 to Joint1.
-%         LSE_MTM_one_joint(config_lse_joint6);
-%         LSE_MTM_one_joint(config_lse_joint5, config_lse_joint6);
-%         LSE_MTM_one_joint(config_lse_joint4, config_lse_joint5);
-%         LSE_MTM_one_joint(config_lse_joint3 ,config_lse_joint4);
+        LSE_MTM_one_joint(config_lse_joint6);
+        LSE_MTM_one_joint(config_lse_joint5, config_lse_joint6);
+        LSE_MTM_one_joint(config_lse_joint4, config_lse_joint5);
+        LSE_MTM_one_joint(config_lse_joint3 ,config_lse_joint4);
         LSE_MTM_one_joint(config_lse_joint2 ,config_lse_joint3);
         MTMR_output_dynamic_matrix = LSE_MTM_one_joint(config_lse_joint1 ,config_lse_joint2);
         
