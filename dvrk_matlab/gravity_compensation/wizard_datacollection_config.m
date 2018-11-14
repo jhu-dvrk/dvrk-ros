@@ -2,19 +2,9 @@ function output_json_str = wizard_datacollection_config(GC_ARM, input_json_str)
 %  Institute: The Chinese University of Hong Kong
 %  Author(s):  Hongbin LIN, Vincent Hui, Samuel Au
 %  Created on: 2018-10-05
-
-    output_json_str = '';
-    if~(strcmp(GC_ARM,'MTML') | strcmp(GC_ARM,'MTMR') | strcmp(GC_ARM,'MTML&MTMR'))
-        error(sprintf(['Input of argument ''GC_ARM''= %s is error, you should input one of the string',...
-                       '[''MTML'',''MTMR'',''MTML&MTMR'']'],GC_ARM));
-    end
-    if exist(input_json_str) ~= 2
-        error(sprintf('Cannot find the json file %s',input_json_str))
-    end
-
-    if(~strcmp(input_json_str(end-4:end),'.json'))
-        error(sprintf('file %s is not .json extend',input_json_str))
-    end
+    
+    % checking if arguments correct
+    argument_checking(GC_ARM, input_json_str);
     
     % Read JSON File
     fid = fopen(input_json_str);
@@ -36,42 +26,25 @@ function output_json_str = wizard_datacollection_config(GC_ARM, input_json_str)
         mtmr_arm.move_joint([0,0,0,0,0,0,0]);
     end
     
-    
-    % Specifying the data save path
-    input_str = '';
-
-    while(~strcmp(input_str,'y') & ~strcmp(input_str,'n'))
-        clc
-        disp(sprintf('Defaut path of output_data_root_path is ''%s''', config.data_collection.output_data_root_path));
-        input_str = input(sprintf('do you want to use defaut data saving path? [y/n]  '),'s');
-    end
-    if input_str == 'n'
-        input_str = 1;
-        while(~ischar(input_str))
-            clc
-            input_str = input(sprintf('Input the output data root path: '),'s');
-        end
-        config.data_collection.output_data_root_path = input_str;
-    end
  
     % Specifying the front panel paramter
     if strcmp(GC_ARM,'MTML') | strcmp(GC_ARM, 'MTML&MTMR')
         arm_string = 'MTML';
         mtm_arm = mtml_arm;
-        joint_init_pos = config.data_collection.joint2_3.init_joint_range.MTML;
+        joint_init_pos = config.data_collection.joint3.init_joint_range.MTML;
     else
         arm_string = 'MTMR';
         mtm_arm = mtmr_arm;
-        joint_init_pos = config.data_collection.joint2_3.init_joint_range.MTMR;
+        joint_init_pos = config.data_collection.joint3.init_joint_range.MTMR;
     end
     
     Joint_No = 2;
     param_name = 'theta_angle_max';
-    recommend_value = config.data_collection.joint2_3.theta_angle_max;
+    recommend_value = config.data_collection.joint3.theta_angle_max;
     joint_init_pos(2) = recommend_value-10; %10 degree smaller for saftey reason
-    joint_init_pos(3) = config.data_collection.joint2_3.train_angle_min;
+    joint_init_pos(3) = config.data_collection.joint3.train_angle_min;
     goal_msg = 'Moving up MTM ARM as close to front panel as possible..';
-    config.data_collection.joint2_3.theta_angle_max = wizard_move_one_joint(mtm_arm,...
+    config.data_collection.joint3.theta_angle_max = wizard_move_one_joint(mtm_arm,...
                                                                                joint_init_pos,...
                                                                                Joint_No,...
                                                                                param_name,...
@@ -83,20 +56,20 @@ function output_json_str = wizard_datacollection_config(GC_ARM, input_json_str)
     if strcmp(GC_ARM,'MTML') | strcmp(GC_ARM, 'MTML&MTMR')
         arm_string = 'MTML';
         mtm_arm = mtml_arm;
-        joint_init_pos = config.data_collection.joint2_3.init_joint_range.MTML;
+        joint_init_pos = config.data_collection.joint3.init_joint_range.MTML;
     else
         arm_string = 'MTMR';
         mtm_arm = mtmr_arm;
-        joint_init_pos = config.data_collection.joint2_3.init_joint_range.MTMR;
+        joint_init_pos = config.data_collection.joint3.init_joint_range.MTMR;
     end
     
     Joint_No = 3;
-    joint_init_pos(2) = config.data_collection.joint2_3.theta_angle_max;
-    joint_init_pos(3) = config.data_collection.joint2_3.train_angle_min;
+    joint_init_pos(2) = config.data_collection.joint3.theta_angle_max;
+    joint_init_pos(3) = config.data_collection.joint3.train_angle_min;
     param_name = 'couple_upper_limit';
-    recommend_value = config.data_collection.joint2_3.couple_upper_limit;
+    recommend_value = config.data_collection.joint3.couple_upper_limit;
     goal_msg = 'Moving up MTM ARM as close to upper panel as possible..';
-    config.data_collection.joint2_3.couple_upper_limit = wizard_move_one_joint(mtm_arm,...
+    config.data_collection.joint3.couple_upper_limit = wizard_move_one_joint(mtm_arm,...
                                                                                joint_init_pos,...
                                                                                Joint_No,...
                                                                                param_name,...
@@ -150,7 +123,7 @@ function output_json_str = wizard_datacollection_config(GC_ARM, input_json_str)
         arm_string = 'MTML';
         mtm_arm = mtml_arm;
         joint_init_pos = zeros(1,7);
-
+        joint_init_pos(1) = 30;
         Joint_No = 1;
         param_name = 'train_angle_max';
         recommend_value = config.data_collection.joint1.train_angle_max.MTML;
@@ -170,7 +143,7 @@ function output_json_str = wizard_datacollection_config(GC_ARM, input_json_str)
         arm_string = 'MTMR';
         mtm_arm = mtmr_arm;
         joint_init_pos = zeros(1,7);
-
+        joint_init_pos(1) = -30;
         Joint_No = 1;
         param_name = 'train_angle_min';
         recommend_value = config.data_collection.joint1.train_angle_min.MTMR;
@@ -190,8 +163,8 @@ function output_json_str = wizard_datacollection_config(GC_ARM, input_json_str)
     % Output Display
     clc;
     disp(sprintf('Your customized parameters is:'));
-    disp(sprintf('Joint2_3.theta_angle_max: %d', config.data_collection.joint2_3.theta_angle_max));
-    disp(sprintf('Joint2_3.couple_upper_limit: %d', config.data_collection.joint2_3.couple_upper_limit));
+    disp(sprintf('joint3.theta_angle_max: %d', config.data_collection.joint3.theta_angle_max));
+    disp(sprintf('joint3.couple_upper_limit: %d', config.data_collection.joint3.couple_upper_limit));
     if strcmp(GC_ARM,'MTML') | strcmp(GC_ARM, 'MTML&MTMR')
         disp(sprintf('Joint1.train_angle_min.MTML: %d', config.data_collection.joint1.train_angle_min.MTML));
         disp(sprintf('Joint1.train_angle_max.MTML: %d', config.data_collection.joint1.train_angle_max.MTML));
@@ -200,16 +173,16 @@ function output_json_str = wizard_datacollection_config(GC_ARM, input_json_str)
         disp(sprintf('Joint1.train_angle_min.MTMR: %d', config.data_collection.joint1.train_angle_min.MTMR));
         disp(sprintf('Joint1.train_angle_max.MTMR: %d', config.data_collection.joint1.train_angle_max.MTMR));
     end
-    
-    % Output JSON File
-    output_json_str = [input_json_str(1:end-5),'_wizard.json'];
-    fid = fopen(output_json_str,'w');
+
+    % save wizard JSON File
+    file_name = [config.data_collection.output_data_root_path,'/', input_json_str(1:end-5),'_',...
+        datestr(datetime('now'),'mmmm-dd-yyyy-HH-MM-SS'),'_wizard.json'];
+    fid = fopen(file_name,'w');
     jsonStr = jsonencode(config);
     fwrite(fid, jsonStr);
     fclose(fid);
-    disp(sprintf('Save config file to %s', output_json_str));
-
-   
+    disp(sprintf('Save config file to %s', file_name));
+    output_json_str = file_name;
 end
 
 function customized_value = wizard_move_one_joint(mtm_arm, joint_init_pos, Joint_No, param_name, arm_string,...
@@ -254,3 +227,16 @@ function customized_value = wizard_move_one_joint(mtm_arm, joint_init_pos, Joint
     end
 end
 
+function argument_checking(GC_ARM, input_json_str)
+    if~(strcmp(GC_ARM,'MTML') | strcmp(GC_ARM,'MTMR') | strcmp(GC_ARM,'MTML&MTMR'))
+        error(sprintf(['Input of argument ''GC_ARM''= %s is error, you should input one of the string',...
+                       '[''MTML'',''MTMR'',''MTML&MTMR'']'],GC_ARM));
+    end
+    if exist(input_json_str) ~= 2
+        error(sprintf('Cannot find the json file %s',input_json_str))
+    end
+
+    if(~strcmp(input_json_str(end-4:end),'.json'))
+        error(sprintf('file %s is not .json extend',input_json_str))
+    end
+end

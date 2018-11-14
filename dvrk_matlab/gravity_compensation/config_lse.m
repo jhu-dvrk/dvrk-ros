@@ -6,7 +6,6 @@ classdef config_lse
    properties
        Joint_No
        std_filter
-       symbolic_file
        g_constant
        Is_Plot
        issave_figure
@@ -19,19 +18,17 @@ classdef config_lse
        root_output_path
        output_pos_fig_path
        output_neg_fig_path
-       output_pos_param_path
-       output_neg_param_path
+       output_param_path
        Output_Param_Joint_No
        prior_param_index
        prior_param_values
    end
    methods
-      function obj = config_lse(Joint_No,std_filter,symbolic_file,Is_Plot,...
+      function obj = config_lse(Joint_No,std_filter,Is_Plot,...
               issave_figure,root_input_path,fit_method,g_constant,root_output_path)
           if nargin >= 6
                obj.Joint_No =Joint_No;
                obj.std_filter = std_filter;
-               obj.symbolic_file = symbolic_file;
                obj.Is_Plot = Is_Plot;
                obj.issave_figure = issave_figure;
                obj.root_input_path = root_input_path;
@@ -65,46 +62,67 @@ classdef config_lse
           else
               obj.root_output_path = root_output_path;
           end
-          obj.output_pos_param_path = [obj.root_output_path,'/data_pos/',obj.fit_method];
-          obj.output_neg_param_path = [obj.root_output_path, '/data_neg/',obj.fit_method];
-          obj.output_pos_fig_path = [obj.root_output_path, '/data_pos/',obj.fit_method,'/figures'];
-          obj.output_neg_fig_path = [obj.root_output_path, '/data_neg/',obj.fit_method,'/figures'];
+          obj.output_param_path = [obj.root_output_path,'/Estimated_Param/',obj.fit_method];
+          obj.output_pos_fig_path = [obj.root_output_path,'/Estimated_Param/',obj.fit_method,'/figures/data_pos'];
+          obj.output_neg_fig_path = [obj.root_output_path,'/Estimated_Param/',obj.fit_method,'/figures/data_neg'];
           obj.Output_Param_Joint_No = [];
           for k=obj.Joint_No:7
               obj.Output_Param_Joint_No(end+1) = k;
           end
-          if Joint_No==3
-               obj.Output_Param_Joint_No = [2,3,4,5,6,7];
-          end
-          obj = set_prior(obj);
+          obj = set_fit_method(obj);
       end
-      function obj = set_prior(obj)
+      function obj = set_fit_method(obj)
+         % Goal: Choose different fitting method by setting specified dynamic param to zeros
+         % For example:
+         %         full equation: G(q)+a0+a1*q+a2*q^2+a3*q^3+a4*q^4
+         %         3POL ----- G(q)+a0+a1*q+a2*q^2+a3*q^3
+         %         then a4 set to zeros
+         % Set fitting model
+         % fit_method     Dynamic Equation
+         % 4POL ----- G(q)+a0+a1*q+a2*q^2+a3*q^3+a4*q^4
+         % 3POL ----- G(q)+a0+a1*q+a2*q^2+a3*q^3
+         % 2POL ----- G(q)+a0+a1*q+a2*q^2
+         % 1POL ----- G(q)+a0+a1*q
+         % drift -----G(q)+a0
+         % origin ----G(q)
+         %Output:
+         %param(param_index) = 0;
+         %prior_param_index = {[0,[param_index]]};
+         
          fit_method_list = {'4POL','3POL','2POL','1POL','drift','origin'};
-         joint6_prior_index ={{0},{0,41},{0,40,41},{0,39,40,41},{0,38,39,40,41},{0,37,38,39,40,41}};
-         joint5_prior_index ={{0},{0,36},{0,35,36},{0,34,35,36},{0,33,34,35,36},{0,32,33,34,35,36}};
-         joint4_prior_index ={{0},{0,31},{0,30,31},{0,29,30,31},{0,28,29,30,31},{0,27,28,29,30,31}};
-         joint2_3_prior_index ={{0,16,17,18,19,20},{0,16,17,18,19,20,26},{0,16,17,18,19,20,25,26},{0,16,17,18,19,20,24,25,26},...
-                                {0,16,17,18,19,20,23,24,25,26},{0,16,17,18,19,20,22,23,24,25,26}};
-         joint1_prior_index ={{0},{0,15},{0,14,15},{0,13,14,15},{0,12,13,14,15},{0,11,12,13,14,15}};
+         joint_prior_index_list = {};
+         for i=1:6
+             gc_param_num = 10;
+             joint_prior_index = {{0},...
+                              num2cell([0,i*5+gc_param_num, i*5+gc_param_num+30]),...
+                              num2cell([0,i*5+gc_param_num-1:i*5+gc_param_num, i*5+gc_param_num+30-1:i*5+gc_param_num+30]),...
+                              num2cell([0,i*5+gc_param_num-2:i*5+gc_param_num, i*5+gc_param_num+30-2:i*5+gc_param_num+30]),...
+                              num2cell([0,i*5+gc_param_num-3:i*5+gc_param_num, i*5+gc_param_num+30-3:i*5+gc_param_num+30]),...
+                              num2cell([0,i*5+gc_param_num-4:i*5+gc_param_num, i*5+gc_param_num+30-4:i*5+gc_param_num+30])};
+             joint_prior_index_list{end+1} = joint_prior_index;
+         end
+         joint1_prior_index = joint_prior_index_list{1};
+         joint2_prior_index = joint_prior_index_list{2};
+         joint3_prior_index = joint_prior_index_list{3};
+         joint4_prior_index = joint_prior_index_list{4};
+         joint5_prior_index = joint_prior_index_list{5};
+         joint6_prior_index = joint_prior_index_list{6};
+         
          param_values = {num2cell(zeros(1,1)),...
-                         num2cell(zeros(1,2)),...
                          num2cell(zeros(1,3)),...
-                         num2cell(zeros(1,4)),...
                          num2cell(zeros(1,5)),...
-                         num2cell(zeros(1,6))};
-         joint2_3_param_values = {num2cell(zeros(1,6)),...
-                                  num2cell(zeros(1,7)),...
-                                  num2cell(zeros(1,8)),...
-                                  num2cell(zeros(1,9)),...
-                                  num2cell(zeros(1,10)),...
-                                  num2cell(zeros(1,11))};
+                         num2cell(zeros(1,7)),...
+                         num2cell(zeros(1,9)),...
+                         num2cell(zeros(1,11))};
+
          joint1_index_map = containers.Map(fit_method_list,joint1_prior_index); 
-         joint2_3_index_map = containers.Map(fit_method_list,joint2_3_prior_index); 
+         joint2_index_map = containers.Map(fit_method_list,joint2_prior_index); 
+         joint3_index_map = containers.Map(fit_method_list,joint3_prior_index); 
          joint4_index_map = containers.Map(fit_method_list,joint4_prior_index); 
          joint5_index_map = containers.Map(fit_method_list,joint5_prior_index); 
          joint6_index_map = containers.Map(fit_method_list,joint6_prior_index);
+         
          joint_values_map = containers.Map(fit_method_list,param_values);
-         joint2_3_values_map = containers.Map(fit_method_list,joint2_3_param_values);
          if obj.Joint_No == 6
              obj.prior_param_index = joint6_index_map(obj.fit_method);
              obj.prior_param_values = joint_values_map(obj.fit_method);
@@ -117,9 +135,13 @@ classdef config_lse
              obj.prior_param_index = joint4_index_map(obj.fit_method);
              obj.prior_param_values = joint_values_map(obj.fit_method);
          end
-         if obj.Joint_No == 3 | obj.Joint_No == 2
-             obj.prior_param_index = joint2_3_index_map(obj.fit_method);
-             obj.prior_param_values = joint2_3_values_map(obj.fit_method);
+         if obj.Joint_No == 3 
+             obj.prior_param_index = joint3_index_map(obj.fit_method);
+             obj.prior_param_values = joint_values_map(obj.fit_method);
+         end
+          if obj.Joint_No == 2
+             obj.prior_param_index = joint2_index_map(obj.fit_method);
+             obj.prior_param_values = joint_values_map(obj.fit_method);
          end
          if obj.Joint_No == 1
              obj.prior_param_index = joint1_index_map(obj.fit_method);

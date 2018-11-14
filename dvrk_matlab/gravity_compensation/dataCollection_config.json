@@ -2,10 +2,11 @@
   "data_collection": {
     "is_path_planning": true,
     "is_collecting_data": true,
-    "output_data_root_path": "./../GC_Data_test",
+    "output_data_root_path": "./../GC_Data_stable_test",
     "is_pos_dir": true,
     "is_neg_dir": true,
     "sample_num": 10,
+    "steady_time": 0.5,
     "joint6": {
       "init_joint_range": [
         0,
@@ -69,7 +70,7 @@
       "theta_angle_min": -10,
       "theta_angle_delta": 5
     },
-    "joint2_3": {
+    "joint3": {
       "init_joint_range": {
         "MTML": [
           28,
@@ -101,6 +102,22 @@
       "couple_upper_limit": 16,
       "couple_lower_limit": -11
     },
+    "joint2": {
+      "init_joint_range": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "Train_Joint_No": 2,
+      "train_angle_max": 40,
+      "train_angle_min": -14,
+      "train_angle_delta": 1,
+      "repeat_times": 10
+    },
     "joint1": {
       "init_joint_range": [
         0,
@@ -121,7 +138,7 @@
         "MTMR": -40
       },
       "train_angle_delta": 1,
-      "Theta_Joint_No": 1
+      "repeat_times": 10
     }
   }
 }

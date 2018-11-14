@@ -1,5 +1,9 @@
-function [output_param_map, output_param_map_full] = iterative_LSE(input_param_map, R2_augmented,...
-    T2_augmented, bool_Regressor_Mat, Output_Param_Joint_No)
+function [output_param_map,output_param_full_map, output_param_rel_std_map] = iterative_LSE(input_param_map,...
+                                                                                            input_param_rel_std_map,...
+                                                                                            R2_augmented,... 
+                                                                                            T2_augmented,...
+                                                                                            bool_Regressor_Mat,...
+                                                                                            Output_Param_Joint_No)
 %  Institute: The Chinese University of Hong Kong
 %  Author(s):  Hongbin LIN, Vincent Hui, Samuel Au
 %  Created on: 2018-10-05
@@ -12,15 +16,13 @@ function [output_param_map, output_param_map_full] = iterative_LSE(input_param_m
         error('Please gives the correct size of argument')
     else
     param_num = size_R(2);              
-    %Set Prior, set known_index(i)=1; known_parameter(i)={value}
-    known_index_tmp = cell2mat(input_param_map.keys);
-    known_parameter_tmp = cell2mat(input_param_map.values);
+    %Set initial prior,  known_index(i)=1; known_parameter(i)={value}
     known_index = zeros(param_num,1);
     known_parameter = zeros(param_num,1);
-    known_index(known_index_tmp) = 1;
-    known_parameter(known_index_tmp)=known_parameter_tmp;
+    known_index(cell2mat(input_param_map.keys)) = 1;
+    known_parameter(cell2mat(input_param_map.keys))=cell2mat(input_param_map.values);
     %Iterative Learning
-    for j = 7:-1:1
+    for j = 7:-1:min(Output_Param_Joint_No)
         % simplify using known param and bool Regessor 
         T2 = T2_augmented;
         for i=1:param_num
@@ -28,11 +30,13 @@ function [output_param_map, output_param_map_full] = iterative_LSE(input_param_m
                 T2 = T2 - R2_augmented(:,i)*known_parameter(i);
             end
         end
-        bool_known_index = known_index~=1; bool_known_index= bool_known_index.';
-        bool_unknown_index = bool_known_index & bool_Regressor_Mat(j,:); 
+        %get unknown index in bool mask 
+        unknown_index = known_index~=1; 
+        unknown_index= unknown_index.';
+        bool_unknown_index = unknown_index & bool_Regressor_Mat(j,:); 
         R2 = R2_augmented(:,bool_unknown_index);
 
-        % Extracting the Rows which to be trained 
+        % Extracting the rows from T2 and R2 which to be trained 
         Train_Row_Index = zeros(1,7);Train_Row_Index(j) = 1;
         Train_Row_list = [];
         d_size = size(T2);
@@ -45,18 +49,19 @@ function [output_param_map, output_param_map_full] = iterative_LSE(input_param_m
 
         %Compute unknown param using Least Square Estimation
         learn_dynamic_parameters = pinv(R2)*T2;
+        
+        %Compute the std of computed parameters
+         [ std_var_beta, rel_std_var_beta ] = std_dynamic_param( R2, T2, learn_dynamic_parameters);
 
         %dynamic_param_result[:,1] = 1 for trained param; 2 for known param; 
         % 0 for param that this row cannot train
         k=1;
-        dynamic_param_result = [];  
+        dynamic_param_result = zeros(param_num,3);  
         for i = 1:param_num
             if known_index(i)==1
-                dynamic_param_result = [dynamic_param_result;[2,known_parameter(i)]];
-            elseif ~bool_Regressor_Mat(j,i)
-                dynamic_param_result = [dynamic_param_result;[0,0]];
-            else
-                dynamic_param_result = [dynamic_param_result;[1,learn_dynamic_parameters(k)]];
+                dynamic_param_result(i,1:2) = [2,known_parameter(i)];
+            elseif bool_Regressor_Mat(j,i)
+                dynamic_param_result(i,:) = [1,learn_dynamic_parameters(k),rel_std_var_beta(k)];
                 k = k+1;
             end
         end
@@ -72,8 +77,10 @@ function [output_param_map, output_param_map_full] = iterative_LSE(input_param_m
 
     %Second column of dynamic_param_result: 
     %1 stand for trained param, 0 stands for unknown param, 2 stand for known param
-    output_param_map_full = containers.Map(1:param_num,dynamic_param_result(:,2));
-    output_param_map = containers.Map(output_param_map_full.keys, output_param_map_full.values);
+    output_param_full_map = containers.Map(1:param_num,dynamic_param_result(:,2));
+    output_param_map = containers.Map(1:param_num,dynamic_param_result(:,2));
+    output_param_rel_std_map = containers.Map(1:param_num,dynamic_param_result(:,3));
+    
     bool_joint_array =  zeros(1,param_num);
     for i=1:size(Output_Param_Joint_No,2)
         bool_joint_array = bool_joint_array | bool_Regressor_Mat(Output_Param_Joint_No(i),:);
@@ -81,6 +88,13 @@ function [output_param_map, output_param_map_full] = iterative_LSE(input_param_m
     for i=1:size(bool_joint_array, 2)
         if bool_joint_array(i)~=1
             output_param_map.remove(i);
+            output_param_rel_std_map.remove(i);
         end
     end
+    keys = input_param_rel_std_map.keys;
+    values = input_param_rel_std_map.values;
+    for i=1:size(input_param_rel_std_map.keys,2)
+       output_param_rel_std_map(keys{i})  = values{i}; 
+    end
+    output_param_rel_std_map
 end

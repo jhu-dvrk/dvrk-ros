@@ -2,7 +2,9 @@ function Torques_data = Torques_data_Process(current_position, desired_effort, m
 %  Institute: The Chinese University of Hong Kong
 %  Author(s):  Hongbin LIN, Vincent Hui, Samuel Au
 %  Created on: 2018-10-05
-
+    
+    %current_position = current_position(:,:,1:10);
+    %desired_effort = desired_effort(:,:,1:10);
     d_size = size(desired_effort);
     Torques_data = zeros(7,2,d_size(2));
     %First Filter out Point out of 1 std, then save the date with its index whose value is close to mean
@@ -41,10 +43,10 @@ function Torques_data = Torques_data_Process(current_position, desired_effort, m
                    end
                 end
             end
-            if(lower(method == 'mean'))
+            if(strcmp(lower(method),'mean'))
                 Torques_data(j,1,i) = position_data_filtered_mean;
                 Torques_data(j,2,i) = effort_data_filtered_mean;              
-            elseif(lower(method == 'min_abs_error'))
+            elseif(strcmp(lower(method),'min_abs_error'))
                 Torques_data(j,1,i) = current_position(j,i,final_index);
                 Torques_data(j,2,i) = desired_effort(j,i,final_index);
             else
@@ -54,5 +56,5 @@ function Torques_data = Torques_data_Process(current_position, desired_effort, m
     end
 
     % Tick out the data collecting from some joint configuration which reaches limits and have cable force effect. 
-    Torques_data = Torques_data(:,:,:);
+    Torques_data = Torques_data(:,:,3:end-1);
 end

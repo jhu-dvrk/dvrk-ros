@@ -2,7 +2,6 @@
   "lse": {
     "issave_figure": false,
     "isplot": false,
-    "symbolic_file": "symbolic_MMPM_6_4POL.mat",
     "std_filter": 0.3,
     "g_constant": 9.81,
     "joint6": {
@@ -14,8 +13,11 @@
     "joint4": {
       "fit_method": "4POL"
     },
-    "joint2_3": {
+    "joint3": {
       "fit_method": "4POL"
+    },
+    "joint2": {
+      "fit_method": "1POL"
     },
     "joint1": {
       "fit_method": "4POL"
