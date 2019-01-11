@@ -145,14 +145,15 @@ dvrk::console::console(const double & publish_rate_in_seconds,
          inputsIter != inputsEnd;
          ++inputsIter) {
         std::string upperName = inputsIter->second.second;
-        std::string lowerName = upperName;
+        std::string lowerName = inputsIter->first;
         // put everything lower case
         std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), tolower);
         // replace +/- by strings
         cmnStringReplaceAll(lowerName, "-", "_minus");
         cmnStringReplaceAll(lowerName, "+", "_plus");
         pub_bridge->AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-            (upperName, "Button", footPedalsNameSpace + lowerName);
+            (upperName + "_" + inputsIter->first, "Button",
+             footPedalsNameSpace + lowerName);
     }
 
     dvrk::add_topics_console(*pub_bridge, mNameSpace + "/console", version);
@@ -278,7 +279,7 @@ void dvrk::console::Connect(void)
     for (inputsIter = mConsole->mDInputSources.begin();
          inputsIter != inputsEnd;
          ++inputsIter) {
-        componentManager->Connect(mBridgeName, inputsIter->second.second,
+        componentManager->Connect(mBridgeName, inputsIter->second.second + "_" + inputsIter->first,
                                   inputsIter->second.first, inputsIter->second.second);
     }
 
