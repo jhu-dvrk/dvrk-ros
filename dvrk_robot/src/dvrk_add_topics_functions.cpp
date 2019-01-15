@@ -217,9 +217,9 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
         (arm_component_name, "SetDesiredState",
          ros_namespace + "/set_desired_state");
-    bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
-        (arm_component_name, "SetDeviceState",
-         ros_namespace + "/set_device_state");
+    bridge.AddSubscriberToCommandWrite<prmOperatingState, crtk_msgs::robot_state>
+        (arm_component_name, "SetOperatingState",
+         ros_namespace + "/set_operating_state");
 
     switch (version) {
     case dvrk_topics_version::crtk_alpha:
@@ -298,9 +298,9 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
         (arm_component_name, "DesiredState",
          ros_namespace + "/desired_state");
-    bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
-        (arm_component_name, "DeviceState",
-         ros_namespace + "/device_state");
+    bridge.AddPublisherFromEventWrite<prmOperatingState, crtk_msgs::robot_state>
+        (arm_component_name, "OperatingState",
+         ros_namespace + "/operating_state");
     bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
         (arm_component_name, "GoalReached",
          ros_namespace + "/goal_reached");
