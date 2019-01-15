@@ -3,7 +3,7 @@
 # Author: Anton Deguet
 # Date: 2015-02-22
 
-# (C) Copyright 2015-2017 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2015-2019 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -41,18 +41,18 @@ class example_application:
         print(rospy.get_caller_id(), ' -> starting home')
         self.arm.home()
         # get current joints just to set size
-        goal = numpy.copy(self.arm.get_current_joint_position())
+        goal = numpy.copy(self.arm.setpoint_jp())
         # go to zero position, for PSM and ECM make sure 3rd joint is past cannula
         goal.fill(0)
         if ((self.arm.name() == 'PSM1') or (self.arm.name() == 'PSM2') or (self.arm.name() == 'PSM3') or (self.arm.name() == 'ECM')):
             goal[2] = 0.12
-        self.arm.move_joint(goal, interpolate = True)
+        self.arm.move_jp(goal)
 
     # direct joint control example
-    def joint_direct(self):
-        print(rospy.get_caller_id(), ' -> starting joint direct')
+    def servo_jp(self):
+        print(rospy.get_caller_id(), ' -> starting servo_jp')
         # get current position
-        initial_joint_position = numpy.copy(self.arm.get_current_joint_position())
+        initial_joint_position = numpy.copy(self.arm.setpoint_jp())
         print(rospy.get_caller_id(), ' -> testing direct joint position for 2 joints of ', len(initial_joint_position))
         amplitude = math.radians(10.0) # +/- 10 degrees
         duration = 5  # seconds
@@ -63,15 +63,15 @@ class example_application:
         for i in range(samples):
             goal[0] = initial_joint_position[0] + amplitude *  math.sin(i * math.radians(360.0) / samples)
             goal[1] = initial_joint_position[1] + amplitude *  math.sin(i * math.radians(360.0) / samples)
-            self.arm.move_joint(goal, interpolate = False)
+            self.arm.servo_jp(goal)
             rospy.sleep(1.0 / rate)
-        print(rospy.get_caller_id(), ' <- joint direct complete')
+        print(rospy.get_caller_id(), ' <- servo_jp complete')
 
     # goal joint control example
-    def joint_goal(self):
-        print(rospy.get_caller_id(), ' -> starting joint goal')
+    def move_jp(self):
+        print(rospy.get_caller_id(), ' -> starting move_jp')
         # get current position
-        initial_joint_position = numpy.copy(self.arm.get_current_joint_position())
+        initial_joint_position = numpy.copy(self.arm.setpoint_jp())
         print(rospy.get_caller_id(), ' -> testing goal joint position for 2 joints of ', len(initial_joint_position))
         amplitude = math.radians(10.0)
         # create a new goal starting with current position
@@ -79,38 +79,38 @@ class example_application:
         # first motion
         goal[0] = initial_joint_position[0] + amplitude
         goal[1] = initial_joint_position[1] - amplitude
-        self.arm.move_joint(goal, interpolate = True)
+        self.arm.move_jp(goal)
         # second motion
         goal[0] = initial_joint_position[0] - amplitude
         goal[1] = initial_joint_position[1] + amplitude
-        self.arm.move_joint(goal, interpolate = True)
+        self.arm.move_jp(goal)
         # back to initial position
-        self.arm.move_joint(initial_joint_position, interpolate = True)
-        print(rospy.get_caller_id(), ' <- joint goal complete')
+        self.arm.move_jp(initial_joint_position)
+        print(rospy.get_caller_id(), ' <- move_jp complete')
 
     # utility to position tool/camera deep enough before cartesian examples
     def prepare_cartesian(self):
         # make sure the camera is past the cannula and tool vertical
-        goal = numpy.copy(self.arm.get_current_joint_position())
+        goal = numpy.copy(self.arm.setpoint_jp())
         if ((self.arm.name() == 'PSM1') or (self.arm.name() == 'PSM2') or (self.arm.name() == 'PSM3') or (self.arm.name() == 'ECM')):
             # set in position joint mode
             goal[0] = 0.0
             goal[1] = 0.0
             goal[2] = 0.12
-            self.arm.move_joint(goal, interpolate = True)
+            self.arm.move_jp(goal)
 
     # direct cartesian control example
-    def cartesian_direct(self):
-        print(rospy.get_caller_id(), ' -> starting cartesian direct')
+    def servo_cp(self):
+        print(rospy.get_caller_id(), ' -> starting servo_cp')
         self.prepare_cartesian()
 
         # create a new goal starting with current position
         initial_cartesian_position = PyKDL.Frame()
-        initial_cartesian_position.p = self.arm.get_desired_position().p
-        initial_cartesian_position.M = self.arm.get_desired_position().M
+        initial_cartesian_position.p = self.arm.setpoint_cp().p
+        initial_cartesian_position.M = self.arm.setpoint_cp().M
         goal = PyKDL.Frame()
-        goal.p = self.arm.get_desired_position().p
-        goal.M = self.arm.get_desired_position().M
+        goal.p = self.arm.setpoint_cp().p
+        goal.M = self.arm.setpoint_cp().M
         # motion parameters
         amplitude = 0.05 # 5 cm
         duration = 5  # 5 seconds
@@ -119,31 +119,31 @@ class example_application:
         for i in range(samples):
             goal.p[0] =  initial_cartesian_position.p[0] + amplitude *  math.sin(i * math.radians(360.0) / samples)
             goal.p[1] =  initial_cartesian_position.p[1] + amplitude *  math.sin(i * math.radians(360.0) / samples)
-            self.arm.move(goal.p, interpolate=False)
+            self.arm.servo_cp(goal)
             # check error on kinematics, compare to desired on arm.
             # to test tracking error we would compare to
             # current_position
-            errorX = goal.p[0] - self.arm.get_desired_position().p[0]
-            errorY = goal.p[1] - self.arm.get_desired_position().p[1]
-            errorZ = goal.p[2] - self.arm.get_desired_position().p[2]
+            errorX = goal.p[0] - self.arm.setpoint_cp().p[0]
+            errorY = goal.p[1] - self.arm.setpoint_cp().p[1]
+            errorZ = goal.p[2] - self.arm.setpoint_cp().p[2]
             error = math.sqrt(errorX * errorX + errorY * errorY + errorZ * errorZ)
             if error > 0.002: # 2 mm
                 print('Inverse kinematic error in position [', i, ']: ', error)
             rospy.sleep(1.0 / rate)
-        print(rospy.get_caller_id(), ' <- cartesian direct complete')
+        print(rospy.get_caller_id(), ' <- servo_cp complete')
 
     # direct cartesian control example
-    def cartesian_goal(self):
-        print(rospy.get_caller_id(), ' -> starting cartesian goal')
+    def move_cp(self):
+        print(rospy.get_caller_id(), ' -> starting move_cp')
         self.prepare_cartesian()
 
         # create a new goal starting with current position
         initial_cartesian_position = PyKDL.Frame()
-        initial_cartesian_position.p = self.arm.get_desired_position().p
-        initial_cartesian_position.M = self.arm.get_desired_position().M
+        initial_cartesian_position.p = self.arm.setpoint_cp().p
+        initial_cartesian_position.M = self.arm.setpoint_cp().M
         goal = PyKDL.Frame()
-        goal.p = self.arm.get_desired_position().p
-        goal.M = self.arm.get_desired_position().M
+        goal.p = self.arm.setpoint_cp().p
+        goal.M = self.arm.setpoint_cp().M
 
         # motion parameters
         amplitude = 0.05 # 5 cm
@@ -151,36 +151,36 @@ class example_application:
         # first motion
         goal.p[0] =  initial_cartesian_position.p[0] - amplitude
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move(goal)
+        self.arm.move_cp(goal)
         # second motion
         goal.p[0] =  initial_cartesian_position.p[0] + amplitude
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move(goal)
+        self.arm.move_cp(goal)
         # back to initial position
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move(goal)
+        self.arm.move_cp(goal)
         # first motion
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1] - amplitude
-        self.arm.move(goal)
+        self.arm.move_cp(goal)
         # second motion
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1] + amplitude
-        self.arm.move(goal)
+        self.arm.move_cp(goal)
         # back to initial position
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move(goal)
-        print(rospy.get_caller_id(), ' <- cartesian goal complete')
+        self.arm.move_cp(goal)
+        print(rospy.get_caller_id(), ' <- move_cp complete')
 
     # main method
     def run(self):
         self.home()
-        self.joint_direct()
-        self.joint_goal()
-        self.cartesian_direct()
-        self.cartesian_goal()
+        self.servo_jp()
+        self.move_jp()
+        self.servo_cp()
+        self.move_cp()
 
 if __name__ == '__main__':
     try:
