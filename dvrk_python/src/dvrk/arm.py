@@ -61,7 +61,7 @@ class arm(object):
         self.__ros_namespace = ros_namespace
 
         # crtk features
-        self.__crtk_utils = crtk.utils(ros_namespace + arm_name)
+        self.__crtk_utils = crtk.utils(self, ros_namespace + arm_name)
 
         # add crtk features that we need and are supported by the dVRK
         self.__crtk_utils.add_setpoint_js(self)
