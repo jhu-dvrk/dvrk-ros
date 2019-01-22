@@ -217,7 +217,7 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
         (arm_component_name, "SetDesiredState",
          ros_namespace + "/set_desired_state");
-    bridge.AddSubscriberToCommandWrite<prmOperatingState, crtk_msgs::robot_state>
+    bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
         (arm_component_name, "SetOperatingState",
          ros_namespace + "/set_operating_state");
 
