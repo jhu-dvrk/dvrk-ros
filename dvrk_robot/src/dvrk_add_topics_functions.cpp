@@ -220,6 +220,12 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
         (arm_component_name, "SetOperatingState",
          ros_namespace + "/set_operating_state");
+    bridge.AddSubscriberToCommandWrite<double, std_msgs::Float64>
+        (arm_component_name, "SetJointVelocityRatio",
+         ros_namespace + "/set_joint_velocity_ratio");
+    bridge.AddSubscriberToCommandWrite<double, std_msgs::Float64>
+        (arm_component_name, "SetJointAccelerationRatio",
+         ros_namespace + "/set_joint_acceleration_ratio");
 
     switch (version) {
     case dvrk_topics_version::crtk_alpha:
@@ -304,6 +310,12 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
         (arm_component_name, "GoalReached",
          ros_namespace + "/goal_reached");
+    bridge.AddPublisherFromEventWrite<double, std_msgs::Float64>
+        (arm_component_name, "JointVelocityRatio",
+         ros_namespace + "/joint_velocity_ratio");
+    bridge.AddPublisherFromEventWrite<double, std_msgs::Float64>
+        (arm_component_name, "JointAccelerationRatio",
+         ros_namespace + "/joint_acceleration_ratio");
 
     // messages
     bridge.AddLogFromEventWrite(arm_component_name + "-log", "Error",

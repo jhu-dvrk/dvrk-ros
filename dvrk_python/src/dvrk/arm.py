@@ -64,19 +64,19 @@ class arm(object):
         self.__crtk_utils = crtk.utils(self, ros_namespace + arm_name)
 
         # add crtk features that we need and are supported by the dVRK
-        self.__crtk_utils.add_operating_state(self)
-        self.__crtk_utils.add_setpoint_js(self)
-        self.__crtk_utils.add_setpoint_cp(self)
-        self.__crtk_utils.add_measured_js(self)
-        self.__crtk_utils.add_measured_cp(self)
-        self.__crtk_utils.add_measured_cv(self)
-        self.__crtk_utils.add_measured_cf(self)
-        self.__crtk_utils.add_servo_jp(self)
-        self.__crtk_utils.add_servo_cp(self)
-        self.__crtk_utils.add_servo_jf(self)
-        self.__crtk_utils.add_servo_cf(self)
-        self.__crtk_utils.add_move_jp(self)
-        self.__crtk_utils.add_move_cp(self)
+        self.__crtk_utils.add_operating_state()
+        self.__crtk_utils.add_setpoint_js()
+        self.__crtk_utils.add_setpoint_cp()
+        self.__crtk_utils.add_measured_js()
+        self.__crtk_utils.add_measured_cp()
+        self.__crtk_utils.add_measured_cv()
+        self.__crtk_utils.add_measured_cf()
+        self.__crtk_utils.add_servo_jp()
+        self.__crtk_utils.add_servo_cp()
+        self.__crtk_utils.add_servo_jf()
+        self.__crtk_utils.add_servo_cf()
+        self.__crtk_utils.add_move_jp()
+        self.__crtk_utils.add_move_cp()
 
         # non crtk topics
         self.__arm_current_state = ''
