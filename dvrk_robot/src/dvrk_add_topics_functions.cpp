@@ -304,7 +304,7 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
         (arm_component_name, "DesiredState",
          ros_namespace + "/desired_state");
-    bridge.AddPublisherFromEventWrite<prmOperatingState, crtk_msgs::robot_state>
+    bridge.AddPublisherFromEventWrite<prmOperatingState, crtk_msgs::operating_state>
         (arm_component_name, "OperatingState",
          ros_namespace + "/operating_state");
     bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
