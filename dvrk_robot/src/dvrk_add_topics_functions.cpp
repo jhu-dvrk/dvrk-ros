@@ -218,8 +218,8 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
         (arm_component_name, "SetDesiredState",
          ros_namespace + "/set_desired_state");
     bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
-        (arm_component_name, "SetOperatingState",
-         ros_namespace + "/set_operating_state");
+        (arm_component_name, "OperatingStateCommand",
+         ros_namespace + "/state_command");
     bridge.AddSubscriberToCommandWrite<double, std_msgs::Float64>
         (arm_component_name, "SetJointVelocityRatio",
          ros_namespace + "/set_joint_velocity_ratio");
