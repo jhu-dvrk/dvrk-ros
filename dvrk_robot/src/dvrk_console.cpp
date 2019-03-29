@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2018 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2019 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -62,15 +62,15 @@ dvrk::console::console(const double & publish_rate_in_seconds,
     componentManager->AddComponent(spin_bridge);
     componentManager->AddComponent(stats_bridge);
 
-    stats_bridge->AddIntervalStatisticsPublisher(ros_namespace + "/publishers", pub_bridge->GetName());
-    stats_bridge->AddIntervalStatisticsPublisher(ros_namespace + "/tf_broadcast", tf_bridge->GetName());
-    stats_bridge->AddIntervalStatisticsPublisher(ros_namespace + "/spin", spin_bridge->GetName());
+    stats_bridge->AddIntervalStatisticsPublisher(ros_namespace + "publishers", pub_bridge->GetName());
+    stats_bridge->AddIntervalStatisticsPublisher(ros_namespace + "tf_broadcast", tf_bridge->GetName());
+    stats_bridge->AddIntervalStatisticsPublisher(ros_namespace + "spin", spin_bridge->GetName());
 
     mBridgeName = pub_bridge->GetName();
     mTfBridgeName = tf_bridge->GetName();
 
     if (mConsole->mHasIO) {
-        dvrk::add_topics_io(*pub_bridge, mNameSpace + "/io", version);
+        dvrk::add_topics_io(*pub_bridge, mNameSpace + "io", version);
     }
 
     const mtsIntuitiveResearchKitConsole::ArmList::iterator
@@ -80,7 +80,7 @@ dvrk::console::console(const double & publish_rate_in_seconds,
          armIter != armEnd;
          ++armIter) {
         const std::string name = armIter->first;
-        const std::string armNameSpace = mNameSpace + "/" + name;
+        const std::string armNameSpace = mNameSpace + name;
         switch (armIter->second->mType) {
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
@@ -115,10 +115,10 @@ dvrk::console::console(const double & publish_rate_in_seconds,
             dvrk::add_tf_suj(*tf_bridge, "PSM2");
             dvrk::add_tf_suj(*tf_bridge, "PSM3");
             dvrk::add_tf_suj(*tf_bridge, "ECM");
-            dvrk::add_topics_suj(*pub_bridge, mNameSpace + "/SUJ/PSM1", "PSM1", version);
-            dvrk::add_topics_suj(*pub_bridge, mNameSpace + "/SUJ/PSM2", "PSM2", version);
-            dvrk::add_topics_suj(*pub_bridge, mNameSpace + "/SUJ/PSM3", "PSM3", version);
-            dvrk::add_topics_suj(*pub_bridge, mNameSpace + "/SUJ/ECM", "ECM", version);
+            dvrk::add_topics_suj(*pub_bridge, mNameSpace + "SUJ/PSM1", "PSM1", version);
+            dvrk::add_topics_suj(*pub_bridge, mNameSpace + "SUJ/PSM2", "PSM2", version);
+            dvrk::add_topics_suj(*pub_bridge, mNameSpace + "SUJ/PSM3", "PSM3", version);
+            dvrk::add_topics_suj(*pub_bridge, mNameSpace + "SUJ/ECM", "ECM", version);
         default:
             break;
         }
@@ -133,11 +133,11 @@ dvrk::console::console(const double & publish_rate_in_seconds,
         const std::string name = teleopIter->first;
         std::string topic_name = teleopIter->first;
         std::replace(topic_name.begin(), topic_name.end(), '-', '_');
-        dvrk::add_topics_teleop(*pub_bridge, mNameSpace + "/" + topic_name, name, version);
+        dvrk::add_topics_teleop(*pub_bridge, mNameSpace + topic_name, name, version);
     }
 
     // digital inputs
-    const std::string footPedalsNameSpace = mNameSpace + "/footpedals/";
+    const std::string footPedalsNameSpace = mNameSpace + "footpedals/";
     typedef mtsIntuitiveResearchKitConsole::DInputSourceType DInputSourceType;
     const DInputSourceType::const_iterator inputsEnd = mConsole->mDInputSources.end();
     DInputSourceType::const_iterator inputsIter;
@@ -145,17 +145,18 @@ dvrk::console::console(const double & publish_rate_in_seconds,
          inputsIter != inputsEnd;
          ++inputsIter) {
         std::string upperName = inputsIter->second.second;
-        std::string lowerName = upperName;
+        std::string lowerName = inputsIter->first;
         // put everything lower case
         std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), tolower);
         // replace +/- by strings
         cmnStringReplaceAll(lowerName, "-", "_minus");
         cmnStringReplaceAll(lowerName, "+", "_plus");
         pub_bridge->AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-            (upperName, "Button", footPedalsNameSpace + lowerName);
+            (upperName + "_" + inputsIter->first, "Button",
+             footPedalsNameSpace + lowerName);
     }
 
-    dvrk::add_topics_console(*pub_bridge, mNameSpace + "/console", version);
+    dvrk::add_topics_console(*pub_bridge, mNameSpace + "console", version);
 }
 
 void dvrk::console::Configure(const std::string & jsonFile)
@@ -186,7 +187,7 @@ void dvrk::console::Configure(const std::string & jsonFile)
         } else {
             mtsROSBridge * rosIOBridge = new mtsROSBridge(bridgeNamePrefix + name, period, true);
             dvrk::add_topics_io(*rosIOBridge,
-                                mNameSpace + "/" + name + "/io/",
+                                mNameSpace + name + "/io/",
                                 name, mVersion);
             componentManager->AddComponent(rosIOBridge);
             mIOInterfaces.push_back(name);
@@ -278,7 +279,7 @@ void dvrk::console::Connect(void)
     for (inputsIter = mConsole->mDInputSources.begin();
          inputsIter != inputsEnd;
          ++inputsIter) {
-        componentManager->Connect(mBridgeName, inputsIter->second.second,
+        componentManager->Connect(mBridgeName, inputsIter->second.second + "_" + inputsIter->first,
                                   inputsIter->second.first, inputsIter->second.second);
     }
 

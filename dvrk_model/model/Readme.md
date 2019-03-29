@@ -36,5 +36,5 @@ call *both_psms.urdf.xacro* to generate urdf file with two PSM arms urdf
 
 ### How to generate urdf form xacro
 ```
-rosrun xacro xacro.py mtm_right_only.urdf.xacro > mtm_right_only.urdf
+rosrun xacro xacro mtm_right_only.urdf.xacro > mtm_right_only.urdf
 ```

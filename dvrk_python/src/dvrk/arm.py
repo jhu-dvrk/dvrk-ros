@@ -75,6 +75,7 @@ Arm API
 
 # sphinx-apidoc -F -A "Yijun Hu" -o doc src
 
+from __future__ import print_function
 import inspect
 import threading
 import math
@@ -538,7 +539,7 @@ class arm(object):
                   return True
         # not of type_list print state for this error inside
         if (found == False):
-            print 'Error in ', inspect.stack()[1][3], 'input is of type', input, 'and is not one of:'
+            print('Error in ', inspect.stack()[1][3], 'input is of type', input, 'and is not one of:')
             message = ''
             # skip_length
             i = 0
@@ -546,7 +547,7 @@ class arm(object):
                 message += ' '
                 message += str(type_list[i])
                 i += 1
-            print message
+            print(message)
         return False
 
 
@@ -700,10 +701,10 @@ class arm(object):
         :param interpolate: see  :ref:`interpolate <interpolate>`"""
         if ((not(type(delta_pos) is numpy.ndarray))
              or (not(delta_pos.dtype == numpy.float64))):
-            print "delta_pos must be an array of floats"
+            print("delta_pos must be an array of floats")
             return False
         if (not(delta_pos.size ==  self.get_joint_number())):
-            print "delta_pos must be an array of size", self.get_joint_number()
+            print("delta_pos must be an array of size", self.get_joint_number())
             return False
 
         abs_pos = numpy.array(self.__position_joint_desired)
@@ -733,23 +734,23 @@ class arm(object):
         # check if delta is an array
         if ((not(type(delta_pos) is numpy.ndarray))
              or (not(delta_pos.dtype == numpy.float64))):
-            print "delta_pos must be an array of floats"
+            print("delta_pos must be an array of floats")
             return False
 
         # check the length of the delta move
         if ((not(type(indices) is numpy.ndarray))
             or (not(indices.dtype == numpy.int64))):
-            print "indices must be an array of integers"
+            print("indices must be an array of integers")
             return False
 
         if ((not(indices.size == delta_pos.size))
             or (indices.size > self.get_joint_number())):
-            print "size of delta_pos and indices must match and be less than", self.get_joint_number()
+            print("size of delta_pos and indices must match and be less than", self.get_joint_number())
             return False
 
         for i in range(indices.size):
             if (indices[i] > self.get_joint_number()):
-                print "all indices must be less than", self.get_joint_number()
+                print("all indices must be less than", self.get_joint_number())
                 return False
 
         abs_pos = numpy.array(self.__position_joint_desired)
@@ -768,10 +769,10 @@ class arm(object):
 
         if ((not(type(abs_pos) is numpy.ndarray))
             or (not(abs_pos.dtype == numpy.float64))):
-            print "abs_pos must be an array of floats"
+            print("abs_pos must be an array of floats")
             return False
         if (not(abs_pos.size == self.get_joint_number())):
-            print "abs_pos must be an array of size", self.get_joint_number()
+            print("abs_pos must be an array of size", self.get_joint_number())
             return False
 
         return self.__move_joint(abs_pos, interpolate, blocking)
@@ -798,23 +799,23 @@ class arm(object):
 
         if ((not(type(abs_pos) is numpy.ndarray))
             or (not(abs_pos.dtype == numpy.float64))):
-            print "delta_pos must be an array of floats"
+            print("delta_pos must be an array of floats")
             return False
 
         # check the length of the delta move
         if ((not(type(indices) is numpy.ndarray))
             or (not(indices.dtype == numpy.int64))):
-            print "indices must be an array of integers"
+            print("indices must be an array of integers")
             return False
 
         if ((not(indices.size == abs_pos.size))
             or (indices.size > self.get_joint_number())):
-            print "size of delta_pos and indices must match and be less than", self.get_joint_number()
+            print("size of delta_pos and indices must match and be less than", self.get_joint_number())
             return False
 
         for i in range(indices.size):
             if (indices[i] > self.get_joint_number()):
-                print "all indices must be less than", self.get_joint_number()
+                print("all indices must be less than", self.get_joint_number())
                 return False
 
         abs_pos_result = numpy.array(self.__position_joint_desired)
@@ -881,10 +882,10 @@ class arm(object):
     def set_effort_joint(self, effort):
         if ((not(type(effort) is numpy.ndarray))
             or (not(effort.dtype == numpy.float64))):
-            print "effort must be an array of floats"
+            print("effort must be an array of floats")
             return False
         if (not(effort.size == self.get_joint_number())):
-            print "effort must be an array of size", self.get_joint_number()
+            print("effort must be an array of size", self.get_joint_number())
             return False
         joint_state = JointState()
         joint_state.effort[:] = effort.flat
@@ -937,9 +938,9 @@ class arm(object):
         for sub in self.__sub_list:
             sub.unregister()
         if verbose:
-            print 'Unregistered {} subs for {}'.format(self.__sub_list.__len__(), self.__arm_name)
+            print('Unregistered {} subs for {}'.format(self.__sub_list.__len__(), self.__arm_name))
 
         for pub in self.__pub_list:
             pub.unregister()
         if verbose:
-            print 'Unregistered {} pubs for {}'.format(self.__pub_list.__len__(), self.__arm_name)
+            print('Unregistered {} pubs for {}'.format(self.__pub_list.__len__(), self.__arm_name))
