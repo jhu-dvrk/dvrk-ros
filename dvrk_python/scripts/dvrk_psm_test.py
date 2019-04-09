@@ -19,6 +19,7 @@
 # To communicate with the arm using ROS topics, see the python based example dvrk_arm_test.py:
 # > rosrun dvrk_python dvrk_arm_test.py <arm-name>
 
+from __future__ import print_function
 import dvrk
 import math
 import sys
@@ -26,17 +27,22 @@ import rospy
 import numpy
 import PyKDL
 
+
+if sys.version_info.major < 3:
+    input = raw_input
+
+
 # example of application using arm.py
 class example_application:
 
     # configuration
     def configure(self, robot_name):
-        print rospy.get_caller_id(), ' -> configuring dvrk_psm_test for ', robot_name
+        print(rospy.get_caller_id(), ' -> configuring dvrk_psm_test for ', robot_name)
         self.arm = dvrk.psm(robot_name)
 
     # homing example
     def home(self):
-        print rospy.get_caller_id(), ' -> starting home'
+        print(rospy.get_caller_id(), ' -> starting home')
         self.arm.home()
         # get current joints just to set size
         goal = numpy.copy(self.arm.get_current_joint_position())
@@ -58,18 +64,18 @@ class example_application:
 
     # goal jaw control example
     def jaw_goal(self):
-        print rospy.get_caller_id(), ' -> starting jaw goal'
+        print(rospy.get_caller_id(), ' -> starting jaw goal')
         # try to open and close with the cartesian part of the arm in different modes
-        print rospy.get_caller_id(), '   -> close and open without other move command'
-        raw_input("    Press Enter to continue...")
+        print(rospy.get_caller_id(), '   -> close and open without other move command')
+        input("    Press Enter to continue...")
         self.arm.home()
         self.arm.close_jaw()
         self.arm.open_jaw()
         self.arm.close_jaw()
         self.arm.open_jaw()
         # try to open and close with a joint goal
-        print rospy.get_caller_id(), '   -> close and open with joint move command'
-        raw_input("    Press Enter to continue...")
+        print(rospy.get_caller_id(), '   -> close and open with joint move command')
+        input("    Press Enter to continue...")
         self.arm.home()
         self.arm.close_jaw(blocking = False)
         self.arm.insert_tool(0.1)
@@ -80,8 +86,8 @@ class example_application:
         self.arm.open_jaw()
         self.arm.insert_tool(0.15)
 
-        print rospy.get_caller_id(), '   -> close and open with cartesian move command'
-        raw_input("    Press Enter to continue...")
+        print(rospy.get_caller_id(), '   -> close and open with cartesian move command')
+        input("    Press Enter to continue...")
 
         # try to open and close with a cartesian goal
         self.prepare_cartesian()
@@ -111,10 +117,10 @@ class example_application:
 
     # goal jaw control example
     def jaw_direct(self):
-        print rospy.get_caller_id(), ' -> starting jaw direct'
+        print(rospy.get_caller_id(), ' -> starting jaw direct')
         # try to open and close directly, needs interpolation
-        print rospy.get_caller_id(), '   -> close and open without other move command'
-        raw_input("    Press Enter to continue...")
+        print(rospy.get_caller_id(), '   -> close and open without other move command')
+        input("    Press Enter to continue...")
         self.arm.move_jaw(math.radians(30.0))
         # assume we start at 30 the move +/- 30
         amplitude = math.radians(30.0)
@@ -122,7 +128,7 @@ class example_application:
         rate = 200 # aiming for 200 Hz
         samples = duration * rate
         # create a new goal starting with current position
-        for i in xrange(samples):
+        for i in range(samples):
             goal = math.radians(30.0) + amplitude * math.sin(i * math.radians(360.0) / samples)
             self.arm.move_jaw(goal, interpolate = False)
             rospy.sleep(1.0 / rate)
@@ -139,7 +145,7 @@ class example_application:
 if __name__ == '__main__':
     try:
         if (len(sys.argv) != 2):
-            print sys.argv[0], ' requires one argument, i.e. name of dVRK arm'
+            print(sys.argv[0], ' requires one argument, i.e. name of dVRK arm')
         else:
             application = example_application()
             application.configure(sys.argv[1])

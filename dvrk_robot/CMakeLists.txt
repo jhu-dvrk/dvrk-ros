@@ -9,7 +9,11 @@
 #
 # --- end cisst license ---
 
-cmake_minimum_required (VERSION 2.8.3)
+cmake_minimum_required (VERSION 3.1)
+
+set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
+set (CMAKE_CXX_EXTENSIONS OFF)
 
 project (dvrk_robot)
 
@@ -43,7 +47,7 @@ set (REQUIRED_CISST_LIBRARIES
      cisstQt
      )
 
-find_package (cisst 1.0.10 REQUIRED ${REQUIRED_CISST_LIBRARIES})
+find_package (cisst 1.0.11 REQUIRED ${REQUIRED_CISST_LIBRARIES})
 
 if (cisst_FOUND_AS_REQUIRED)
 
@@ -60,9 +64,9 @@ if (cisst_FOUND_AS_REQUIRED)
 
 
   # sawRobotIO1394 has been compiled within cisst, we should find it automatically
-  find_package (sawRobotIO1394          1.6.0 REQUIRED)
-  find_package (sawControllers          1.6.0 REQUIRED)
-  find_package (sawIntuitiveResearchKit 1.6.0 REQUIRED)
+  find_package (sawRobotIO1394          1.7.0 REQUIRED)
+  find_package (sawControllers          1.7.0 REQUIRED)
+  find_package (sawIntuitiveResearchKit 1.7.0 REQUIRED)
 
   include_directories (
     ${dvrk_robot_SOURCE_DIR}/include

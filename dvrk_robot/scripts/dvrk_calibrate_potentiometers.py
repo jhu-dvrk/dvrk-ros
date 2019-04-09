@@ -9,19 +9,20 @@
 
 import time
 import rospy
-import threading
 import math
 import sys
 import csv
 import datetime
 import numpy
 
-from std_msgs.msg import String, Bool
 from sensor_msgs.msg import JointState
-
 import dvrk
-
 import xml.etree.ElementTree as ET
+
+
+if sys.version_info.major < 3:
+    input = raw_input
+
 
 def slope(x, y):
     a = []
@@ -99,10 +100,10 @@ class potentiometer_calibration:
                 if currentRobot.attrib["Name"] == self._robot_name:
                     self._serial_number = currentRobot.attrib["SN"]
                     xmlRobot = currentRobot
-                    print "Succesfully found robot \"", currentRobot.attrib["Name"], "\", Serial number: ", self._serial_number, " in XML file"
+                    print("Succesfully found robot \"", currentRobot.attrib["Name"], "\", Serial number: ", self._serial_number, " in XML file")
                     robotFound = True
                 else:
-                    print "Found robot \"", currentRobot.attrib["Name"], "\", while looking for \"", self._robot_name, "\""
+                    print("Found robot \"", currentRobot.attrib["Name"], "\", while looking for \"", self._robot_name, "\"")
 
         if robotFound == False:
             sys.exit("Robot tree could not be found in xml file")
@@ -165,13 +166,13 @@ class potentiometer_calibration:
         # Check that everything is working
         time.sleep(2.0) # to make sure some data has arrived
         if not self._data_received:
-            print "It seems the console for ", self._robot_name, " is not started or is not publishing the IO topics"
-            print "Make sure you use \"rosrun dvrk_robot dvrk_console_json\" with the -i option"
+            print("It seems the console for ", self._robot_name, " is not started or is not publishing the IO topics")
+            print("Make sure you use \"rosrun dvrk_robot dvrk_console_json\" with the -i option")
             sys.exit("Start the dvrk_console_json with the proper options first")
 
-        print "The serial number found in the XML file is: ", self._serial_number
-        print "Make sure the dvrk_console_json is using the same configuration file.  Serial number can be found in GUI tab \"IO\"."
-        ok = raw_input("Press `c` and [enter] to continue\n")
+        print("The serial number found in the XML file is: ", self._serial_number)
+        print("Make sure the dvrk_console_json is using the same configuration file.  Serial number can be found in GUI tab \"IO\".")
+        ok = input("Press `c` and [enter] to continue\n")
         if ok != "c":
             sys.exit("Quitting")
 
@@ -181,11 +182,11 @@ class potentiometer_calibration:
 
         if calibrate == "scales":
 
-            print "Calibrating scales using encoders as reference"
+            print("Calibrating scales using encoders as reference")
 
             # write all values to csv file
             csv_file_name = 'pot_calib_scales_' + self._robot_name + '-' + self._serial_number + '-' + now_string + '.csv'
-            print "Values will be saved in: ", csv_file_name
+            print("Values will be saved in: ", csv_file_name)
             f = open(csv_file_name, 'wb')
             writer = csv.writer(f)
             header = []
@@ -196,13 +197,13 @@ class potentiometer_calibration:
             writer.writerow(header)
 
             # messages
-            raw_input("To start with some initial values, you first need to \"home\" the robot.  When homed, press [enter]\n")
+            input("To start with some initial values, you first need to \"home\" the robot.  When homed, press [enter]\n")
 
             if arm_type == "PSM":
-                raw_input("Since you are calibrating a PSM, make sure there is no tool inserted.  Please remove tool or calibration plate if any and press [enter]\n")
+                input("Since you are calibrating a PSM, make sure there is no tool inserted.  Please remove tool or calibration plate if any and press [enter]\n")
             if arm_type == "ECM":
-                raw_input("Since you are calibrating an ECM, remove the endoscope and press [enter]\n")
-            raw_input("The robot will make LARGE MOVEMENTS, please hit [enter] to continue once it is safe to proceed\n")
+                input("Since you are calibrating an ECM, remove the endoscope and press [enter]\n")
+            input("The robot will make LARGE MOVEMENTS, please hit [enter] to continue once it is safe to proceed\n")
 
             for position in range(nb_joint_positions):
                 # create joint goal
@@ -254,11 +255,11 @@ class potentiometer_calibration:
         ######## offset calibration
         if calibrate == "offsets":
 
-            print "Calibrating offsets"
+            print("Calibrating offsets")
 
             # write all values to csv file
             csv_file_name = 'pot_calib_offsets_' + self._robot_name + '-' + self._serial_number + '-' + now_string + '.csv'
-            print "Values will be saved in: ", csv_file_name
+            print("Values will be saved in: ", csv_file_name)
             f = open(csv_file_name, 'wb')
             writer = csv.writer(f)
             header = []
@@ -267,10 +268,10 @@ class potentiometer_calibration:
             writer.writerow(header)
 
             # messages
-            print("Please home AND power off the robot first.  Then hold/clamp your arm in zero position.");
+            print("Please home AND power off the robot first.  Then hold/clamp your arm in zero position.")
             if arm_type == "PSM":
                 print("For a PSM, you need to hold at least the last 4 joints in zero position.  If you don't have a way to constrain the first 3 joints, you can still just calibrate the last 4.  This program will ask you later if you want to save all PSM joint offsets");
-            raw_input("Press [enter] to continue\n")
+            input("Press [enter] to continue\n")
             nb_samples = 10 * nb_samples_per_position
             for sample in range(nb_samples):
                 for axis in range(nb_axis):
@@ -282,11 +283,11 @@ class potentiometer_calibration:
             for axis in range(nb_axis):
                 offsets[axis] = (math.fsum(average_offsets[axis]) / (nb_samples) )
 
-        print ""
+        print("")
 
 
         if calibrate == "scales":
-            print "index | old scale  | new scale  | correction"
+            print("index | old scale  | new scale  | correction")
             for index in range(nb_axis):
                 # find existing values
                 oldScale = float(xmlVoltsToPosSI[index].attrib["Scale"])
@@ -295,13 +296,13 @@ class potentiometer_calibration:
                 newScale = oldScale / correction
 
                 # display
-                print " %d    | % 04.6f | % 04.6f | % 04.6f" % (index, oldScale, newScale, correction)
+                print(" %d    | % 04.6f | % 04.6f | % 04.6f" % (index, oldScale, newScale, correction))
                 # replace values
                 xmlVoltsToPosSI[index].attrib["Scale"] = str(newScale)
 
         if calibrate == "offsets":
             newOffsets = []
-            print "index | old offset  | new offset | correction"
+            print("index | old offset  | new offset | correction")
             for index in range(nb_axis):
                 # find existing values
                 oldOffset = float(xmlVoltsToPosSI[index].attrib["Offset"])
@@ -309,17 +310,17 @@ class potentiometer_calibration:
                 newOffsets.append(oldOffset - offsets[index])
 
                 # display
-                print " %d    | % 04.6f | % 04.6f | % 04.6f " % (index, oldOffset, newOffsets[index], offsets[index])
+                print(" %d    | % 04.6f | % 04.6f | % 04.6f " % (index, oldOffset, newOffsets[index], offsets[index]))
 
             if arm_type == "PSM":
-                all = raw_input("Do you want to save all joint offsets or just the last 4, press 'a' followed by [enter] to save all\n");
+                all = input("Do you want to save all joint offsets or just the last 4, press 'a' followed by [enter] to save all\n");
                 if all == "a":
-                    print "This program will save ALL new PSM offsets"
+                    print("This program will save ALL new PSM offsets")
                     for axis in range(nb_axis):
                         # replace values
                         xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffsets[axis])
                 else:
-                    print "This program will only save the last 4 PSM offsets"
+                    print("This program will only save the last 4 PSM offsets")
                     for axis in range(3, nb_axis):
                         # replace values
                         xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffsets[axis])
@@ -328,18 +329,18 @@ class potentiometer_calibration:
                     # replace values
                     xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffsets[axis])
 
-        save = raw_input("To save this in new file press 'y' followed by [enter]\n")
+        save = input("To save this in new file press 'y' followed by [enter]\n")
         if save == "y":
             tree.write(filename + "-new")
-            print 'Results saved in', filename + '-new. Restart your dVRK application with the new file!'
-            print 'To copy the new file over the existing one: cp', filename + '-new', filename
+            print('Results saved in', filename + '-new. Restart your dVRK application with the new file!')
+            print('To copy the new file over the existing one: cp', filename + '-new', filename)
 
 if __name__ == '__main__':
     if (len(sys.argv) != 4):
-        print sys.argv[0] + ' requires three arguments, i.e. "scales"/"offsets", name of dVRK arm and file name.  Always start with scales calibration.'
+        print(sys.argv[0] + ' requires three arguments, i.e. "scales"/"offsets", name of dVRK arm and file name.  Always start with scales calibration.')
     else:
         if (sys.argv[1] == 'offsets') or (sys.argv[1] == 'scales'):
             calibration = potentiometer_calibration(sys.argv[2])
             calibration.run(sys.argv[1], sys.argv[3])
         else:
-            print sys.argv[0] + ', first argument must be either scales or offsets.  You must start with the scale calibration'
+            print(sys.argv[0] + ', first argument must be either scales or offsets.  You must start with the scale calibration')

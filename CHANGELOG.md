@@ -1,6 +1,23 @@
 Change log
 ==========
 
+1.7.0 (2019-04-09)
+==================
+
+* API changes:
+  * ROS namespaces are now relative, `dvrk_console_json` uses the namespace `dvrk/`, not `/dvrk/`.
+* Deprecated features:
+  * Old deprecated examples have been removed
+* New features:
+  * Support Python3
+  * Log file (`cisstLog.txt`) is now timestamped
+  * ROS topics to:
+    * Set velocity/acceleration ratio for trajectory generation
+    * Set and check active teleop PSM components
+* Bug fixes:
+  * Fixed issue with `coag` being hidden if used for operator present
+  * Launch files use `xacro`, not the deprecated `xacro.py`
+
 1.6.0 (2018-05-16)
 ==================
 

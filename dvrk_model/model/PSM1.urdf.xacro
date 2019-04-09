@@ -6,8 +6,8 @@
 
   <link name="world"/>
   <xacro:psm_sca
-      prefix="$(arg prefix)"
+      prefix="PSM1_"
       parent_link="world"
       xyz="-0.25 0.0 0.5" rpy="0.0 0.0 3.1415926"/>
-  
+
 </robot>

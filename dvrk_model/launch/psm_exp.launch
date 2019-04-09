@@ -13,7 +13,7 @@
   </group>
 
   <!-- send robot description to parameter sercer-->
-  <param name="robot_description" command="$(find xacro)/xacro.py '$(find daVinciCore)/urdf/daVinci_exp.urdf.xacro'" />
+  <param name="robot_description" command="rosrun xacro xacro '$(find daVinciCore)/urdf/daVinci_exp.urdf.xacro'" />
 
    <node name="daVinciCore" pkg="gazebo" type="spawn_model" args="-urdf -param robot_description -model daVinci" respawn="false" output="screen" />
   

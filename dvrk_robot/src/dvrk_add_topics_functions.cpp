@@ -5,7 +5,7 @@
   Author(s):  Zihan Chen, Anton Deguet
   Created on: 2015-04-33
 
-  (C) Copyright 2015-2018 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2019 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -35,12 +35,24 @@ void dvrk::add_topics_console(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         ("Console", "TeleopEnable",
          ros_namespace + "/teleop/enable");
+    bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
+        ("Console", "CycleTeleopPSMByMTM",
+         ros_namespace + "/teleop/cycle_teleop_psm_by_mtm");
+    bridge.AddSubscriberToCommandWrite<prmKeyValue, diagnostic_msgs::KeyValue>
+        ("Console", "SelectTeleopPSM",
+         ros_namespace + "/teleop/select_teleop_psm");
     bridge.AddSubscriberToCommandWrite<double, std_msgs::Float32>
         ("Console", "SetScale",
          ros_namespace + "/teleop/set_scale");
     bridge.AddPublisherFromEventWrite<double, std_msgs::Float32>
         ("Console", "Scale",
          ros_namespace + "/teleop/scale");
+    bridge.AddPublisherFromEventWrite<prmKeyValue, diagnostic_msgs::KeyValue>
+        ("Console", "TeleopPSMSelected",
+         ros_namespace + "/teleop/teleop_psm_selected");
+    bridge.AddPublisherFromEventWrite<prmKeyValue, diagnostic_msgs::KeyValue>
+        ("Console", "TeleopPSMUnselected",
+         ros_namespace + "/teleop/teleop_psm_unselected");
 }
 
 void dvrk::connect_bridge_console(const std::string & bridge_name,
@@ -205,6 +217,12 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
         (arm_component_name, "SetDesiredState",
          ros_namespace + "/set_desired_state");
+    bridge.AddSubscriberToCommandWrite<double, std_msgs::Float64>
+        (arm_component_name, "SetJointVelocityRatio",
+         ros_namespace + "/set_joint_velocity_ratio");
+    bridge.AddSubscriberToCommandWrite<double, std_msgs::Float64>
+        (arm_component_name, "SetJointAccelerationRatio",
+         ros_namespace + "/set_joint_acceleration_ratio");
 
     switch (version) {
     case dvrk_topics_version::crtk_alpha:
@@ -286,6 +304,12 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
         (arm_component_name, "GoalReached",
          ros_namespace + "/goal_reached");
+    bridge.AddPublisherFromEventWrite<double, std_msgs::Float64>
+        (arm_component_name, "JointVelocityRatio",
+         ros_namespace + "/joint_velocity_ratio");
+    bridge.AddPublisherFromEventWrite<double, std_msgs::Float64>
+        (arm_component_name, "JointAccelerationRatio",
+         ros_namespace + "/joint_acceleration_ratio");
 
     // messages
     bridge.AddLogFromEventWrite(arm_component_name + "-log", "Error",

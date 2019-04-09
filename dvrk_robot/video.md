@@ -1,7 +1,7 @@
 Video pipeline
 ==============
 
-This describes a fairly low cost setup that can be used with the dVRK/HRSV display (High Resolution Stereo Video).  We use a couple of cheap USB frame grabbers for the analog videos from SD cameras.   For HD systems, we tested a Blackmagic DeckLink Duo with dual SDI inputs.   For displaying the video back, we just use a graphic card with two spare video outputs.  The software relies heavily on ROS tools to grab and display the stereo video.  Some lag is to be expected.
+This describes a fairly low cost setup that can be used with the dVRK/HRSV display (High Resolution Stereo Video).  We use a couple of cheap USB frame grabbers for the analog videos from SD cameras.   For HD systems, we tested a BlackMagic DeckLink Duo with dual SDI inputs.   For displaying the video back, we just use a graphic card with two spare video outputs.  The software relies heavily on ROS tools to grab and display the stereo video.  Some lag is to be expected.
 
 # Hardware
 
