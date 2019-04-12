@@ -3,7 +3,7 @@
 # Author: Anton Deguet
 # Date: 2017-07-22
 
-# (C) Copyright 2017 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2017-2019 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -61,6 +61,9 @@ class example_application:
 
     # tests
     def tests(self):
+        # turn on gravity compensation
+        self.arm.set_gravity_compensation(True)
+
         print(rospy.get_caller_id(), ' -> press COAG pedal to move to next test (or just wait 60 seconds)')
 
         print(rospy.get_caller_id(), ' -> arm will go limp, hold it and press coag')
@@ -70,12 +73,12 @@ class example_application:
         print(rospy.get_caller_id(), ' -> keep holding arm, press coag, a force in body frame will be applied')
         self.wait_for_coag()
         self.arm.set_wrench_body_orientation_absolute(False)
-        self.arm.set_wrench_body_force((0.0, 0.0, -2.0))
+        self.arm.set_wrench_body_force((0.0, 0.0, -3.0))
 
         print(rospy.get_caller_id(), ' -> keep holding arm, press coag, a force in world frame will be applied')
         self.wait_for_coag()
         self.arm.set_wrench_body_orientation_absolute(True)
-        self.arm.set_wrench_body_force((0.0, 0.0, 2.0))
+        self.arm.set_wrench_body_force((0.0, 0.0, -3.0))
 
         print(rospy.get_caller_id(), ' -> keep holding arm, press coag, orientation will be locked')
         self.wait_for_coag()
