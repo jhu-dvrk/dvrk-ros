@@ -606,6 +606,11 @@ void dvrk::add_topics_teleop(mtsROSBridge & bridge,
     bridge.AddLogFromEventWrite(teleop_component_name + "-log", "Status",
                                 mtsROSEventWriteLog::ROS_LOG_INFO);
 
+    // publisher
+    bridge.AddPublisherFromCommandRead<vctMatRot3, geometry_msgs::QuaternionStamped>
+        (teleop_component_name, "GetAlignOffset",
+         ros_namespace + "/align_offset");
+
     // events
     bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
         (teleop_component_name, "DesiredState", ros_namespace + "/desired_state");
@@ -631,6 +636,8 @@ void dvrk::add_topics_teleop(mtsROSBridge & bridge,
         (teleop_component_name, "Scale", ros_namespace + "/scale");
     bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
         (teleop_component_name, "Following", ros_namespace + "/following");
+    bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
+        (teleop_component_name, "AlignMTM", ros_namespace + "/align_mtm");
 
     // commands
     bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
@@ -645,6 +652,9 @@ void dvrk::add_topics_teleop(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandWrite<double, std_msgs::Float32>
         (teleop_component_name, "SetScale",
          ros_namespace + "/set_scale");
+    bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
+        (teleop_component_name, "SetAlignMTM",
+         ros_namespace + "/set_align_mtm");
     bridge.AddSubscriberToCommandWrite<vctMatRot3, geometry_msgs::Quaternion>
         (teleop_component_name, "SetRegistrationRotation",
          ros_namespace + "/set_registration_rotation");
