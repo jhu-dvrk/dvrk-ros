@@ -124,6 +124,7 @@ dvrk::console::console(const double & publish_rate_in_seconds,
         }
     }
 
+    // PSM teleop
     const mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator
         teleopsEnd = mConsole->mTeleopsPSM.end();
     mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator teleopIter;
@@ -133,7 +134,15 @@ dvrk::console::console(const double & publish_rate_in_seconds,
         const std::string name = teleopIter->first;
         std::string topic_name = teleopIter->first;
         std::replace(topic_name.begin(), topic_name.end(), '-', '_');
-        dvrk::add_topics_teleop(*pub_bridge, mNameSpace + topic_name, name, version);
+        dvrk::add_topics_teleop_psm(*pub_bridge, mNameSpace + topic_name, name, version);
+    }
+
+    // ECM teleop
+    if (mConsole->mTeleopECM) {
+        const std::string name = mConsole->mTeleopECM->Name();
+        std::string topic_name = mConsole->mTeleopECM->Name();
+        std::replace(topic_name.begin(), topic_name.end(), '-', '_');
+        dvrk::add_topics_teleop_ecm(*pub_bridge, mNameSpace + topic_name, name, version);
     }
 
     // digital inputs
@@ -261,6 +270,7 @@ void dvrk::console::Connect(void)
         }
     }
 
+    // PSM teleop
     const mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator
         teleopsEnd = mConsole->mTeleopsPSM.end();
     mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator teleopIter;
@@ -268,7 +278,13 @@ void dvrk::console::Connect(void)
          teleopIter != teleopsEnd;
          ++teleopIter) {
         const std::string name = teleopIter->first;
-        dvrk::connect_bridge_teleop(mBridgeName, name);
+        dvrk::connect_bridge_teleop_psm(mBridgeName, name);
+    }
+
+    // ECM teleop
+    if (mConsole->mTeleopECM) {
+        const std::string name = mConsole->mTeleopECM->Name();
+        dvrk::connect_bridge_teleop_ecm(mBridgeName, name);
     }
 
     // connect foot pedal, all arms use same
