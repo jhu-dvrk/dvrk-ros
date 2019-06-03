@@ -599,10 +599,10 @@ void dvrk::connect_bridge_ecm_io(const std::string & bridge_name,
                               io_component_name, interfaceName);
 }
 
-void dvrk::add_topics_teleop(mtsROSBridge & bridge,
-                             const std::string & ros_namespace,
-                             const std::string & teleop_component_name,
-                             const dvrk_topics_version::version version)
+void dvrk::add_topics_teleop_psm(mtsROSBridge & bridge,
+                                 const std::string & ros_namespace,
+                                 const std::string & teleop_component_name,
+                                 const dvrk_topics_version::version version)
 {
     // messages
     bridge.AddLogFromEventWrite(teleop_component_name + "-log", "Error",
@@ -611,6 +611,11 @@ void dvrk::add_topics_teleop(mtsROSBridge & bridge,
                                 mtsROSEventWriteLog::ROS_LOG_WARN);
     bridge.AddLogFromEventWrite(teleop_component_name + "-log", "Status",
                                 mtsROSEventWriteLog::ROS_LOG_INFO);
+
+    // publisher
+    bridge.AddPublisherFromCommandRead<vctMatRot3, geometry_msgs::QuaternionStamped>
+        (teleop_component_name, "GetAlignOffset",
+         ros_namespace + "/align_offset");
 
     // events
     bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
@@ -637,6 +642,8 @@ void dvrk::add_topics_teleop(mtsROSBridge & bridge,
         (teleop_component_name, "Scale", ros_namespace + "/scale");
     bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
         (teleop_component_name, "Following", ros_namespace + "/following");
+    bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
+        (teleop_component_name, "AlignMTM", ros_namespace + "/align_mtm");
 
     // commands
     bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
@@ -651,13 +658,58 @@ void dvrk::add_topics_teleop(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandWrite<double, std_msgs::Float32>
         (teleop_component_name, "SetScale",
          ros_namespace + "/set_scale");
+    bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
+        (teleop_component_name, "SetAlignMTM",
+         ros_namespace + "/set_align_mtm");
     bridge.AddSubscriberToCommandWrite<vctMatRot3, geometry_msgs::Quaternion>
         (teleop_component_name, "SetRegistrationRotation",
          ros_namespace + "/set_registration_rotation");
 }
 
-void dvrk::connect_bridge_teleop(const std::string & bridge_name,
-                                 const std::string & teleop_component_name)
+void dvrk::connect_bridge_teleop_psm(const std::string & bridge_name,
+                                     const std::string & teleop_component_name)
+{
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
+    componentManager->Connect(bridge_name, teleop_component_name,
+                              teleop_component_name, "Setting");
+    componentManager->Connect(bridge_name, teleop_component_name + "-log",
+                              teleop_component_name, "Setting");
+}
+
+void dvrk::add_topics_teleop_ecm(mtsROSBridge & bridge,
+                                 const std::string & ros_namespace,
+                                 const std::string & teleop_component_name,
+                                 const dvrk_topics_version::version version)
+{
+    // messages
+    bridge.AddLogFromEventWrite(teleop_component_name + "-log", "Error",
+                                mtsROSEventWriteLog::ROS_LOG_ERROR);
+    bridge.AddLogFromEventWrite(teleop_component_name + "-log", "Warning",
+                                mtsROSEventWriteLog::ROS_LOG_WARN);
+    bridge.AddLogFromEventWrite(teleop_component_name + "-log", "Status",
+                                mtsROSEventWriteLog::ROS_LOG_INFO);
+
+    // events
+    bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
+        (teleop_component_name, "DesiredState", ros_namespace + "/desired_state");
+    bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
+        (teleop_component_name, "CurrentState", ros_namespace + "/current_state");
+    bridge.AddPublisherFromEventWrite<double, std_msgs::Float32>
+        (teleop_component_name, "Scale", ros_namespace + "/scale");
+    bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
+        (teleop_component_name, "Following", ros_namespace + "/following");
+
+    // commands
+    bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
+        (teleop_component_name, "SetDesiredState",
+         ros_namespace + "/set_desired_state");
+    bridge.AddSubscriberToCommandWrite<double, std_msgs::Float32>
+        (teleop_component_name, "SetScale",
+         ros_namespace + "/set_scale");
+}
+
+void dvrk::connect_bridge_teleop_ecm(const std::string & bridge_name,
+                                     const std::string & teleop_component_name)
 {
     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
     componentManager->Connect(bridge_name, teleop_component_name,
