@@ -91,25 +91,34 @@ Once gstreamer is installed, you can use a few command lines to test the drivers
 
 `gscam` is a ROS node using the `gstreamer` library.  The gstreamer
 library supports a few frame grabbers including the Hauppage one.  The
-gstreamer developement library can be installed using `apt-get install`.  Make sure you install gstreamer 1.0, not 0.1.
+gstreamer developement library can be installed using `apt-get install`.  Make sure you install gstreamer 1.0, not 0.1.  It is important to note that when you're installing `gscam`, the dependencies will also be installed and you might install the wrong version of `gstreamer` without realizing it.
 
-**Important note:** `gscam` binaries provided with ROS kinetic use gstreamer 0.1 so you should **not** install these using `apt`.  Instead, download the source from github and compile in your catkin workspace.  See https://github.com/ros-drivers/gscam.  As of March 2018, the readme on gscam/github are a bit confusing since they still indicate that gstreamer 1.x support is experimental but they provide instructions to compile with gstreamer 1.x.   So, make sure you compile for 1.x version.
+To figure out if the ROS provided gscam uses gstreamer 0.1 or 1.x, use the command line:
+```sh
+apt-cache showpkg ros-kinetic-gscam # or ros-lunar-gscam or whatever ROS version
+```
+
+Then search the Dependencies to find gstreamer.
+
+As far as we know, ROS Kinetic on Ubuntu 16.04 uses the gstreamer 0.1 so you will have to manually compile `gscam` to use gstreamer 1.x.   Melodic on 18.04 seems to use gstreamer 1.x so you should be able install using `apt`.
 
 ### ROS Ubuntu packages
 
-Use `apt install` to install gscam!   The package name should be `ros-<distro>-gscam`.   It will install all the required dependencies for you.
+Use `apt install` to install gscam on 18.04.  The package name should be `ros-melodic-gscam`.   It will install all the required dependencies for you.
 
 ### Manual compilation
 
-**This is not recommended anymore, there are now ROS packages for gstreamer, just use them!**
-
-The gscam node is part of ROS Hydro but hasn't made it to ROS Indigo yet (as of March 2016).  If you have ROS Hydro (also Kinetic and Lunar!), use `apt-get` to install it.  If you're using a more recent version of ROS, get the sources from github and build it.  Assuming your Catkin workspace is in `~/catkin` and you're using the Catkin Python build tools:
+If you need gstreamer 1.x and gscam is not built against it, you need to manually compile it.  Assuming your Catkin workspace is in `~/catkin` and you're using the Catkin Python build tools:
 
 ```sh
 cd ~/catkin_ws/src
 git clone https://github.com/ros-drivers/gscam
 catkin build
+source ~/catkin_ws/devel/setup.bash
 ```
+
+**Note:** See https://github.com/ros-drivers/gscam.  As of March 2018, the readme on gscam/github are a bit confusing since they still indicate that gstreamer 1.x support is experimental but they provide instructions to compile with gstreamer 1.x.   So, make sure you compile for 1.x version.
+
 
 ### Using gscam
 
