@@ -98,17 +98,22 @@ To figure out if the ROS provided gscam uses gstreamer 0.1 or 1.x, use the comma
 apt-cache showpkg ros-kinetic-gscam # or ros-lunar-gscam or whatever ROS version
 ```
 
-Then search the Dependencies to find gstreamer.
+Look at the output of the `apt-cache showpkg` command and search the "Dependencies" to find the gstreamer version used.
 
 As far as we know, ROS Kinetic on Ubuntu 16.04 uses the gstreamer 0.1 so you will have to manually compile `gscam` to use gstreamer 1.x.   Melodic on 18.04 seems to use gstreamer 1.x so you should be able install using `apt`.
 
 ### ROS Ubuntu packages
 
-Use `apt install` to install gscam on 18.04.  The package name should be `ros-melodic-gscam`.   It will install all the required dependencies for you.
+Use `apt install` to install gscam on Ubuntu 18.04.  The package name should be `ros-melodic-gscam`.   It will install all the required dependencies for you.
 
 ### Manual compilation
 
-If you need gstreamer 1.x and gscam is not built against it, you need to manually compile it.  Assuming your Catkin workspace is in `~/catkin` and you're using the Catkin Python build tools:
+If you need gstreamer 1.x and gscam is not built against it, you need to manually compile it.  You will first need to install some development libraries:
+```sh
+sudo apt-get install gstreamer1.0-tools libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev
+```
+
+Then, assuming your catkin workspace is in `~/catkin` and you're using the Catkin Python build tools:
 
 ```sh
 cd ~/catkin_ws/src
