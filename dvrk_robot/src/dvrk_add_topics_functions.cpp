@@ -218,7 +218,7 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
         (arm_component_name, "SetDesiredState",
          ros_namespace + "/set_desired_state");
     bridge.AddSubscriberToCommandWrite<std::string, crtk_msgs::StringStamped>
-        (arm_component_name, "OperatingStateCommand",
+        (arm_component_name, "state_command",
          ros_namespace + "/state_command");
     bridge.AddSubscriberToCommandWrite<double, std_msgs::Float64>
         (arm_component_name, "SetJointVelocityRatio",
@@ -305,7 +305,7 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
         (arm_component_name, "DesiredState",
          ros_namespace + "/desired_state");
     bridge.AddPublisherFromEventWrite<prmOperatingState, crtk_msgs::operating_state>
-        (arm_component_name, "OperatingState",
+        (arm_component_name, "operating_state",
          ros_namespace + "/operating_state");
     bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
         (arm_component_name, "GoalReached",
