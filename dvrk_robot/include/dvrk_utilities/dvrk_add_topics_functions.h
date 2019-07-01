@@ -5,7 +5,7 @@
   Author(s):  Zihan Chen, Anton Deguet
   Created on: 2015-05-23
 
-  (C) Copyright 2015-2017 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2019 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -134,16 +134,27 @@ namespace dvrk {
                                const std::string & arm_name,
                                const std::string & io_component_name);
 
-    /*! Add all the topics related to tele-op component. */
-    void add_topics_teleop(mtsROSBridge & bridge,
-                           const std::string & ros_namespace,
-                           const std::string & teleop_component_name,
-                           const dvrk_topics_version::version version);
+    /*! Add all the topics related to teleop PSM component. */
+    void add_topics_teleop_psm(mtsROSBridge & bridge,
+                               const std::string & ros_namespace,
+                               const std::string & teleop_component_name,
+                               const dvrk_topics_version::version version);
 
     /*! This method connects all the required interfaces for a teleop
-      component, it must be used after add_topics_teleop. */
-    void connect_bridge_teleop(const std::string & bridge_name,
-                               const std::string & teleop_component_name);
+      PSM component, it must be used after add_topics_teleop. */
+    void connect_bridge_teleop_psm(const std::string & bridge_name,
+                                   const std::string & teleop_component_name);
+
+    /*! Add all the topics related to teleop ECM component. */
+    void add_topics_teleop_ecm(mtsROSBridge & bridge,
+                               const std::string & ros_namespace,
+                               const std::string & teleop_component_name,
+                               const dvrk_topics_version::version version);
+
+    /*! This method connects all the required interfaces for a teleop
+      ECM component, it must be used after add_topics_teleop. */
+    void connect_bridge_teleop_ecm(const std::string & bridge_name,
+                                   const std::string & teleop_component_name);
 
     /*! Add all the topics related to the setup joints (SUJ) */
     void add_topics_suj(mtsROSBridge & bridge,
@@ -187,7 +198,7 @@ namespace dvrk {
 
     void add_tf_arm(mtsROSBridge & tf_bridge,
                     const std::string & arm_name);
-    
+
     void connect_tf_arm(const std::string & tf_bridge_name,
                         const std::string & arm_name,
                         const std::string & arm_component_name,
@@ -195,7 +206,7 @@ namespace dvrk {
 
     void add_tf_suj(mtsROSBridge & tf_bridge,
                     const std::string & arm_name);
-    
+
     void connect_tf_suj(const std::string & tf_bridge_name,
                         const std::string & suj_component_name,
                         const std::string & arm_name);

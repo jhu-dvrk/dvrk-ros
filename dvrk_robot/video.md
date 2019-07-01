@@ -68,9 +68,14 @@ from the cables to the endoscope or the endoscope itself.
 
 ## Blackmagic DeckLink Duo
 
-You first need to install the drivers from Blackmagic, see https://www.blackmagicdesign.com/support/family/capture-and-playback   The drivers are included in the package "Desktop Video".  Once you've downloaded the binaries and extracted the files from Blackmagic, follow the instructions on their ReadMe.txt.   For 64 bits Ubuntu system, install the `.deb` files in subfolder `deb/x86_64`.
+You first need to install the drivers from Blackmagic, see https://www.blackmagicdesign.com/support/family/capture-and-playback   The drivers are included in the package "Desktop Video".  Once you've downloaded the binaries and extracted the files from Blackmagic, follow the instructions on their ReadMe.txt.   For 64 bits Ubuntu system, install the `.deb` files in subfolder `deb/x86_64`.   If your card is old, the DeckLink install might ask to run the BlackMagic firmware updater, i.e. something like `BlackmagicFirmwareUpdater update 0`.  After you reboot, check with `dmesg | grep -i black` to see if the card is recognized.  If the driver is working properly, the devices will show up under `/dev/blackmagic`.
 
-To test if the drivers are working and the cards are working, use gstreamer 1.0 or greater.  On Ubuntu 16.04 you can install gstreamer 1.0 or 0.1.   Make sure you install the 1.0 packages.   Once installed, you can use a few command lines to test the drivers:
+To test if the drivers are working and the cards are working, use gstreamer 1.0 or greater.  On Ubuntu 16.04/18.04 both gstreamer 1.0 and 0.1 are available.   Make sure you ONLY install the 1.0 packages.   You will also need the proper gstreamer plugins installed:
+```sh
+  sudo apt install gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad 
+```
+
+Once gstreamer is installed, you can use a few command lines to test the drivers:
   * `gst-inspect-1.0 decklinkvideosrc` will show you the different parameters for the Decklink gstreamer plugin
   * `gst-launch-1.0` can be used to launch the streamer and pipe it to see the video live on the computer.   For example, we used `gst-launch-1.0 -v decklinkvideosrc mode=0 connection=sdi device-number=0 ! videoconvert ! autovideosink`.
     * `mode=0` is for auto detection and is optional
@@ -86,25 +91,39 @@ To test if the drivers are working and the cards are working, use gstreamer 1.0 
 
 `gscam` is a ROS node using the `gstreamer` library.  The gstreamer
 library supports a few frame grabbers including the Hauppage one.  The
-gstreamer developement library can be installed using `apt-get install`.  Make sure you install gstreamer 1.0, not 0.1.
+gstreamer developement library can be installed using `apt-get install`.  Make sure you install gstreamer 1.0, not 0.1.  It is important to note that when you're installing `gscam`, the dependencies will also be installed and you might install the wrong version of `gstreamer` without realizing it.
 
-**Important note:** `gscam` binaries provided with ROS kinetic use gstreamer 0.1 so you should **not** install these using `apt`.  Instead, download the source from github and compile in your catkin workspace.  See https://github.com/ros-drivers/gscam.  As of March 2018, the readme on gscam/github are a bit confusing since they still indicate that gstreamer 1.x support is experimental but they provide instructions to compile with gstreamer 1.x.   So, make sure you compile for 1.x version.
+To figure out if the ROS provided gscam uses gstreamer 0.1 or 1.x, use the command line:
+```sh
+apt-cache showpkg ros-kinetic-gscam # or ros-lunar-gscam or whatever ROS version
+```
+
+Look at the output of the `apt-cache showpkg` command and search the "Dependencies" to find the gstreamer version used.
+
+As far as we know, ROS Kinetic on Ubuntu 16.04 uses the gstreamer 0.1 so you will have to manually compile `gscam` to use gstreamer 1.x.   Melodic on 18.04 seems to use gstreamer 1.x so you should be able install using `apt`.
 
 ### ROS Ubuntu packages
 
-Use `apt install` to install gscam!   The package name should be `ros-<distro>-gscam`.   It will install all the required dependencies for you.
+Use `apt install` to install gscam on Ubuntu 18.04.  The package name should be `ros-melodic-gscam`.   It will install all the required dependencies for you.
 
 ### Manual compilation
 
-**This is not recommended anymore, there are now ROS packages for gstreamer, just use them!**
+If you need gstreamer 1.x and gscam is not built against it, you need to manually compile it.  You will first need to install some development libraries:
+```sh
+sudo apt-get install gstreamer1.0-tools libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev
+```
 
-The gscam node is part of ROS Hydro but hasn't made it to ROS Indigo yet (as of March 2016).  If you have ROS Hydro (also Kinetic and Lunar!), use `apt-get` to install it.  If you're using a more recent version of ROS, get the sources from github and build it.  Assuming your Catkin workspace is in `~/catkin` and you're using the Catkin Python build tools:
+Then, assuming your catkin workspace is in `~/catkin` and you're using the Catkin Python build tools:
 
 ```sh
 cd ~/catkin_ws/src
 git clone https://github.com/ros-drivers/gscam
 catkin build
+source ~/catkin_ws/devel/setup.bash
 ```
+
+**Note:** See https://github.com/ros-drivers/gscam.  As of March 2018, the readme on gscam/github are a bit confusing since they still indicate that gstreamer 1.x support is experimental but they provide instructions to compile with gstreamer 1.x.   So, make sure you compile for 1.x version.
+
 
 ### Using gscam
 

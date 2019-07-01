@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2018 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2019 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -77,18 +77,20 @@ int main(int argc, char ** argv)
     // parse options
     cmnCommandLineOptions options;
     std::string jsonMainConfigFile;
-    std::string rosNamespace = "/dvrk";
+    std::string rosNamespace = "dvrk/";
     double rosPeriod = 10.0 * cmn_ms;
     double tfPeriod = 20.0 * cmn_ms;
     std::list<std::string> jsonIOConfigFiles;
     std::string versionString = "v1_4_0";
+    typedef std::list<std::string> managerConfigType;
+    managerConfigType managerConfig;
 
     options.AddOptionOneValue("j", "json-config",
                               "json configuration file",
                               cmnCommandLineOptions::REQUIRED_OPTION, &jsonMainConfigFile);
 
     options.AddOptionOneValue("n", "ros-namespace",
-                              "ROS namespace to prefix all topics, must have start and end \"/\" (default /dvrk/)",
+                              "ROS namespace to prefix all topics, must end with \"/\" if not empty (default is \"dvrk/\")",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &rosNamespace);
 
     options.AddOptionOneValue("p", "ros-period",
@@ -109,6 +111,10 @@ int main(int argc, char ** argv)
     options.AddOptionOneValue("c", "compatibility",
                               "compatibility mode, e.g. \"v1_3_0\", \"v1_4_0\"",
                               cmnCommandLineOptions::OPTIONAL_OPTION, &versionString);
+
+    options.AddOptionMultipleValues("m", "component-manager",
+                                    "JSON files to configure component manager",
+                                    cmnCommandLineOptions::OPTIONAL_OPTION, &managerConfig);
 
     // check that all required options have been provided
     std::string errorMessage;
@@ -178,6 +184,25 @@ int main(int argc, char ** argv)
     }
 
     consoleROS->Connect();
+
+    // custom user component
+    const managerConfigType::iterator endConfig = managerConfig.end();
+    for (managerConfigType::iterator iterConfig = managerConfig.begin();
+         iterConfig != endConfig;
+         ++iterConfig) {
+        if (!iterConfig->empty()) {
+            if (!cmnPath::Exists(*iterConfig)) {
+                CMN_LOG_INIT_ERROR << "File " << *iterConfig
+                                   << " not found!" << std::endl;
+            } else {
+                if (!componentManager->ConfigureJSON(*iterConfig)) {
+                    CMN_LOG_INIT_ERROR << "Configure: failed to configure component-manager for "
+                                       << *iterConfig << std::endl;
+                    return -1;
+                }
+            }
+        }
+    }
 
     //-------------- create the components ------------------
     componentManager->CreateAllAndWait(2.0 * cmn_s);

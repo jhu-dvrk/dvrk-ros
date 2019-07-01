@@ -3,7 +3,7 @@
 # Author: Anton Deguet
 # Date: 2017-07-22
 
-# (C) Copyright 2017 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2017-2019 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -64,6 +64,9 @@ class example_application:
 
     # tests
     def tests(self):
+        # turn on gravity compensation
+        self.arm.set_gravity_compensation(True)
+
         gains = prmCartesianImpedanceGains()
         # set orientation to identity quaternions
         gains.ForceOrientation.w = 1.0
@@ -71,7 +74,7 @@ class example_application:
 
         print(rospy.get_caller_id(), ' -> press COAG pedal to move to next example')
 
-        print(rospy.get_caller_id(), ' -> an horizontal plane will be created around the current position')
+        print(rospy.get_caller_id(), ' -> arm will be constrained in X/Y plane around the current position')
         self.wait_for_coag()
         # set gains in z direction
         gains.PosStiffNeg.z = -200.0
@@ -87,8 +90,19 @@ class example_application:
         self.wait_for_coag()
         self.arm.lock_orientation_as_is()
 
-        print(rospy.get_caller_id(), ' -> an horizontal line will be created around the current position, with a small positive viscosity along the line')
-        print(rospy.get_caller_id(), ' -> MAKE SURE YOU HOLD THE MTM FIRST, this will accelerate your motions along the line!')
+        print(rospy.get_caller_id(), ' -> arm will be constrained in X/Y half plane around the current position')
+        self.wait_for_coag()
+        # set gains in z direction, stiffer in half positive, 0 in negative
+        gains.PosStiffNeg.z = 0.0
+        gains.PosStiffPos.z = -500.0
+        gains.PosDampingNeg.z = 0.0
+        gains.PosDampingPos.z = -15.0
+        gains.ForcePosition.x = self.arm.get_current_position().p[0]
+        gains.ForcePosition.y = self.arm.get_current_position().p[1]
+        gains.ForcePosition.z = self.arm.get_current_position().p[2]
+        self.set_gains_pub.publish(gains)
+
+        print(rospy.get_caller_id(), ' -> an horizontal line will be created around the current position, with viscosity along the line')
         self.wait_for_coag()
         # set gains in x, z directions for the line
         gains.PosStiffNeg.x = -200.0
@@ -99,9 +113,9 @@ class example_application:
         gains.PosStiffPos.z = -200.0
         gains.PosDampingNeg.z = -5.0
         gains.PosDampingPos.z = -5.0
-        # NEGATIVE viscosity along the line
-        gains.PosDampingNeg.y = 5.0
-        gains.PosDampingPos.y = 5.0
+        # viscosity along the line
+        gains.PosDampingNeg.y = -10.0
+        gains.PosDampingPos.y = -10.0
         # always start from current position to avoid jumps
         gains.ForcePosition.x = self.arm.get_current_position().p[0]
         gains.ForcePosition.y = self.arm.get_current_position().p[1]
