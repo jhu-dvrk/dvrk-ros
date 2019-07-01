@@ -750,6 +750,12 @@ void dvrk::add_topics_io(mtsROSBridge & bridge,
     bridge.AddPublisherFromCommandRead<prmPositionJointGet, sensor_msgs::JointState>
         (arm_name + "-io", "GetPositionActuator",
          ros_namespace + "/actuator_position");
+    bridge.AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
+        (arm_name + "-io", "GetActuatorFeedbackCurrent",
+         ros_namespace + "/actuator_current_measured");
+    bridge.AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
+        (arm_name + "-io", "GetActuatorRequestedCurrent",
+         ros_namespace + "/actuator_current_requested");
 }
 
 void dvrk::connect_bridge_io(const std::string & bridge_name,
