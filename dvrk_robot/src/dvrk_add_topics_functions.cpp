@@ -483,6 +483,10 @@ void dvrk::add_topics_psm(mtsROSBridge & bridge,
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
         (psm_component_name, "ManipClutch",
          ros_namespace + "/manip_clutch");
+
+    bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
+        (psm_component_name, "ToolType",
+         ros_namespace + "/tool_type");
 }
 
 void dvrk::connect_bridge_psm(const std::string & bridge_name,
