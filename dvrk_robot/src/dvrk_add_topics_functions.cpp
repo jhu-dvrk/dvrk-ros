@@ -485,10 +485,22 @@ void dvrk::add_topics_psm(mtsROSBridge & bridge,
         (psm_component_name, "SetToolPresent",
          ros_namespace + "/set_tool_present");
 
+    bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
+        (psm_component_name, "SetToolType",
+         ros_namespace + "/set_tool_type");
+
     // events
     bridge.AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
         (psm_component_name, "ManipClutch",
          ros_namespace + "/manip_clutch");
+
+    bridge.AddPublisherFromEventVoid
+        (psm_component_name, "ToolTypeRequest",
+         ros_namespace + "/tool_type_request");
+
+    bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
+        (psm_component_name, "ToolType",
+         ros_namespace + "/tool_type");
 }
 
 void dvrk::connect_bridge_psm(const std::string & bridge_name,
@@ -820,6 +832,12 @@ void dvrk::add_topics_io(mtsROSBridge & bridge,
     bridge.AddPublisherFromCommandRead<prmPositionJointGet, sensor_msgs::JointState>
         (arm_name + "-io", "GetPositionActuator",
          ros_namespace + "/actuator_position");
+    bridge.AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
+        (arm_name + "-io", "GetActuatorFeedbackCurrent",
+         ros_namespace + "/actuator_current_measured");
+    bridge.AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
+        (arm_name + "-io", "GetActuatorRequestedCurrent",
+         ros_namespace + "/actuator_current_requested");
 }
 
 void dvrk::connect_bridge_io(const std::string & bridge_name,
