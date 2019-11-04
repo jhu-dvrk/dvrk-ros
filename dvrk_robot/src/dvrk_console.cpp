@@ -223,6 +223,7 @@ void dvrk::console::Connect(void)
             dvrk::connect_tf_arm(mTfBridgeName, name,
                                  armIter->second->ComponentName(),
                                  armIter->second->InterfaceName());
+            [[fallthrough]];
         case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
             dvrk::connect_bridge_mtm(mBridgeName, name,
                                      armIter->second->ComponentName(),
