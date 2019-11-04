@@ -689,9 +689,7 @@ class arm(object):
         # recursively call this function until end is reached
         self.__set_position_goal_cartesian_pub.publish(end_position)
         self.__goal_reached_event.wait(20) # 1 minute at most
-        if not self.__goal_reached:
-            return False
-        return True
+        return self.__goal_reached
 
 
     def dmove_joint(self, delta_pos, interpolate = True, blocking = True):
@@ -874,9 +872,7 @@ class arm(object):
         self.__goal_reached = False
         self.__set_position_goal_joint_pub.publish(end_position)
         self.__goal_reached_event.wait(20) # 1 minute at most
-        if not self.__goal_reached:
-            return False
-        return True
+        return self.__goal_reached
 
 
     def set_effort_joint(self, effort):
