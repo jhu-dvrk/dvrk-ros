@@ -53,6 +53,9 @@ void dvrk::add_topics_console(mtsROSBridge & bridge,
     bridge.AddPublisherFromEventWrite<prmKeyValue, diagnostic_msgs::KeyValue>
         ("Console", "TeleopPSMUnselected",
          ros_namespace + "/teleop/teleop_psm_unselected");
+    bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
+        ("Console", "StringToSpeech",
+         ros_namespace + "/string_to_speech");
 }
 
 void dvrk::connect_bridge_console(const std::string & bridge_name,
