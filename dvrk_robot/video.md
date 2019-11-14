@@ -1,8 +1,13 @@
 Video pipeline
 ==============
 
-This describes a fairly low cost setup that can be used with the dVRK/HRSV display (High Resolution Stereo Video).  We use a couple of cheap USB frame grabbers for the analog videos from SD cameras.   For HD systems, we tested a BlackMagic DeckLink Duo with dual SDI inputs.   For displaying the video back, we just use a graphic card with two spare video outputs.  The software relies heavily on ROS tools to grab and display the stereo video.  Some lag is to be expected.
+This describes a fairly low cost setup that can be used with the dVRK/HRSV display (High Resolution Stereo Video).  We use a couple of cheap USB frame grabbers for the analog videos from SD cameras.   For HD systems, we tested a BlackMagic DeckLink Duo frame grabber with dual SDI inputs.   For displaying the video back, we just use a graphic card with two spare video outputs.  The software relies heavily on ROS tools to grab and display the stereo video.  Some lag is to be expected.
 
+The general steps are:
+ * Make sure the frame grabber works (e.g. using tvtime or vendor application)
+ * Figure out the gstreamer pipeline and test using `gst-launch-1.0`
+ * Create a lauch file for gscam with the gstreamer pipeline you just tested
+ 
 # Hardware
 
 ## USB frame grabbers
@@ -76,7 +81,18 @@ If the video is still not working, the problem likely comes from your
 S-video cables.  If the color bars show correctly, the problem comes
 from the cables to the endoscope or the endoscope itself.
 
-## Blackmagic DeckLink Duo
+Once you have the video showing in tvtime, you need to figure out the gstreamer options.   There is some information online and you can use `gst-inspect-1.0` (see more details in DeckLink Duo section).  You can also use the command line tool `v4l2-ctl` to figure out the output format of your frame grabber.   The option `-d0` is to specify `/dev/video0`, if you're using a different device, make sure the digit matches.  Example of commands:
+```sh
+v4l2-ctl -d0 --get-fmt-video
+v4l2-ctl -d0 --list-formats-ext
+```
+
+On Ubuntu 18.04, we found the following syntax seems to work with the USB Hauppage Live2:
+```sh
+ gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw,interlace-mode=interleaved ! autovideosink
+ ```
+
+## Blackmagic DeckLink Duo frame grabber
 
 You first need to install the drivers from Blackmagic, see https://www.blackmagicdesign.com/support/family/capture-and-playback   The drivers are included in the package "Desktop Video".  Once you've downloaded the binaries and extracted the files from Blackmagic, follow the instructions on their ReadMe.txt.   For 64 bits Ubuntu system, install the `.deb` files in subfolder `deb/x86_64`.   If your card is old, the DeckLink install might ask to run the BlackMagic firmware updater, i.e. something like `BlackmagicFirmwareUpdater update 0`.  After you reboot, check with `dmesg | grep -i black` to see if the card is recognized.  If the driver is working properly, the devices will show up under `/dev/blackmagic`.
 
