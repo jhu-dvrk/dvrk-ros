@@ -1,13 +1,17 @@
 Video pipeline
 ==============
 
-This describes a fairly low cost setup that can be used with the dVRK/HRSV display (High Resolution Stereo Video).  We use a couple of cheap USB frame grabbers for the analog videos from SD cameras.   For HD systems, we tested a BlackMagic DeckLink Duo frame grabber with dual SDI inputs.   For displaying the video back, we just use a graphic card with two spare video outputs.  The software relies heavily on ROS tools to grab and display the stereo video.  Some lag is to be expected.
+This describes a fairly low cost setup that can be used with the dVRK HRSV display (High Resolution Stereo Video).  We use a couple of cheap USB frame grabbers (Hauppage Live 2) for the analog videos from SD cameras.   For HD systems, we tested a BlackMagic DeckLink Duo frame grabber with dual SDI inputs.   For displaying the video back, we just use a graphic card with two spare video outputs.  The software relies heavily on ROS tools to grab and display the stereo video.  Some lag is to be expected.
 
 The general steps are:
  * Make sure the frame grabber works (e.g. using tvtime or vendor application)
  * Figure out the gstreamer pipeline and test using `gst-launch-1.0`
  * Create a lauch file for gscam with the gstreamer pipeline you just tested
  
+# Disclaimer
+
+This page is a collection of notes that might be helpful for the dVRK community but it is in no way exhaustive.  If you need some help re. gstreamer and gscam, you should probably start searching online and/or reach out to the gstreamer and gscam developers.
+
 # Hardware
 
 ## USB frame grabbers
@@ -57,7 +61,7 @@ If the result shows something like:
 ```sh
 crw-rw----+ 1 root video 81, 0 Nov 14 11:47 /dev/video0
 ```
-you will need to add your user id to the video group.
+you will need to add your user id to the `video` group.  Do not use `sudo tvtime`, it might work for `tvtime` but it's not going to work with `gscam`.   You should fix the unix file permissions first and make sure you can access the video without `sudo`.
 
 To test each channel one after another:
 ```sh
