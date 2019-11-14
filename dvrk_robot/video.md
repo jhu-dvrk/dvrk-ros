@@ -43,8 +43,18 @@ The numbering (i.e. which frame grabber is `/dev/video0` and which one
 is `/dev/video1`) depends on the order the grabbers are plugged in.
 To have a consistent ordering, always plug the frame grabbers in the
 same order, e.g. first the left channel and then the right channel.
-To test each channel one after another:
 
+Some Linux distributions might restrict access to the video devices using the `video` group.  To check, do:
+```sh
+ls -l /dev/video*
+```
+If the result shows something like:
+```sh
+crw-rw----+ 1 root video 81, 0 Nov 14 11:47 /dev/video0
+```
+you will need to add your user id to the video group.
+
+To test each channel one after another:
 ```sh
 tvtime -Ld /dev/video0
 ```
