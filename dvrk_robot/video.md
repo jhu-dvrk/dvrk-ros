@@ -157,7 +157,7 @@ source ~/catkin_ws/devel/setup.bash
 
 ### Using gscam
 
-To start the `gscam` node, we provide a couple of ROS launch scripts.
+To start the `gscam` node, we provide a couple of ROS launch scripts.  **Make sure the launch script has been updated to use a working gstreamer pipeline** (as descrided above using `gst-launch-1.01). 
 
 For a stereo system with the USB frame grabbers, use:
 ```sh
