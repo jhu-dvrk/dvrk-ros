@@ -1,5 +1,5 @@
 #
-# (C) Copyright 2015-2018 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2015-2019 Johns Hopkins University (JHU), All Rights Reserved.
 #
 # --- begin cisst license - do not edit ---
 #
@@ -104,18 +104,15 @@ if (cisst_FOUND_AS_REQUIRED)
     )
     cisst_target_link_libraries (dvrk_utilities ${REQUIRED_CISST_LIBRARIES})
 
-  set (_EXECUTABLES dvrk_mtm_ros dvrk_psm_ros dvrk_ecm_ros dvrk_full_ros dvrk_console_json)
-  foreach (_executable ${_EXECUTABLES})
-    add_executable (${_executable} src/${_executable}.cpp)
+  add_executable (dvrk_console_json src/dvrk_console_json.cpp)
     target_link_libraries (
-      ${_executable}
+      dvrk_console_json
       ${sawRobotIO1394_LIBRARIES}
       ${sawIntuitiveResearchKit_LIBRARIES}
       ${sawControllers_LIBRARIES}
       ${catkin_LIBRARIES}
     )
-    cisst_target_link_libraries (${_executable} ${REQUIRED_CISST_LIBRARIES})
-    target_link_libraries (${_executable} dvrk_utilities)
-  endforeach (_executable)
+  cisst_target_link_libraries (dvrk_console_json ${REQUIRED_CISST_LIBRARIES})
+  target_link_libraries (dvrk_console_json dvrk_utilities)
 
 endif (cisst_FOUND_AS_REQUIRED)
