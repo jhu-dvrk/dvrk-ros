@@ -68,17 +68,14 @@ int main(int argc, char ** argv)
     cmnLogger::AddChannel(logFileStream);
     cmnLogger::HaltDefaultLog(); // stop log to default cisstLog.txt
 
-    // ---- WARNING: hack to remove ros args ----
-    ros::V_string argout;
-    ros::removeROSArgs(argc, argv, argout);
-    argc = argout.size();
-    // ------------------------------------------
+    // create ROS node handle
+    ros::init(argc, argv, "dvrk", ros::init_options::AnonymousName);
+    ros::NodeHandle rosNodeHandle;
 
     // parse options
     cmnCommandLineOptions options;
     std::string jsonMainConfigFile;
-    std::string rosNamespace = "dvrk/";
-    double rosPeriod = 10.0 * cmn_ms;
+    double publishPeriod = 10.0 * cmn_ms;
     double tfPeriod = 20.0 * cmn_ms;
     std::list<std::string> jsonIOConfigFiles;
     std::string versionString = "v1_4_0";
@@ -89,13 +86,9 @@ int main(int argc, char ** argv)
                               "json configuration file",
                               cmnCommandLineOptions::REQUIRED_OPTION, &jsonMainConfigFile);
 
-    options.AddOptionOneValue("n", "ros-namespace",
-                              "ROS namespace to prefix all topics, must end with \"/\" if not empty (default is \"dvrk/\")",
-                              cmnCommandLineOptions::OPTIONAL_OPTION, &rosNamespace);
-
     options.AddOptionOneValue("p", "ros-period",
                               "period in seconds to read all arms/teleop components and publish (default 0.01, 10 ms, 100Hz).  There is no point to have a period higher than the arm component's period",
-                              cmnCommandLineOptions::OPTIONAL_OPTION, &rosPeriod);
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &publishPeriod);
 
     options.AddOptionOneValue("P", "tf-ros-period",
                               "period in seconds to read all components and broadcast tf2 (default 0.02, 20 ms, 50Hz).  There is no point to have a period higher than the arm component's period",
@@ -166,12 +159,13 @@ int main(int argc, char ** argv)
     }
 
     // create a console with all dVRK ROS topics
-    // - rosPeriod is used to control publish rate
+    // - publishPeriod is used to control publish rate
     // - tfPeriod is used to control tf broadcast rate
     //
     // this also adds a mtsROSBridge that performs the ros::spinOnce
     // in a separate thread as fast possible
-    dvrk::console * consoleROS = new dvrk::console(rosPeriod, tfPeriod, rosNamespace,
+    dvrk::console * consoleROS = new dvrk::console(&rosNodeHandle,
+                                                   publishPeriod, tfPeriod,
                                                    console, versionEnum);
     // IOs
     const std::list<std::string>::const_iterator end = jsonIOConfigFiles.end();

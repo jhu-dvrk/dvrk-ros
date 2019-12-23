@@ -29,8 +29,8 @@ namespace dvrk {
       /teleop/set_scale and /teleop_scale.
     */
     void add_topics_console(mtsROSBridge & bridge,
-                               const std::string & ros_namespace,
-                               const dvrk_topics_version::version version);
+                            const std::string & ros_namespace,
+                            const dvrk_topics_version::version version);
 
     /*! This method connects all the required interfaces for the
       console, it must be used after add_topics_console. */
