@@ -40,7 +40,7 @@ namespace dvrk {
         mtsIntuitiveResearchKitConsole * mConsole;
         dvrk_topics_version::version mVersion;
         std::list<std::string> mIOInterfaces;
-        ros::NodeHandlePtr mNodeHandlePointer;
+        ros::NodeHandle * mNodeHandle;
     };
 }
 

@@ -35,7 +35,7 @@ dvrk::console::console(ros::NodeHandle * node_handle,
     mVersion(version)
 {
     // keep shared pointer on NodeHandle
-    mNodeHandlePointer = ros::NodeHandlePtr(node_handle);
+    mNodeHandle = node_handle;
 
     // start creating components
     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
@@ -198,7 +198,7 @@ void dvrk::console::Configure(const std::string & jsonFile)
                       << "for this IO." << std::endl;
         } else {
             mtsROSBridge * rosIOBridge = new mtsROSBridge(bridgeNamePrefix + name, period,
-                                                          mNodeHandlePointer.get());
+                                                          mNodeHandle);
             dvrk::add_topics_io(*rosIOBridge,
                                 name + "/io/",
                                 name, mVersion);
