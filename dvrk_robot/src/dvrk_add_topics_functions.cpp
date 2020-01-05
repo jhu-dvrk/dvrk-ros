@@ -53,6 +53,9 @@ void dvrk::add_topics_console(mtsROSBridge & bridge,
     bridge.AddPublisherFromEventWrite<prmKeyValue, diagnostic_msgs::KeyValue>
         ("Console", "TeleopPSMUnselected",
          ros_namespace + "/teleop/teleop_psm_unselected");
+    bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
+        ("Console", "StringToSpeech",
+         ros_namespace + "/string_to_speech");
 }
 
 void dvrk::connect_bridge_console(const std::string & bridge_name,
@@ -572,6 +575,15 @@ void dvrk::add_topics_ecm(mtsROSBridge & bridge,
             (ecm_component_name, "ManipClutch", ros_namespace + "/manip_clutch");
         break;
     }
+
+    // set endoscope type
+    bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
+        (ecm_component_name, "SetEndoscopeType",
+         ros_namespace + "/set_endoscope_type");
+
+    bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
+        (ecm_component_name, "EndoscopeType",
+         ros_namespace + "/endoscope_type");
 }
 
 void dvrk::connect_bridge_ecm(const std::string & bridge_name,

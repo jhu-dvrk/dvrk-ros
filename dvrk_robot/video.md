@@ -1,7 +1,16 @@
 Video pipeline
 ==============
 
-This describes a fairly low cost setup that can be used with the dVRK/HRSV display (High Resolution Stereo Video).  We use a couple of cheap USB frame grabbers for the analog videos from SD cameras.   For HD systems, we tested a BlackMagic DeckLink Duo with dual SDI inputs.   For displaying the video back, we just use a graphic card with two spare video outputs.  The software relies heavily on ROS tools to grab and display the stereo video.  Some lag is to be expected.
+This describes a fairly low cost setup that can be used with the dVRK HRSV display (High Resolution Stereo Video).  We use a couple of cheap USB frame grabbers (Hauppage Live 2) for the analog videos from SD cameras.   For HD systems, we tested a BlackMagic DeckLink Duo frame grabber with dual SDI inputs.   For displaying the video back, we just use a graphic card with two spare video outputs.  The software relies heavily on ROS tools to grab and display the stereo video.  Some lag is to be expected.
+
+The general steps are:
+ * Make sure the frame grabber works (e.g. using tvtime or vendor application)
+ * Figure out the gstreamer pipeline and test using `gst-launch-1.0`
+ * Create a lauch file for gscam with the gstreamer pipeline you just tested
+ 
+# Disclaimer
+
+This page is a collection of notes that might be helpful for the dVRK community but it is in no way exhaustive.  If you need some help re. gstreamer and gscam, you should probably start searching online and/or reach out to the gstreamer and gscam developers.
 
 # Hardware
 
@@ -43,8 +52,18 @@ The numbering (i.e. which frame grabber is `/dev/video0` and which one
 is `/dev/video1`) depends on the order the grabbers are plugged in.
 To have a consistent ordering, always plug the frame grabbers in the
 same order, e.g. first the left channel and then the right channel.
-To test each channel one after another:
 
+Some Linux distributions might restrict access to the video devices using the `video` group.  To check, do:
+```sh
+ls -l /dev/video*
+```
+If the result shows something like:
+```sh
+crw-rw----+ 1 root video 81, 0 Nov 14 11:47 /dev/video0
+```
+you will need to add your user id to the `video` group.  Do not use `sudo tvtime`, it might work for `tvtime` but it's not going to work with `gscam`.   You should fix the unix file permissions first and make sure you can access the video without `sudo`.
+
+To test each channel one after another:
 ```sh
 tvtime -Ld /dev/video0
 ```
@@ -66,7 +85,18 @@ If the video is still not working, the problem likely comes from your
 S-video cables.  If the color bars show correctly, the problem comes
 from the cables to the endoscope or the endoscope itself.
 
-## Blackmagic DeckLink Duo
+Once you have the video showing in tvtime, you need to figure out the gstreamer options.   There is some information online and you can use `gst-inspect-1.0` (see more details in DeckLink Duo section).  You can also use the command line tool `v4l2-ctl` to figure out the output format of your frame grabber.   The option `-d0` is to specify `/dev/video0`, if you're using a different device, make sure the digit matches.  Example of commands:
+```sh
+v4l2-ctl -d0 --get-fmt-video
+v4l2-ctl -d0 --list-formats-ext
+```
+
+On Ubuntu 18.04, we found the following syntax seems to work with the USB Hauppage Live2:
+```sh
+ gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw,interlace-mode=interleaved ! autovideosink
+ ```
+
+## Blackmagic DeckLink Duo frame grabber
 
 You first need to install the drivers from Blackmagic, see https://www.blackmagicdesign.com/support/family/capture-and-playback   The drivers are included in the package "Desktop Video".  Once you've downloaded the binaries and extracted the files from Blackmagic, follow the instructions on their ReadMe.txt.   For 64 bits Ubuntu system, install the `.deb` files in subfolder `deb/x86_64`.   If your card is old, the DeckLink install might ask to run the BlackMagic firmware updater, i.e. something like `BlackmagicFirmwareUpdater update 0`.  After you reboot, check with `dmesg | grep -i black` to see if the card is recognized.  If the driver is working properly, the devices will show up under `/dev/blackmagic`.
 
@@ -127,7 +157,7 @@ source ~/catkin_ws/devel/setup.bash
 
 ### Using gscam
 
-To start the `gscam` node, we provide a couple of ROS launch scripts.
+To start the `gscam` node, we provide a couple of ROS launch scripts.  **Make sure the launch script has been updated to use a working gstreamer pipeline** (as descrided above using `gst-launch-1.01).   The main difference is that your pipeline for gscam should end with `videoconvert` and you need to remove `autovideosink`.
 
 For a stereo system with the USB frame grabbers, use:
 ```sh

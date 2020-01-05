@@ -27,9 +27,9 @@ namespace dvrk {
     class console
     {
     public:
-        console(const double & publish_rate_in_seconds,
+        console(ros::NodeHandle * node_handle,
+                const double & publish_rate_in_seconds,
                 const double & tf_rate_in_seconds,
-                const std::string & ros_namespace,
                 mtsIntuitiveResearchKitConsole * mts_console,
                 const dvrk_topics_version::version version);
         void Configure(const std::string & jsonFile);
@@ -37,10 +37,10 @@ namespace dvrk {
     protected:
         std::string mBridgeName;
         std::string mTfBridgeName;
-        std::string mNameSpace;
         mtsIntuitiveResearchKitConsole * mConsole;
         dvrk_topics_version::version mVersion;
         std::list<std::string> mIOInterfaces;
+        ros::NodeHandle * mNodeHandle;
     };
 }
 
