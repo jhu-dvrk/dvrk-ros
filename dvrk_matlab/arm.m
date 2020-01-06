@@ -28,9 +28,9 @@ classdef arm < handle
 
     % settings that are not supposed to change after constructor
     properties (SetAccess = immutable)
-        ros_namespace % namespace for this arm, should contain head/tail / (default is /dvrk/)
+        ros_namespace % namespace for this arm, should contain head/tail / (default is empty)
         robot_name    % name of robot, e.g. PSM1, ECM.  Must match ROS topics namespace
-        ros_name      % full ROS namespace, i.e. ros_name + robot_name (e.g. /dvrk/MTML)
+        ros_name      % full ROS namespace, i.e. ros_name + robot_name (e.g. MTML)
     end
 
     % values set by this class, can be read by others
@@ -78,11 +78,11 @@ classdef arm < handle
         function self = arm(name, namespace)
             % Create a robot interface.  The name must match the arm name
             % in ROS topics (test using rostopic list).  The namespace is
-            % optional, default is /dvrk/.  It is provide for
+            % optional, default is empty.  It is provide for
             % configurations with multiple dVRK so one could have
             % /dvrkA/PSM1 and /dvrkB/PSM1
             if nargin == 1
-                namespace = '/dvrk/';
+                namespace = '';
             end
             self.ros_namespace = namespace;
             self.robot_name = name;

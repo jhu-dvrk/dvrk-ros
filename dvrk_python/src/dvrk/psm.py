@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-05
 
-#   (C) Copyright 2016-2018 Johns Hopkins University (JHU), All Rights Reserved.
+#   (C) Copyright 2016-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -17,7 +17,7 @@ class psm(arm):
     """Simple robot API wrapping around ROS messages
     """
     # initialize the robot
-    def __init__(self, psm_name, ros_namespace = '/dvrk/'):
+    def __init__(self, psm_name, ros_namespace = ''):
         # first call base class constructor
         self._arm__init_arm(psm_name, ros_namespace)
 

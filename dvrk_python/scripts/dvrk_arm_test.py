@@ -3,7 +3,7 @@
 # Author: Anton Deguet
 # Date: 2015-02-22
 
-# (C) Copyright 2015-2017 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -97,6 +97,7 @@ class example_application:
             goal[0] = 0.0
             goal[1] = 0.0
             goal[2] = 0.12
+            goal[3] = 0.0
             self.arm.move_joint(goal, interpolate = True)
 
     # direct cartesian control example
@@ -119,7 +120,7 @@ class example_application:
         for i in range(samples):
             goal.p[0] =  initial_cartesian_position.p[0] + amplitude *  math.sin(i * math.radians(360.0) / samples)
             goal.p[1] =  initial_cartesian_position.p[1] + amplitude *  math.sin(i * math.radians(360.0) / samples)
-            self.arm.move(goal.p, interpolate=False)
+            self.arm.move(goal, interpolate=False)
             # check error on kinematics, compare to desired on arm.
             # to test tracking error we would compare to
             # current_position

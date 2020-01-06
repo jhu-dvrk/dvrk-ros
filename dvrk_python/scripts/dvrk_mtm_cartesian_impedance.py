@@ -36,7 +36,7 @@ class example_application:
         print(rospy.get_caller_id(), ' -> configuring dvrk_arm_test for ', robot_name)
         self.arm = dvrk.mtm(robot_name)
         self.coag_event = threading.Event()
-        rospy.Subscriber('/dvrk/footpedals/coag',
+        rospy.Subscriber('/footpedals/coag',
                          Joy, self.coag_event_cb)
         self.set_gains_pub = rospy.Publisher(self.arm._arm__full_ros_namespace + '/set_cartesian_impedance_gains',
                                              prmCartesianImpedanceGains, latch = True, queue_size = 1)

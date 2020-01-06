@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-05
 
-# (C) Copyright 2016-2018 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2016-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -24,12 +24,12 @@ class suj(object):
     """
 
     # initialize the arm
-    def __init__(self, arm_name, ros_namespace = '/dvrk/SUJ/'):
+    def __init__(self, arm_name, ros_namespace = 'SUJ/'):
         """Constructor.  This initializes a few data members.It
         requires a arm name, this will be used to find the ROS
         topics for the arm being controlled.  For example if the
         user wants `PSM1`, the ROS topics will be from the namespace
-        `/dvrk/SUJ/PSM1`"""
+        `SUJ/PSM1`"""
         # data members, event based
         self.__arm_name = arm_name
         self.__ros_namespace = ros_namespace

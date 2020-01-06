@@ -7,7 +7,7 @@ classdef console < handle
 
     % settings that are not supposed to change after constructor
     properties (SetAccess = immutable)
-        ros_namespace % namespace for this arm, should contain head/tail / (default is /dvrk/)
+        ros_namespace % namespace for this arm, should contain head/tail / (default is '')
     end
 
     % only this class methods can view/modify
@@ -26,39 +26,39 @@ classdef console < handle
 
         function self = console(namespace)
             % Create a console interface.  The namespace is
-            % optional, default is /dvrk/.  It is provide for
+            % optional, default is empty.  It is provide for
             % configurations with multiple dVRK so one could have
             % /dvrkA/ and /dvrkB/
             if nargin == 0
-                namespace = '/dvrk/console';
+                namespace = '';
             end
             self.ros_namespace = namespace;
 
             % ----------- subscribers
             % teleop scale
-            topic = strcat(self.ros_namespace, '/teleop/scale');
+            topic = strcat(self.ros_namespace, 'console/teleop/scale');
             self.teleop_scale_subscriber = ...
                 rossubscriber(topic, rostype.std_msgs_Float32);
 
             % ----------- publishers
             % power off
-            topic = strcat(self.ros_namespace, '/power_off');
+            topic = strcat(self.ros_namespace, 'console/power_off');
             self.power_off_publisher = rospublisher(topic, rostype.std_msgs_Empty);
 
             % power on
-            topic = strcat(self.ros_namespace, '/power_on');
+            topic = strcat(self.ros_namespace, 'console/power_on');
             self.power_on_publisher = rospublisher(topic, rostype.std_msgs_Empty);
 
             % home
-            topic = strcat(self.ros_namespace, '/home');
+            topic = strcat(self.ros_namespace, 'console/home');
             self.home_publisher = rospublisher(topic, rostype.std_msgs_Empty);
 
             % teleop enable
-            topic = strcat(self.ros_namespace, '/teleop/enable');
+            topic = strcat(self.ros_namespace, 'console/teleop/enable');
             self.teleop_enable_publisher = rospublisher(topic, rostype.std_msgs_Bool);
 
             % teleop set scale
-            topic = strcat(self.ros_namespace, '/teleop/set_scale');
+            topic = strcat(self.ros_namespace, 'console/teleop/set_scale');
             self.teleop_set_scale_publisher = rospublisher(topic, rostype.std_msgs_Float32);
         end
 

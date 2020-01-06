@@ -161,7 +161,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
       Name: RobotModel
-      Robot Description: /dvrk/PSM2/robot_description
+      Robot Description: /PSM2/robot_description
       TF Prefix: ""
       Update Interval: 0
       Value: true

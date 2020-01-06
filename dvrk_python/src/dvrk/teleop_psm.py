@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-08
 
-# (C) Copyright 2016-2017 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2016-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -21,12 +21,12 @@ class teleop_psm(object):
     """
 
     # initialize the teleop
-    def __init__(self, teleop_name, ros_namespace = '/dvrk/'):
+    def __init__(self, teleop_name, ros_namespace = ''):
         # base class constructor in separate method so it can be called in derived classes
         self.__init_teleop_psm(teleop_name, ros_namespace)
 
 
-    def __init_teleop_psm(self, teleop_name, ros_namespace = '/dvrk/'):
+    def __init_teleop_psm(self, teleop_name, ros_namespace = ''):
         """Constructor.  This initializes a few data members. It
         requires a teleop name, this will be used to find the ROS topics
         for the console being controlled."""
