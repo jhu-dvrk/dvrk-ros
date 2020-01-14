@@ -82,48 +82,50 @@ dvrk::console::console(ros::NodeHandle * node_handle,
     for (armIter = mConsole->mArms.begin();
          armIter != armEnd;
          ++armIter) {
-        const std::string name = armIter->first;
-        const std::string armNameSpace = name;
-        switch (armIter->second->mType) {
-        case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
-        case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
-            dvrk::add_tf_arm(*tf_bridge, name);
-            dvrk::add_topics_mtm(*pub_bridge, armNameSpace, name, version);
-            break;
-        case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
-            dvrk::add_topics_mtm_generic(*pub_bridge, armNameSpace, name, version);
-            break;
-        case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
-        case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
-            dvrk::add_tf_arm(*tf_bridge, name);
-            dvrk::add_topics_ecm(*pub_bridge, armNameSpace, name, version);
-            if (armIter->second->mSimulation
-                == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
-                dvrk::add_topics_ecm_io(*pub_bridge, armNameSpace,
-                                        name, version);
+        if (!armIter->second->mSkipROSBridge) {
+            const std::string name = armIter->first;
+            const std::string armNameSpace = name;
+            switch (armIter->second->mType) {
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
+                dvrk::add_tf_arm(*tf_bridge, name);
+                dvrk::add_topics_mtm(*pub_bridge, armNameSpace, name, version);
+                break;
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
+                dvrk::add_topics_mtm_generic(*pub_bridge, armNameSpace, name, version);
+                break;
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
+                dvrk::add_tf_arm(*tf_bridge, name);
+                dvrk::add_topics_ecm(*pub_bridge, armNameSpace, name, version);
+                if (armIter->second->mSimulation
+                    == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
+                    dvrk::add_topics_ecm_io(*pub_bridge, armNameSpace,
+                                            name, version);
+                }
+                break;
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
+                dvrk::add_tf_arm(*tf_bridge, name);
+                dvrk::add_topics_psm(*pub_bridge, armNameSpace, name, version);
+                if (armIter->second->mSimulation
+                    == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
+                    dvrk::add_topics_psm_io(*pub_bridge, armNameSpace,
+                                            name, version);
+                }
+                break;
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
+                dvrk::add_tf_suj(*tf_bridge, "PSM1");
+                dvrk::add_tf_suj(*tf_bridge, "PSM2");
+                dvrk::add_tf_suj(*tf_bridge, "PSM3");
+                dvrk::add_tf_suj(*tf_bridge, "ECM");
+                dvrk::add_topics_suj(*pub_bridge, "SUJ/PSM1", "PSM1", version);
+                dvrk::add_topics_suj(*pub_bridge, "SUJ/PSM2", "PSM2", version);
+                dvrk::add_topics_suj(*pub_bridge, "SUJ/PSM3", "PSM3", version);
+                dvrk::add_topics_suj(*pub_bridge, "SUJ/ECM", "ECM", version);
+            default:
+                break;
             }
-            break;
-        case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
-        case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
-            dvrk::add_tf_arm(*tf_bridge, name);
-            dvrk::add_topics_psm(*pub_bridge, armNameSpace, name, version);
-            if (armIter->second->mSimulation
-                == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
-                dvrk::add_topics_psm_io(*pub_bridge, armNameSpace,
-                                        name, version);
-            }
-            break;
-        case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
-            dvrk::add_tf_suj(*tf_bridge, "PSM1");
-            dvrk::add_tf_suj(*tf_bridge, "PSM2");
-            dvrk::add_tf_suj(*tf_bridge, "PSM3");
-            dvrk::add_tf_suj(*tf_bridge, "ECM");
-            dvrk::add_topics_suj(*pub_bridge, "SUJ/PSM1", "PSM1", version);
-            dvrk::add_topics_suj(*pub_bridge, "SUJ/PSM2", "PSM2", version);
-            dvrk::add_topics_suj(*pub_bridge, "SUJ/PSM3", "PSM3", version);
-            dvrk::add_topics_suj(*pub_bridge, "SUJ/ECM", "ECM", version);
-        default:
-            break;
         }
     }
 
@@ -220,58 +222,60 @@ void dvrk::console::Connect(void)
     for (armIter = mConsole->mArms.begin();
          armIter != armEnd;
          ++armIter) {
-        const std::string name = armIter->first;
-        switch (armIter->second->mType) {
-        case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
-        case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
-            dvrk::connect_tf_arm(mTfBridgeName, name,
-                                 armIter->second->ComponentName(),
-                                 armIter->second->InterfaceName());
-            [[fallthrough]];
-        case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
-            dvrk::connect_bridge_mtm(mBridgeName, name,
+        if (!armIter->second->mSkipROSBridge) {
+            const std::string name = armIter->first;
+            switch (armIter->second->mType) {
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
+                dvrk::connect_tf_arm(mTfBridgeName, name,
                                      armIter->second->ComponentName(),
                                      armIter->second->InterfaceName());
-            break;
-        case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
-        case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
-            dvrk::connect_tf_arm(mTfBridgeName, name,
-                                 armIter->second->ComponentName(),
-                                 armIter->second->InterfaceName());
-            dvrk::connect_bridge_ecm(mBridgeName, name,
+                [[fallthrough]];
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
+                dvrk::connect_bridge_mtm(mBridgeName, name,
+                                         armIter->second->ComponentName(),
+                                         armIter->second->InterfaceName());
+                break;
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
+                dvrk::connect_tf_arm(mTfBridgeName, name,
                                      armIter->second->ComponentName(),
                                      armIter->second->InterfaceName());
-            if (armIter->second->mSimulation
-                == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
-                dvrk::connect_bridge_ecm_io(mBridgeName, name,
-                                            armIter->second->IOComponentName());
+                dvrk::connect_bridge_ecm(mBridgeName, name,
+                                         armIter->second->ComponentName(),
+                                         armIter->second->InterfaceName());
+                if (armIter->second->mSimulation
+                    == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
+                    dvrk::connect_bridge_ecm_io(mBridgeName, name,
+                                                armIter->second->IOComponentName());
+                }
+                break;
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
+                dvrk::connect_tf_arm(mTfBridgeName, name,
+                                     armIter->second->ComponentName(),
+                                     armIter->second->InterfaceName());
+                dvrk::connect_bridge_psm(mBridgeName, name,
+                                         armIter->second->ComponentName(),
+                                         armIter->second->InterfaceName());
+                if (armIter->second->mSimulation
+                    == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
+                    dvrk::connect_bridge_psm_io(mBridgeName, name,
+                                                armIter->second->IOComponentName());
+                }
+                break;
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
+                dvrk::connect_tf_suj(mTfBridgeName, name, "PSM1");
+                dvrk::connect_tf_suj(mTfBridgeName, name, "PSM2");
+                dvrk::connect_tf_suj(mTfBridgeName, name, "PSM3");
+                dvrk::connect_tf_suj(mTfBridgeName, name, "ECM");
+                dvrk::connect_bridge_suj(mBridgeName, name, "PSM1");
+                dvrk::connect_bridge_suj(mBridgeName, name, "PSM2");
+                dvrk::connect_bridge_suj(mBridgeName, name, "PSM3");
+                dvrk::connect_bridge_suj(mBridgeName, name, "ECM");
+            default:
+                break;
             }
-            break;
-        case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
-        case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
-            dvrk::connect_tf_arm(mTfBridgeName, name,
-                                 armIter->second->ComponentName(),
-                                 armIter->second->InterfaceName());
-            dvrk::connect_bridge_psm(mBridgeName, name,
-                                     armIter->second->ComponentName(),
-                                     armIter->second->InterfaceName());
-            if (armIter->second->mSimulation
-                == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
-                dvrk::connect_bridge_psm_io(mBridgeName, name,
-                                            armIter->second->IOComponentName());
-            }
-            break;
-        case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
-            dvrk::connect_tf_suj(mTfBridgeName, name, "PSM1");
-            dvrk::connect_tf_suj(mTfBridgeName, name, "PSM2");
-            dvrk::connect_tf_suj(mTfBridgeName, name, "PSM3");
-            dvrk::connect_tf_suj(mTfBridgeName, name, "ECM");
-            dvrk::connect_bridge_suj(mBridgeName, name, "PSM1");
-            dvrk::connect_bridge_suj(mBridgeName, name, "PSM2");
-            dvrk::connect_bridge_suj(mBridgeName, name, "PSM3");
-            dvrk::connect_bridge_suj(mBridgeName, name, "ECM");
-        default:
-            break;
         }
     }
 
