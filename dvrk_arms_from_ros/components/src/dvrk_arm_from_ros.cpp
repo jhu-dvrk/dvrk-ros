@@ -45,13 +45,70 @@ dvrk_arm_from_ros::dvrk_arm_from_ros(const mtsTaskPeriodicConstructorArg & arg)
 void dvrk_arm_from_ros::Init(void)
 {
 
-    std::string ros_namespace = "/remote/" + this->GetName();
+    std::string ros_namespace = this->GetName();
     std::string interface_provided = this->GetName();
+
+    AddPublisherFromCommandWrite<std::string, std_msgs::String>
+        (interface_provided,
+         "SetDesiredState",
+         ros_namespace + "/set_desired_state");
+
+    AddPublisherFromCommandVoid
+        (interface_provided,
+         "Freeze",
+         ros_namespace + "/freeze");
+
+    AddPublisherFromCommandWrite<prmPositionCartesianSet, geometry_msgs::Pose>
+        (interface_provided,
+         "SetPositionCartesian",
+         ros_namespace + "/set_position_cartesian");
+
+    AddPublisherFromCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
+        (interface_provided,
+         "SetPositionJaw",
+         ros_namespace + "/set_position_jaw");
+
+    AddSubscriberToCommandRead<mtsStdString, std_msgs::String>
+        (interface_provided,
+         "GetCurrentState",
+         ros_namespace + "/current_state");
+
+    AddSubscriberToCommandRead<mtsStdString, std_msgs::String>
+        (interface_provided,
+         "GetDesiredState",
+         ros_namespace + "/desired_state");
 
     AddSubscriberToCommandRead<prmStateJoint, sensor_msgs::JointState>
         (interface_provided,
          "GetStateJointDesired",
          ros_namespace + "/state_joint_desired");
+
+    AddSubscriberToCommandRead<prmStateJoint, sensor_msgs::JointState>
+        (interface_provided,
+         "GetStateJaw",
+         ros_namespace + "/state_jaw_current");
+
+    AddSubscriberToCommandRead<prmPositionCartesianGet, geometry_msgs::PoseStamped>
+        (interface_provided,
+         "GetPositionCartesian",
+         ros_namespace + "/position_cartesian_current");
+
+    AddSubscriberToCommandRead<mtsIntervalStatistics, cisst_msgs::mtsIntervalStatistics>
+        (interface_provided,
+         "GetPeriodStatistics",
+         ros_namespace + "/period_statistics");
+
+    AddSubscriberToEventWrite<mtsMessage, std_msgs::String>
+        (interface_provided, "Error",
+         ros_namespace + "/error");
+
+    AddSubscriberToEventWrite<mtsMessage, std_msgs::String>
+        (interface_provided, "Warning",
+         ros_namespace + "/warning");
+    
+    AddSubscriberToEventWrite<mtsMessage, std_msgs::String>
+        (interface_provided, "Status",
+         ros_namespace + "/status");
 }
 
 // Configure is a virtual method, we can redefine it and have our own
