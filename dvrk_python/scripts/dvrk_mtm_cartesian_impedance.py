@@ -3,7 +3,7 @@
 # Author: Anton Deguet
 # Date: 2017-07-22
 
-# (C) Copyright 2017-2019 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2017-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -19,31 +19,35 @@
 # To communicate with the arm using ROS topics, see the python based example dvrk_arm_test.py:
 # > rosrun dvrk_python dvrk_mtm_cartesian_impedance <arm-name>
 
-from __future__ import print_function
 import dvrk
 import sys
 import rospy
 import numpy
 import threading
+import argparse
 from sensor_msgs.msg import Joy
 from cisst_msgs.msg import prmCartesianImpedanceGains
+
+# print with node id
+def print_id(message):
+    print('%s -> %s' % (rospy.get_caller_id(), message))
 
 # example of application using arm.py
 class example_application:
 
     # configuration
     def configure(self, robot_name):
-        print(rospy.get_caller_id(), ' -> configuring dvrk_arm_test for ', robot_name)
+        print_id('configuring dvrk_arm_test for %s' % robot_name)
         self.arm = dvrk.mtm(robot_name)
         self.coag_event = threading.Event()
-        rospy.Subscriber('/footpedals/coag',
+        rospy.Subscriber('footpedals/coag',
                          Joy, self.coag_event_cb)
         self.set_gains_pub = rospy.Publisher(self.arm._arm__full_ros_namespace + '/set_cartesian_impedance_gains',
                                              prmCartesianImpedanceGains, latch = True, queue_size = 1)
 
     # homing example
     def home(self):
-        print(rospy.get_caller_id(), ' -> starting home')
+        print_id('starting home')
         self.arm.home()
         # get current joints just to set size
         goal = numpy.copy(self.arm.get_current_joint_position())
@@ -72,9 +76,9 @@ class example_application:
         gains.ForceOrientation.w = 1.0
         gains.TorqueOrientation.w = 1.0
 
-        print(rospy.get_caller_id(), ' -> press COAG pedal to move to next example')
+        print_id('press COAG pedal to move to next example')
 
-        print(rospy.get_caller_id(), ' -> arm will be constrained in X/Y plane around the current position')
+        print_id('arm will be constrained in X/Y plane around the current position')
         self.wait_for_coag()
         # set gains in z direction
         gains.PosStiffNeg.z = -200.0
@@ -86,11 +90,11 @@ class example_application:
         gains.ForcePosition.z = self.arm.get_current_position().p[2]
         self.set_gains_pub.publish(gains)
 
-        print(rospy.get_caller_id(), ' -> orientation will be locked')
+        print_id('orientation will be locked')
         self.wait_for_coag()
         self.arm.lock_orientation_as_is()
 
-        print(rospy.get_caller_id(), ' -> arm will be constrained in X/Y half plane around the current position')
+        print_id('arm will be constrained in X/Y half plane around the current position')
         self.wait_for_coag()
         # set gains in z direction, stiffer in half positive, 0 in negative
         gains.PosStiffNeg.z = 0.0
@@ -102,7 +106,7 @@ class example_application:
         gains.ForcePosition.z = self.arm.get_current_position().p[2]
         self.set_gains_pub.publish(gains)
 
-        print(rospy.get_caller_id(), ' -> an horizontal line will be created around the current position, with viscosity along the line')
+        print_id('an horizontal line will be created around the current position, with viscosity along the line')
         self.wait_for_coag()
         # set gains in x, z directions for the line
         gains.PosStiffNeg.x = -200.0
@@ -122,7 +126,7 @@ class example_application:
         gains.ForcePosition.z = self.arm.get_current_position().p[2]
         self.set_gains_pub.publish(gains)
 
-        print(rospy.get_caller_id(), ' -> a plane will be created perpendicular to the master gripper')
+        print_id('a plane will be created perpendicular to the master gripper')
         self.wait_for_coag()
         # set gains in x, z directions for the line
         gains.PosStiffNeg.x = 0.0
@@ -169,11 +173,11 @@ class example_application:
         self.set_gains_pub.publish(gains)
         self.arm.unlock_orientation()
 
-        print(rospy.get_caller_id(), ' -> keep holding arm, press coag, arm will freeze in position')
+        print_id('keep holding arm, press coag, arm will freeze in position')
         self.wait_for_coag()
         self.arm.move(self.arm.get_desired_position())
 
-        print(rospy.get_caller_id(), ' -> press coag to end')
+        print_id('press coag to end')
         self.wait_for_coag()
 
 
@@ -183,13 +187,18 @@ class example_application:
         self.tests()
 
 if __name__ == '__main__':
-    try:
-        if (len(sys.argv) != 2):
-            print(sys.argv[0], ' requires one argument, i.e. MTML or MTMR')
-        else:
-            application = example_application()
-            application.configure(sys.argv[1])
-            application.run()
+    # ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
+    rospy.init_node('dvrk_mtm_cartesian_impedance')
+    # strip ros arguments
+    argv = rospy.myargv(argv=sys.argv)
 
-    except rospy.ROSInterruptException:
-        pass
+    # parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-a', '--arm', type=str, required=True,
+                        choices=['MTML', 'MTMR'],
+                        help = 'arm name corresponding to ROS topics without namespace.  Use __ns:= to specify the namespace')
+    args = parser.parse_args(argv[1:]) # skip argv[0], script name
+
+    application = example_application()
+    application.configure(args.arm)
+    application.run()
