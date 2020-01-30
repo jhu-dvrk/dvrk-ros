@@ -217,6 +217,9 @@ int main(int argc, char ** argv)
     cmnLogger::Kill();
     cmnLogger::RemoveChannel(logFileStream);
 
+    // stop ROS node
+    ros::shutdown();
+
     delete console;
     if (hasQt) {
         delete consoleQt;
