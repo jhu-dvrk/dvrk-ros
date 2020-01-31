@@ -96,15 +96,9 @@ On Ubuntu 18.04, we found the following syntax seems to work with the USB Hauppa
  gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw,interlace-mode=interleaved ! autovideosink
  ```
 
-To setup a `udev` rule, you first need to find a way to uniquely identify each frame grabber.   To start, plug just one frame grabber then do `lsusb`.
+To setup a `udev` rule, you first need to find a way to uniquely identify each frame grabber.   To start, plug just one frame grabber then do `ls /dev/video*`.  Use the full path to identify each frame grabber (e.g. `/dev/video0`, `/dev/video1`...):
 ```
-...
-Bus 001 Device 007: ID 2040:c200 Hauppauge 
-...
-```
-Use the bus (`001`) and device (`007`) numbers to query the attributes we can use to identify each frame grabber using:
-```
-udevadm info --attribute-walk /dev/bus/usb/001/007
+udevadm info --attribute-walk /dev/video0
 ```
 Scroll through the output to find the serial number:
 ```
@@ -114,10 +108,10 @@ Scroll through the output to find the serial number:
 ```
 Note that this info should correspond to the messages in `dmesg -w` when you plugged your frame grabber.  Now we can create a `udev` rule to automatically assign the frame grabber to a specific `/dev/video` "device".  You can write the rules in `/etc/udev/rules.d/90-hauppauge.rules` using sudo privileges, replace the serial numbers with yours, the following example is for a stereo system:
 ```
-SUBSYSTEM=="usb", ATTR{manufacturer}=="Hauppauge", ATTR{serial}=="0011367747", SYMLINK+="video-left"
-SUBSYSTEM=="usb", ATTR{manufacturer}=="Hauppauge", ATTR{serial}=="0011485772", SYMLINK+="video-right"
+SUBSYSTEM=="video4linux", ATTRS{manufacturer}=="Hauppauge", ATTRS{serial}=="0011367747", SYMLINK+="video-left"
+SUBSYSTEM=="video4linux", ATTRS{manufacturer}=="Hauppauge", ATTRS{serial}=="0011485772", SYMLINK+="video-right"
 ```
-Save the file and then do `sudo udevadm control --reload-rules` to apply the rules.  No need to reboot the computer, just unplug your frame grabber, wait a few seconds, replug it and then do `ls -l /dev/video*` to confirm that the rule worked.  If this didn't work, this page has some useful info for debugging `udev` rules: https://linuxconfig.org/tutorial-on-how-to-write-basic-udev-rules-in-linux
+Save the file and then do `sudo udevadm control --reload-rules` to apply the rules.  No need to reboot the computer, just unplug your frame grabber, wait a few seconds, replug it and then do `ls -l /dev/video*` to confirm that the rule worked.  If this didn't work, these pages have some useful info for debugging `udev` and `video4linux` rules: https://linuxconfig.org/tutorial-on-how-to-write-basic-udev-rules-in-linux and https://unix.stackexchange.com/questions/424887/udev-rule-to-discern-2-identical-webcams-on-linux
 
 ## Blackmagic DeckLink Duo frame grabber
 
