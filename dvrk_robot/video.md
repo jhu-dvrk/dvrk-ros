@@ -112,12 +112,12 @@ Scroll through the output to find the serial number:
     ...
     ATTR{serial}=="0011485772"
 ```
-Note that this info should correspond to the messages in `dmesg -w` when you plugged your frame grabber.  Now we can start create a `udev` rule to automatically assign the frame grabber to a specific `/dev/video` "device".  You can create the rules in `/etc/udev/rules.d/90-hauppauge.rules`, replace the serial numbers with yours, the following example is for a stereo system:
+Note that this info should correspond to the messages in `dmesg -w` when you plugged your frame grabber.  Now we can create a `udev` rule to automatically assign the frame grabber to a specific `/dev/video` "device".  You can write the rules in `/etc/udev/rules.d/90-hauppauge.rules` using sudo privileges, replace the serial numbers with yours, the following example is for a stereo system:
 ```
 SUBSYSTEM=="usb", ATTR{manufacturer}=="Hauppauge", ATTR{serial}=="0011367747", SYMLINK+="video-left"
 SUBSYSTEM=="usb", ATTR{manufacturer}=="Hauppauge", ATTR{serial}=="0011485772", SYMLINK+="video-right"
 ```
-Save the file and then do `sudo udevadm control --reload-rules` to apply the rules.  No need to reboot the computer, just unplug your frame grabber, wait a few seconds, replug it and then do `ls -l /dev/video*` to confirm that the rule worked.
+Save the file and then do `sudo udevadm control --reload-rules` to apply the rules.  No need to reboot the computer, just unplug your frame grabber, wait a few seconds, replug it and then do `ls -l /dev/video*` to confirm that the rule worked.  If this didn't work, this page has some useful info for debugging `udev` rules: https://linuxconfig.org/tutorial-on-how-to-write-basic-udev-rules-in-linux
 
 ## Blackmagic DeckLink Duo frame grabber
 
