@@ -180,7 +180,7 @@ int main(int argc, char ** argv)
             palette->setColor(QPalette::Base, QColor(75, 75, 75));
             palette->setColor(QPalette::AlternateBase, QColor(53, 53, 53));
             palette->setColor(QPalette::ToolTipBase, Qt::white);
-            palette->setColor(QPalette::ToolTipText, Qt::white);
+            palette->setColor(QPalette::ToolTipText, Qt::black);
             palette->setColor(QPalette::Text, Qt::white);
             palette->setColor(QPalette::Button, QColor(53, 53, 53));
             palette->setColor(QPalette::ButtonText, Qt::white);
