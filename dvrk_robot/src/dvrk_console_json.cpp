@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2019 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -32,6 +32,10 @@ http://www.cisst.org/cisst/license.txt.
 #include <QApplication>
 #include <QIcon>
 #include <QLocale>
+#include <QStyle>
+#include <QStyleFactory>
+#include <QPalette>
+
 #include <clocale>
 
 #include <ros/ros.h>
@@ -81,6 +85,7 @@ int main(int argc, char ** argv)
     std::string versionString = "v1_4_0";
     typedef std::list<std::string> managerConfigType;
     managerConfigType managerConfig;
+    std::string qtStyle;
 
     options.AddOptionOneValue("j", "json-config",
                               "json configuration file",
@@ -108,6 +113,13 @@ int main(int argc, char ** argv)
     options.AddOptionMultipleValues("m", "component-manager",
                                     "JSON files to configure component manager",
                                     cmnCommandLineOptions::OPTIONAL_OPTION, &managerConfig);
+
+    options.AddOptionOneValue("S", "qt-style",
+                              "Qt style, use this option with a random name to see available styles",
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &qtStyle);
+
+    options.AddOptionNoValue("D", "dark-mode",
+                             "replaces the default Qt palette with darker colors");
 
     // check that all required options have been provided
     std::string errorMessage;
@@ -153,6 +165,31 @@ int main(int argc, char ** argv)
         application = new QApplication(argc, argv);
         application->setWindowIcon(QIcon(":/dVRK.png"));
         cmnQt::QApplicationExitsOnCtrlC();
+        if (options.IsSet("qt-style")) {
+            QStyle * result = QApplication::setStyle(QString(qtStyle.c_str()));
+            if (!result) {
+                std::cerr << "Style \"" << qtStyle << "\" is not valid, pick one from: "
+                          << std::endl << QStyleFactory::keys().join(", ").toStdString() << std::endl;
+                return -1;
+            }
+        }
+        if (options.IsSet("dark-mode")) {
+            QPalette * palette = new QPalette();
+            palette->setColor(QPalette::Window, QColor(53, 53, 53));
+            palette->setColor(QPalette::WindowText, Qt::white);
+            palette->setColor(QPalette::Base, QColor(75, 75, 75));
+            palette->setColor(QPalette::AlternateBase, QColor(53, 53, 53));
+            palette->setColor(QPalette::ToolTipBase, Qt::white);
+            palette->setColor(QPalette::ToolTipText, Qt::white);
+            palette->setColor(QPalette::Text, Qt::white);
+            palette->setColor(QPalette::Button, QColor(53, 53, 53));
+            palette->setColor(QPalette::ButtonText, Qt::white);
+            palette->setColor(QPalette::BrightText, Qt::red);
+            palette->setColor(QPalette::Link, QColor(42, 130, 218));
+            palette->setColor(QPalette::Highlight, QColor(42, 130, 218));
+            palette->setColor(QPalette::HighlightedText, Qt::black);
+            application->setPalette(*palette);
+        }
         consoleQt = new mtsIntuitiveResearchKitConsoleQt();
         consoleQt->Configure(console);
         consoleQt->Connect();
