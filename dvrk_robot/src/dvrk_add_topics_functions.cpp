@@ -5,7 +5,7 @@
   Author(s):  Zihan Chen, Anton Deguet
   Created on: 2015-04-33
 
-  (C) Copyright 2015-2019 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -734,6 +734,39 @@ void dvrk::connect_bridge_teleop_ecm(const std::string & bridge_name,
                               teleop_component_name, "Setting");
     componentManager->Connect(bridge_name, teleop_component_name + "-log",
                               teleop_component_name, "Setting");
+}
+
+void dvrk::add_topics_endoscope_focus(mtsROSBridge & bridge,
+                                      const std::string & ros_namespace,
+                                      const std::string & focus_component_name,
+                                      const dvrk_topics_version::version version)
+{
+    // events
+    bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
+        (focus_component_name, "Locked", ros_namespace + "/locked");
+    bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
+        (focus_component_name, "FocusingIn", ros_namespace + "/focusing_in");
+    bridge.AddPublisherFromEventWrite<bool, std_msgs::Bool>
+        (focus_component_name, "FocusingOut", ros_namespace + "/focusing_out");
+
+    // commands
+    bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
+        (focus_component_name, "Lock",
+         ros_namespace + "/lock");
+    bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
+        (focus_component_name, "FocusIn",
+         ros_namespace + "/focus_in");
+    bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
+        (focus_component_name, "FocusOut",
+         ros_namespace + "/focus_out");
+}
+
+void dvrk::connect_bridge_endoscope_focus(const std::string & bridge_name,
+                                          const std::string & focus_component_name)
+{
+    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
+    componentManager->Connect(bridge_name, focus_component_name,
+                              focus_component_name, "Control");
 }
 
 void dvrk::add_topics_suj(mtsROSBridge & bridge,

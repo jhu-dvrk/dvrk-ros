@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2019 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -21,6 +21,7 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <cisstCommon/cmnStrings.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
+#include <sawIntuitiveResearchKit/mtsDaVinciEndoscopeFocus.h>
 
 #include <json/json.h>
 
@@ -148,6 +149,13 @@ dvrk::console::console(ros::NodeHandle * node_handle,
         std::string topic_name = mConsole->mTeleopECM->Name();
         std::replace(topic_name.begin(), topic_name.end(), '-', '_');
         dvrk::add_topics_teleop_ecm(*pub_bridge, topic_name, name, version);
+    }
+    
+    // Endoscope focus
+    if (mConsole->mDaVinciEndoscopeFocus) {
+        const std::string name = mConsole->mDaVinciEndoscopeFocus->GetName();
+        const std::string topic_name = "endoscope_focus";
+        dvrk::add_topics_endoscope_focus(*pub_bridge, topic_name, name, version);
     }
 
     // digital inputs
@@ -294,6 +302,12 @@ void dvrk::console::Connect(void)
     if (mConsole->mTeleopECM) {
         const std::string name = mConsole->mTeleopECM->Name();
         dvrk::connect_bridge_teleop_ecm(mBridgeName, name);
+    }
+
+    // Endoscope focus
+    if (mConsole->mDaVinciEndoscopeFocus) {
+        const std::string name = mConsole->mDaVinciEndoscopeFocus->GetName();
+        dvrk::connect_bridge_endoscope_focus(mBridgeName, name);
     }
 
     // connect foot pedal, all arms use same

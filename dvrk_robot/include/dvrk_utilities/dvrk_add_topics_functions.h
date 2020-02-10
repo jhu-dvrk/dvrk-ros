@@ -5,7 +5,7 @@
   Author(s):  Zihan Chen, Anton Deguet
   Created on: 2015-05-23
 
-  (C) Copyright 2015-2019 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -155,6 +155,18 @@ namespace dvrk {
       ECM component, it must be used after add_topics_teleop. */
     void connect_bridge_teleop_ecm(const std::string & bridge_name,
                                    const std::string & teleop_component_name);
+
+    /*! Add all the topics related to endoscope focus component. */
+    void add_topics_endoscope_focus(mtsROSBridge & bridge,
+                                    const std::string & ros_namespace,
+                                    const std::string & focus_component_name,
+                                    const dvrk_topics_version::version version);
+
+    /*! This method connects all the required interfaces for the
+      endoscope focus component, it must be used after
+      add_topics_teleop. */
+    void connect_bridge_endoscope_focus(const std::string & bridge_name,
+                                        const std::string & focus_component_name);
 
     /*! Add all the topics related to the setup joints (SUJ) */
     void add_topics_suj(mtsROSBridge & bridge,
