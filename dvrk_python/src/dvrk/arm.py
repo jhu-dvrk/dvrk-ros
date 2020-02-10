@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-05
 
-# (C) Copyright 2016-2019 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2016-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -43,19 +43,17 @@ class arm(object):
     """
 
     # initialize the arm
-    def __init__(self, arm_name, ros_namespace = 'dvrk/'):
+    def __init__(self, arm_name, ros_namespace = ''):
         # base class constructor in separate method so it can be called in derived classes
         self.__init_arm(arm_name, ros_namespace)
 
 
-    def __init_arm(self, arm_name, ros_namespace = 'dvrk/'):
-        """Constructor.  This initializes a few data members. It requires an
-        arm name, this will be used to find the ROS topics for the arm
-        being controlled.  For example if the arm name is `PSM1`, the
-        ROS topics will be from the namespace `dvrk/PSM1`.
-
-        """
-
+    def __init_arm(self, arm_name, ros_namespace = ''):
+        """Constructor.  This initializes a few data members.It
+        requires a arm name, this will be used to find the ROS
+        topics for the arm being controlled.  For example if the
+        user wants `PSM1`, the ROS topics will be from the namespace
+        `PSM1`"""
         # data members, event based
         self.__arm_name = arm_name
         self.__ros_namespace = ros_namespace

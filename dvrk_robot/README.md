@@ -1,11 +1,11 @@
-dvrk robot 
+dvrk robot
 ==========
 
 This package contains programs, which fires real robot, publishes and
 subscribes ROS topics.
 
-# Depends  
-* cisst-ros 
+# Depends
+* cisst-ros
 
 IMPORTANT: You first need to make sure you have all your configuration
 files ready, very likely in
@@ -26,10 +26,13 @@ We also provide a launch script for single arm using RViz (you need to provide y
 
 One can also simulate one or more arms using the field `simulation` in your console-xyz.json.  See examples in the `sawIntuitiveResearchKit/share` directory:
 ```sh
-  roslaunch dvrk_robot dvrk_arm_rviz.launch arm:=ECM config:=/home/<user_name>/catkin_ws/src/cisst-saw/sawIntuitiveResearchKit/share/console-ECM_KIN_SIMULATED.json
+  roslaunch dvrk_robot dvrk_arm_rviz.launch arm:=ECM
 ```
+
+We provide a few console configurations for simulated arms in `sawIntuitiveResearchKit/share/console`.  By default, the launch file `dvrk_arm_rviz.launch` will look for the file `console/console-$(arg arm)_KIN_SIMULATED.json`.
 
 # Using the ROS topics
 
 The best way to figure how to use the ROS topics is to look at the
-files dvrk_python/src/robot.py and dvrk_matlab/robot.m.
+python ROS wrappers in `dvrk_python` or the Matlab ROS wrappers in
+`dvrk_matlab`.

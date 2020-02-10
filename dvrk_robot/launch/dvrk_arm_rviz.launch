@@ -1,8 +1,8 @@
 <launch>
 
   <arg name="arm" />
-  <arg name="config" />
 
+  <arg name="config" default="$(find dvrk_config)/console/console-$(arg arm)_KIN_SIMULATED.json" />
   <arg name="model" default="$(find dvrk_model)/model/$(arg arm).urdf.xacro" />
 
   <node name="dvrk_$(arg arm)_node"
@@ -11,7 +11,7 @@
         args="-j $(arg config)"
         output="screen"/>
 
-  <group ns="/dvrk/$(arg arm)">
+  <group ns="$(arg arm)">
       <arg name="gui" default="false" />
       <arg name="rate" default="20" />
 
@@ -20,13 +20,13 @@
       <param name="rate" value="$(arg rate)"/>
 
       <rosparam param="source_list" subst_value="True">
-          [/dvrk/$(arg arm)/measured_js,
-           /dvrk/$(arg arm)/jaw/measured_js,
-           /dvrk/$(arg arm)/gripper/measured_js]
+          [/$(arg arm)/measured_js,
+           /$(arg arm)/jaw/measured_js,
+           /$(arg arm)/gripper/measured_js]
       </rosparam>
 
       <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
-      <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+      <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
   </group>
 
   <node name="rviz" pkg="rviz" type="rviz"

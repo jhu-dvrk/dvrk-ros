@@ -2,10 +2,7 @@
 
 # Authors: Nick Eusman, Anton Deguet
 # Date: 2015-09-24
-# Copyright JHU 2015-2017
-
-# Todo:
-# - test calibrating 3rd offset on PSM?
+# Copyright JHU 2015-2020
 
 import time
 import rospy
@@ -14,6 +11,7 @@ import sys
 import csv
 import datetime
 import numpy
+import argparse
 
 from sensor_msgs.msg import JointState
 import dvrk
@@ -51,7 +49,7 @@ class potentiometer_calibration:
         self._data_received = False # use pots to make sure the ROS topics are OK
         self._last_potentiometers = []
         self._last_joints = []
-        ros_namespace = '/dvrk/' + self._robot_name
+        ros_namespace = self._robot_name
         rospy.Subscriber(ros_namespace +  '/io/analog_input_pos_si', JointState, self.pot_callback)
         rospy.Subscriber(ros_namespace +  '/io/joint_position', JointState, self.joints_callback)
 
@@ -100,10 +98,10 @@ class potentiometer_calibration:
                 if currentRobot.attrib["Name"] == self._robot_name:
                     self._serial_number = currentRobot.attrib["SN"]
                     xmlRobot = currentRobot
-                    print("Succesfully found robot \"", currentRobot.attrib["Name"], "\", Serial number: ", self._serial_number, " in XML file")
+                    print("Succesfully found robot \"%s\", serial number %s in XML file" % (currentRobot.attrib["Name"], self._serial_number))
                     robotFound = True
                 else:
-                    print("Found robot \"", currentRobot.attrib["Name"], "\", while looking for \"", self._robot_name, "\"")
+                    print("Found robot \"%s\" while looking for \"%s\", make sure you're using the correct configuration file!" % (currentRobot.attrib["Name"], self._robot_name))
 
         if robotFound == False:
             sys.exit("Robot tree could not be found in xml file")
@@ -166,11 +164,11 @@ class potentiometer_calibration:
         # Check that everything is working
         time.sleep(2.0) # to make sure some data has arrived
         if not self._data_received:
-            print("It seems the console for ", self._robot_name, " is not started or is not publishing the IO topics")
+            print("It seems the console for %s is not started or is not publishing the IO topics" % self._robot_name)
             print("Make sure you use \"rosrun dvrk_robot dvrk_console_json\" with the -i option")
             sys.exit("Start the dvrk_console_json with the proper options first")
 
-        print("The serial number found in the XML file is: ", self._serial_number)
+        print("The serial number found in the XML file is: %s" % self._serial_number)
         print("Make sure the dvrk_console_json is using the same configuration file.  Serial number can be found in GUI tab \"IO\".")
         ok = input("Press `c` and [enter] to continue\n")
         if ok != "c":
@@ -186,7 +184,7 @@ class potentiometer_calibration:
 
             # write all values to csv file
             csv_file_name = 'pot_calib_scales_' + self._robot_name + '-' + self._serial_number + '-' + now_string + '.csv'
-            print("Values will be saved in: ", csv_file_name)
+            print("Values will be saved in: %s" % csv_file_name)
             f = open(csv_file_name, 'wb')
             writer = csv.writer(f)
             header = []
@@ -332,15 +330,26 @@ class potentiometer_calibration:
         save = input("To save this in new file press 'y' followed by [enter]\n")
         if save == "y":
             tree.write(filename + "-new")
-            print('Results saved in', filename + '-new. Restart your dVRK application with the new file!')
-            print('To copy the new file over the existing one: cp', filename + '-new', filename)
+            print('Results saved in %s-new. Restart your dVRK application with the new file!' % filename)
+            print('To copy the new file over the existing one: cp %s-new %s' % (filename, filename))
 
 if __name__ == '__main__':
-    if (len(sys.argv) != 4):
-        print(sys.argv[0] + ' requires three arguments, i.e. "scales"/"offsets", name of dVRK arm and file name.  Always start with scales calibration.')
-    else:
-        if (sys.argv[1] == 'offsets') or (sys.argv[1] == 'scales'):
-            calibration = potentiometer_calibration(sys.argv[2])
-            calibration.run(sys.argv[1], sys.argv[3])
-        else:
-            print(sys.argv[0] + ', first argument must be either scales or offsets.  You must start with the scale calibration')
+    # ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
+    rospy.init_node('dvrk_calibrate_potentiometer')
+    # strip ros arguments
+    argv = rospy.myargv(argv=sys.argv)
+
+    # parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--type', type=str, required=True,
+                        choices=['scales', 'offsets'],
+                        help = 'use either "scales" or "offsets"')
+    parser.add_argument('-a', '--arm', type=str, required=True,
+                        choices=['ECM', 'MTML', 'MTMR', 'PSM1', 'PSM2', 'PSM3'],
+                        help = 'arm name corresponding to ROS topics without namespace.  Use __ns:= to specify the namespace')
+    parser.add_argument('-c', '--config', type=str, required=True,
+                        help = 'arm IO config file, i.e. something like sawRobotIO1394-xwz-12345.xml')
+    args = parser.parse_args(argv[1:]) # skip argv[0], script name
+
+    calibration = potentiometer_calibration(args.arm)
+    calibration.run(args.type, args.config)

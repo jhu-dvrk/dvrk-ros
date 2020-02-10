@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2019 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -32,6 +32,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <QApplication>
 #include <QIcon>
 #include <QLocale>
+
 #include <clocale>
 
 #include <ros/ros.h>
@@ -81,6 +82,7 @@ int main(int argc, char ** argv)
     std::string versionString = "crtk_alpha";
     typedef std::list<std::string> managerConfigType;
     managerConfigType managerConfig;
+    std::string qtStyle;
 
     options.AddOptionOneValue("j", "json-config",
                               "json configuration file",
@@ -108,6 +110,13 @@ int main(int argc, char ** argv)
     options.AddOptionMultipleValues("m", "component-manager",
                                     "JSON files to configure component manager",
                                     cmnCommandLineOptions::OPTIONAL_OPTION, &managerConfig);
+
+    options.AddOptionOneValue("S", "qt-style",
+                              "Qt style, use this option with a random name to see available styles",
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &qtStyle);
+
+    options.AddOptionNoValue("D", "dark-mode",
+                             "replaces the default Qt palette with darker colors");
 
     // check that all required options have been provided
     std::string errorMessage;
@@ -153,6 +162,16 @@ int main(int argc, char ** argv)
         application = new QApplication(argc, argv);
         application->setWindowIcon(QIcon(":/dVRK.png"));
         cmnQt::QApplicationExitsOnCtrlC();
+        if (options.IsSet("qt-style")) {
+            std::string errorMessage = cmnQt::SetStyle(qtStyle);
+            if (errorMessage != "") {
+                std::cerr << errorMessage << std::endl;
+                return -1;
+            }
+        }
+        if (options.IsSet("dark-mode")) {
+            cmnQt::SetDarkMode();
+        }
         consoleQt = new mtsIntuitiveResearchKitConsoleQt();
         consoleQt->Configure(console);
         consoleQt->Connect();
@@ -216,6 +235,9 @@ int main(int argc, char ** argv)
     // stop all logs
     cmnLogger::Kill();
     cmnLogger::RemoveChannel(logFileStream);
+
+    // stop ROS node
+    ros::shutdown();
 
     delete console;
     if (hasQt) {

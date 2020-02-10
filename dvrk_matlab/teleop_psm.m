@@ -7,7 +7,7 @@ classdef teleop_psm < handle
 
     % settings that are not supposed to change after constructor
     properties (SetAccess = immutable)
-        ros_namespace % namespace for this arm, should contain head/tail / (default is /dvrk/)
+        ros_namespace % namespace for this arm, should contain head/tail / (default is empty)
         teleop_name   % name of teleop, e.g. MTMR_PSM1.  Must match ROS topics namespace
         ros_name      % full ROS namespace, i.e. ros_name + teleop_name (e.g. /dvrk/MTMR_PSM1)
     end
@@ -26,11 +26,11 @@ classdef teleop_psm < handle
         function self = teleop_psm(name, namespace)
             % Create a teleop interface.  The name must match the arm name
             % in ROS topics (test using rostopic list).  The namespace is
-            % optional, default is /dvrk/.  It is provide for
+            % optional, default is empty.  It is provide for
             % configurations with multiple dVRK so one could have
             % /dvrkA/MTMR_PSM1 and /dvrkB/MTMR_PSM1
             if nargin == 1
-                namespace = '/dvrk/';
+                namespace = '';
             end
             self.ros_namespace = namespace;
             self.teleop_name = name;
