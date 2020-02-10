@@ -32,9 +32,6 @@ http://www.cisst.org/cisst/license.txt.
 #include <QApplication>
 #include <QIcon>
 #include <QLocale>
-#include <QStyle>
-#include <QStyleFactory>
-#include <QPalette>
 
 #include <clocale>
 
@@ -166,29 +163,14 @@ int main(int argc, char ** argv)
         application->setWindowIcon(QIcon(":/dVRK.png"));
         cmnQt::QApplicationExitsOnCtrlC();
         if (options.IsSet("qt-style")) {
-            QStyle * result = QApplication::setStyle(QString(qtStyle.c_str()));
-            if (!result) {
-                std::cerr << "Style \"" << qtStyle << "\" is not valid, pick one from: "
-                          << std::endl << QStyleFactory::keys().join(", ").toStdString() << std::endl;
+            std::string errorMessage = cmnQt::SetStyle(qtStyle);
+            if (errorMessage != "") {
+                std::cerr << errorMessage << std::endl;
                 return -1;
             }
         }
         if (options.IsSet("dark-mode")) {
-            QPalette * palette = new QPalette();
-            palette->setColor(QPalette::Window, QColor(53, 53, 53));
-            palette->setColor(QPalette::WindowText, Qt::white);
-            palette->setColor(QPalette::Base, QColor(75, 75, 75));
-            palette->setColor(QPalette::AlternateBase, QColor(53, 53, 53));
-            palette->setColor(QPalette::ToolTipBase, Qt::white);
-            palette->setColor(QPalette::ToolTipText, Qt::black);
-            palette->setColor(QPalette::Text, Qt::white);
-            palette->setColor(QPalette::Button, QColor(53, 53, 53));
-            palette->setColor(QPalette::ButtonText, Qt::white);
-            palette->setColor(QPalette::BrightText, Qt::red);
-            palette->setColor(QPalette::Link, QColor(42, 130, 218));
-            palette->setColor(QPalette::Highlight, QColor(42, 130, 218));
-            palette->setColor(QPalette::HighlightedText, Qt::black);
-            application->setPalette(*palette);
+            cmnQt::SetDarkMode();
         }
         consoleQt = new mtsIntuitiveResearchKitConsoleQt();
         consoleQt->Configure(console);
