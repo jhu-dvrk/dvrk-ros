@@ -22,11 +22,9 @@ project (dvrk_robot)
 ## is used, also find other catkin packages
 find_package (catkin REQUIRED
               COMPONENTS
-              cisst_msgs
               cisst_ros_bridge
-              geometry_msgs
+	      cisst_ros_crtk
               roscpp
-              std_msgs
               roslib
               )
 
@@ -60,7 +58,7 @@ if (cisst_FOUND_AS_REQUIRED)
 
   catkin_package (INCLUDE_DIRS include "${CATKIN_DEVEL_PREFIX}/include"
                   LIBRARIES dvrk_utilities
-                  CATKIN_DEPENDS cisst_msgs cisst_ros_bridge geometry_msgs roscpp std_msgs)
+                  CATKIN_DEPENDS cisst_ros_bridge cisst_ros_crtk roscpp)
 
 
   # sawRobotIO1394 has been compiled within cisst, we should find it automatically

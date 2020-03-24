@@ -16,8 +16,10 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
-#include <dvrk_utilities/dvrk_add_topics_functions.h>
+#include <cisst_ros_crtk/mtsCISSTToROS.h>
+#include <cisst_ros_crtk/mtsROSToCISST.h>
 
+#include <dvrk_utilities/dvrk_add_topics_functions.h>
 
 void dvrk::add_topics_console(mtsROSBridge & bridge,
                               const std::string & ros_namespace,

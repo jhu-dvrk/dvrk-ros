@@ -80,8 +80,7 @@ int main(int argc, char ** argv)
     double tfPeriod = 20.0 * cmn_ms;
     std::list<std::string> jsonIOConfigFiles;
     std::string versionString = "crtk_alpha";
-    typedef std::list<std::string> managerConfigType;
-    managerConfigType managerConfig;
+    std::list<std::string> managerConfig;
     std::string qtStyle;
 
     options.AddOptionOneValue("j", "json-config",
@@ -199,22 +198,9 @@ int main(int argc, char ** argv)
     consoleROS->Connect();
 
     // custom user component
-    const managerConfigType::iterator endConfig = managerConfig.end();
-    for (managerConfigType::iterator iterConfig = managerConfig.begin();
-         iterConfig != endConfig;
-         ++iterConfig) {
-        if (!iterConfig->empty()) {
-            if (!cmnPath::Exists(*iterConfig)) {
-                CMN_LOG_INIT_ERROR << "File " << *iterConfig
-                                   << " not found!" << std::endl;
-            } else {
-                if (!componentManager->ConfigureJSON(*iterConfig)) {
-                    CMN_LOG_INIT_ERROR << "Configure: failed to configure component-manager for "
-                                       << *iterConfig << std::endl;
-                    return -1;
-                }
-            }
-        }
+    if (!componentManager->ConfigureJSON(managerConfig)) {
+        CMN_LOG_INIT_ERROR << "Configure: failed to configure component-manager, check cisstLog for error messages" << std::endl;
+        return -1;
     }
 
     //-------------- create the components ------------------
