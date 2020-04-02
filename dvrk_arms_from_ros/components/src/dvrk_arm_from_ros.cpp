@@ -60,7 +60,7 @@ void dvrk_arm_from_ros::Init(void)
 
     AddPublisherFromCommandWrite<prmPositionCartesianSet, geometry_msgs::Pose>
         (interface_provided,
-         "SetPositionCartesian",
+         "servo_cp",
          ros_namespace + "/set_position_cartesian");
 
     AddPublisherFromCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
@@ -80,7 +80,7 @@ void dvrk_arm_from_ros::Init(void)
 
     AddSubscriberToCommandRead<prmStateJoint, sensor_msgs::JointState>
         (interface_provided,
-         "GetStateJointDesired",
+         "setpoint_js",
          ros_namespace + "/state_joint_desired");
 
     AddSubscriberToCommandRead<prmStateJoint, sensor_msgs::JointState>
@@ -90,12 +90,12 @@ void dvrk_arm_from_ros::Init(void)
 
     AddSubscriberToCommandRead<prmPositionCartesianGet, geometry_msgs::PoseStamped>
         (interface_provided,
-         "GetPositionCartesian",
+         "measured_cp",
          ros_namespace + "/position_cartesian_current");
 
     AddSubscriberToCommandRead<mtsIntervalStatistics, cisst_msgs::mtsIntervalStatistics>
         (interface_provided,
-         "GetPeriodStatistics",
+         "period_statistics",
          ros_namespace + "/period_statistics");
 
     AddSubscriberToEventWrite<mtsMessage, std_msgs::String>
