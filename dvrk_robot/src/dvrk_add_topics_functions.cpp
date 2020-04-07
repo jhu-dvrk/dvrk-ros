@@ -5,7 +5,7 @@
   Author(s):  Zihan Chen, Anton Deguet
   Created on: 2015-04-33
 
-  (C) Copyright 2015-2019 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -294,13 +294,13 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
 
     // events
     bridge.AddPublisherFromEventWrite<mtsMessage, std_msgs::String>
-        (arm_component_name, "Error",
+        (arm_component_name, "error",
          ros_namespace + "/error");
     bridge.AddPublisherFromEventWrite<mtsMessage, std_msgs::String>
-        (arm_component_name, "Warning",
+        (arm_component_name, "warning",
          ros_namespace + "/warning");
     bridge.AddPublisherFromEventWrite<mtsMessage, std_msgs::String>
-        (arm_component_name, "Status",
+        (arm_component_name, "status",
          ros_namespace + "/status");
 
     bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
@@ -323,11 +323,11 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
          ros_namespace + "/joint_acceleration_ratio");
 
     // messages
-    bridge.AddLogFromEventWrite(arm_component_name + "-log", "Error",
+    bridge.AddLogFromEventWrite(arm_component_name + "-log", "error",
                                 mtsROSEventWriteLog::ROS_LOG_ERROR);
-    bridge.AddLogFromEventWrite(arm_component_name + "-log", "Warning",
+    bridge.AddLogFromEventWrite(arm_component_name + "-log", "warning",
                                 mtsROSEventWriteLog::ROS_LOG_WARN);
-    bridge.AddLogFromEventWrite(arm_component_name + "-log", "Status",
+    bridge.AddLogFromEventWrite(arm_component_name + "-log", "status",
                                 mtsROSEventWriteLog::ROS_LOG_INFO);
 }
 
@@ -403,11 +403,11 @@ void dvrk::add_topics_mtm_generic(mtsROSBridge & bridge,
 
     // events
     bridge.AddPublisherFromEventWrite<mtsMessage, std_msgs::String>
-        (arm_component_name, "Error", ros_namespace + "/error");
+        (arm_component_name, "error", ros_namespace + "/error");
     bridge.AddPublisherFromEventWrite<mtsMessage, std_msgs::String>
-        (arm_component_name, "Warning", ros_namespace + "/warning");
+        (arm_component_name, "warning", ros_namespace + "/warning");
     bridge.AddPublisherFromEventWrite<mtsMessage, std_msgs::String>
-        (arm_component_name, "Status", ros_namespace + "/status");
+        (arm_component_name, "status", ros_namespace + "/status");
 
     bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
         (arm_component_name, "CurrentState", ros_namespace + "/current_state");
@@ -415,11 +415,11 @@ void dvrk::add_topics_mtm_generic(mtsROSBridge & bridge,
         (arm_component_name, "DesiredState", ros_namespace + "/desired_state");
 
     // messages
-    bridge.AddLogFromEventWrite(arm_component_name + "-log", "Error",
+    bridge.AddLogFromEventWrite(arm_component_name + "-log", "error",
                                 mtsROSEventWriteLog::ROS_LOG_ERROR);
-    bridge.AddLogFromEventWrite(arm_component_name + "-log", "Warning",
+    bridge.AddLogFromEventWrite(arm_component_name + "-log", "warning",
                                 mtsROSEventWriteLog::ROS_LOG_WARN);
-    bridge.AddLogFromEventWrite(arm_component_name + "-log", "Status",
+    bridge.AddLogFromEventWrite(arm_component_name + "-log", "status",
                                 mtsROSEventWriteLog::ROS_LOG_INFO);
 }
 
@@ -631,11 +631,11 @@ void dvrk::add_topics_teleop_psm(mtsROSBridge & bridge,
                                  const dvrk_topics_version::version version)
 {
     // messages
-    bridge.AddLogFromEventWrite(teleop_component_name + "-log", "Error",
+    bridge.AddLogFromEventWrite(teleop_component_name + "-log", "error",
                                 mtsROSEventWriteLog::ROS_LOG_ERROR);
-    bridge.AddLogFromEventWrite(teleop_component_name + "-log", "Warning",
+    bridge.AddLogFromEventWrite(teleop_component_name + "-log", "warning",
                                 mtsROSEventWriteLog::ROS_LOG_WARN);
-    bridge.AddLogFromEventWrite(teleop_component_name + "-log", "Status",
+    bridge.AddLogFromEventWrite(teleop_component_name + "-log", "status",
                                 mtsROSEventWriteLog::ROS_LOG_INFO);
 
     // publisher
@@ -708,11 +708,11 @@ void dvrk::add_topics_teleop_ecm(mtsROSBridge & bridge,
                                  const dvrk_topics_version::version version)
 {
     // messages
-    bridge.AddLogFromEventWrite(teleop_component_name + "-log", "Error",
+    bridge.AddLogFromEventWrite(teleop_component_name + "-log", "error",
                                 mtsROSEventWriteLog::ROS_LOG_ERROR);
-    bridge.AddLogFromEventWrite(teleop_component_name + "-log", "Warning",
+    bridge.AddLogFromEventWrite(teleop_component_name + "-log", "warning",
                                 mtsROSEventWriteLog::ROS_LOG_WARN);
-    bridge.AddLogFromEventWrite(teleop_component_name + "-log", "Status",
+    bridge.AddLogFromEventWrite(teleop_component_name + "-log", "status",
                                 mtsROSEventWriteLog::ROS_LOG_INFO);
 
     // events
@@ -790,11 +790,11 @@ void dvrk::add_topics_suj(mtsROSBridge & bridge,
     }
 
     // messages
-    bridge.AddLogFromEventWrite(arm_name + "-suj-log", "Error",
+    bridge.AddLogFromEventWrite(arm_name + "-suj-log", "error",
                                 mtsROSEventWriteLog::ROS_LOG_ERROR);
-    bridge.AddLogFromEventWrite(arm_name + "-suj-log", "Warning",
+    bridge.AddLogFromEventWrite(arm_name + "-suj-log", "warning",
                                 mtsROSEventWriteLog::ROS_LOG_WARN);
-    bridge.AddLogFromEventWrite(arm_name + "-suj-log", "Status",
+    bridge.AddLogFromEventWrite(arm_name + "-suj-log", "status",
                                 mtsROSEventWriteLog::ROS_LOG_INFO);
 }
 
