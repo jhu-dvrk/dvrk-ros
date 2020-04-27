@@ -175,10 +175,10 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
             (arm_component_name, "measured_cf_body",
              ros_namespace + "/body/measured_cf");
         bridge.AddPublisherFromCommandRead<vctDoubleMat, std_msgs::Float64MultiArray>
-            (arm_component_name, "GetJacobianBody",
+            (arm_component_name, "jacobian_body",
              ros_namespace + "/body/jacobian");
         bridge.AddPublisherFromCommandRead<vctDoubleMat, std_msgs::Float64MultiArray>
-            (arm_component_name, "GetJacobianSpatial",
+            (arm_component_name, "jacobian_spatial",
              ros_namespace + "/spatial/jacobian");
         break;
     default:
@@ -207,10 +207,10 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
             (arm_component_name, "measured_cf_body",
              ros_namespace + "/wrench_body_current");
         bridge.AddPublisherFromCommandRead<vctDoubleMat, std_msgs::Float64MultiArray>
-            (arm_component_name, "GetJacobianBody",
+            (arm_component_name, "jacobian_body",
              ros_namespace + "/jacobian_body");
         bridge.AddPublisherFromCommandRead<vctDoubleMat, std_msgs::Float64MultiArray>
-            (arm_component_name, "GetJacobianSpatial",
+            (arm_component_name, "jacobian_spatial",
              ros_namespace + "/jacobian_spatial");
         break;
     }
@@ -219,9 +219,6 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
     bridge.AddSubscriberToCommandWrite<prmPositionCartesianSet, geometry_msgs::Pose>
         (arm_component_name, "SetBaseFrame",
          ros_namespace + "/set_base_frame");
-    bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
-        (arm_component_name, "SetDesiredState",
-         ros_namespace + "/set_desired_state");
     bridge.AddSubscriberToCommandWrite<std::string, crtk_msgs::StringStamped>
         (arm_component_name, "state_command",
          ros_namespace + "/state_command");
@@ -303,9 +300,6 @@ void dvrk::add_topics_arm(mtsROSBridge & bridge,
         (arm_component_name, "status",
          ros_namespace + "/status");
 
-    bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
-        (arm_component_name, "CurrentState",
-         ros_namespace + "/current_state");
     bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
         (arm_component_name, "DesiredState",
          ros_namespace + "/desired_state");
@@ -410,9 +404,10 @@ void dvrk::add_topics_mtm_generic(mtsROSBridge & bridge,
         (arm_component_name, "status", ros_namespace + "/status");
 
     bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
-        (arm_component_name, "CurrentState", ros_namespace + "/current_state");
-    bridge.AddPublisherFromEventWrite<std::string, std_msgs::String>
         (arm_component_name, "DesiredState", ros_namespace + "/desired_state");
+    bridge.AddPublisherFromEventWrite<prmOperatingState, crtk_msgs::operating_state>
+        (arm_component_name, "operating_state",
+         ros_namespace + "/operating_state");
 
     // messages
     bridge.AddLogFromEventWrite(arm_component_name + "-log", "error",
@@ -672,9 +667,9 @@ void dvrk::add_topics_teleop_psm(mtsROSBridge & bridge,
         (teleop_component_name, "AlignMTM", ros_namespace + "/align_mtm");
 
     // commands
-    bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
-        (teleop_component_name, "SetDesiredState",
-         ros_namespace + "/set_desired_state");
+    bridge.AddSubscriberToCommandWrite<std::string, crtk_msgs::StringStamped>
+        (teleop_component_name, "state_command",
+         ros_namespace + "/state_command");
     bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (teleop_component_name, "LockTranslation",
          ros_namespace + "/lock_translation");
@@ -726,9 +721,9 @@ void dvrk::add_topics_teleop_ecm(mtsROSBridge & bridge,
         (teleop_component_name, "Following", ros_namespace + "/following");
 
     // commands
-    bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
-        (teleop_component_name, "SetDesiredState",
-         ros_namespace + "/set_desired_state");
+    bridge.AddSubscriberToCommandWrite<std::string, crtk_msgs::StringStamped>
+        (teleop_component_name, "state_command",
+         ros_namespace + "/state_command");
     bridge.AddSubscriberToCommandWrite<double, std_msgs::Float32>
         (teleop_component_name, "SetScale",
          ros_namespace + "/set_scale");
