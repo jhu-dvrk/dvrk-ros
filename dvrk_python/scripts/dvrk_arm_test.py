@@ -41,24 +41,33 @@ class example_application:
 
     # homing example
     def home(self):
+        print_id('starting enable')
+        if not self.arm.enable(10):
+            sys.exit('failed to enable within 10 seconds')
         print_id('starting home')
-        self.arm.home()
+        if not self.arm.home(10):
+            sys.exit('failed to home within 10 seconds')
+        # wait for arm to move to zero position
+        print_id('----------- need better way to avoid sleep 5')
+        rospy.sleep(5)
         # get current joints just to set size
-        print(self.arm.setpoint_jp())
+        print_id('move to starting position')
         goal = numpy.copy(self.arm.setpoint_jp())
-        print(goal)
         # go to zero position, for PSM and ECM make sure 3rd joint is past cannula
         goal.fill(0)
         if ((self.arm.name() == 'PSM1') or (self.arm.name() == 'PSM2') or (self.arm.name() == 'PSM3') or (self.arm.name() == 'ECM')):
             goal[2] = 0.12
         self.arm.move_jp(goal)
+        print_id('----------- need better way to avoid sleep 3')
+        rospy.sleep(3)
+
 
     # direct joint control example
     def servo_jp(self):
         print_id('starting servo_jp')
         # get current position
         initial_joint_position = numpy.copy(self.arm.setpoint_jp())
-        print_id('testing direct joint position for 2 joints of %i' % len(initial_joint_position))
+        print_id('testing direct joint position for 2 joints out of %i' % initial_joint_position.size)
         amplitude = math.radians(10.0) # +/- 10 degrees
         duration = 5  # seconds
         rate = 200 # aiming for 200 Hz
@@ -77,7 +86,7 @@ class example_application:
         print_id('starting move_jp')
         # get current position
         initial_joint_position = numpy.copy(self.arm.setpoint_jp())
-        print_id('testing goal joint position for 2 joints of %i' % len(initial_joint_position))
+        print_id('testing goal joint position for 2 joints out of %i' % initial_joint_position.size)
         amplitude = math.radians(10.0)
         # create a new goal starting with current position
         goal = numpy.copy(initial_joint_position)
@@ -185,8 +194,8 @@ class example_application:
         self.home()
         self.servo_jp()
         self.move_jp()
-        self.servo_cp()
-        self.move_cp()
+        #self.servo_cp()
+        #self.move_cp()
 
 if __name__ == '__main__':
     # ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
