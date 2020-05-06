@@ -351,12 +351,12 @@ void dvrk::add_topics_mtm(mtsROSBridge & bridge,
     switch (version) {
     case dvrk_topics_version::crtk_alpha:
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
-            (mtm_component_name, "GetStateGripper",
+            (mtm_component_name, "gripper_measured_js",
              ros_namespace + "/gripper/measured_js");
         break;
     default:
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
-            (mtm_component_name, "GetStateGripper",
+            (mtm_component_name, "gripper_measured_js",
              ros_namespace + "/state_gripper_current");
         break;
     }
@@ -378,7 +378,7 @@ void dvrk::add_topics_mtm_generic(mtsROSBridge & bridge,
         (arm_component_name, "measured_cf_body",
          ros_namespace + "/wrench_body_current");
     bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
-        (arm_component_name, "GetStateGripper",
+        (arm_component_name, "gripper_measured_js",
          ros_namespace + "/state_gripper_current");
 
     // write
@@ -389,7 +389,7 @@ void dvrk::add_topics_mtm_generic(mtsROSBridge & bridge,
         (arm_component_name, "servo_cf_body",
          ros_namespace + "/set_wrench_body");
     bridge.AddSubscriberToCommandWrite<prmForceTorqueJointSet, sensor_msgs::JointState>
-        (arm_component_name, "SetEffortGripper",
+        (arm_component_name, "gripper_servo_jf",
          ros_namespace + "/set_effort_gripper");
     bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (arm_component_name, "SetGravityCompensation",
@@ -443,36 +443,36 @@ void dvrk::add_topics_psm(mtsROSBridge & bridge,
     switch (version) {
     case dvrk_topics_version::crtk_alpha:
         bridge.AddSubscriberToCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
-            (psm_component_name, "SetPositionJaw",
+            (psm_component_name, "jaw_servo_jp",
              ros_namespace + "/jaw/servo_jp");
         bridge.AddSubscriberToCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
-            (psm_component_name, "SetPositionGoalJaw",
+            (psm_component_name, "jaw_move_jp",
              ros_namespace + "/jaw/move_jp");
         bridge.AddSubscriberToCommandWrite<prmForceTorqueJointSet, sensor_msgs::JointState>
-            (psm_component_name, "SetEffortJaw",
+            (psm_component_name, "jaw_servo_jf",
              ros_namespace + "/jaw/servo_jf");
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
-            (psm_component_name, "GetStateJawDesired",
+            (psm_component_name, "jaw_setpoint_js",
              ros_namespace + "/jaw/setpoint_js");
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
-            (psm_component_name, "GetStateJaw",
+            (psm_component_name, "jaw_measured_js",
              ros_namespace + "/jaw/measured_js");
         break;
     default:
         bridge.AddSubscriberToCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
-            (psm_component_name, "SetPositionJaw",
+            (psm_component_name, "jaw_servo_jp",
              ros_namespace + "/set_position_jaw");
         bridge.AddSubscriberToCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
-            (psm_component_name, "SetPositionGoalJaw",
+            (psm_component_name, "jaw_move_jp",
              ros_namespace + "/set_position_goal_jaw");
         bridge.AddSubscriberToCommandWrite<prmForceTorqueJointSet, sensor_msgs::JointState>
-            (psm_component_name, "SetEffortJaw",
+            (psm_component_name, "jaw_servo_jf",
              ros_namespace + "/set_effort_jaw");
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
-            (psm_component_name, "GetStateJawDesired",
+            (psm_component_name, "jaw_setpoint_js",
              ros_namespace + "/state_jaw_desired");
         bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
-            (psm_component_name, "GetStateJaw",
+            (psm_component_name, "jaw_measured_js",
              ros_namespace + "/state_jaw_current");
         break;
     }
@@ -835,12 +835,12 @@ void dvrk::add_topics_io(mtsROSBridge & bridge,
     bridge.AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
         (arm_name + "-io", "GetAnalogInputPosSI",
          ros_namespace + "/analog_input_pos_si");
-    bridge.AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
-        (arm_name + "-io", "GetPosition",
-         ros_namespace + "/joint_position");
-    bridge.AddPublisherFromCommandRead<prmPositionJointGet, sensor_msgs::JointState>
-        (arm_name + "-io", "GetPositionActuator",
-         ros_namespace + "/actuator_position");
+    bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
+        (arm_name + "-io", "measured_js",
+         ros_namespace + "/joint_measured_js");
+    bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
+        (arm_name + "-io", "actuator_measured_js",
+         ros_namespace + "/actuator_measured_js");
     bridge.AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
         (arm_name + "-io", "GetActuatorFeedbackCurrent",
          ros_namespace + "/actuator_current_measured");
