@@ -35,9 +35,10 @@ def print_id(message):
 class example_application:
 
     # configuration
-    def configure(self, robot_name):
+    def configure(self, robot_name, expected_interval):
         print_id('configuring dvrk_arm_test for %s' % robot_name)
-        self.arm = dvrk.arm(robot_name)
+        self.arm = dvrk.arm(arm_name = robot_name,
+                            expected_interval = expected_interval)
 
     # homing example
     def home(self):
@@ -47,19 +48,15 @@ class example_application:
         print_id('starting home')
         if not self.arm.home(10):
             sys.exit('failed to home within 10 seconds')
-        # wait for arm to move to zero position
-        print_id('----------- need better way to avoid sleep 5')
-        rospy.sleep(5)
         # get current joints just to set size
         print_id('move to starting position')
         goal = numpy.copy(self.arm.setpoint_jp())
         # go to zero position, for PSM and ECM make sure 3rd joint is past cannula
         goal.fill(0)
-        if ((self.arm.name() == 'PSM1') or (self.arm.name() == 'PSM2') or (self.arm.name() == 'PSM3') or (self.arm.name() == 'ECM')):
+        if ((self.arm.name() == 'PSM1') or (self.arm.name() == 'PSM2')
+            or (self.arm.name() == 'PSM3') or (self.arm.name() == 'ECM')):
             goal[2] = 0.12
-        self.arm.move_jp(goal)
-        print_id('----------- need better way to avoid sleep 3')
-        rospy.sleep(3)
+        self.arm.move_jp(goal, blocking = True)
 
 
     # direct joint control example
@@ -70,7 +67,7 @@ class example_application:
         print_id('testing direct joint position for 2 joints out of %i' % initial_joint_position.size)
         amplitude = math.radians(10.0) # +/- 10 degrees
         duration = 5  # seconds
-        rate = 200 # aiming for 200 Hz
+        rate = 100 # aiming for 100 Hz
         samples = duration * rate
         # create a new goal starting with current position
         goal = numpy.copy(initial_joint_position)
@@ -93,26 +90,27 @@ class example_application:
         # first motion
         goal[0] = initial_joint_position[0] + amplitude
         goal[1] = initial_joint_position[1] - amplitude
-        self.arm.move_jp(goal)
+        self.arm.move_jp(goal, blocking = True)
         # second motion
         goal[0] = initial_joint_position[0] - amplitude
         goal[1] = initial_joint_position[1] + amplitude
-        self.arm.move_jp(goal)
+        self.arm.move_jp(goal, blocking = True)
         # back to initial position
-        self.arm.move_jp(initial_joint_position)
+        self.arm.move_jp(initial_joint_position, blocking = True)
         print_id('move_jp complete')
 
     # utility to position tool/camera deep enough before cartesian examples
     def prepare_cartesian(self):
         # make sure the camera is past the cannula and tool vertical
         goal = numpy.copy(self.arm.setpoint_jp())
-        if ((self.arm.name() == 'PSM1') or (self.arm.name() == 'PSM2') or (self.arm.name() == 'PSM3') or (self.arm.name() == 'ECM')):
+        if ((self.arm.name() == 'PSM1') or (self.arm.name() == 'PSM2')
+            or (self.arm.name() == 'PSM3') or (self.arm.name() == 'ECM')):
             # set in position joint mode
             goal[0] = 0.0
             goal[1] = 0.0
             goal[2] = 0.12
             goal[3] = 0.0
-            self.arm.move_jp(goal)
+            self.arm.move_jp(goal, blocking = True)
 
     # direct cartesian control example
     def servo_cp(self):
@@ -129,7 +127,7 @@ class example_application:
         # motion parameters
         amplitude = 0.05 # 5 cm
         duration = 5  # 5 seconds
-        rate = 200 # aiming for 200 Hz
+        rate = 100 # aiming for 100 Hz
         samples = duration * rate
         for i in range(samples):
             goal.p[0] =  initial_cartesian_position.p[0] + amplitude *  math.sin(i * math.radians(360.0) / samples)
@@ -138,12 +136,13 @@ class example_application:
             # check error on kinematics, compare to desired on arm.
             # to test tracking error we would compare to
             # current_position
-            errorX = goal.p[0] - self.arm.setpoint_cp().p[0]
-            errorY = goal.p[1] - self.arm.setpoint_cp().p[1]
-            errorZ = goal.p[2] - self.arm.setpoint_cp().p[2]
+            setpoint_cp = self.arm.setpoint_cp()
+            errorX = goal.p[0] - setpoint_cp.p[0]
+            errorY = goal.p[1] - setpoint_cp.p[1]
+            errorZ = goal.p[2] - setpoint_cp.p[2]
             error = math.sqrt(errorX * errorX + errorY * errorY + errorZ * errorZ)
             if error > 0.002: # 2 mm
-                print_id('Inverse kinematic error in position [%i]: %s' % (i, error))
+                print_id('Inverse kinematic error in position [%i]: %s (might be due to latency)' % (i, error))
             rospy.sleep(1.0 / rate)
         print_id('servo_cp complete')
 
@@ -166,27 +165,27 @@ class example_application:
         # first motion
         goal.p[0] =  initial_cartesian_position.p[0] - amplitude
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move_cp(goal)
+        self.arm.move_cp(goal, blocking = True)
         # second motion
         goal.p[0] =  initial_cartesian_position.p[0] + amplitude
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move_cp(goal)
+        self.arm.move_cp(goal, blocking = True)
         # back to initial position
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move_cp(goal)
+        self.arm.move_cp(goal, blocking = True)
         # first motion
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1] - amplitude
-        self.arm.move_cp(goal)
+        self.arm.move_cp(goal, blocking = True)
         # second motion
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1] + amplitude
-        self.arm.move_cp(goal)
+        self.arm.move_cp(goal, blocking = True)
         # back to initial position
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move_cp(goal)
+        self.arm.move_cp(goal, blocking = True)
         print_id('move_cp complete')
 
     # main method
@@ -194,8 +193,8 @@ class example_application:
         self.home()
         self.servo_jp()
         self.move_jp()
-        #self.servo_cp()
-        #self.move_cp()
+        self.servo_cp()
+        self.move_cp()
 
 if __name__ == '__main__':
     # ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
@@ -208,8 +207,10 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--arm', type=str, required=True,
                         choices=['ECM', 'MTML', 'MTMR', 'PSM1', 'PSM2', 'PSM3'],
                         help = 'arm name corresponding to ROS topics without namespace.  Use __ns:= to specify the namespace')
+    parser.add_argument('-i', '--interval', type=float, default=0.01,
+                        help = 'expected interval in seconds between messages sent by the device')
     args = parser.parse_args(argv[1:]) # skip argv[0], script name
 
     application = example_application()
-    application.configure(args.arm)
+    application.configure(args.arm, args.interval)
     application.run()

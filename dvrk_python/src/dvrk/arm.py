@@ -43,12 +43,12 @@ class arm(object):
     """
 
     # initialize the arm
-    def __init__(self, arm_name, ros_namespace = ''):
+    def __init__(self, arm_name, ros_namespace = '', expected_interval = 0.01):
         # base class constructor in separate method so it can be called in derived classes
-        self.__init_arm(arm_name, ros_namespace)
+        self.__init_arm(arm_name, ros_namespace, expected_interval)
 
 
-    def __init_arm(self, arm_name, ros_namespace = ''):
+    def __init_arm(self, arm_name, ros_namespace, expected_interval):
         """Constructor.  This initializes a few data members.It
         requires a arm name, this will be used to find the ROS
         topics for the arm being controlled.  For example if the
@@ -59,7 +59,7 @@ class arm(object):
         self.__ros_namespace = ros_namespace
 
         # crtk features
-        self.__crtk_utils = crtk.utils(self, ros_namespace + arm_name)
+        self.__crtk_utils = crtk.utils(self, ros_namespace + arm_name, expected_interval)
 
         # add crtk features that we need and are supported by the dVRK
         self.__crtk_utils.add_operating_state()
