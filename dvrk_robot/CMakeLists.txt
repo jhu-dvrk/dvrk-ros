@@ -1,5 +1,5 @@
 #
-# (C) Copyright 2015-2019 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
 #
 # --- begin cisst license - do not edit ---
 #
@@ -22,7 +22,6 @@ project (dvrk_robot)
 ## is used, also find other catkin packages
 find_package (catkin REQUIRED
               COMPONENTS
-              cisst_ros_bridge
 	      cisst_ros_crtk
               roscpp
               roslib
@@ -58,7 +57,7 @@ if (cisst_FOUND_AS_REQUIRED)
 
   catkin_package (INCLUDE_DIRS include "${CATKIN_DEVEL_PREFIX}/include"
                   LIBRARIES dvrk_utilities
-                  CATKIN_DEPENDS cisst_ros_bridge cisst_ros_crtk roscpp)
+                  CATKIN_DEPENDS cisst_ros_crtk roscpp roslib)
 
 
   # sawRobotIO1394 has been compiled within cisst, we should find it automatically
@@ -80,18 +79,11 @@ if (cisst_FOUND_AS_REQUIRED)
     ${sawIntuitiveResearchKit_LIBRARY_DIR}
     )
 
-  cisst_data_generator (dvrk_utilities
-                        "${CATKIN_DEVEL_PREFIX}/include" # where to save the file
-                        "dvrk_utilities/"    # sub directory for include
-                        src/dvrk_topics_version.cdg)
-
   add_library (dvrk_utilities
                include/dvrk_utilities/dvrk_add_topics_functions.h
                src/dvrk_add_topics_functions.cpp
                include/dvrk_utilities/dvrk_console.h
-               src/dvrk_console.cpp
-               ${dvrk_utilities_CISST_DG_SRCS}
-               ${dvrk_utilities_CISST_DG_HDRS})
+               src/dvrk_console.cpp)
 
     target_link_libraries (
       dvrk_utilities

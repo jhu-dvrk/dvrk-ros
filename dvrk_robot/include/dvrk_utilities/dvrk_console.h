@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-05-23
 
-  (C) Copyright 2015-2018 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -19,28 +19,48 @@ http://www.cisst.org/cisst/license.txt.
 #ifndef _dvrk_console_h
 #define _dvrk_console_h
 
+#include <cisst_ros_crtk/mts_ros_crtk_bridge.h>
 #include <dvrk_utilities/dvrk_add_topics_functions.h>
 
 class mtsIntuitiveResearchKitConsole;
 
 namespace dvrk {
-    class console
+    class console: public mts_ros_crtk_bridge
     {
     public:
-        console(ros::NodeHandle * node_handle,
+        console(const std::string & name,
+                ros::NodeHandle * node_handle,
                 const double & publish_rate_in_seconds,
                 const double & tf_rate_in_seconds,
-                mtsIntuitiveResearchKitConsole * mts_console,
-                const dvrk_topics_version::version version);
+                mtsIntuitiveResearchKitConsole * mts_console);
         void Configure(const std::string & jsonFile);
-        void Connect(void);
+        void Connect(void) override;
+
+        void bridge_interface_provided_arm(const std::string & _component_name,
+                                           const std::string & _interface_name,
+                                           const double _publish_period_in_seconds,
+                                           const std::string & _ros_namespace);
+
+        void bridge_interface_provided_ecm(const std::string & _component_name,
+                                           const std::string & _interface_name,
+                                           const double _publish_period_in_seconds,
+                                           const std::string & _ros_namespace);
+
+        void bridge_interface_provided_mtm(const std::string & _component_name,
+                                           const std::string & _interface_name,
+                                           const double _publish_period_in_seconds,
+                                           const std::string & _ros_namespace);
+
+        void bridge_interface_provided_psm(const std::string & _component_name,
+                                           const std::string & _interface_name,
+                                           const double _publish_period_in_seconds,
+                                           const std::string & _ros_namespace);
+
     protected:
         std::string mBridgeName;
         std::string mTfBridgeName;
         mtsIntuitiveResearchKitConsole * mConsole;
-        dvrk_topics_version::version mVersion;
         std::list<std::string> mIOInterfaces;
-        ros::NodeHandle * mNodeHandle;
     };
 }
 

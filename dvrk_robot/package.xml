@@ -10,13 +10,11 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>saw_intuitive_research_kit</build_depend>
-  <build_depend>cisst_ros_bridge</build_depend>
   <build_depend>cisst_ros_crtk</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>roslib</build_depend>
 
   <run_depend>saw_intuitive_research_kit</run_depend>
-  <run_depend>cisst_ros_bridge</run_depend>
   <run_depend>cisst_ros_crtk</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>roslib</run_depend>

@@ -79,7 +79,6 @@ int main(int argc, char ** argv)
     double publishPeriod = 10.0 * cmn_ms;
     double tfPeriod = 20.0 * cmn_ms;
     std::list<std::string> jsonIOConfigFiles;
-    std::string versionString = "crtk_alpha";
     std::list<std::string> managerConfig;
     std::string qtStyle;
 
@@ -102,10 +101,6 @@ int main(int argc, char ** argv)
     options.AddOptionNoValue("t", "text-only",
                              "text only interface, do not create Qt widgets");
 
-    options.AddOptionOneValue("c", "compatibility",
-                              "compatibility mode, e.g. \"v1_3_0\", \"v1_4_0\"",
-                              cmnCommandLineOptions::OPTIONAL_OPTION, &versionString);
-
     options.AddOptionMultipleValues("m", "component-manager",
                                     "JSON files to configure component manager",
                                     cmnCommandLineOptions::OPTIONAL_OPTION, &managerConfig);
@@ -127,19 +122,6 @@ int main(int argc, char ** argv)
     std::string arguments;
     options.PrintParsedArguments(arguments);
     std::cout << "Options provided:" << std::endl << arguments;
-
-    // check version mode
-    dvrk_topics_version::version versionEnum;
-    try {
-        versionEnum = dvrk_topics_version::versionFromString(versionString);
-    } catch (std::exception e) {
-        std::cerr << "Compatibility mode " << versionString << " is invalid" << std::endl;
-        std::cerr << "Possible values are: ";
-        std::cerr << cmnData<std::vector<std::string> >::HumanReadable(dvrk_topics_version::versionVectorString());
-        std::cerr << std::endl;
-        return -1;
-    }
-    std::cout << "Using compatibility mode: " << versionString << std::endl;
 
     const bool hasQt = !options.IsSet("text-only");
 
@@ -182,9 +164,10 @@ int main(int argc, char ** argv)
     //
     // this also adds a mtsROSBridge that performs the ros::spinOnce
     // in a separate thread as fast possible
-    dvrk::console * consoleROS = new dvrk::console(&rosNodeHandle,
+    dvrk::console * consoleROS = new dvrk::console("dvrk_robot",
+                                                   &rosNodeHandle,
                                                    publishPeriod, tfPeriod,
-                                                   console, versionEnum);
+                                                   console);
     // IOs
     const std::list<std::string>::const_iterator end = jsonIOConfigFiles.end();
     std::list<std::string>::const_iterator iter;
@@ -195,6 +178,7 @@ int main(int argc, char ** argv)
         consoleROS->Configure(*iter);
     }
 
+    componentManager->AddComponent(consoleROS);
     consoleROS->Connect();
 
     // custom user component
