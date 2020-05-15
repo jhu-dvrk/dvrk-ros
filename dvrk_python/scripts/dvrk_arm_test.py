@@ -37,6 +37,7 @@ class example_application:
     # configuration
     def configure(self, robot_name, expected_interval):
         print_id('configuring dvrk_arm_test for %s' % robot_name)
+        self.expected_interval = expected_interval
         self.arm = dvrk.arm(arm_name = robot_name,
                             expected_interval = expected_interval)
 
@@ -67,16 +68,17 @@ class example_application:
         print_id('testing direct joint position for 2 joints out of %i' % initial_joint_position.size)
         amplitude = math.radians(10.0) # +/- 10 degrees
         duration = 5  # seconds
-        rate = 100 # aiming for 100 Hz
-        samples = duration * rate
+        samples = duration / self.expected_interval
         # create a new goal starting with current position
         goal = numpy.copy(initial_joint_position)
-        for i in range(samples):
+        start = rospy.Time.now()
+        for i in range(int(samples)):
             goal[0] = initial_joint_position[0] + amplitude *  math.sin(i * math.radians(360.0) / samples)
             goal[1] = initial_joint_position[1] + amplitude *  math.sin(i * math.radians(360.0) / samples)
             self.arm.servo_jp(goal)
-            rospy.sleep(1.0 / rate)
-        print_id('servo_jp complete')
+            rospy.sleep(self.expected_interval)
+        actual_duration = rospy.Time.now() - start
+        print_id('servo_jp complete in %2.2f seconds (expected %2.2f)' % (actual_duration.to_sec(), duration))
 
     # goal joint control example
     def move_jp(self):
@@ -127,9 +129,9 @@ class example_application:
         # motion parameters
         amplitude = 0.05 # 5 cm
         duration = 5  # 5 seconds
-        rate = 100 # aiming for 100 Hz
-        samples = duration * rate
-        for i in range(samples):
+        samples = duration / self.expected_interval
+        start = rospy.Time.now()
+        for i in range(int(samples)):
             goal.p[0] =  initial_cartesian_position.p[0] + amplitude *  math.sin(i * math.radians(360.0) / samples)
             goal.p[1] =  initial_cartesian_position.p[1] + amplitude *  math.sin(i * math.radians(360.0) / samples)
             self.arm.servo_cp(goal)
@@ -143,8 +145,9 @@ class example_application:
             error = math.sqrt(errorX * errorX + errorY * errorY + errorZ * errorZ)
             if error > 0.002: # 2 mm
                 print_id('Inverse kinematic error in position [%i]: %s (might be due to latency)' % (i, error))
-            rospy.sleep(1.0 / rate)
-        print_id('servo_cp complete')
+            rospy.sleep(self.expected_interval)
+        actual_duration = rospy.Time.now() - start
+        print_id('servo_cp complete in %2.2f seconds (expected %2.2f)' % (actual_duration.to_sec(), duration))
 
     # direct cartesian control example
     def move_cp(self):
@@ -198,7 +201,7 @@ class example_application:
 
 if __name__ == '__main__':
     # ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
-    rospy.init_node('dvrk_arm_test')
+    rospy.init_node('dvrk_arm_test', anonymous=True)
     # strip ros arguments
     argv = rospy.myargv(argv=sys.argv)
 
