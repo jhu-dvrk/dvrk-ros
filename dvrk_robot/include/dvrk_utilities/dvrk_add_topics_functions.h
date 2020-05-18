@@ -23,18 +23,6 @@ http://www.cisst.org/cisst/license.txt.
 
 namespace dvrk {
 
-    /*! This methods adds a default set of topics to connect to a dVRK
-      console.  Topics are /off, /home, /teleop/start, /teleop/stop,
-      /teleop/set_scale and /teleop_scale.
-    */
-    void add_topics_console(mtsROSBridge & bridge,
-                            const std::string & ros_namespace);
-
-    /*! This method connects all the required interfaces for the
-      console, it must be used after add_topics_console. */
-    void connect_bridge_console(const std::string & bridge_name,
-                                const std::string & console_component_name);
-
     /*! Add all the IO topics for physical dVRK PSMs. */
     void add_topics_psm_io(mtsROSBridge & bridge,
                            const std::string & ros_namespace,
@@ -113,14 +101,6 @@ namespace dvrk {
     void connect_bridge_io(const std::string & bridge_name,
                            const std::string & io_component_name,
                            const std::string & arm_name);
-
-    void add_tf_arm(mtsROSBridge & tf_bridge,
-                    const std::string & arm_name);
-
-    void connect_tf_arm(const std::string & tf_bridge_name,
-                        const std::string & arm_name,
-                        const std::string & arm_component_name,
-                        const std::string & arm_interface_name);
 
     void add_tf_suj(mtsROSBridge & tf_bridge,
                     const std::string & arm_name);

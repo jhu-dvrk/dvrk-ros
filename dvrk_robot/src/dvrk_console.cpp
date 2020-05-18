@@ -32,31 +32,31 @@ dvrk::console::console(const std::string & name,
                        const double & tf_rate_in_seconds,
                        mtsIntuitiveResearchKitConsole * mts_console):
     mts_ros_crtk_bridge(name, node_handle),
-    mConsole(mts_console)
+    m_console(mts_console)
 {
     // start creating components
     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
 
     // create all ROS bridges
-    mBridgeName = "dvrk_ros" + node_handle->getNamespace();
-    clean_namespace(mBridgeName);
+    std::string m_bridge_name = "dvrk_ros" + node_handle->getNamespace();
+    clean_namespace(m_bridge_name);
 
     // shared publish bridge
-    mtsROSBridge * pub_bridge = new mtsROSBridge(mBridgeName, publish_rate_in_seconds, node_handle);
-    pub_bridge->AddIntervalStatisticsInterface();
-    componentManager->AddComponent(pub_bridge);
+    m_pub_bridge = new mtsROSBridge(m_bridge_name, publish_rate_in_seconds, node_handle);
+    m_pub_bridge->AddIntervalStatisticsInterface();
+    componentManager->AddComponent(m_pub_bridge);
 
     // get the stats bridge from base class
-    stats_bridge().AddIntervalStatisticsPublisher("publishers", pub_bridge->GetName());
+    stats_bridge().AddIntervalStatisticsPublisher("publishers", m_pub_bridge->GetName());
 
-    if (mConsole->mHasIO) {
-        dvrk::add_topics_io(*pub_bridge, "io");
+    if (m_console->mHasIO) {
+        dvrk::add_topics_io(*m_pub_bridge, "io");
     }
 
     const mtsIntuitiveResearchKitConsole::ArmList::iterator
-        armEnd = mConsole->mArms.end();
+        armEnd = m_console->mArms.end();
     mtsIntuitiveResearchKitConsole::ArmList::iterator armIter;
-    for (armIter = mConsole->mArms.begin();
+    for (armIter = m_console->mArms.begin();
          armIter != armEnd;
          ++armIter) {
         if (!armIter->second->mSkipROSBridge) {
@@ -81,7 +81,7 @@ dvrk::console::console(const std::string & name,
                                               publish_rate_in_seconds, tf_rate_in_seconds);
                 if (armIter->second->mSimulation
                     == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
-                    dvrk::add_topics_ecm_io(*pub_bridge, armNameSpace,
+                    dvrk::add_topics_ecm_io(*m_pub_bridge, armNameSpace,
                                             name);
                 }
                 break;
@@ -92,7 +92,7 @@ dvrk::console::console(const std::string & name,
                                               publish_rate_in_seconds, tf_rate_in_seconds);
                 if (armIter->second->mSimulation
                     == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
-                    dvrk::add_topics_psm_io(*pub_bridge, armNameSpace,
+                    dvrk::add_topics_psm_io(*m_pub_bridge, armNameSpace,
                                             name);
                 }
                 break;
@@ -114,31 +114,31 @@ dvrk::console::console(const std::string & name,
 
     // PSM teleop
     const mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator
-        teleopsEnd = mConsole->mTeleopsPSM.end();
+        teleopsEnd = m_console->mTeleopsPSM.end();
     mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator teleopIter;
-    for (teleopIter = mConsole->mTeleopsPSM.begin();
+    for (teleopIter = m_console->mTeleopsPSM.begin();
          teleopIter != teleopsEnd;
          ++teleopIter) {
         const std::string name = teleopIter->first;
         std::string topic_name = teleopIter->first;
         clean_namespace(topic_name);
-        dvrk::add_topics_teleop_psm(*pub_bridge, topic_name, name);
+        dvrk::add_topics_teleop_psm(*m_pub_bridge, topic_name, name);
     }
 
     // ECM teleop
-    if (mConsole->mTeleopECM) {
-        const std::string name = mConsole->mTeleopECM->Name();
-        std::string topic_name = mConsole->mTeleopECM->Name();
+    if (m_console->mTeleopECM) {
+        const std::string name = m_console->mTeleopECM->Name();
+        std::string topic_name = m_console->mTeleopECM->Name();
         clean_namespace(topic_name);
-        dvrk::add_topics_teleop_ecm(*pub_bridge, topic_name, name);
+        dvrk::add_topics_teleop_ecm(*m_pub_bridge, topic_name, name);
     }
 
     // digital inputs
     const std::string footPedalsNameSpace = "footpedals/";
     typedef mtsIntuitiveResearchKitConsole::DInputSourceType DInputSourceType;
-    const DInputSourceType::const_iterator inputsEnd = mConsole->mDInputSources.end();
+    const DInputSourceType::const_iterator inputsEnd = m_console->mDInputSources.end();
     DInputSourceType::const_iterator inputsIter;
-    for (inputsIter = mConsole->mDInputSources.begin();
+    for (inputsIter = m_console->mDInputSources.begin();
          inputsIter != inputsEnd;
          ++inputsIter) {
         std::string upperName = inputsIter->second.second;
@@ -157,7 +157,8 @@ dvrk::console::console(const std::string & name,
 
     }
 
-    dvrk::add_topics_console(*pub_bridge, "console");
+    // console
+    add_topics_console();
 }
 
 void dvrk::console::Configure(const std::string & jsonFile)
@@ -180,7 +181,7 @@ void dvrk::console::Configure(const std::string & jsonFile)
     for (unsigned int index = 0; index < interfaces.size(); ++index) {
         const std::string name = interfaces[index]["name"].asString();
         const double period = interfaces[index]["period"].asFloat();
-        const std::string ioComponentName = mConsole->GetArmIOComponentName(name);
+        const std::string ioComponentName = m_console->GetArmIOComponentName(name);
         if (ioComponentName == "") {
             std::cerr << "Warning: the arm \"" << name << "\" doesn't seem to exist" << std::endl
                       << "or it doesn't have an IO component, no ROS bridge connected" << std::endl
@@ -346,18 +347,63 @@ void dvrk::console::bridge_interface_provided_psm(const std::string & _component
          _ros_namespace + "/tool_type");
 }
 
+void dvrk::console::add_topics_console(void)
+{
+    const std::string _ros_namespace = "console";
+
+    m_subscribers_bridge->AddSubscriberToCommandVoid
+        ("Console", "PowerOff",
+         _ros_namespace + "/power_off");
+    m_subscribers_bridge->AddSubscriberToCommandVoid
+        ("Console", "PowerOn",
+         _ros_namespace + "/power_on");
+    m_subscribers_bridge->AddSubscriberToCommandVoid
+        ("Console", "Home",
+         _ros_namespace + "/home");
+    m_subscribers_bridge->AddSubscriberToCommandWrite<bool, std_msgs::Bool>
+        ("Console", "TeleopEnable",
+         _ros_namespace + "/teleop/enable");
+    m_subscribers_bridge->AddSubscriberToCommandWrite<std::string, std_msgs::String>
+        ("Console", "CycleTeleopPSMByMTM",
+         _ros_namespace + "/teleop/cycle_teleop_psm_by_mtm");
+    m_subscribers_bridge->AddSubscriberToCommandWrite<prmKeyValue, diagnostic_msgs::KeyValue>
+        ("Console", "SelectTeleopPSM",
+         _ros_namespace + "/teleop/select_teleop_psm");
+    m_subscribers_bridge->AddSubscriberToCommandWrite<double, std_msgs::Float32>
+        ("Console", "SetScale",
+         _ros_namespace + "/teleop/set_scale");
+
+    m_events_bridge->AddPublisherFromEventWrite<double, std_msgs::Float32>
+        ("Console", "Scale",
+         _ros_namespace + "/teleop/scale");
+    m_events_bridge->AddPublisherFromEventWrite<prmKeyValue, diagnostic_msgs::KeyValue>
+        ("Console", "TeleopPSMSelected",
+         _ros_namespace + "/teleop/teleop_psm_selected");
+    m_events_bridge->AddPublisherFromEventWrite<prmKeyValue, diagnostic_msgs::KeyValue>
+        ("Console", "TeleopPSMUnselected",
+         _ros_namespace + "/teleop/teleop_psm_unselected");
+    m_events_bridge->AddSubscriberToCommandWrite<std::string, std_msgs::String>
+        ("Console", "StringToSpeech",
+         _ros_namespace + "/string_to_speech");
+
+    m_connections.Add(m_subscribers_bridge->GetName(), "Console",
+                      m_console->GetName(), "Main");
+    m_connections.Add(m_events_bridge->GetName(), "Console",
+                      m_console->GetName(), "Main");
+}
+
 void dvrk::console::Connect(void)
 {
     mts_ros_crtk_bridge::Connect();
 
-    if (mConsole->mHasIO) {
-        dvrk::connect_bridge_io(mBridgeName, mConsole->mIOComponentName);
+    if (m_console->mHasIO) {
+        dvrk::connect_bridge_io(m_pub_bridge->GetName(), m_console->mIOComponentName);
     }
 
     const mtsIntuitiveResearchKitConsole::ArmList::iterator
-        armEnd = mConsole->mArms.end();
+        armEnd = m_console->mArms.end();
     mtsIntuitiveResearchKitConsole::ArmList::iterator armIter;
-    for (armIter = mConsole->mArms.begin();
+    for (armIter = m_console->mArms.begin();
          armIter != armEnd;
          ++armIter) {
         if (!armIter->second->mSkipROSBridge) {
@@ -367,7 +413,7 @@ void dvrk::console::Connect(void)
             case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
                 if (armIter->second->mSimulation
                     == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
-                    dvrk::connect_bridge_ecm_io(mBridgeName, name,
+                    dvrk::connect_bridge_ecm_io(m_pub_bridge->GetName(), name,
                                                 armIter->second->IOComponentName());
                 }
                 break;
@@ -375,7 +421,7 @@ void dvrk::console::Connect(void)
             case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
                 if (armIter->second->mSimulation
                     == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
-                    dvrk::connect_bridge_psm_io(mBridgeName, name,
+                    dvrk::connect_bridge_psm_io(m_pub_bridge->GetName(), name,
                                                 armIter->second->IOComponentName());
                 }
                 break;
@@ -384,10 +430,10 @@ void dvrk::console::Connect(void)
                 // dvrk::connect_tf_suj(mTfBridgeName, name, "PSM2");
                 // dvrk::connect_tf_suj(mTfBridgeName, name, "PSM3");
                 // dvrk::connect_tf_suj(mTfBridgeName, name, "ECM");
-                // dvrk::connect_bridge_suj(mBridgeName, name, "PSM1");
-                // dvrk::connect_bridge_suj(mBridgeName, name, "PSM2");
-                // dvrk::connect_bridge_suj(mBridgeName, name, "PSM3");
-                // dvrk::connect_bridge_suj(mBridgeName, name, "ECM");
+                // dvrk::connect_bridge_suj(m_pub_bridge->GetName(), name, "PSM1");
+                // dvrk::connect_bridge_suj(m_pub_bridge->GetName(), name, "PSM2");
+                // dvrk::connect_bridge_suj(m_pub_bridge->GetName(), name, "PSM3");
+                // dvrk::connect_bridge_suj(m_pub_bridge->GetName(), name, "ECM");
             default:
                 break;
             }
@@ -396,23 +442,20 @@ void dvrk::console::Connect(void)
 
     // PSM teleop
     const mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator
-        teleopsEnd = mConsole->mTeleopsPSM.end();
+        teleopsEnd = m_console->mTeleopsPSM.end();
     mtsIntuitiveResearchKitConsole::TeleopPSMList::iterator teleopIter;
-    for (teleopIter = mConsole->mTeleopsPSM.begin();
+    for (teleopIter = m_console->mTeleopsPSM.begin();
          teleopIter != teleopsEnd;
          ++teleopIter) {
         const std::string name = teleopIter->first;
-        dvrk::connect_bridge_teleop_psm(mBridgeName, name);
+        dvrk::connect_bridge_teleop_psm(m_pub_bridge->GetName(), name);
     }
 
     // ECM teleop
-    if (mConsole->mTeleopECM) {
-        const std::string name = mConsole->mTeleopECM->Name();
-        dvrk::connect_bridge_teleop_ecm(mBridgeName, name);
+    if (m_console->mTeleopECM) {
+        const std::string name = m_console->mTeleopECM->Name();
+        dvrk::connect_bridge_teleop_ecm(m_pub_bridge->GetName(), name);
     }
-
-    // connect console bridge
-    dvrk::connect_bridge_console(mBridgeName, mConsole->GetName());
 
     // ros wrappers for IO
     const std::list<std::string>::const_iterator end = mIOInterfaces.end();
@@ -421,7 +464,7 @@ void dvrk::console::Connect(void)
          iter != end;
          iter++) {
         const std::string bridgeName = bridgeNamePrefix + *iter;
-        const std::string ioComponentName = mConsole->GetArmIOComponentName(*iter);
+        const std::string ioComponentName = m_console->GetArmIOComponentName(*iter);
         dvrk::connect_bridge_io(bridgeName, ioComponentName, *iter);
     }
 }

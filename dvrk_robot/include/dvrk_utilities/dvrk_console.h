@@ -36,6 +36,7 @@ namespace dvrk {
         void Configure(const std::string & jsonFile);
         void Connect(void) override;
 
+        // methods using CRTK bridge_interface_provided method
         void bridge_interface_provided_arm(const std::string & _component_name,
                                            const std::string & _interface_name,
                                            const std::string & _ros_namespace,
@@ -59,10 +60,13 @@ namespace dvrk {
                                            const std::string & _ros_namespace,
                                            const double _publish_period_in_seconds,
                                            const double _tf_period_in_seconds);
+
+        // dVRK specific topics
+        void add_topics_console(void);
+
     protected:
-        std::string mBridgeName;
-        std::string mTfBridgeName;
-        mtsIntuitiveResearchKitConsole * mConsole;
+        mtsROSBridge * m_pub_bridge;
+        mtsIntuitiveResearchKitConsole * m_console;
         std::list<std::string> mIOInterfaces;
     };
 }

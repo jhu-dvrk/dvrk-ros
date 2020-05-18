@@ -21,52 +21,6 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <dvrk_utilities/dvrk_add_topics_functions.h>
 
-void dvrk::add_topics_console(mtsROSBridge & bridge,
-                              const std::string & ros_namespace)
-{
-    bridge.AddSubscriberToCommandVoid
-        ("Console", "PowerOff",
-         ros_namespace + "/power_off");
-    bridge.AddSubscriberToCommandVoid
-        ("Console", "PowerOn",
-         ros_namespace + "/power_on");
-    bridge.AddSubscriberToCommandVoid
-        ("Console", "Home",
-         ros_namespace + "/home");
-    bridge.AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        ("Console", "TeleopEnable",
-         ros_namespace + "/teleop/enable");
-    bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
-        ("Console", "CycleTeleopPSMByMTM",
-         ros_namespace + "/teleop/cycle_teleop_psm_by_mtm");
-    bridge.AddSubscriberToCommandWrite<prmKeyValue, diagnostic_msgs::KeyValue>
-        ("Console", "SelectTeleopPSM",
-         ros_namespace + "/teleop/select_teleop_psm");
-    bridge.AddSubscriberToCommandWrite<double, std_msgs::Float32>
-        ("Console", "SetScale",
-         ros_namespace + "/teleop/set_scale");
-    bridge.AddPublisherFromEventWrite<double, std_msgs::Float32>
-        ("Console", "Scale",
-         ros_namespace + "/teleop/scale");
-    bridge.AddPublisherFromEventWrite<prmKeyValue, diagnostic_msgs::KeyValue>
-        ("Console", "TeleopPSMSelected",
-         ros_namespace + "/teleop/teleop_psm_selected");
-    bridge.AddPublisherFromEventWrite<prmKeyValue, diagnostic_msgs::KeyValue>
-        ("Console", "TeleopPSMUnselected",
-         ros_namespace + "/teleop/teleop_psm_unselected");
-    bridge.AddSubscriberToCommandWrite<std::string, std_msgs::String>
-        ("Console", "StringToSpeech",
-         ros_namespace + "/string_to_speech");
-}
-
-void dvrk::connect_bridge_console(const std::string & bridge_name,
-                                  const std::string & console_component_name)
-{
-    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
-    componentManager->Connect(bridge_name, "Console",
-                              console_component_name, "Main");
-}
-
 void dvrk::add_topics_psm_io(mtsROSBridge & bridge,
                              const std::string & ros_namespace,
                              const std::string & arm_name)
@@ -321,22 +275,6 @@ void dvrk::connect_bridge_io(const std::string & bridge_name,
     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
     componentManager->Connect(bridge_name, arm_name + "-io",
                               io_component_name, arm_name);
-}
-
-void dvrk::add_tf_arm(mtsROSBridge & tf_bridge,
-                      const std::string & arm_name)
-{
-    tf_bridge.Addtf2BroadcasterFromCommandRead(arm_name, "measured_cp");
-}
-
-void dvrk::connect_tf_arm(const std::string & tf_bridge_name,
-                          const std::string & arm_name,
-                          const std::string & arm_component_name,
-                          const std::string & arm_interface_name)
-{
-    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
-    componentManager->Connect(tf_bridge_name, arm_name,
-                              arm_component_name, arm_interface_name);
 }
 
 void dvrk::add_tf_suj(mtsROSBridge & tf_bridge,
