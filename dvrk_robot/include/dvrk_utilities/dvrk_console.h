@@ -38,24 +38,27 @@ namespace dvrk {
 
         void bridge_interface_provided_arm(const std::string & _component_name,
                                            const std::string & _interface_name,
+                                           const std::string & _ros_namespace,
                                            const double _publish_period_in_seconds,
-                                           const std::string & _ros_namespace);
+                                           const double _tf_period_in_seconds);
 
         void bridge_interface_provided_ecm(const std::string & _component_name,
                                            const std::string & _interface_name,
+                                           const std::string & _ros_namespace,
                                            const double _publish_period_in_seconds,
-                                           const std::string & _ros_namespace);
+                                           const double _tf_period_in_seconds);
 
         void bridge_interface_provided_mtm(const std::string & _component_name,
                                            const std::string & _interface_name,
+                                           const std::string & _ros_namespace,
                                            const double _publish_period_in_seconds,
-                                           const std::string & _ros_namespace);
+                                           const double _tf_period_in_seconds);
 
         void bridge_interface_provided_psm(const std::string & _component_name,
                                            const std::string & _interface_name,
+                                           const std::string & _ros_namespace,
                                            const double _publish_period_in_seconds,
-                                           const std::string & _ros_namespace);
-
+                                           const double _tf_period_in_seconds);
     protected:
         std::string mBridgeName;
         std::string mTfBridgeName;

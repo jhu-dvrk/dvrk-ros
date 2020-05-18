@@ -67,37 +67,6 @@ void dvrk::connect_bridge_console(const std::string & bridge_name,
                               console_component_name, "Main");
 }
 
-void dvrk::add_topics_footpedals(mtsROSBridge & bridge,
-                                 const std::string & ros_namespace)
-{
-    bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-        ("Clutch", "Button", ros_namespace + "/clutch");
-    bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-        ("Coag", "Button", ros_namespace + "/coag");
-    bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-        ("Camera", "Button", ros_namespace + "/camera");
-    bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-        ("Cam+", "Button", ros_namespace + "/camera_plus");
-    bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-        ("Cam-", "Button", ros_namespace + "/camera_minus");
-}
-
-void dvrk::connect_bridge_footpedals(const std::string & bridge_name,
-                                     const std::string & io_component_name)
-{
-    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
-    componentManager->Connect(bridge_name, "Clutch",
-                              io_component_name, "CLUTCH");
-    componentManager->Connect(bridge_name, "Coag",
-                              io_component_name, "COAG");
-    componentManager->Connect(bridge_name, "Camera",
-                              io_component_name, "CAMERA");
-    componentManager->Connect(bridge_name, "Cam+",
-                              io_component_name, "CAM+");
-    componentManager->Connect(bridge_name, "Cam-",
-                              io_component_name, "CAM-");
-}
-
 void dvrk::add_topics_psm_io(mtsROSBridge & bridge,
                              const std::string & ros_namespace,
                              const std::string & arm_name)

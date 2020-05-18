@@ -66,19 +66,19 @@ dvrk::console::console(const std::string & name,
             case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
             case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
                 // custom dVRK
-                bridge_interface_provided_mtm(name, "Arm",
-                                              publish_rate_in_seconds, armNameSpace);
+                bridge_interface_provided_mtm(name, "Arm", armNameSpace,
+                                              publish_rate_in_seconds, tf_rate_in_seconds);
                 break;
             case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
                 // standard CRTK
-                bridge_interface_provided(name, "Arm",
-                                          publish_rate_in_seconds, armNameSpace);
+                bridge_interface_provided(name, "Arm", armNameSpace,
+                                          publish_rate_in_seconds, tf_rate_in_seconds);
                 break;
             case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
             case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
                 // custom dVRK
-                bridge_interface_provided_ecm(name, "Arm",
-                                              publish_rate_in_seconds, armNameSpace);
+                bridge_interface_provided_ecm(name, "Arm", armNameSpace,
+                                              publish_rate_in_seconds, tf_rate_in_seconds);
                 if (armIter->second->mSimulation
                     == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
                     dvrk::add_topics_ecm_io(*pub_bridge, armNameSpace,
@@ -88,8 +88,8 @@ dvrk::console::console(const std::string & name,
             case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
             case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
                 // custom dVRK
-                bridge_interface_provided_psm(name, "Arm",
-                                              publish_rate_in_seconds, armNameSpace);
+                bridge_interface_provided_psm(name, "Arm", armNameSpace,
+                                              publish_rate_in_seconds, tf_rate_in_seconds);
                 if (armIter->second->mSimulation
                     == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
                     dvrk::add_topics_psm_io(*pub_bridge, armNameSpace,
@@ -143,14 +143,18 @@ dvrk::console::console(const std::string & name,
          ++inputsIter) {
         std::string upperName = inputsIter->second.second;
         std::string lowerName = inputsIter->first;
+        std::string requiredInterfaceName = upperName + "_" + lowerName;
         // put everything lower case
         std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), tolower);
         // replace +/- by strings
         cmnStringReplaceAll(lowerName, "-", "_minus");
         cmnStringReplaceAll(lowerName, "+", "_plus");
-        pub_bridge->AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-            (upperName + "_" + inputsIter->first, "Button",
+        m_events_bridge->AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
+            (requiredInterfaceName, "Button",
              footPedalsNameSpace + lowerName);
+        componentManager->Connect(m_events_bridge->GetName(), requiredInterfaceName,
+                                  inputsIter->second.first, inputsIter->second.second);
+
     }
 
     dvrk::add_topics_console(*pub_bridge, "console");
@@ -195,12 +199,13 @@ void dvrk::console::Configure(const std::string & jsonFile)
 
 void dvrk::console::bridge_interface_provided_arm(const std::string & _component_name,
                                                   const std::string & _interface_name,
+                                                  const std::string & _ros_namespace,
                                                   const double _publish_period_in_seconds,
-                                                  const std::string & _ros_namespace)
+                                                  const double _tf_period_in_seconds)
 {
     // first call the base class method for all CRTK topics
-    bridge_interface_provided(_component_name, _interface_name,
-                              _publish_period_in_seconds, _ros_namespace);
+    bridge_interface_provided(_component_name, _interface_name, _ros_namespace,
+                              _publish_period_in_seconds, _tf_period_in_seconds);
 
     // now the publisher for the arm should have been created, we can
     // add topics specific to dVRK arm
@@ -244,12 +249,13 @@ void dvrk::console::bridge_interface_provided_arm(const std::string & _component
 
 void dvrk::console::bridge_interface_provided_ecm(const std::string & _component_name,
                                                   const std::string & _interface_name,
+                                                  const std::string & _ros_namespace,
                                                   const double _publish_period_in_seconds,
-                                                  const std::string & _ros_namespace)
+                                                  const double _tf_period_in_seconds)
 {
     // first call the base class method for all dVRK topics
-    bridge_interface_provided_arm(_component_name, _interface_name,
-                                  _publish_period_in_seconds, _ros_namespace);
+    bridge_interface_provided_arm(_component_name, _interface_name, _ros_namespace,
+                                  _publish_period_in_seconds, _tf_period_in_seconds);
 
     // now the publisher for the arm should have been created, we can
     // add topics specific to dVRK ECM
@@ -272,12 +278,13 @@ void dvrk::console::bridge_interface_provided_ecm(const std::string & _component
 
 void dvrk::console::bridge_interface_provided_mtm(const std::string & _component_name,
                                                   const std::string & _interface_name,
+                                                  const std::string & _ros_namespace,
                                                   const double _publish_period_in_seconds,
-                                                  const std::string & _ros_namespace)
+                                                  const double _tf_period_in_seconds)
 {
     // first call the base class method for all dVRK topics
-    bridge_interface_provided_arm(_component_name, _interface_name,
-                                  _publish_period_in_seconds, _ros_namespace);
+    bridge_interface_provided_arm(_component_name, _interface_name, _ros_namespace,
+                                  _publish_period_in_seconds, _tf_period_in_seconds);
 
     // now the publisher for the arm should have been created, we can
     // add topics specific to dVRK MTM
@@ -303,12 +310,13 @@ void dvrk::console::bridge_interface_provided_mtm(const std::string & _component
 
 void dvrk::console::bridge_interface_provided_psm(const std::string & _component_name,
                                                   const std::string & _interface_name,
+                                                  const std::string & _ros_namespace,
                                                   const double _publish_period_in_seconds,
-                                                  const std::string & _ros_namespace)
+                                                  const double _tf_period_in_seconds)
 {
     // first call the base class method for all dVRK topics
-    bridge_interface_provided_arm(_component_name, _interface_name,
-                                  _publish_period_in_seconds, _ros_namespace);
+    bridge_interface_provided_arm(_component_name, _interface_name, _ros_namespace,
+                                  _publish_period_in_seconds, _tf_period_in_seconds);
 
     // now the publisher for the arm should have been created, we can
     // add topics specific to dVRK PSM
@@ -401,18 +409,6 @@ void dvrk::console::Connect(void)
     if (mConsole->mTeleopECM) {
         const std::string name = mConsole->mTeleopECM->Name();
         dvrk::connect_bridge_teleop_ecm(mBridgeName, name);
-    }
-
-    // connect foot pedal, all arms use same
-    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
-    typedef mtsIntuitiveResearchKitConsole::DInputSourceType DInputSourceType;
-    const DInputSourceType::const_iterator inputsEnd = mConsole->mDInputSources.end();
-    DInputSourceType::const_iterator inputsIter;
-    for (inputsIter = mConsole->mDInputSources.begin();
-         inputsIter != inputsEnd;
-         ++inputsIter) {
-        componentManager->Connect(mBridgeName, inputsIter->second.second + "_" + inputsIter->first,
-                                  inputsIter->second.first, inputsIter->second.second);
     }
 
     // connect console bridge

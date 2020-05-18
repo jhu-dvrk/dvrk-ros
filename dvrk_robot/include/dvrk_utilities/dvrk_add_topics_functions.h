@@ -35,17 +35,6 @@ namespace dvrk {
     void connect_bridge_console(const std::string & bridge_name,
                                 const std::string & console_component_name);
 
-    /*! This methods adds a default set of topics to connect to a dVRK
-      foot pedal.  It will create one required interface per "button",
-      i,e: "Clutch", "Coag", "Camera", Cam+" and "Cam-". */
-    void add_topics_footpedals(mtsROSBridge & bridge,
-                               const std::string & ros_namespace);
-
-    /*! This method connects all the required interfaces for the foot
-      pedals, it must be used after add_topics_footpedals. */
-    void connect_bridge_footpedals(const std::string & bridge_name,
-                                   const std::string & io_component_name);
-
     /*! Add all the IO topics for physical dVRK PSMs. */
     void add_topics_psm_io(mtsROSBridge & bridge,
                            const std::string & ros_namespace,
