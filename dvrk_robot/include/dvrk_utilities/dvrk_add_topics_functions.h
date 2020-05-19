@@ -23,17 +23,6 @@ http://www.cisst.org/cisst/license.txt.
 
 namespace dvrk {
 
-    /*! Add all the topics related to the setup joints (SUJ) */
-    void add_topics_suj(mtsROSBridge & bridge,
-                        const std::string & ros_namespace,
-                        const std::string & arm_name);
-
-    /*! This method connects all the required interfaces for a SUJ
-        component, it must be used after add_topics_suj. */
-    void connect_bridge_suj(const std::string & bridge_name,
-                            const std::string & suj_component_name,
-                            const std::string & arm_name);
-
     /*! This method adds topics from the IO level for the whole
       system. */
     void add_topics_io(mtsROSBridge & bridge,
@@ -59,13 +48,6 @@ namespace dvrk {
     void connect_bridge_io(const std::string & bridge_name,
                            const std::string & io_component_name,
                            const std::string & arm_name);
-
-    void add_tf_suj(mtsROSBridge & tf_bridge,
-                    const std::string & arm_name);
-
-    void connect_tf_suj(const std::string & tf_bridge_name,
-                        const std::string & suj_component_name,
-                        const std::string & arm_name);
 }
 
 #endif // _dvrk_add_topics_functions_h

@@ -97,14 +97,16 @@ dvrk::console::console(const std::string & name,
                 }
                 break;
             case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
-                // dvrk::add_tf_suj(*tf_bridge, "PSM1");
-                // dvrk::add_tf_suj(*tf_bridge, "PSM2");
-                // dvrk::add_tf_suj(*tf_bridge, "PSM3");
-                // dvrk::add_tf_suj(*tf_bridge, "ECM");
-                // dvrk::add_topics_suj(*pub_bridge, "SUJ/PSM1", "PSM1");
-                // dvrk::add_topics_suj(*pub_bridge, "SUJ/PSM2", "PSM2");
-                // dvrk::add_topics_suj(*pub_bridge, "SUJ/PSM3", "PSM3");
-                // dvrk::add_topics_suj(*pub_bridge, "SUJ/ECM", "ECM");
+                {
+                    const auto _sujs = std::list<std::string>({"PSM1", "PSM2", "PSM3", "ECM"});
+                    for (auto const & _suj : _sujs) {
+                        bridge_interface_provided(name,
+                                                  _suj,
+                                                  "SUJ/" + _suj,
+                                                  publish_rate_in_seconds,
+                                                  tf_rate_in_seconds);
+                    }
+                }
                 break;
             default:
                 break;
@@ -382,7 +384,7 @@ void dvrk::console::add_topics_ecm_io(const std::string & _arm_name,
                                       const std::string & _io_component_name)
 {
     // known events and corresponding ros topic
-    auto events = std::list<std::pair<std::string, std::string> >({
+    const auto events = std::list<std::pair<std::string, std::string> >({
             {"ManipClutch", "manip_clutch"},
                 {"SUJClutch", "suj_clutch"}});
     for (auto event = events.begin();
@@ -400,7 +402,7 @@ void dvrk::console::add_topics_psm_io(const std::string & _arm_name,
                                       const std::string & _io_component_name)
 {
     // known events and corresponding ros topic
-    auto events = std::list<std::pair<std::string, std::string> >({
+    const auto events = std::list<std::pair<std::string, std::string> >({
             {"ManipClutch", "manip_clutch"},
                 {"SUJClutch", "suj_clutch"},
                     {"Adapter", "adapter"},
@@ -532,30 +534,6 @@ void dvrk::console::Connect(void)
 
     if (m_console->mHasIO) {
         dvrk::connect_bridge_io(m_pub_bridge->GetName(), m_console->mIOComponentName);
-    }
-
-    const mtsIntuitiveResearchKitConsole::ArmList::iterator
-        armEnd = m_console->mArms.end();
-    mtsIntuitiveResearchKitConsole::ArmList::iterator armIter;
-    for (armIter = m_console->mArms.begin();
-         armIter != armEnd;
-         ++armIter) {
-        if (!armIter->second->mSkipROSBridge) {
-            const std::string name = armIter->first;
-            switch (armIter->second->mType) {
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
-                // dvrk::connect_tf_suj(mTfBridgeName, name, "PSM1");
-                // dvrk::connect_tf_suj(mTfBridgeName, name, "PSM2");
-                // dvrk::connect_tf_suj(mTfBridgeName, name, "PSM3");
-                // dvrk::connect_tf_suj(mTfBridgeName, name, "ECM");
-                // dvrk::connect_bridge_suj(m_pub_bridge->GetName(), name, "PSM1");
-                // dvrk::connect_bridge_suj(m_pub_bridge->GetName(), name, "PSM2");
-                // dvrk::connect_bridge_suj(m_pub_bridge->GetName(), name, "PSM3");
-                // dvrk::connect_bridge_suj(m_pub_bridge->GetName(), name, "ECM");
-            default:
-                break;
-            }
-        }
     }
 
     // ros wrappers for IO

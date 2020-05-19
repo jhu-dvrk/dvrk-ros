@@ -21,44 +21,6 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <dvrk_utilities/dvrk_add_topics_functions.h>
 
-void dvrk::add_topics_suj(mtsROSBridge & bridge,
-                          const std::string & ros_namespace,
-                          const std::string & arm_name)
-{
-    // events
-    bridge.AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
-        (arm_name + "-suj", "measured_js",
-         ros_namespace + "/measured_js");
-    bridge.AddSubscriberToCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
-        (arm_name + "-suj", "servo_jp",
-         ros_namespace + "/servo_jp");
-    bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::TransformStamped>
-        (arm_name + "-suj", "measured_cp_local",
-         ros_namespace + "/local/measured_cp");
-    bridge.AddPublisherFromCommandRead<prmPositionCartesianGet, geometry_msgs::TransformStamped>
-        (arm_name + "-suj", "measured_cp",
-         ros_namespace + "/measured_cp");
-
-    // messages
-    bridge.AddLogFromEventWrite(arm_name + "-suj-log", "error",
-                                mtsROSEventWriteLog::ROS_LOG_ERROR);
-    bridge.AddLogFromEventWrite(arm_name + "-suj-log", "warning",
-                                mtsROSEventWriteLog::ROS_LOG_WARN);
-    bridge.AddLogFromEventWrite(arm_name + "-suj-log", "status",
-                                mtsROSEventWriteLog::ROS_LOG_INFO);
-}
-
-void dvrk::connect_bridge_suj(const std::string & bridge_name,
-                              const std::string & suj_component_name,
-                              const std::string & arm_name)
-{
-    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
-    componentManager->Connect(bridge_name, arm_name + "-suj",
-                              suj_component_name, arm_name);
-    componentManager->Connect(bridge_name, arm_name + "-suj-log",
-                              suj_component_name, arm_name);
-}
-
 void dvrk::add_topics_io(mtsROSBridge & bridge,
                          const std::string & ros_namespace)
 {
@@ -109,19 +71,4 @@ void dvrk::connect_bridge_io(const std::string & bridge_name,
     mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
     componentManager->Connect(bridge_name, arm_name + "-io",
                               io_component_name, arm_name);
-}
-
-void dvrk::add_tf_suj(mtsROSBridge & tf_bridge,
-                      const std::string & arm_name)
-{
-    tf_bridge.Addtf2BroadcasterFromCommandRead(arm_name + "-suj", "measured_cp");
-}
-
-void dvrk::connect_tf_suj(const std::string & tf_bridge_name,
-                          const std::string & suj_component_name,
-                          const std::string & arm_name)
-{
-    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
-    componentManager->Connect(tf_bridge_name, arm_name + "-suj",
-                              suj_component_name, arm_name);
 }
