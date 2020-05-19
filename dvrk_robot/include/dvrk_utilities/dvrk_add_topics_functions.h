@@ -23,26 +23,6 @@ http://www.cisst.org/cisst/license.txt.
 
 namespace dvrk {
 
-    /*! Add all the topics related to teleop PSM component. */
-    void add_topics_teleop_psm(mtsROSBridge & bridge,
-                               const std::string & ros_namespace,
-                               const std::string & teleop_component_name);
-
-    /*! This method connects all the required interfaces for a teleop
-      PSM component, it must be used after add_topics_teleop. */
-    void connect_bridge_teleop_psm(const std::string & bridge_name,
-                                   const std::string & teleop_component_name);
-
-    /*! Add all the topics related to teleop ECM component. */
-    void add_topics_teleop_ecm(mtsROSBridge & bridge,
-                               const std::string & ros_namespace,
-                               const std::string & teleop_component_name);
-
-    /*! This method connects all the required interfaces for a teleop
-      ECM component, it must be used after add_topics_teleop. */
-    void connect_bridge_teleop_ecm(const std::string & bridge_name,
-                                   const std::string & teleop_component_name);
-
     /*! Add all the topics related to the setup joints (SUJ) */
     void add_topics_suj(mtsROSBridge & bridge,
                         const std::string & ros_namespace,
