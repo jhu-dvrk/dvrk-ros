@@ -23,28 +23,6 @@ http://www.cisst.org/cisst/license.txt.
 
 namespace dvrk {
 
-    /*! Add all the IO topics for physical dVRK PSMs. */
-    void add_topics_psm_io(mtsROSBridge & bridge,
-                           const std::string & ros_namespace,
-                           const std::string & arm_name);
-
-    /*! This method connects all the required interfaces for the PSM's
-        IOs, it must be used after add_topics_psm_io. */
-    void connect_bridge_psm_io(const std::string & bridge_name,
-                               const std::string & arm_name,
-                               const std::string & io_component_name);
-
-    /*! Add all the IO topics for physical dVRK ECMs. */
-    void add_topics_ecm_io(mtsROSBridge & bridge,
-                           const std::string & ros_namespace,
-                           const std::string & arm_name);
-
-    /*! This method connects all the required interfaces for the ECM's
-        IOs, it must be used after add_topics_ecm_io. */
-    void connect_bridge_ecm_io(const std::string & bridge_name,
-                               const std::string & arm_name,
-                               const std::string & io_component_name);
-
     /*! Add all the topics related to teleop PSM component. */
     void add_topics_teleop_psm(mtsROSBridge & bridge,
                                const std::string & ros_namespace,

@@ -39,30 +39,30 @@ namespace dvrk {
         // methods using CRTK bridge_interface_provided method
         void bridge_interface_provided_arm(const std::string & _component_name,
                                            const std::string & _interface_name,
-                                           const std::string & _ros_namespace,
                                            const double _publish_period_in_seconds,
                                            const double _tf_period_in_seconds);
 
         void bridge_interface_provided_ecm(const std::string & _component_name,
                                            const std::string & _interface_name,
-                                           const std::string & _ros_namespace,
                                            const double _publish_period_in_seconds,
                                            const double _tf_period_in_seconds);
 
         void bridge_interface_provided_mtm(const std::string & _component_name,
                                            const std::string & _interface_name,
-                                           const std::string & _ros_namespace,
                                            const double _publish_period_in_seconds,
                                            const double _tf_period_in_seconds);
 
         void bridge_interface_provided_psm(const std::string & _component_name,
                                            const std::string & _interface_name,
-                                           const std::string & _ros_namespace,
                                            const double _publish_period_in_seconds,
                                            const double _tf_period_in_seconds);
 
         // dVRK specific topics
         void add_topics_console(void);
+        void add_topics_ecm_io(const std::string & _arm_name,
+                               const std::string & _io_component_name);
+        void add_topics_psm_io(const std::string & _arm_name,
+                               const std::string & _io_component_name);
 
     protected:
         mtsROSBridge * m_pub_bridge;

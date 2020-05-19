@@ -21,65 +21,6 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <dvrk_utilities/dvrk_add_topics_functions.h>
 
-void dvrk::add_topics_psm_io(mtsROSBridge & bridge,
-                             const std::string & ros_namespace,
-                             const std::string & arm_name)
-{
-    bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-        (arm_name + "-ManipClutch", "Button", ros_namespace + "/io/manip_clutch");
-    bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-        (arm_name + "-SUJClutch", "Button", ros_namespace + "/io/suj_clutch");
-    bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-        (arm_name + "-Adapter", "Button", ros_namespace + "/io/adapter");
-    bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-        (arm_name + "-Tool", "Button", ros_namespace + "/io/tool");
-}
-
-void dvrk::connect_bridge_psm_io(const std::string & bridge_name,
-                                 const std::string & arm_name,
-                                 const std::string & io_component_name)
-{
-    std::string interfaceName;
-    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
-    interfaceName = arm_name + "-ManipClutch";
-    componentManager->Connect(bridge_name, interfaceName,
-                              io_component_name, interfaceName);
-    interfaceName = arm_name + "-SUJClutch";
-    componentManager->Connect(bridge_name, interfaceName,
-                              io_component_name, interfaceName);
-    interfaceName = arm_name + "-Adapter";
-    componentManager->Connect(bridge_name, interfaceName,
-                              io_component_name, interfaceName);
-    interfaceName = arm_name + "-Tool";
-    componentManager->Connect(bridge_name, interfaceName,
-                              io_component_name, interfaceName);
-}
-
-void dvrk::add_topics_ecm_io(mtsROSBridge & bridge,
-
-                             const std::string & ros_namespace,
-                             const std::string & arm_name)
-{
-    bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-        (arm_name + "-ManipClutch", "Button", ros_namespace + "/io/manip_clutch");
-    bridge.AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-        (arm_name + "-SUJClutch", "Button", ros_namespace + "/io/suj_clutch");
-}
-
-void dvrk::connect_bridge_ecm_io(const std::string & bridge_name,
-                                 const std::string & arm_name,
-                                 const std::string & io_component_name)
-{
-    std::string interfaceName;
-    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
-    interfaceName = arm_name + "-ManipClutch";
-    componentManager->Connect(bridge_name, interfaceName,
-                              io_component_name, interfaceName);
-    interfaceName = arm_name + "-SUJClutch";
-    componentManager->Connect(bridge_name, interfaceName,
-                              io_component_name, interfaceName);
-}
-
 void dvrk::add_topics_teleop_psm(mtsROSBridge & bridge,
                                  const std::string & ros_namespace,
                                  const std::string & teleop_component_name)
