@@ -80,8 +80,6 @@ if (cisst_FOUND_AS_REQUIRED)
     )
 
   add_library (dvrk_utilities
-               include/dvrk_utilities/dvrk_add_topics_functions.h
-               src/dvrk_add_topics_functions.cpp
                include/dvrk_utilities/dvrk_console.h
                src/dvrk_console.cpp)
 

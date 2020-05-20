@@ -20,7 +20,6 @@ http://www.cisst.org/cisst/license.txt.
 #define _dvrk_console_h
 
 #include <cisst_ros_crtk/mts_ros_crtk_bridge.h>
-#include <dvrk_utilities/dvrk_add_topics_functions.h>
 
 class mtsIntuitiveResearchKitConsole;
 
@@ -34,7 +33,6 @@ namespace dvrk {
                 const double & tf_rate_in_seconds,
                 mtsIntuitiveResearchKitConsole * mts_console);
         void Configure(const std::string & jsonFile);
-        void Connect(void) override;
 
         // methods using CRTK bridge_interface_provided method
         void bridge_interface_provided_arm(const std::string & _component_name,
@@ -59,8 +57,16 @@ namespace dvrk {
 
         // dVRK specific topics
         void add_topics_console(void);
+        // IO timing
+        void add_topics_io(void);
+        // low level IO for a given arm if requested by user
+        void add_topics_arm_io(mtsROSBridge * _pub_bridge,
+                               const std::string & _arm_name,
+                               const std::string & _io_component_name);
+        // buttons on ECM
         void add_topics_ecm_io(const std::string & _arm_name,
                                const std::string & _io_component_name);
+        // buttons on PSM
         void add_topics_psm_io(const std::string & _arm_name,
                                const std::string & _io_component_name);
         void add_topics_teleop_ecm(const std::string & _name);
@@ -69,7 +75,6 @@ namespace dvrk {
     protected:
         mtsROSBridge * m_pub_bridge;
         mtsIntuitiveResearchKitConsole * m_console;
-        std::list<std::string> mIOInterfaces;
     };
 }
 

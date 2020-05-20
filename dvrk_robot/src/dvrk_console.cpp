@@ -27,7 +27,7 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <json/json.h>
 
-const std::string bridgeNamePrefix = "dVRKIOBridge";
+const std::string bridgeNamePrefix = "dVRKIOBridge_";
 
 dvrk::console::console(const std::string & name,
                        ros::NodeHandle * node_handle,
@@ -52,10 +52,12 @@ dvrk::console::console(const std::string & name,
     // get the stats bridge from base class
     stats_bridge().AddIntervalStatisticsPublisher("publishers", m_pub_bridge->GetName());
 
+    // IO topics
     if (m_console->mHasIO) {
-        dvrk::add_topics_io(*m_pub_bridge, "io");
+        add_topics_io();
     }
 
+    // arm topics
     const mtsIntuitiveResearchKitConsole::ArmList::iterator
         armEnd = m_console->mArms.end();
     mtsIntuitiveResearchKitConsole::ArmList::iterator armIter;
@@ -166,26 +168,24 @@ void dvrk::console::Configure(const std::string & jsonFile)
         return;
     }
 
-    mtsManagerLocal * componentManager = mtsManagerLocal::GetInstance();
-
+    mtsManagerLocal * _component_manager = mtsManagerLocal::GetInstance();
+    
     // look for io-interfaces
     const Json::Value interfaces = jsonConfig["io-interfaces"];
     for (unsigned int index = 0; index < interfaces.size(); ++index) {
-        const std::string name = interfaces[index]["name"].asString();
-        const double period = interfaces[index]["period"].asFloat();
-        const std::string ioComponentName = m_console->GetArmIOComponentName(name);
-        if (ioComponentName == "") {
-            std::cerr << "Warning: the arm \"" << name << "\" doesn't seem to exist" << std::endl
+        const std::string _name = interfaces[index]["name"].asString();
+        const double _period = interfaces[index]["period"].asFloat();
+        const std::string _io_component_name = m_console->GetArmIOComponentName(_name);
+        if (_io_component_name == "") {
+            std::cerr << "Warning: the arm \"" << _name << "\" doesn't seem to exist" << std::endl
                       << "or it doesn't have an IO component, no ROS bridge connected" << std::endl
                       << "for this IO." << std::endl;
         } else {
-            mtsROSBridge * rosIOBridge = new mtsROSBridge(bridgeNamePrefix + name, period,
-                                                          node_handle_ptr());
-            dvrk::add_topics_io(*rosIOBridge,
-                                name + "/io/",
-                                name);
-            componentManager->AddComponent(rosIOBridge);
-            mIOInterfaces.push_back(name);
+            const std::string _bridgeName = bridgeNamePrefix + _name;
+            mtsROSBridge * _rosIOBridge = new mtsROSBridge(bridgeNamePrefix + _name, _period,
+                                                           node_handle_ptr());
+            _component_manager->AddComponent(_rosIOBridge);
+            add_topics_arm_io(_rosIOBridge, _name, _io_component_name);
         }
     }
 }
@@ -337,29 +337,29 @@ void dvrk::console::bridge_interface_provided_psm(const std::string & _arm_name,
 
 void dvrk::console::add_topics_console(void)
 {
-    const std::string _ros_namespace = "console";
+    const std::string _ros_namespace = "console/";
 
     subscribers_bridge().AddSubscriberToCommandVoid
         ("Console", "PowerOff",
-         _ros_namespace + "/power_off");
+         _ros_namespace + "power_off");
     subscribers_bridge().AddSubscriberToCommandVoid
         ("Console", "PowerOn",
-         _ros_namespace + "/power_on");
+         _ros_namespace + "power_on");
     subscribers_bridge().AddSubscriberToCommandVoid
         ("Console", "Home",
-         _ros_namespace + "/home");
+         _ros_namespace + "home");
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         ("Console", "TeleopEnable",
-         _ros_namespace + "/teleop/enable");
+         _ros_namespace + "teleop/enable");
     subscribers_bridge().AddSubscriberToCommandWrite<std::string, std_msgs::String>
         ("Console", "CycleTeleopPSMByMTM",
-         _ros_namespace + "/teleop/cycle_teleop_psm_by_mtm");
+         _ros_namespace + "teleop/cycle_teleop_psm_by_mtm");
     subscribers_bridge().AddSubscriberToCommandWrite<prmKeyValue, diagnostic_msgs::KeyValue>
         ("Console", "SelectTeleopPSM",
-         _ros_namespace + "/teleop/select_teleop_psm");
+         _ros_namespace + "teleop/select_teleop_psm");
     subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float32>
         ("Console", "SetScale",
-         _ros_namespace + "/teleop/set_scale");
+         _ros_namespace + "teleop/set_scale");
 
     events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float32>
         ("Console", "Scale",
@@ -378,6 +378,49 @@ void dvrk::console::add_topics_console(void)
                       m_console->GetName(), "Main");
     m_connections.Add(events_bridge().GetName(), "Console",
                       m_console->GetName(), "Main");
+}
+
+void dvrk::console::add_topics_io(void)
+{
+    const std::string _ros_namespace = "stats/io/";
+    m_pub_bridge->AddPublisherFromCommandRead<mtsIntervalStatistics, cisst_msgs::mtsIntervalStatistics>
+        ("io", "period_statistics",
+         _ros_namespace + "period_statistics");
+    m_pub_bridge->AddPublisherFromCommandRead<mtsIntervalStatistics, cisst_msgs::mtsIntervalStatistics>
+        ("io", "GetPeriodStatisticsRead",
+         _ros_namespace + "period_statistics_read");
+    m_pub_bridge->AddPublisherFromCommandRead<mtsIntervalStatistics, cisst_msgs::mtsIntervalStatistics>
+        ("io", "GetPeriodStatisticsWrite",
+         _ros_namespace + "period_statistics_write");
+
+    m_connections.Add(m_pub_bridge->GetName(), "io",
+                      m_console->mIOComponentName, "Configuration");
+}
+
+void dvrk::console::add_topics_arm_io(mtsROSBridge * _pub_bridge,
+                                      const std::string & _arm_name,
+                                      const std::string & _io_component_name)
+{
+    const std::string _ros_namespace = _arm_name + "/io/";
+    const std::string _interface_name = _arm_name + "-io";
+    _pub_bridge->AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
+        (_interface_name, "GetAnalogInputPosSI",
+         _ros_namespace + "/analog_input_pos_si");
+    _pub_bridge->AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
+        (_interface_name, "measured_js",
+         _ros_namespace + "/joint_measured_js");
+    _pub_bridge->AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
+        (_interface_name, "actuator_measured_js",
+         _ros_namespace + "/actuator_measured_js");
+    _pub_bridge->AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
+        (_interface_name, "GetActuatorFeedbackCurrent",
+         _ros_namespace + "/actuator_measured_current");
+    _pub_bridge->AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
+        (_interface_name, "GetActuatorRequestedCurrent",
+         _ros_namespace + "/actuator_servo_current");
+
+    m_connections.Add(_pub_bridge->GetName(), _interface_name,
+                      _io_component_name, _arm_name);
 }
 
 void dvrk::console::add_topics_ecm_io(const std::string & _arm_name,
@@ -526,24 +569,4 @@ void dvrk::console::add_topics_teleop_psm(const std::string & _name)
     // connect
     m_connections.Add(subscribers_bridge().GetName(), _name,
                       _name, "Setting");
-}
-
-void dvrk::console::Connect(void)
-{
-    mts_ros_crtk_bridge::Connect();
-
-    if (m_console->mHasIO) {
-        dvrk::connect_bridge_io(m_pub_bridge->GetName(), m_console->mIOComponentName);
-    }
-
-    // ros wrappers for IO
-    const std::list<std::string>::const_iterator end = mIOInterfaces.end();
-    std::list<std::string>::const_iterator iter;
-    for (iter = mIOInterfaces.begin();
-         iter != end;
-         iter++) {
-        const std::string bridgeName = bridgeNamePrefix + *iter;
-        const std::string ioComponentName = m_console->GetArmIOComponentName(*iter);
-        dvrk::connect_bridge_io(bridgeName, ioComponentName, *iter);
-    }
 }
