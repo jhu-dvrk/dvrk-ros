@@ -57,6 +57,7 @@ namespace dvrk {
 
         // dVRK specific topics
         void add_topics_console(void);
+        void add_topics_endoscope_focus(void);
         // IO timing
         void add_topics_io(void);
         // low level IO for a given arm if requested by user

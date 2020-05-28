@@ -63,14 +63,13 @@ void dvrk_arm_from_ros::Init(void)
          "servo_cp",
          ros_namespace + "/set_position_cartesian");
 
-    AddPublisherFromCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
-        (interface_provided,
-         "SetPositionJaw",
-         ros_namespace + "/set_position_jaw");
-
     AddSubscriberToCommandRead<mtsStdString, std_msgs::String>
         (interface_provided,
          "GetCurrentState",
+         ros_namespace + "/current_state");
+
+    AddSubscriberToEventWrite<mtsStdString, std_msgs::String>
+        (interface_provided, "CurrentState",
          ros_namespace + "/current_state");
 
     AddSubscriberToCommandRead<mtsStdString, std_msgs::String>
@@ -78,15 +77,14 @@ void dvrk_arm_from_ros::Init(void)
          "GetDesiredState",
          ros_namespace + "/desired_state");
 
+    AddSubscriberToEventWrite<mtsStdString, std_msgs::String>
+        (interface_provided, "DesiredState",
+         ros_namespace + "/desired_state");
+
     AddSubscriberToCommandRead<prmStateJoint, sensor_msgs::JointState>
         (interface_provided,
          "setpoint_js",
          ros_namespace + "/state_joint_desired");
-
-    AddSubscriberToCommandRead<prmStateJoint, sensor_msgs::JointState>
-        (interface_provided,
-         "GetStateJaw",
-         ros_namespace + "/state_jaw_current");
 
     AddSubscriberToCommandRead<prmPositionCartesianGet, geometry_msgs::PoseStamped>
         (interface_provided,
@@ -105,7 +103,7 @@ void dvrk_arm_from_ros::Init(void)
     AddSubscriberToEventWrite<mtsMessage, std_msgs::String>
         (interface_provided, "Warning",
          ros_namespace + "/warning");
-    
+
     AddSubscriberToEventWrite<mtsMessage, std_msgs::String>
         (interface_provided, "Status",
          ros_namespace + "/status");

@@ -56,29 +56,16 @@ if (cisst_FOUND_AS_REQUIRED)
                   LIBRARIES dvrk_arm_from_ros
                   CATKIN_DEPENDS cisst_msgs cisst_ros_bridge geometry_msgs roscpp std_msgs)
 
-
-  # sawRobotIO1394 has been compiled within cisst, we should find it automatically
-  # find_package (sawRobotIO1394          1.7.0 REQUIRED)
-  # find_package (sawControllers          1.7.0 REQUIRED)
-  # find_package (sawIntuitiveResearchKit 1.7.0 REQUIRED)
-
   include_directories (
     ${dvrk_arms_from_ros_SOURCE_DIR}/include
     ${CATKIN_DEVEL_PREFIX}/include
-    # ${sawRobotIO1394_INCLUDE_DIR}
-    # ${sawControllers_INCLUDE_DIR}
-    # ${sawIntuitiveResearchKit_INCLUDE_DIR}
     )
-
-  # link_directories (
-  #   ${sawRobotIO1394_LIBRARY_DIR}
-  #   ${sawControllers_LIBRARY_DIR}
-  #   ${sawIntuitiveResearchKit_LIBRARY_DIR}
-  #   )
 
   add_library (dvrk_arm_from_ros
                include/dvrk_arm_from_ros.h
-               src/dvrk_arm_from_ros.cpp)
+               include/dvrk_psm_from_ros.h
+               src/dvrk_arm_from_ros.cpp
+               src/dvrk_psm_from_ros.cpp)
 
   target_link_libraries (
     dvrk_arm_from_ros

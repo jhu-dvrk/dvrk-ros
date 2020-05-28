@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2019 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -24,6 +24,7 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <cisstCommon/cmnStrings.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
+#include <sawIntuitiveResearchKit/mtsDaVinciEndoscopeFocus.h>
 
 #include <json/json.h>
 
@@ -125,6 +126,11 @@ dvrk::console::console(const std::string & name,
     // PSM teleops
     for (auto const & teleop : m_console->mTeleopsPSM) {
         add_topics_teleop_psm(teleop.first);
+    }
+    
+    // Endoscope focus
+    if (m_console->mDaVinciEndoscopeFocus) {
+        add_topics_endoscope_focus();
     }
 
     // digital inputs
@@ -378,6 +384,39 @@ void dvrk::console::add_topics_console(void)
                       m_console->GetName(), "Main");
     m_connections.Add(events_bridge().GetName(), "Console",
                       m_console->GetName(), "Main");
+}
+
+void dvrk::console::add_topics_endoscope_focus(void)
+{
+    const std::string _ros_namespace = "endoscope_focus/";
+    const std::string _focus_component_name = m_console->mDaVinciEndoscopeFocus->GetName();
+
+    // events
+    events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
+        (_focus_component_name, "Locked",
+         _ros_namespace + "/locked");
+    events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
+        (_focus_component_name, "FocusingIn",
+         _ros_namespace + "/focusing_in");
+    events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
+        (_focus_component_name, "FocusingOut",
+         _ros_namespace + "/focusing_out");
+
+    // commands
+    subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
+        (_focus_component_name, "Lock",
+         _ros_namespace + "/lock");
+    subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
+        (_focus_component_name, "FocusIn",
+         _ros_namespace + "/focus_in");
+    subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
+        (_focus_component_name, "FocusOut",
+         _ros_namespace + "/focus_out");
+
+    m_connections.Add(subscribers_bridge().GetName(), _focus_component_name,
+                      _focus_component_name, "Control");
+    m_connections.Add(events_bridge().GetName(), _focus_component_name,
+                      _focus_component_name, "Control");
 }
 
 void dvrk::console::add_topics_io(void)
