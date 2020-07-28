@@ -17,9 +17,9 @@ class psm(arm):
     """Simple robot API wrapping around ROS messages
     """
     # initialize the robot
-    def __init__(self, psm_name, ros_namespace = ''):
+    def __init__(self, psm_name, ros_namespace = '', expected_interval = 0.01):
         # first call base class constructor
-        self._arm__init_arm(psm_name, ros_namespace)
+        self._arm__init_arm(psm_name, ros_namespace, expected_interval)
 
         # jaw states
         self.__position_jaw_desired = 0.0

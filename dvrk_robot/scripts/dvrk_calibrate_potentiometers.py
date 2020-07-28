@@ -12,6 +12,7 @@ import csv
 import datetime
 import numpy
 import argparse
+import os.path
 
 from sensor_msgs.msg import JointState
 import dvrk
@@ -51,7 +52,7 @@ class potentiometer_calibration:
         self._last_joints = []
         ros_namespace = self._robot_name
         rospy.Subscriber(ros_namespace +  '/io/analog_input_pos_si', JointState, self.pot_callback)
-        rospy.Subscriber(ros_namespace +  '/io/joint_position', JointState, self.joints_callback)
+        rospy.Subscriber(ros_namespace +  '/io/joint_measured_js', JointState, self.joints_callback)
 
     def pot_callback(self, data):
         self._last_potentiometers[:] = data.position
@@ -88,68 +89,58 @@ class potentiometer_calibration:
         # config > Robot> Actuator > AnalogIn > VoltsToPosSI > Scale = ____   or   Offset = ____
         xmlVoltsToPosSI = {}
 
+        # Make sure file exists
+        if not os.path.exists(filename):
+            sys.exit("Config file \"%s\" not found" % filename)
+
         tree = ET.parse(filename)
         root = tree.getroot()
-        robotFound = False
-        stuffInRoot = root.getchildren()
-        for index in range(len(stuffInRoot)):
-            if stuffInRoot[index].tag == "Robot":
-                currentRobot = stuffInRoot[index]
-                if currentRobot.attrib["Name"] == self._robot_name:
-                    self._serial_number = currentRobot.attrib["SN"]
-                    xmlRobot = currentRobot
-                    print("Succesfully found robot \"%s\", serial number %s in XML file" % (currentRobot.attrib["Name"], self._serial_number))
-                    robotFound = True
-                else:
-                    print("Found robot \"%s\" while looking for \"%s\", make sure you're using the correct configuration file!" % (currentRobot.attrib["Name"], self._robot_name))
 
-        if robotFound == False:
-            sys.exit("Robot tree could not be found in xml file")
+        # Find Robot in config file and make sure name matches
+        xpath_search_results = root.findall("./Robot")
+        if len(xpath_search_results) == 1:
+            xmlRobot = xpath_search_results[0]
+        else:
+            sys.exit("Can't find \"Robot\" in configuration file")
 
-        # look for all VoltsToPosSI
-        stuffInRobot = xmlRobot.getchildren()
-        for index in range(len(stuffInRobot)):
-            child = stuffInRobot[index]
-            if child.tag == "Actuator":
-                actuatorId = int(child.attrib["ActuatorID"])
-                stuffInActuator = child.getchildren()
-                for subIndex in range(len(stuffInActuator)):
-                    subChild = stuffInActuator[subIndex]
-                    if subChild.tag == "AnalogIn":
-                        stuffInAnalogIn = subChild.getchildren()
-                        for subSubIndex in range(len(stuffInAnalogIn)):
-                            subSubChild = stuffInAnalogIn[subSubIndex]
-                            if subSubChild.tag == "VoltsToPosSI":
-                                xmlVoltsToPosSI[actuatorId] = subSubChild
+        if xmlRobot.get("Name") == self._robot_name:
+            self._serial_number = xmlRobot.get("SN")
+            print("Successfully found robot \"%s\", serial number %s in XML file" % (self._robot_name, self._serial_number))
+            robotFound = True
+        else:
+            sys.exit("Found robot \"%s\" while looking for \"%s\", make sure you're using the correct configuration file!" % (xmlRobot.get("Name"), self._robot_name))
+
+        # Look for all actuators/VoltsToPosSI
+        xpath_search_results = root.findall("./Robot/Actuator")
+        for actuator in xpath_search_results:
+            actuatorId = int(actuator.get("ActuatorID"))
+            voltsToPosSI = actuator.find("./AnalogIn/VoltsToPosSI")
+            xmlVoltsToPosSI[actuatorId] = voltsToPosSI
 
         # set joint limits and number of axis based on arm type, using robot name
-        if ("").join(list(currentRobot.attrib["Name"])[:-1]) == "PSM": #checks to see if the robot being tested is a PSM
+        if ("").join(list(self._robot_name)[:-1]) == "PSM": #checks to see if the robot being tested is a PSM
             arm_type = "PSM"
             lower_joint_limits = [-60.0 * d2r, -30.0 * d2r, 0.005, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r]
             upper_joint_limits = [ 60.0 * d2r,  30.0 * d2r, 0.235,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r]
-            nb_axis = 7 #number of joints being tested
-        elif currentRobot.attrib["Name"] == "MTML":
+            nb_axis = 7
+        elif self._robot_name == "MTML":
             arm_type = "MTM"
             lower_joint_limits = [-15.0 * d2r, -10.0 * d2r, -10.0 * d2r, -180.0 * d2r, -80.0 * d2r, -40.0 * d2r, -100.0 * d2r]
             upper_joint_limits = [ 35.0 * d2r,  20.0 * d2r,  10.0 * d2r,   80.0 * d2r, 160.0 * d2r,  40.0 * d2r,  100.0 * d2r]
             nb_axis = 7
-        elif currentRobot.attrib["Name"] == "MTMR":
+        elif self._robot_name == "MTMR":
             arm_type = "MTM"
             lower_joint_limits = [-30.0 * d2r, -10.0 * d2r, -10.0 * d2r,  -80.0 * d2r, -80.0 * d2r, -40.0 * d2r, -100.0 * d2r]
             upper_joint_limits = [ 15.0 * d2r,  20.0 * d2r,  10.0 * d2r,  180.0 * d2r, 160.0 * d2r,  40.0 * d2r,  100.0 * d2r]
             nb_axis = 7
-        elif currentRobot.attrib["Name"] == "ECM":
+        elif self._robot_name == "ECM":
             arm_type = "ECM"
             lower_joint_limits = [-60.0 * d2r, -40.0 * d2r,  0.005, -80.0 * d2r]
             upper_joint_limits = [ 60.0 * d2r,  40.0 * d2r,  0.230,  80.0 * d2r]
             nb_axis = 4
 
-
-        if arm_type == "PSM":
-            this_arm = dvrk.psm(self._robot_name)
-        else:
-            this_arm = dvrk.arm(self._robot_name)
-
+        # Create the dVRK python ROS client
+        this_arm = dvrk.arm(self._robot_name)
 
         # resize all arrays
         for axis in range(nb_axis):
@@ -212,11 +203,7 @@ class potentiometer_calibration:
                     average_potentiometer[axis] = []
 
                 # move and sleep
-                if arm_type == "PSM":
-                    this_arm.move_jaw(joint_goal[6], blocking = False)
-                    this_arm.move_joint(numpy.array(joint_goal[0:6]))
-                else:
-                    this_arm.move_joint(numpy.array(joint_goal))
+                this_arm.move_jp(numpy.array(joint_goal))
                 time.sleep(sleep_time_after_motion)
 
                 # collect nb_samples_per_position at current position to compute average
@@ -238,13 +225,10 @@ class potentiometer_calibration:
 
 
             # at the end, return to home position
-            if arm_type == "PSM":
-                this_arm.move_jaw(0.0, blocking = False)
-                this_arm.move_joint(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
-            elif arm_type == "MTM":
-                this_arm.move_joint(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
+            if arm_type == "PSM" or arm_type == "MTM":
+                this_arm.move_jp(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
             elif arm_type == "ECM":
-                this_arm.move_joint(numpy.array([0.0, 0.0, 0.0, 0.0]))
+                this_arm.move_jp(numpy.array([0.0, 0.0, 0.0, 0.0]))
 
             # close file
             f.close()
@@ -288,7 +272,7 @@ class potentiometer_calibration:
             print("index | old scale  | new scale  | correction")
             for index in range(nb_axis):
                 # find existing values
-                oldScale = float(xmlVoltsToPosSI[index].attrib["Scale"])
+                oldScale = float(xmlVoltsToPosSI[index].get("Scale"))
                 # compute new values
                 correction = slope(encoders[index], potentiometers[index])
                 newScale = oldScale / correction
@@ -296,14 +280,14 @@ class potentiometer_calibration:
                 # display
                 print(" %d    | % 04.6f | % 04.6f | % 04.6f" % (index, oldScale, newScale, correction))
                 # replace values
-                xmlVoltsToPosSI[index].attrib["Scale"] = str(newScale)
+                xmlVoltsToPosSI[index].set("Scale", str(newScale))
 
         if calibrate == "offsets":
             newOffsets = []
             print("index | old offset  | new offset | correction")
             for index in range(nb_axis):
                 # find existing values
-                oldOffset = float(xmlVoltsToPosSI[index].attrib["Offset"])
+                oldOffset = float(xmlVoltsToPosSI[index].get("Offset"))
                 # compute new values
                 newOffsets.append(oldOffset - offsets[index])
 
@@ -316,16 +300,16 @@ class potentiometer_calibration:
                     print("This program will save ALL new PSM offsets")
                     for axis in range(nb_axis):
                         # replace values
-                        xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffsets[axis])
+                        xmlVoltsToPosSI[axis].set("Offset", str(newOffsets[axis]))
                 else:
                     print("This program will only save the last 4 PSM offsets")
                     for axis in range(3, nb_axis):
                         # replace values
-                        xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffsets[axis])
+                        xmlVoltsToPosSI[axis].set("Offset", str(newOffsets[axis]))
             else:
                 for axis in range(nb_axis):
                     # replace values
-                    xmlVoltsToPosSI[axis].attrib["Offset"] = str(newOffsets[axis])
+                    xmlVoltsToPosSI[axis].set("Offset", str(newOffsets[axis]))
 
         save = input("To save this in new file press 'y' followed by [enter]\n")
         if save == "y":
