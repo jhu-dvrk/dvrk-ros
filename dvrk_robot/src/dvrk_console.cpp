@@ -30,6 +30,8 @@ http://www.cisst.org/cisst/license.txt.
 
 const std::string bridgeNamePrefix = "dVRKIOBridge_";
 
+CMN_IMPLEMENT_SERVICES(dvrk_console);
+
 dvrk::console::console(const std::string & name,
                        ros::NodeHandle * node_handle,
                        const double & publish_rate_in_seconds,
@@ -127,7 +129,7 @@ dvrk::console::console(const std::string & name,
     for (auto const & teleop : m_console->mTeleopsPSM) {
         add_topics_teleop_psm(teleop.first);
     }
-    
+
     // Endoscope focus
     if (m_console->mDaVinciEndoscopeFocus) {
         add_topics_endoscope_focus();
@@ -175,7 +177,7 @@ void dvrk::console::Configure(const std::string & jsonFile)
     }
 
     mtsManagerLocal * _component_manager = mtsManagerLocal::GetInstance();
-    
+
     // look for io-interfaces
     const Json::Value interfaces = jsonConfig["io-interfaces"];
     for (unsigned int index = 0; index < interfaces.size(); ++index) {

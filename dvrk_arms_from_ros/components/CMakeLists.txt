@@ -22,11 +22,8 @@ project (dvrk_arms_from_ros)
 ## is used, also find other catkin packages
 find_package (catkin REQUIRED
               COMPONENTS
-              cisst_msgs
-              cisst_ros_bridge
-              geometry_msgs
+              cisst_ros_crtk
               roscpp
-              std_msgs
               roslib
               )
 
@@ -54,7 +51,7 @@ if (cisst_FOUND_AS_REQUIRED)
 
   catkin_package (INCLUDE_DIRS include "${CATKIN_DEVEL_PREFIX}/include"
                   LIBRARIES dvrk_arm_from_ros
-                  CATKIN_DEPENDS cisst_msgs cisst_ros_bridge geometry_msgs roscpp std_msgs)
+                  CATKIN_DEPENDS cisst_ros_crtk roscpp roslib)
 
   include_directories (
     ${dvrk_arms_from_ros_SOURCE_DIR}/include
@@ -69,9 +66,6 @@ if (cisst_FOUND_AS_REQUIRED)
 
   target_link_libraries (
     dvrk_arm_from_ros
-    ${sawRobotIO1394_LIBRARIES}
-    ${sawIntuitiveResearchKit_LIBRARIES}
-    ${sawControllers_LIBRARIES}
     ${catkin_LIBRARIES}
     )
     cisst_target_link_libraries (dvrk_arm_from_ros ${REQUIRED_CISST_LIBRARIES})

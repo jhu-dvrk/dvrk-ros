@@ -16,14 +16,10 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
+#include <cisst_ros_crtk/mtsCISSTToROS.h>
+#include <cisst_ros_crtk/mtsROSToCISST.h>
+
 #include <dvrk_psm_from_ros.h>
-
-#include <cisstMultiTask/mtsInterfaceRequired.h>
-#include <cisstParameterTypes/prmForceCartesianGet.h>
-#include <cisstParameterTypes/prmVelocityCartesianGet.h>
-#include <cisstParameterTypes/prmForceCartesianSet.h>
-
-#include <cmath>
 
 CMN_IMPLEMENT_SERVICES_DERIVED_ONEARG(dvrk_psm_from_ros,
                                       dvrk_arm_from_ros,
@@ -49,16 +45,16 @@ void dvrk_psm_from_ros::InitPSM(void)
 
     AddPublisherFromCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
         (interface_provided,
-         "SetPositionJaw",
-         ros_namespace + "/set_position_jaw");
+         "jaw/servo_jp",
+         ros_namespace + "/jaw/servo_jp");
 
     AddSubscriberToCommandRead<prmStateJoint, sensor_msgs::JointState>
         (interface_provided,
-         "GetStateJaw",
-         ros_namespace + "/state_jaw_current");
+         "jaw/measured_js",
+         ros_namespace + "/jaw/measured_js");
 
     AddSubscriberToCommandRead<prmStateJoint, sensor_msgs::JointState>
         (interface_provided,
-         "GetStateJawDesired",
-         ros_namespace + "/state_jaw_desired");
+         "jaw/setpoint_js",
+         ros_namespace + "/jaw/setpoint_js");
 }

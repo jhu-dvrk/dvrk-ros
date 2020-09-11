@@ -16,14 +16,10 @@ http://www.cisst.org/cisst/license.txt.
 --- end cisst license ---
 */
 
+#include <cisst_ros_crtk/mtsCISSTToROS.h>
+#include <cisst_ros_crtk/mtsROSToCISST.h>
+
 #include <dvrk_arm_from_ros.h>
-
-#include <cisstMultiTask/mtsInterfaceRequired.h>
-#include <cisstParameterTypes/prmForceCartesianGet.h>
-#include <cisstParameterTypes/prmVelocityCartesianGet.h>
-#include <cisstParameterTypes/prmForceCartesianSet.h>
-
-#include <cmath>
 
 CMN_IMPLEMENT_SERVICES_DERIVED_ONEARG(dvrk_arm_from_ros,
                                       mtsROSBridge,
@@ -44,52 +40,41 @@ dvrk_arm_from_ros::dvrk_arm_from_ros(const mtsTaskPeriodicConstructorArg & arg)
 
 void dvrk_arm_from_ros::Init(void)
 {
-
     std::string ros_namespace = this->GetName();
     std::string interface_provided = this->GetName();
 
-    AddPublisherFromCommandWrite<std::string, std_msgs::String>
+    AddPublisherFromCommandWrite<std::string, crtk_msgs::StringStamped>
         (interface_provided,
-         "SetDesiredState",
-         ros_namespace + "/set_desired_state");
+         "state_command",
+         ros_namespace + "/state_command");
 
     AddPublisherFromCommandVoid
         (interface_provided,
          "Freeze",
          ros_namespace + "/freeze");
 
-    AddPublisherFromCommandWrite<prmPositionCartesianSet, geometry_msgs::Pose>
+    AddPublisherFromCommandWrite<prmPositionCartesianSet, geometry_msgs::TransformStamped>
         (interface_provided,
          "servo_cp",
-         ros_namespace + "/set_position_cartesian");
+         ros_namespace + "/servo_cp");
 
-    AddSubscriberToCommandRead<mtsStdString, std_msgs::String>
-        (interface_provided,
-         "GetCurrentState",
-         ros_namespace + "/current_state");
+    AddSubscriberToEventWrite<prmOperatingState, crtk_msgs::operating_state>
+        (interface_provided, "operating_state",
+         ros_namespace + "/operating_state");
 
-    AddSubscriberToEventWrite<mtsStdString, std_msgs::String>
-        (interface_provided, "CurrentState",
-         ros_namespace + "/current_state");
-
-    AddSubscriberToCommandRead<mtsStdString, std_msgs::String>
-        (interface_provided,
-         "GetDesiredState",
-         ros_namespace + "/desired_state");
-
-    AddSubscriberToEventWrite<mtsStdString, std_msgs::String>
-        (interface_provided, "DesiredState",
-         ros_namespace + "/desired_state");
+    AddSubscriberToCommandRead<prmOperatingState, crtk_msgs::operating_state>
+        (interface_provided, "operating_state",
+         ros_namespace + "/operating_state");
 
     AddSubscriberToCommandRead<prmStateJoint, sensor_msgs::JointState>
         (interface_provided,
          "setpoint_js",
-         ros_namespace + "/state_joint_desired");
+         ros_namespace + "/setpoint_js");
 
-    AddSubscriberToCommandRead<prmPositionCartesianGet, geometry_msgs::PoseStamped>
+    AddSubscriberToCommandRead<prmPositionCartesianGet, geometry_msgs::TransformStamped>
         (interface_provided,
          "measured_cp",
-         ros_namespace + "/position_cartesian_current");
+         ros_namespace + "/measured_cp");
 
     AddSubscriberToCommandRead<mtsIntervalStatistics, cisst_msgs::mtsIntervalStatistics>
         (interface_provided,
@@ -97,15 +82,15 @@ void dvrk_arm_from_ros::Init(void)
          ros_namespace + "/period_statistics");
 
     AddSubscriberToEventWrite<mtsMessage, std_msgs::String>
-        (interface_provided, "Error",
+        (interface_provided, "error",
          ros_namespace + "/error");
 
     AddSubscriberToEventWrite<mtsMessage, std_msgs::String>
-        (interface_provided, "Warning",
+        (interface_provided, "warning",
          ros_namespace + "/warning");
 
     AddSubscriberToEventWrite<mtsMessage, std_msgs::String>
-        (interface_provided, "Status",
+        (interface_provided, "status",
          ros_namespace + "/status");
 }
 

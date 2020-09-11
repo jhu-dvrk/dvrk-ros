@@ -26,6 +26,8 @@ class mtsIntuitiveResearchKitConsole;
 namespace dvrk {
     class console: public mts_ros_crtk_bridge
     {
+        CMN_DECLARE_SERVICES(CMN_NO_DYNAMIC_CREATION, CMN_LOG_ALLOW_DEFAULT);
+
     public:
         console(const std::string & name,
                 ros::NodeHandle * node_handle,
@@ -78,5 +80,8 @@ namespace dvrk {
         mtsIntuitiveResearchKitConsole * m_console;
     };
 }
+
+typedef dvrk::console dvrk_console;
+CMN_DECLARE_SERVICES_INSTANTIATION(dvrk_console);
 
 #endif // _dvrk_console_h
