@@ -378,9 +378,20 @@ void dvrk::console::add_topics_console(void)
     events_bridge().AddPublisherFromEventWrite<prmKeyValue, diagnostic_msgs::KeyValue>
         ("Console", "TeleopPSMUnselected",
          _ros_namespace + "/teleop/teleop_psm_unselected");
+
     events_bridge().AddSubscriberToCommandWrite<std::string, std_msgs::String>
         ("Console", "StringToSpeech",
          _ros_namespace + "/string_to_speech");
+
+    subscribers_bridge().AddSubscriberToCommandWrite<prmEventButton, sensor_msgs::Joy>
+        ("Console", "EmulateOperatorPresent",
+         _ros_namespace + "/emulate_operator_present");
+    subscribers_bridge().AddSubscriberToCommandWrite<prmEventButton, sensor_msgs::Joy>
+        ("Console", "EmulateClutch",
+         _ros_namespace + "/emulate_clutch");
+    subscribers_bridge().AddSubscriberToCommandWrite<prmEventButton, sensor_msgs::Joy>
+        ("Console", "EmulateCamera",
+         _ros_namespace + "/emulate_camera");
 
     m_connections.Add(subscribers_bridge().GetName(), "Console",
                       m_console->GetName(), "Main");
