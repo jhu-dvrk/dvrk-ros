@@ -300,10 +300,10 @@ void dvrk::console::bridge_interface_provided_mtm(const std::string & _arm_name,
 
     events_bridge().AddPublisherFromEventVoid
         (_required_interface_name, "GripperPinchEvent",
-         _arm_name + "/gripper_pinch_event");
+         _arm_name + "/gripper/pinch");
     events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
         (_required_interface_name, "GripperClosedEvent",
-         _arm_name + "/gripper_closed_event");
+         _arm_name + "/gripper/closed");
 }
 
 void dvrk::console::bridge_interface_provided_psm(const std::string & _arm_name,
