@@ -383,6 +383,22 @@ void dvrk::console::add_topics_console(void)
         ("Console", "StringToSpeech",
          _ros_namespace + "/string_to_speech");
 
+    events_bridge().AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
+        ("ConsoleOperatorPresent", "Button",
+         _ros_namespace + "/operator_present");
+    m_connections.Add(events_bridge().GetName(), "ConsoleOperatorPresent",
+                      m_console->GetName(), "OperatorPresent");
+    events_bridge().AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
+        ("ConsoleClutch", "Button",
+         _ros_namespace + "/clutch");
+    m_connections.Add(events_bridge().GetName(), "ConsoleClutch",
+                      m_console->GetName(), "Clutch");
+    events_bridge().AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
+        ("ConsoleCamera", "Button",
+         _ros_namespace + "/camera");
+    m_connections.Add(events_bridge().GetName(), "ConsoleCamera",
+                      m_console->GetName(), "Camera");
+
     subscribers_bridge().AddSubscriberToCommandWrite<prmEventButton, sensor_msgs::Joy>
         ("Console", "EmulateOperatorPresent",
          _ros_namespace + "/emulate_operator_present");
