@@ -36,9 +36,11 @@ def print_id(message):
 class example_application:
 
     # configuration
-    def configure(self, robot_name):
-        print_id('configuring dvrk_arm_test for %s' % robot_name)
-        self.arm = dvrk.mtm(robot_name)
+    def configure(self, robot_name, expected_interval):
+        print_id('configuring dvrk_mtm_cartesian_impedance for %s' % robot_name)
+        self.expected_interval = expected_interval
+        self.arm = dvrk.mtm(arm_name = robot_name,
+                            expected_interval = expected_interval)
         self.coag_event = threading.Event()
         rospy.Subscriber('footpedals/coag',
                          Joy, self.coag_event_cb)
@@ -47,13 +49,19 @@ class example_application:
 
     # homing example
     def home(self):
+        print_id('starting enable')
+        if not self.arm.enable(10):
+            sys.exit('failed to enable within 10 seconds')
         print_id('starting home')
-        self.arm.home()
+        if not self.arm.home(10):
+            sys.exit('failed to home within 10 seconds')
         # get current joints just to set size
-        goal = numpy.copy(self.arm.get_current_joint_position())
-        # go to zero position
+        print_id('move to starting position')
+        goal = numpy.copy(self.arm.setpoint_jp())
+        # go to zero position, make sure 3rd joint is past cannula
         goal.fill(0)
-        self.arm.move_joint(goal, interpolate = True)
+        self.arm.move_jp(goal)
+        self.arm.wait_while_busy(20) # 20 seconds
 
     # foot pedal callback
     def coag_event_cb(self, data):
@@ -85,9 +93,9 @@ class example_application:
         gains.PosStiffPos.z = -200.0
         gains.PosDampingNeg.z = -5.0
         gains.PosDampingPos.z = -5.0
-        gains.ForcePosition.x = self.arm.get_current_position().p[0]
-        gains.ForcePosition.y = self.arm.get_current_position().p[1]
-        gains.ForcePosition.z = self.arm.get_current_position().p[2]
+        gains.ForcePosition.x = self.arm.measured_cp().p[0]
+        gains.ForcePosition.y = self.arm.measured_cp().p[1]
+        gains.ForcePosition.z = self.arm.measured_cp().p[2]
         self.set_gains_pub.publish(gains)
 
         print_id('orientation will be locked')
@@ -101,9 +109,9 @@ class example_application:
         gains.PosStiffPos.z = -500.0
         gains.PosDampingNeg.z = 0.0
         gains.PosDampingPos.z = -15.0
-        gains.ForcePosition.x = self.arm.get_current_position().p[0]
-        gains.ForcePosition.y = self.arm.get_current_position().p[1]
-        gains.ForcePosition.z = self.arm.get_current_position().p[2]
+        gains.ForcePosition.x = self.arm.measured_cp().p[0]
+        gains.ForcePosition.y = self.arm.measured_cp().p[1]
+        gains.ForcePosition.z = self.arm.measured_cp().p[2]
         self.set_gains_pub.publish(gains)
 
         print_id('an horizontal line will be created around the current position, with viscosity along the line')
@@ -121,9 +129,9 @@ class example_application:
         gains.PosDampingNeg.y = -10.0
         gains.PosDampingPos.y = -10.0
         # always start from current position to avoid jumps
-        gains.ForcePosition.x = self.arm.get_current_position().p[0]
-        gains.ForcePosition.y = self.arm.get_current_position().p[1]
-        gains.ForcePosition.z = self.arm.get_current_position().p[2]
+        gains.ForcePosition.x = self.arm.measured_cp().p[0]
+        gains.ForcePosition.y = self.arm.measured_cp().p[1]
+        gains.ForcePosition.z = self.arm.measured_cp().p[2]
         self.set_gains_pub.publish(gains)
 
         print_id('a plane will be created perpendicular to the master gripper')
@@ -158,10 +166,10 @@ class example_application:
         gains.OriDampingPos.z = 0.0
 
         # always start from current position to avoid jumps
-        gains.ForcePosition.x = self.arm.get_current_position().p[0]
-        gains.ForcePosition.y = self.arm.get_current_position().p[1]
-        gains.ForcePosition.z = self.arm.get_current_position().p[2]
-        orientationQuaternion = self.arm.get_current_position().M.GetQuaternion()
+        gains.ForcePosition.x = self.arm.measured_cp().p[0]
+        gains.ForcePosition.y = self.arm.measured_cp().p[1]
+        gains.ForcePosition.z = self.arm.measured_cp().p[2]
+        orientationQuaternion = self.arm.measured_cp().M.GetQuaternion()
         gains.ForceOrientation.x = orientationQuaternion[0]
         gains.ForceOrientation.y = orientationQuaternion[1]
         gains.ForceOrientation.z = orientationQuaternion[2]
@@ -175,7 +183,7 @@ class example_application:
 
         print_id('keep holding arm, press coag, arm will freeze in position')
         self.wait_for_coag()
-        self.arm.move(self.arm.get_desired_position())
+        self.arm.move_jp(self.arm.measured_jp())
 
         print_id('press coag to end')
         self.wait_for_coag()
@@ -197,8 +205,10 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--arm', type=str, required=True,
                         choices=['MTML', 'MTMR'],
                         help = 'arm name corresponding to ROS topics without namespace.  Use __ns:= to specify the namespace')
+    parser.add_argument('-i', '--interval', type=float, default=0.01,
+                        help = 'expected interval in seconds between messages sent by the device')
     args = parser.parse_args(argv[1:]) # skip argv[0], script name
 
     application = example_application()
-    application.configure(args.arm)
+    application.configure(args.arm, args.interval)
     application.run()
