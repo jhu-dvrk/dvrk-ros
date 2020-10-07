@@ -42,6 +42,12 @@ class arm(object):
     """Simple arm API wrapping around ROS messages
     """
 
+    # class to contain jaw methods
+    class ServoCf:
+        def __init__(self, ros_namespace, expected_interval):
+            self.crtk = crtk.utils(self, ros_namespace)
+            self.crtk.add_servo_cf()
+
     # initialize the arm
     def __init__(self, arm_name, ros_namespace = '', expected_interval = 0.01):
         # base class constructor in separate method so it can be called in derived classes
@@ -57,9 +63,10 @@ class arm(object):
         # data members, event based
         self.__arm_name = arm_name
         self.__ros_namespace = ros_namespace
+        self.__full_ros_namespace = ros_namespace + arm_name
 
         # crtk features
-        self.__crtk_utils = crtk.utils(self, ros_namespace + arm_name, expected_interval)
+        self.__crtk_utils = crtk.utils(self, self.__full_ros_namespace, expected_interval)
 
         # add crtk features that we need and are supported by the dVRK
         self.__crtk_utils.add_operating_state()
@@ -72,9 +79,11 @@ class arm(object):
         self.__crtk_utils.add_servo_jp()
         self.__crtk_utils.add_servo_cp()
         self.__crtk_utils.add_servo_jf()
-        self.__crtk_utils.add_servo_cf()
         self.__crtk_utils.add_move_jp()
         self.__crtk_utils.add_move_cp()
+
+        self.spatial = self.ServoCf(self.__full_ros_namespace + '/spatial', expected_interval)
+        self.body = self.ServoCf(self.__full_ros_namespace + '/body', expected_interval)
 
         # continuous publish from dvrk_bridge
         self.__jacobian_spatial = numpy.ndarray(0, dtype = numpy.float)
@@ -85,7 +94,6 @@ class arm(object):
 
         # publishers
         frame = PyKDL.Frame()
-        self.__full_ros_namespace = self.__ros_namespace + self.__arm_name
         self.__set_wrench_body_orientation_absolute_pub = rospy.Publisher(self.__full_ros_namespace
                                                                           + '/set_wrench_body_orientation_absolute',
                                                                           Bool, latch = True, queue_size = 1)

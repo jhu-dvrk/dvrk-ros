@@ -38,31 +38,38 @@ def print_id(message):
 class example_application:
 
     # configuration
-    def configure(self, robot_name):
+    def configure(self, robot_name, expected_interval):
         print_id('configuring dvrk_psm_test for %s' % robot_name)
-        self.arm = dvrk.psm(robot_name)
+        self.expected_interval = expected_interval
+        self.arm = dvrk.psm(arm_name = robot_name,
+                            expected_interval = expected_interval)
 
     # homing example
     def home(self):
+        print_id('starting enable')
+        if not self.arm.enable(10):
+            sys.exit('failed to enable within 10 seconds')
         print_id('starting home')
-        self.arm.home()
+        if not self.arm.home(10):
+            sys.exit('failed to home within 10 seconds')
         # get current joints just to set size
-        goal = numpy.copy(self.arm.get_current_joint_position())
-        # go to zero position, except for insert joint so we can't break tool in cannula
+        print_id('move to starting position')
+        goal = numpy.copy(self.arm.setpoint_jp())
+        # go to zero position, make sure 3rd joint is past cannula
         goal.fill(0)
         goal[2] = 0.12
-        self.arm.move_joint(goal, interpolate = True)
+        self.arm.move_jp(goal, blocking = True)
 
     # utility to position tool/camera deep enough before cartesian examples
     def prepare_cartesian(self):
         # make sure the camera is past the cannula and tool vertical
-        goal = numpy.copy(self.arm.get_current_joint_position())
+        goal = numpy.copy(self.arm.setpoint_jp())
         if ((self.arm.name() == 'PSM1') or (self.arm.name() == 'PSM2') or (self.arm.name() == 'PSM3') or (self.arm.name() == 'ECM')):
             # set in position joint mode
             goal[0] = 0.0
             goal[1] = 0.0
             goal[2] = 0.12
-            self.arm.move_joint(goal, interpolate = True)
+            self.arm.move_jp(goal, blocking = True)
 
     # goal jaw control example
     def jaw_goal(self):
@@ -70,23 +77,25 @@ class example_application:
         # try to open and close with the cartesian part of the arm in different modes
         print_id('close and open without other move command')
         input("    Press Enter to continue...")
-        self.arm.home()
-        self.arm.close_jaw()
-        self.arm.open_jaw()
-        self.arm.close_jaw()
-        self.arm.open_jaw()
+        print_id('closing (1)')
+        self.arm.jaw.close()
+        print_id('opening (2)')
+        self.arm.jaw.open()
+        print_id('closing (3)')
+        self.arm.jaw.close()
+        print_id('opening (4)')
+        self.arm.jaw.open()
         # try to open and close with a joint goal
         print_id('close and open with joint move command')
         input("    Press Enter to continue...")
-        self.arm.home()
-        self.arm.close_jaw(blocking = False)
-        self.arm.insert_tool(0.1)
-        self.arm.open_jaw(blocking = False)
-        self.arm.insert_tool(0.15)
-        self.arm.close_jaw()
-        self.arm.insert_tool(0.1)
-        self.arm.open_jaw()
-        self.arm.insert_tool(0.15)
+        self.arm.jaw.close(blocking = False)
+        self.arm.insert_jp(0.1)
+        self.arm.jaw.open(blocking = False)
+        self.arm.insert_jp(0.15)
+        self.arm.jaw.close()
+        self.arm.insert_jp(0.1)
+        self.arm.jaw.open()
+        self.arm.insert_jp(0.15)
 
         print_id('close and open with cartesian move command')
         input("    Press Enter to continue...")
@@ -95,11 +104,11 @@ class example_application:
         self.prepare_cartesian()
 
         initial_cartesian_position = PyKDL.Frame()
-        initial_cartesian_position.p = self.arm.get_desired_position().p
-        initial_cartesian_position.M = self.arm.get_desired_position().M
+        initial_cartesian_position.p = self.arm.setpoint_cp().p
+        initial_cartesian_position.M = self.arm.setpoint_cp().M
         goal = PyKDL.Frame()
-        goal.p = self.arm.get_desired_position().p
-        goal.M = self.arm.get_desired_position().M
+        goal.p = self.arm.setpoint_cp().p
+        goal.M = self.arm.setpoint_cp().M
 
         # motion parameters
         amplitude = 0.05 # 5 cm
@@ -107,14 +116,14 @@ class example_application:
         # first motion
         goal.p[0] =  initial_cartesian_position.p[0] - amplitude
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move(goal, blocking = False)
-        self.arm.close_jaw()
+        self.arm.move_cp(goal, blocking = False)
+        self.arm.jaw.close()
 
         # second motion
         goal.p[0] =  initial_cartesian_position.p[0] + amplitude
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move(goal, blocking = False)
-        self.arm.open_jaw()
+        self.arm.move_cp(goal, blocking = False)
+        self.arm.jaw.open()
 
 
     # goal jaw control example
@@ -123,7 +132,7 @@ class example_application:
         # try to open and close directly, needs interpolation
         print_id('close and open without other move command')
         input("    Press Enter to continue...")
-        self.arm.move_jaw(math.radians(30.0))
+        self.arm.jaw.move(math.radians(30.0))
         # assume we start at 30 the move +/- 30
         amplitude = math.radians(30.0)
         duration = 5  # seconds
@@ -132,7 +141,7 @@ class example_application:
         # create a new goal starting with current position
         for i in range(samples):
             goal = math.radians(30.0) + amplitude * math.sin(i * math.radians(360.0) / samples)
-            self.arm.move_jaw(goal, interpolate = False)
+            self.arm.jaw.servo_jp(goal, interpolate = False)
             rospy.sleep(1.0 / rate)
 
 
@@ -146,7 +155,7 @@ class example_application:
 
 if __name__ == '__main__':
     # ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
-    rospy.init_node('dvrk_arm_test')
+    rospy.init_node('dvrk_psm_test')
     # strip ros arguments
     argv = rospy.myargv(argv=sys.argv)
 
@@ -155,8 +164,10 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--arm', type=str, required=True,
                         choices=['PSM1', 'PSM2', 'PSM3'],
                         help = 'arm name corresponding to ROS topics without namespace.  Use __ns:= to specify the namespace')
+    parser.add_argument('-i', '--interval', type=float, default=0.01,
+                        help = 'expected interval in seconds between messages sent by the device')
     args = parser.parse_args(argv[1:]) # skip argv[0], script name
 
     application = example_application()
-    application.configure(args.arm)
+    application.configure(args.arm, args.interval)
     application.run()
