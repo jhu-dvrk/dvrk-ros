@@ -35,9 +35,9 @@ class psm(arm):
             "Close the tool jaw"
             return self.move_jp(numpy.array(math.radians(-20.0)), blocking)
 
-        def open(self, blocking = True):
+        def open(self, blocking = True, angle = math.radians(60.0)):
             "Close the tool jaw"
-            return self.move_jp(numpy.array(math.radians(60.0)), blocking)
+            return self.move_jp(numpy.array(angle), blocking)
 
 
     # initialize the robot

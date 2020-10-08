@@ -72,7 +72,7 @@ class example_application:
             self.arm.move_jp(goal, blocking = True)
 
     # goal jaw control example
-    def jaw_goal(self):
+    def jaw_move(self):
         print_id('starting jaw goal')
         # try to open and close with the cartesian part of the arm in different modes
         print_id('close and open without other move command')
@@ -127,12 +127,12 @@ class example_application:
 
 
     # goal jaw control example
-    def jaw_direct(self):
+    def jaw_servo(self):
         print_id('starting jaw direct')
         # try to open and close directly, needs interpolation
         print_id('close and open without other move command')
         input("    Press Enter to continue...")
-        self.arm.jaw.move(math.radians(30.0))
+        self.arm.jaw.open(angle = math.radians(30.0))
         # assume we start at 30 the move +/- 30
         amplitude = math.radians(30.0)
         duration = 5  # seconds
@@ -141,16 +141,16 @@ class example_application:
         # create a new goal starting with current position
         for i in range(samples):
             goal = math.radians(30.0) + amplitude * math.sin(i * math.radians(360.0) / samples)
-            self.arm.jaw.servo_jp(goal, interpolate = False)
+            self.arm.jaw.servo_jp(numpy.array(goal))
             rospy.sleep(1.0 / rate)
 
 
     # main method
     def run(self):
         self.home()
-        self.jaw_goal()
-        self.jaw_direct()
-        self.jaw_goal() # just to make sure we can transition back to trajectory mode
+        self.jaw_move()
+        self.jaw_servo()
+        self.jaw_move() # just to make sure we can transition back to trajectory mode
 
 
 if __name__ == '__main__':
