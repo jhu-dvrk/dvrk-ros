@@ -13,9 +13,6 @@
 
 __all__ = ["arm", "ecm", "mtm", "psm", "suj", "console", "teleop_psm"]
 
-# utils
-from .utils import utils
-
 # arm classes
 from .arm import arm
 from .ecm import ecm

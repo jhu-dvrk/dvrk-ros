@@ -31,13 +31,13 @@ class psm(arm):
             self.crtk.add_servo_jp()
             self.crtk.add_move_jp()
 
-        def close(self, blocking = True):
+        def close(self):
             "Close the tool jaw"
-            return self.move_jp(numpy.array(math.radians(-20.0)), blocking)
+            return self.move_jp(numpy.array(math.radians(-20.0)))
 
-        def open(self, blocking = True, angle = math.radians(60.0)):
+        def open(self, angle = math.radians(60.0)):
             "Close the tool jaw"
-            return self.move_jp(numpy.array(angle), blocking)
+            return self.move_jp(numpy.array(angle))
 
 
     # initialize the robot
@@ -53,11 +53,11 @@ class psm(arm):
 
         self._arm__pub_list.extend([self.__set_tool_present_pub])
 
-    def insert_jp(self, depth, blocking = True):
+    def insert_jp(self, depth):
         "insert the tool, by moving it to an absolute depth"
         goal = numpy.copy(self.setpoint_jp())
         goal[2] = depth
-        self.move_jp(goal, blocking)
+        self.move_jp(goal)
 
     def set_tool_present(self, tool_present):
         "Set tool inserted.  To be used only for custom tools that can't be detected automatically"

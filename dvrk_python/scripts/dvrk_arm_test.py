@@ -57,7 +57,8 @@ class example_application:
         if ((self.arm.name() == 'PSM1') or (self.arm.name() == 'PSM2')
             or (self.arm.name() == 'PSM3') or (self.arm.name() == 'ECM')):
             goal[2] = 0.12
-        self.arm.move_jp(goal, blocking = True)
+        self.arm.move_jp(goal)
+        self.arm.wait_while_busy()
 
 
     # direct joint control example
@@ -92,13 +93,16 @@ class example_application:
         # first motion
         goal[0] = initial_joint_position[0] + amplitude
         goal[1] = initial_joint_position[1] - amplitude
-        self.arm.move_jp(goal, blocking = True)
+        self.arm.move_jp(goal)
+        self.arm.wait_while_busy()
         # second motion
         goal[0] = initial_joint_position[0] - amplitude
         goal[1] = initial_joint_position[1] + amplitude
-        self.arm.move_jp(goal, blocking = True)
+        self.arm.move_jp(goal)
+        self.arm.wait_while_busy()
         # back to initial position
-        self.arm.move_jp(initial_joint_position, blocking = True)
+        self.arm.move_jp(initial_joint_position)
+        self.arm.wait_while_busy()
         print_id('move_jp complete')
 
     # utility to position tool/camera deep enough before cartesian examples
@@ -112,7 +116,8 @@ class example_application:
             goal[1] = 0.0
             goal[2] = 0.12
             goal[3] = 0.0
-            self.arm.move_jp(goal, blocking = True)
+            self.arm.move_jp(goal)
+            self.arm.wait_while_busy()
 
     # direct cartesian control example
     def servo_cp(self):
@@ -168,27 +173,33 @@ class example_application:
         # first motion
         goal.p[0] =  initial_cartesian_position.p[0] - amplitude
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move_cp(goal, blocking = True)
+        self.arm.move_cp(goal)
+        self.arm.wait_while_busy()
         # second motion
         goal.p[0] =  initial_cartesian_position.p[0] + amplitude
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move_cp(goal, blocking = True)
+        self.arm.move_cp(goal)
+        self.arm.wait_while_busy()
         # back to initial position
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move_cp(goal, blocking = True)
+        self.arm.move_cp(goal)
+        self.arm.wait_while_busy()
         # first motion
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1] - amplitude
-        self.arm.move_cp(goal, blocking = True)
+        self.arm.move_cp(goal)
+        self.arm.wait_while_busy()
         # second motion
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1] + amplitude
-        self.arm.move_cp(goal, blocking = True)
+        self.arm.move_cp(goal)
+        self.arm.wait_while_busy()
         # back to initial position
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move_cp(goal, blocking = True)
+        self.arm.move_cp(goal)
+        self.arm.wait_while_busy()
         print_id('move_cp complete')
 
     # main method
