@@ -23,6 +23,10 @@
     uri: https://github.com/jhu-saw/sawTextToSpeech
     version: devel
 - git:
+    local-name: cisst-saw/sawKeyboard
+    uri: https://github.com/jhu-saw/sawKeyboard
+    version: devel
+- git:
     local-name: crtk/crtk_msgs
     uri: https://github.com/collaborative-robotics/crtk_msgs
     version: master
