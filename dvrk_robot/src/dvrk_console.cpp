@@ -76,11 +76,6 @@ dvrk::console::console(const std::string & name,
                 bridge_interface_provided_mtm(name, "Arm",
                                               publish_rate_in_seconds, tf_rate_in_seconds);
                 break;
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
-                // standard CRTK
-                bridge_interface_provided(name, "Arm",
-                                          publish_rate_in_seconds, tf_rate_in_seconds);
-                break;
             case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
             case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
                 // custom dVRK
@@ -101,6 +96,14 @@ dvrk::console::console(const std::string & name,
                     add_topics_psm_io(name, armIter->second->mIOComponentName);
                 }
                 break;
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_GENERIC:
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_GENERIC:
+                // standard CRTK
+                bridge_interface_provided(armIter->second->ComponentName(),
+                                          armIter->second->InterfaceName(),
+                                          publish_rate_in_seconds, tf_rate_in_seconds);
+                break;
             case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
                 {
                     const auto _sujs = std::list<std::string>({"PSM1", "PSM2", "PSM3", "ECM"});
@@ -118,7 +121,6 @@ dvrk::console::console(const std::string & name,
             }
         }
     }
-
 
     // ECM teleop
     if (m_console->mTeleopECM) {
