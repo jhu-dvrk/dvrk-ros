@@ -30,6 +30,7 @@ class psm(arm):
             self.crtk.add_setpoint_js()
             self.crtk.add_servo_jp()
             self.crtk.add_move_jp()
+            self.crtk.add_servo_jf()
 
         def close(self):
             "Close the tool jaw"
@@ -57,10 +58,10 @@ class psm(arm):
         "insert the tool, by moving it to an absolute depth"
         goal = numpy.copy(self.setpoint_jp())
         goal[2] = depth
-        self.move_jp(goal)
+        return self.move_jp(goal)
 
     def set_tool_present(self, tool_present):
         "Set tool inserted.  To be used only for custom tools that can't be detected automatically"
-        ti = Bool()
-        ti.data = tool_present
-        self.__set_tool_present_pub.publish(ti)
+        tp = Bool()
+        tp.data = tool_present
+        self.__set_tool_present_pub.publish(tp)

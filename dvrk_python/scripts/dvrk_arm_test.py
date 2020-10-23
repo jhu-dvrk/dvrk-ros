@@ -22,6 +22,7 @@
 import dvrk
 import math
 import sys
+import time
 import rospy
 import numpy
 import PyKDL
@@ -57,9 +58,15 @@ class example_application:
         if ((self.arm.name() == 'PSM1') or (self.arm.name() == 'PSM2')
             or (self.arm.name() == 'PSM3') or (self.arm.name() == 'ECM')):
             goal[2] = 0.12
-        self.arm.move_jp(goal)
-        self.arm.wait_while_busy()
-
+        # move and wait
+        print_id('moving to starting position')
+        self.arm.wait_while_busy(self.arm.move_jp(goal))
+        # try to move again to make sure waiting is working fine, i.e. not blocking
+        print_id('testing move to current position')
+        ts = self.arm.move_jp(goal)
+        time.sleep(1.0) # add some artificial latency on this side
+        self.arm.wait_while_busy(start_time = ts)
+        print_id('home complete')
 
     # direct joint control example
     def servo_jp(self):
@@ -93,16 +100,13 @@ class example_application:
         # first motion
         goal[0] = initial_joint_position[0] + amplitude
         goal[1] = initial_joint_position[1] - amplitude
-        self.arm.move_jp(goal)
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.move_jp(goal))
         # second motion
         goal[0] = initial_joint_position[0] - amplitude
         goal[1] = initial_joint_position[1] + amplitude
-        self.arm.move_jp(goal)
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.move_jp(goal))
         # back to initial position
-        self.arm.move_jp(initial_joint_position)
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.move_jp(initial_joint_position))
         print_id('move_jp complete')
 
     # utility to position tool/camera deep enough before cartesian examples
@@ -116,8 +120,7 @@ class example_application:
             goal[1] = 0.0
             goal[2] = 0.12
             goal[3] = 0.0
-            self.arm.move_jp(goal)
-            self.arm.wait_while_busy()
+            self.arm.wait_while_busy(self.arm.move_jp(goal))
 
     # direct cartesian control example
     def servo_cp(self):
@@ -173,33 +176,27 @@ class example_application:
         # first motion
         goal.p[0] =  initial_cartesian_position.p[0] - amplitude
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move_cp(goal)
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.move_cp(goal))
         # second motion
         goal.p[0] =  initial_cartesian_position.p[0] + amplitude
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move_cp(goal)
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.move_cp(goal))
         # back to initial position
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move_cp(goal)
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.move_cp(goal))
         # first motion
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1] - amplitude
-        self.arm.move_cp(goal)
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.move_cp(goal))
         # second motion
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1] + amplitude
-        self.arm.move_cp(goal)
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.move_cp(goal))
         # back to initial position
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1]
-        self.arm.move_cp(goal)
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.move_cp(goal))
         print_id('move_cp complete')
 
     # main method

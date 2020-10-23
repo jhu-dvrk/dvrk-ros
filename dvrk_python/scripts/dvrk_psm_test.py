@@ -58,8 +58,7 @@ class example_application:
         # go to zero position, make sure 3rd joint is past cannula
         goal.fill(0)
         goal[2] = 0.12
-        self.arm.move_jp(goal)
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.move_jp(goal))
 
     # utility to position tool/camera deep enough before cartesian examples
     def prepare_cartesian(self):
@@ -70,8 +69,8 @@ class example_application:
             goal[0] = 0.0
             goal[1] = 0.0
             goal[2] = 0.12
-            self.arm.move_jp(goal)
-            self.arm.wait_while_busy()
+            self.arm.wait_while_busy(self.arm.move_jp(goal))
+
 
     # goal jaw control example
     def jaw_move(self):
@@ -80,36 +79,28 @@ class example_application:
         print_id('close and open without other move command')
         input("    Press Enter to continue...")
         print_id('closing (1)')
-        self.arm.jaw.close()
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.jaw.close())
         print_id('opening (2)')
-        self.arm.jaw.open()
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.jaw.open())
         print_id('closing (3)')
-        self.arm.jaw.close()
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.jaw.close())
         print_id('opening (4)')
-        self.arm.jaw.open()
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.jaw.open())
         # try to open and close with a joint goal
         print_id('close and open with joint move command')
         input("    Press Enter to continue...")
         print_id('closing and moving up (1)')
         self.arm.jaw.close()
-        self.arm.insert_jp(0.1)
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.insert_jp(0.1))
         print_id('opening and moving down (2)')
         self.arm.jaw.open()
-        self.arm.insert_jp(0.15)
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.insert_jp(0.15))
         print_id('closing and moving up (3)')
         self.arm.jaw.close()
-        self.arm.insert_jp(0.1)
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.insert_jp(0.1))
         print_id('opening and moving down (4)')
         self.arm.jaw.open()
-        self.arm.insert_jp(0.15)
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.insert_jp(0.15))
 
         print_id('close and open with cartesian move command')
         input("    Press Enter to continue...")
@@ -132,23 +123,20 @@ class example_application:
         goal.p[1] =  initial_cartesian_position.p[1]
         print_id('closing and moving right (1)')
         self.arm.move_cp(goal)
-        self.arm.jaw.close()
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.jaw.close())
 
         # second motion
         goal.p[0] =  initial_cartesian_position.p[0] + amplitude
         goal.p[1] =  initial_cartesian_position.p[1]
         print_id('opening and moving left (1)')
         self.arm.move_cp(goal)
-        self.arm.jaw.open()
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.jaw.open())
 
         # back to starting point
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1]
         print_id('moving back (3)')
-        self.arm.move_cp(goal)
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.move_cp(goal))
 
 
     # goal jaw control example
@@ -157,8 +145,7 @@ class example_application:
         # try to open and close directly, needs interpolation
         print_id('close and open without other move command')
         input("    Press Enter to continue...")
-        self.arm.jaw.open(angle = math.radians(30.0))
-        self.arm.wait_while_busy()
+        self.arm.wait_while_busy(self.arm.jaw.open(angle = math.radians(30.0)))
         # assume we start at 30 the move +/- 30
         amplitude = math.radians(30.0)
         duration = 20  # seconds
