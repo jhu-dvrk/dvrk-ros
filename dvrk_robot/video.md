@@ -1,7 +1,7 @@
 Video pipeline
 ==============
 
-This describes a fairly low cost setup that can be used with the dVRK HRSV display (High Resolution Stereo Video).  We use a couple of cheap USB frame grabbers (Hauppage Live 2) for the analog videos from SD cameras.   For HD systems, we tested a BlackMagic DeckLink Duo frame grabber with dual SDI inputs.   For displaying the video back, we just use a graphic card with two spare video outputs.  The software relies heavily on ROS tools to grab and display the stereo video.  Some lag is to be expected.
+This describes a fairly low cost setup that can be used with the dVRK HRSV display (High Resolution Stereo Video).  We use a couple of cheap USB frame grabbers (Hauppage Live 2) for the analog videos from SD cameras.   For HD systems, we tested a BlackMagic DeckLink Duo frame grabber with dual SDI inputs (see also the dVRK video pipeline page for the hardware setup: https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki/Video-Pipeline).  For displaying the video back, we just use a graphic card with two spare video outputs.  The software relies heavily on ROS tools to grab and display the stereo video.  Some lag is to be expected.
 
 The general steps are:
  * Make sure the frame grabber works (e.g. using tvtime or vendor application)
