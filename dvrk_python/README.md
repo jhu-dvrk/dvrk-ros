@@ -1,5 +1,7 @@
 ## Introduction
 
+The dVRK Python package is based on the CRTK Python ROS client library: https://github.com/collaborative-robotics/crtk_python_client.  The API is following the CRTK conventions: https://github.com/collaborative-robotics/documentation/wiki/Robot-API-motion.
+
 This directory contains:
 * dvrk_python module.  This modules defines the class `robot` which uses the dVRK ROS topics to communicate with the `dvrk_console_json` application included in the `dvrk_robot` ROS package.
 * tutorial examples.  Python scripts using the `dvrk_python` module.
@@ -13,7 +15,8 @@ The `dvrk_python` package is included in the `dvrk_ros` git repository.  Please 
 The dVRK Python ROS client now relies on CRTK so you will also need the following packages:
 * https://github.com/collaborative-robotics/crtk_msgs
 * https://github.com/collaborative-robotics/crtk_python_client
-If you followed the dVRK build instructions above, these packages are likely already installed in your workspace
+
+If you followed the dVRK build instructions above, these CRTK packages are likely already installed in your workspace
 
 ## Runtime
 
@@ -36,6 +39,7 @@ import dvrk
 p = dvrk.psm('PSM1')
 
 # You can home from Python
+p.enable()
 p.home()
 
 # retrieve current info (numpy.array)
@@ -61,17 +65,18 @@ p.move_jp(numpy.array([0.0, 0.0, 0.10, 0.0, 0.0, 0.0]))
 
 # move in cartesian space
 import PyKDL
-p.move_cp(PyKDL.Vector(0.0, 0.0, -0.05))
-
-# save current orientation
-old_orientation = p.setpoint_cp().M
+# start position
+goal = p.setpoint_cp()
+# move 5cm in z direction
+goal.p[2] += 0.05
+p.wait_while_busy(p.move_cp(goal))
 
 import math
-r = PyKDL.Rotation()
-r.DoRotX(math.pi * 0.25)
-p.dmove(r)
-
-p.move(old_orientation)
+# start position
+goal = p.setpoint_cp()
+# rotate tool tip frame by 25 degrees
+goal.M.DoRotX(math.pi * 0.25) 
+p.wait_while_busy(p.move_cp(goal))
 ```
 
 To apply wrenches on MTMs, start ipython and type the following commands while holding the MTM (otherwise the arm will start moving and might bang itself against the console and get damaged).
