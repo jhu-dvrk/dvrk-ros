@@ -18,6 +18,8 @@ classdef arm < dynamicprops
 
         function self = arm(ros_namespace)
             self.crtk_utils = crtk_utils(self, ros_namespace);
+            % operating state
+	    self.crtk_utils.add_operating_state();
             % joint space
             self.crtk_utils.add_measured_js();
             self.crtk_utils.add_setpoint_js();
@@ -34,9 +36,9 @@ classdef arm < dynamicprops
             self.crtk_utils.add_spatial_servo_cf();
             self.crtk_utils.add_move_cp();
         end
-        
+
         function delete(self)
-           delete(self.crtk_utils); 
+           delete(self.crtk_utils);
         end
 
     end % methods
