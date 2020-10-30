@@ -12,14 +12,20 @@ classdef arm < dynamicprops
     % values set by this class, can be read by others
     properties (Access = private)
         crtk_utils;
+        ros_namespace;
     end
 
     methods
 
+        function [name] = name(self)
+            name = self.ros_namespace;
+        end
+
         function self = arm(ros_namespace)
-            self.crtk_utils = crtk_utils(self, ros_namespace);
+            self.ros_namespace = ros_namespace;
+            self.crtk_utils = crtk.utils(self, ros_namespace);
             % operating state
-	    self.crtk_utils.add_operating_state();
+	        self.crtk_utils.add_operating_state();
             % joint space
             self.crtk_utils.add_measured_js();
             self.crtk_utils.add_setpoint_js();

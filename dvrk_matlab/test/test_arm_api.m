@@ -1,21 +1,33 @@
 % call methods to make sure they exist and don't trigger syntax errors
 function test_arm_api(arm_name)
-    addpath('..')
-    r = arm(arm_name);
-    disp('---- Homing')
-    r.home()
-    disp('---- Desired cartesian');
-    [p, t] = r.get_position_desired()
-    [p, t] = r.get_position_local_desired()
-    disp('---- Desired joint');
-    [p, v, e, t] = r.get_state_joint_desired()
-    disp('---- Current cartesian');
-    [p, t] = r.get_position_current()
-    [p, t] = r.get_position_local_current()
-    disp('---- Current joint');
-    [p, v, e, t] = r.get_state_joint_current()
-    disp('---- Current twist')
-    [v, t] = r.get_twist_body_current()
-    disp('---- Current wrench')
-    [e, t] = r.get_wrench_current()
+    try
+        rosnode list
+    catch
+        rosinit
+    end
+    r = dvrk.arm(arm_name);
+    disp('---- Enabling (waiting up to 30s)')
+    if ~r.enable(30.0)
+        error('Unable to enable arm');
+    end
+    disp('---- Homing (waiting up to 30s)')
+    if ~r.home(30.0)
+        error('Unable to home arm');
+    end
+    disp('---- Setpoint cartesian');
+    [p, t] = r.setpoint_cp()
+    disp('---- Setpoint joint');
+    [p, v, e, t] = r.setpoint_js()
+    disp('---- Measured cartesian');
+    [p, t] = r.measured_cp()
+    disp('---- Measured joint');
+    [p, v, e, t] = r.measured_js()
+    disp('---- Measured twist')
+    [v, t] = r.measured_cv()
+    disp('---- Measured wrench')
+    %[e, t] = r.measured_cf()
+    
+    % don't forget to cleanup
+    disp('---- Delete arm class')
+    delete(r)
 end

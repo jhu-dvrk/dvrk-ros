@@ -1,100 +1,100 @@
 % call methods to make sure they exist and don't trigger syntax errors
 % this test program will make the arm move!
 function test_arm_move(arm_name)
-    addpath('..');
-    r = arm(arm_name);
-
-    disp('---- Homing');
-    r.home();
-
-    %%%% for direct moves
+    try
+        rosnode list
+    catch
+        rosinit
+    end
+    r = dvrk.arm(arm_name);
+    disp('---- Enabling (waiting up to 30s)')
+    if ~r.enable(30.0)
+        error('Unable to enable arm');
+    end
+    disp('---- Homing (waiting up to 30s)')
+    if ~r.home(30.0)
+        error('Unable to home arm');
+    end
+    
+    % general settings
     rate = 200; % aiming for 200 Hz
     ros_rate = rosrate(rate);
 
-    %%%% joint position move
-    disp('---- Joint goal move');
+    % move_jp
+    disp('---- Joint move');
     % move to 0 position
-    p = r.get_state_joint_desired();
-    joints_home = p;
+    joints_home = r.setpoint_js();
     joints_home(:) = 0.0;
     if (strcmp(arm_name, 'ECM') || strncmp(arm_name, 'PSM', 3))
         joints_home(3) = 0.12;
     end
-    r.move_joint(joints_home);
+    r.wait_while_busy(r.move_jp(joints_home));
     % wiggle first two joints, matlab index starts at 1
     amplitude = deg2rad(5.0);
     % first move
-    goal = joints_home;
+    start = r.setpoint_js();
+    goal = start;
     goal(1:2) = amplitude;
-    r.move_joint(goal);
+    r.wait_while_busy(r.move_jp(goal));
     % second move
-    goal = joints_home;
+    goal = start;
     goal(1:2) = -amplitude;
-    r.move_joint(goal);
-    % back home
-    r.move_joint(joints_home);
+    r.wait_while_busy(r.move_jp(goal));
 
-    disp('---- Joint direct move');
+    disp('---- Joint servo');
     % move to 0 position
-    p = r.get_state_joint_desired();
-    joints_home = p;
-    joints_home(:) = 0.0;
-    r.move_joint(joints_home);
+    r.wait_while_busy(r.move_jp(joints_home));
     % wiggle first two joints, matlab index starts at 1
     amplitude = deg2rad(10.0);
     duration = 10.0; % seconds
     samples = duration * rate;
     % create a new goal starting with current position
-    goal = p;
+    start = r.setpoint_js();
+    goal = start;
     reset(ros_rate);
     for i = 0:samples
-    	goal(1) = p(1) + amplitude *  sin(i * deg2rad(360.0) / samples);
-        goal(2) = p(2) + amplitude *  sin(i * deg2rad(360.0) / samples);
-        r.move_joint(goal, false); % false -> do not interpolate
+    	goal(1) = start(1) + amplitude *  sin(i * deg2rad(360.0) / samples);
+        goal(2) = start(2) + amplitude *  sin(i * deg2rad(360.0) / samples);
+        r.servo_jp(goal);
         waitfor(ros_rate);
     end
 
-    %%%% cartesian position move
-    disp('---- Cartesian goal move');
-    % make sure tool tip is past RCM on ECM and PSMs
-    n = r.robot_name;
-    if (strcmp(n, 'ECM') || strncmp(n, 'PSM', 3))
-        goal = joints_home;
-        goal(3) = 0.12;
-        r.move_joint(goal);
-    end
-    cartesian_home = r.get_position_desired();
+    % move_cp
+    disp('---- Cartesian move');
+    % move to 0 position
+    r.wait_while_busy(r.move_jp(goal));
+    % start from current position
+    start = r.setpoint_cp();
     amplitude = 0.03; % 3 cm
     % first move
-    goal = cartesian_home;
+    goal = start;
     goal(1:2, 4) = goal(1:2, 4) + amplitude;
-    r.move(goal);
+    r.wait_while_busy(r.move_cp(goal));
     % second move
-    goal = cartesian_home;
+    goal = start;
     goal(1:2, 4) = goal(1:2, 4) - amplitude;
-    r.move(goal);
-    % first move
-    r.move(cartesian_home);
+    r.wait_while_busy(r.move_cp(goal));
+    % third move
+    r.wait_while_busy(r.move_cp(start));
 
-    disp('---- Cartesian direct move');
-    % make sure tool tip is past RCM on ECM and PSMs
-    n = r.robot_name;
-    if (strcmp(n, 'ECM') || strncmp(n, 'PSM', 3))
-        goal = joints_home;
-        goal(3) = 0.12;
-        r.move_joint(goal);
-    end
+    disp('---- Cartesian servo');
+     % move to 0 position
+    r.wait_while_busy(r.move_jp(joints_home));
+    % more around a point
     amplitude = 0.03; % 3 cm
     duration = 10.0; % seconds
     samples = duration * rate;
     % create a new goal starting with current position
-    p = r.get_position_desired();
-    goal = p;
+    start = r.setpoint_cp();
+    goal = start;
     reset(ros_rate);
     for i = 0:samples
-    	goal(1:2, 4) = p(1:2, 4) + amplitude *  sin(i * deg2rad(360.0) / samples);
-        r.move(goal, false); % false -> do not interpolate
+    	goal(1:2, 4) = start(1:2, 4) + amplitude *  sin(i * deg2rad(360.0) / samples);
+        r.servo_cp(goal);
         waitfor(ros_rate);
     end
 
+    % don't forget to cleanup
+    disp('---- Delete arm class')
+    delete(r)
 end
