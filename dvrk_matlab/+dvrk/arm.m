@@ -10,9 +10,11 @@ classdef arm < dynamicprops
     % Naming convention follows CRTK conventions
 
     % values set by this class, can be read by others
-    properties (Access = private)
+    properties (SetAccess = protected)
         crtk_utils;
         ros_namespace;
+        body;
+        spatial;
     end
 
     methods
@@ -21,9 +23,11 @@ classdef arm < dynamicprops
             name = self.ros_namespace;
         end
 
-        function self = arm(ros_namespace)
-            self.ros_namespace = ros_namespace;
-            self.crtk_utils = crtk.utils(self, ros_namespace);
+        function self = arm(name)
+            self.ros_namespace = name;
+            self.crtk_utils = crtk.utils(self, name);
+            self.body = dvrk.arm_cf(strcat(name, '/body'));
+            self.spatial = dvrk.arm_cf(strcat(name, '/spatial'));
             % operating state
 	        self.crtk_utils.add_operating_state();
             % joint space
@@ -35,11 +39,11 @@ classdef arm < dynamicprops
             % cartesian space
             self.crtk_utils.add_measured_cp();
             self.crtk_utils.add_measured_cv();
-            self.crtk_utils.add_body_measured_cf();
+            self.crtk_utils.add_measured_cf();
             self.crtk_utils.add_setpoint_cp();
             self.crtk_utils.add_setpoint_cf();
             self.crtk_utils.add_servo_cp();
-            self.crtk_utils.add_spatial_servo_cf();
+            self.crtk_utils.add_servo_cf();
             self.crtk_utils.add_move_cp();
         end
 

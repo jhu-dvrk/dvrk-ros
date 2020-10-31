@@ -3,8 +3,8 @@ classdef mtm < arm
 
     % only this class methods can view/modify
     properties (SetAccess = private)
-        % subscribers
-        state_gripper_current_subscriber;
+        % gripper
+        gripper;
         % publishers
         lock_orientation_publisher;
         unlock_orientation_publisher;
@@ -17,18 +17,13 @@ classdef mtm < arm
 
         function self = mtm(name)
             self@arm(name);
-
-            % ----------- subscribers
-            % state gripper current
-            topic = strcat(self.ros_name, '/state_gripper_current');
-            self.state_gripper_current_subscriber = ...
-                rossubscriber(topic, rostype.sensor_msgs_JointState);
+            self.gripper = dvrk.mtm_gripper(strcat(name, '/gripper'));
 
             % ----------- publishers
-            topic = strcat(self.ros_name, '/lock_orientation');
+            topic = strcat(self.ros_namespace, '/lock_orientation');
             self.lock_orientation_publisher = rospublisher(topic, ...
                                                            rostype.geometry_msgs_Quaternion);
-            topic = strcat(self.ros_name, '/unlock_orientation');
+            topic = strcat(self.ros_namespace, '/unlock_orientation');
             self.unlock_orientation_publisher = rospublisher(topic, ...
                                                              rostype.std_msgs_Empty);
 
@@ -37,24 +32,12 @@ classdef mtm < arm
             self.geometry_msgs_Quaternion = rosmessage(rostype.geometry_msgs_Quaternion);
         end
 
-
-        function [position, velocity, effort, timestamp] = get_state_gripper_current(self)
-            % Accessor used to retrieve the last current gripper position/effort
-            position = self.state_gripper_current_subscriber.LatestMessage.Position;
-            velocity = self.state_gripper_current_subscriber.LatestMessage.Velocity;
-            effort = self.state_gripper_current_subscriber.LatestMessage.Effort;
-            timestamp = self.ros_time_to_secs(self.state_gripper_current_subscriber.LatestMessage.Header.Stamp);
-        end
-
-
         function result = lock_orientation_as_is(self)
             position_current = self.get_position_current();
             current_orientation = position_current(1:3,1:3);
             self.lock_orientation(current_orientation);
             result = true;
         end
-
-
 
         function result = lock_orientation(self, ...
                                            orientation_matrix)
@@ -92,8 +75,6 @@ classdef mtm < arm
                  self.geometry_msgs_Quaternion);
             result = true;
         end
-
-
 
         function result = unlock_orientation(self)
             % send message (empty)

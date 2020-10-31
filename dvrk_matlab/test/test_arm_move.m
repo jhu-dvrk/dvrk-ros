@@ -66,7 +66,7 @@ function test_arm_move(arm_name)
     % start from current position
     start = r.setpoint_cp();
     amplitude = 0.03; % 3 cm
-    % first move
+    % first move, translation is 4th column, x and y are element 1:2
     goal = start;
     goal(1:2, 4) = goal(1:2, 4) + amplitude;
     r.wait_while_busy(r.move_cp(goal));
@@ -80,7 +80,7 @@ function test_arm_move(arm_name)
     disp('---- Cartesian servo');
      % move to 0 position
     r.wait_while_busy(r.move_jp(joints_home));
-    % more around a point
+    % move in diagonal around a point
     amplitude = 0.03; % 3 cm
     duration = 10.0; % seconds
     samples = duration * rate;
@@ -89,6 +89,7 @@ function test_arm_move(arm_name)
     goal = start;
     reset(ros_rate);
     for i = 0:samples
+        % translation is 4th column, x and y are element 1:2
     	goal(1:2, 4) = start(1:2, 4) + amplitude *  sin(i * deg2rad(360.0) / samples);
         r.servo_cp(goal);
         waitfor(ros_rate);

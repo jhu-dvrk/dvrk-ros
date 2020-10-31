@@ -24,8 +24,10 @@ function test_arm_api(arm_name)
     [p, v, e, t] = r.measured_js()
     disp('---- Measured twist')
     [v, t] = r.measured_cv()
-    disp('---- Measured wrench')
-    %[e, t] = r.measured_cf()
+    disp('---- Measured body wrench')
+    [e, t] = r.body.measured_cf()
+    disp('---- Measured spatial wrench')
+    [e, t] = r.spatial.measured_cf()
     
     % don't forget to cleanup
     disp('---- Delete arm class')
