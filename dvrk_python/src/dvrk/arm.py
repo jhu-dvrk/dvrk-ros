@@ -42,10 +42,11 @@ class arm(object):
     """Simple arm API wrapping around ROS messages
     """
 
-    # class to contain jaw methods
-    class ServoCf:
+    # class to contain spatial/body cf methods
+    class MeasuredServoCf:
         def __init__(self, ros_namespace, expected_interval):
             self.crtk = crtk.utils(self, ros_namespace)
+            self.crtk.add_measured_cf()
             self.crtk.add_servo_cf()
 
     # initialize the arm
@@ -75,15 +76,14 @@ class arm(object):
         self.__crtk_utils.add_measured_js()
         self.__crtk_utils.add_measured_cp()
         self.__crtk_utils.add_measured_cv()
-        self.__crtk_utils.add_measured_cf()
         self.__crtk_utils.add_servo_jp()
         self.__crtk_utils.add_servo_cp()
         self.__crtk_utils.add_servo_jf()
         self.__crtk_utils.add_move_jp()
         self.__crtk_utils.add_move_cp()
 
-        self.spatial = self.ServoCf(self.__full_ros_namespace + '/spatial', expected_interval)
-        self.body = self.ServoCf(self.__full_ros_namespace + '/body', expected_interval)
+        self.spatial = self.MeasuredServoCf(self.__full_ros_namespace + '/spatial', expected_interval)
+        self.body = self.MeasuredServoCf(self.__full_ros_namespace + '/body', expected_interval)
 
         # continuous publish from dvrk_bridge
         self.__jacobian_spatial = numpy.ndarray(0, dtype = numpy.float)
