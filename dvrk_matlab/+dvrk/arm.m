@@ -44,8 +44,10 @@ classdef arm < dynamicprops
             self.crtk_utils.add_measured_js();
             self.crtk_utils.add_setpoint_js();
             self.crtk_utils.add_servo_jp();
+            self.crtk_utils.add_servo_jr();
             self.crtk_utils.add_servo_jf();
             self.crtk_utils.add_move_jp();
+            self.crtk_utils.add_move_jr();
             % cartesian space
             self.crtk_utils.add_measured_cp();
             self.crtk_utils.add_measured_cv();

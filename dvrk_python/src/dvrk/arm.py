@@ -77,9 +77,11 @@ class arm(object):
         self.__crtk_utils.add_measured_cp()
         self.__crtk_utils.add_measured_cv()
         self.__crtk_utils.add_servo_jp()
+        self.__crtk_utils.add_servo_jr()
         self.__crtk_utils.add_servo_cp()
         self.__crtk_utils.add_servo_jf()
         self.__crtk_utils.add_move_jp()
+        self.__crtk_utils.add_move_jr()
         self.__crtk_utils.add_move_cp()
 
         self.spatial = self.MeasuredServoCf(self.__full_ros_namespace + '/spatial', expected_interval)
