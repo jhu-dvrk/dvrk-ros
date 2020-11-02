@@ -1,4 +1,4 @@
-classdef mtm_gripper < dynamicprops
+classdef arm_local < dynamicprops
     properties (Access = protected)
         crtk_utils;
         ros_namespace;
@@ -6,10 +6,11 @@ classdef mtm_gripper < dynamicprops
 
     methods
 
-        function self = mtm_gripper(name)
+        function self = arm_local(name)
             self.ros_namespace = name;
             self.crtk_utils = crtk.utils(self, name);
-            self.crtk_utils.add_measured_js();
+            self.crtk_utils.add_measured_cp();
+            self.crtk_utils.add_setpoint_cp();
         end
 
         function delete(self)

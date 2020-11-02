@@ -108,6 +108,6 @@ classdef console < handle
             send(self.teleop_set_scale_publisher, message);
         end
 
-    end % methods
+    end
 
-end % class
+end

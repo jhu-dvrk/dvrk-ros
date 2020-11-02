@@ -2,15 +2,17 @@ classdef mtm < dvrk.arm
     % Class for MTM specific features
 
     % only this class methods can view/modify
-    properties (SetAccess = private)
-        % gripper
-        gripper;
+    properties (Access = protected)
         % publishers
         lock_orientation_publisher;
         unlock_orientation_publisher;
         % message placeholder
         geometry_msgs_Quaternion = rostype.geometry_msgs_Quaternion;
         std_msgs_Empty = rostype.std_msgs_Empty;
+    end
+
+    properties (SetAccess = immutable)
+        gripper;
     end
 
     methods
@@ -29,6 +31,10 @@ classdef mtm < dvrk.arm
             % one time creation of messages to prevent lookup and creation at each call
             self.std_msgs_Empty = rosmessage(rostype.std_msgs_Empty);
             self.geometry_msgs_Quaternion = rosmessage(rostype.geometry_msgs_Quaternion);
+        end
+
+        function delete(self)
+            delete(self.gripper);
         end
 
         function result = lock_orientation_as_is(self)

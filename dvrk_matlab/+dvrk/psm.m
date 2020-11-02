@@ -1,10 +1,13 @@
 classdef psm < dvrk.arm
     % Class for PSM specific features
     % only this class methods can view/modify
-    properties (SetAccess = protected)
-        jaw;
+    properties (Access = protected)
         % publishers
         tool_present_publisher;
+    end
+
+    properties (SetAccess = immutable)
+        jaw;
     end
 
     methods
@@ -15,6 +18,10 @@ classdef psm < dvrk.arm
             % ----------- publishers
             topic = strcat(self.ros_namespace, '/set_tool_present');
             self.tool_present_publisher = rospublisher(topic, rostype.std_msgs_Bool);
+        end
+
+        function delete(self)
+            delete(self.jaw);
         end
 
         function [time] = insert_jp(self, depth)
@@ -32,6 +39,6 @@ classdef psm < dvrk.arm
             result = true;
         end
 
-    end % methods
+    end
 
-end % class
+end

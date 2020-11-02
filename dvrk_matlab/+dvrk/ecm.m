@@ -12,6 +12,6 @@ classdef ecm < dvrk.arm
             time =  self.move_jp(p);
         end
 
-    end % methods
+    end
 
-end % class
+end

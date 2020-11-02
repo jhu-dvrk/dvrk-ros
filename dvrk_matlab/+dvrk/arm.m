@@ -1,5 +1,5 @@
 classdef arm < dynamicprops
-    % Class used to interface with ROS dVRK console topics and convert to useful
+    % Class used to interface with ROS dVRK arm topics and convert to useful
     % Matlab commands and properties.  To create a robot interface:
     %   r = arm('PSM1');
     %   r
@@ -10,16 +10,20 @@ classdef arm < dynamicprops
     % Naming convention follows CRTK conventions
 
     % values set by this class, can be read by others
-    properties (SetAccess = protected)
+    properties (Access = protected)
         crtk_utils;
         ros_namespace;
-        body;
-        spatial;
         % publishers
         wrench_body_orientation_absolute_publisher;
         gravity_compensation_publisher;
         % message placeholders
         std_msgs_Bool;
+    end
+
+    properties (SetAccess = immutable)
+        body;
+        spatial;
+        local;
     end
 
     methods
@@ -33,6 +37,7 @@ classdef arm < dynamicprops
             self.crtk_utils = crtk.utils(self, name);
             self.body = dvrk.arm_cf(strcat(name, '/body'));
             self.spatial = dvrk.arm_cf(strcat(name, '/spatial'));
+            self.local = dvrk.arm_local(strcat(name, '/local'));
             % operating state
             self.crtk_utils.add_operating_state();
             % joint space
@@ -62,7 +67,10 @@ classdef arm < dynamicprops
         end
 
         function delete(self)
-           delete(self.crtk_utils);
+            delete(self.crtk_utils);
+            delete(self.body);
+            delete(self.spatial);
+            delete(self.local);
         end
 
         function result = set_wrench_body_orientation_absolute(self, absolute)
@@ -81,5 +89,6 @@ classdef arm < dynamicprops
             result = true;
         end
 
-    end % methods
-end % class
+    end
+
+end

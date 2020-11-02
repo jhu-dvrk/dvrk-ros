@@ -6,9 +6,9 @@ classdef arm_cf < dynamicprops
 
     methods
 
-        function self = arm_cf(ros_namespace)
-            self.ros_namespace = ros_namespace;
-            self.crtk_utils = crtk.utils(self, ros_namespace);
+        function self = arm_cf(name)
+            self.ros_namespace = name;
+            self.crtk_utils = crtk.utils(self, name);
             self.crtk_utils.add_measured_cf();
             self.crtk_utils.add_servo_cf();
         end
@@ -17,5 +17,6 @@ classdef arm_cf < dynamicprops
             delete(self.crtk_utils);
         end
 
-    end % methods
-end % class arm_cf
+    end
+
+end
