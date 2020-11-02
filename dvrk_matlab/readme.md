@@ -1,37 +1,19 @@
 Matlab interface for the dVRK ROS topics
 ========================================
 
-Interface class used to subscribe and publish to the dVRK (da Vinci
-Research Kit) ROS topics.  To use this class, one must first start the
-cisst/SAW based C++ controller with the ROS interfaces.
+Interface class used to subscribe and publish to the dVRK (da Vinci Research Kit) ROS topics.  To use this class, one must first start the cisst/SAW based C++ controller with the ROS interfaces.
 
-See in `dvrk-ros` (on github: https://github.com/jhu-dvrk/dvrk-ros),
-package `dvrk_robot`, application `dvrk_console_json`.  To compile and
-install dvrk-ros, see
-https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki/CatkinBuild
+See in `dvrk-ros` (on github: https://github.com/jhu-dvrk/dvrk-ros), package `dvrk_robot`, application `dvrk_console_json`.  To compile and
+install dvrk-ros, see https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki/CatkinBuild.
 
-The file `arm.m` contains the matlab interface to the dVRK ROS topics.
-It also handles data conversion from ROS messages (Poses to 4x4
-homogeneous transformations) as well as timer based wait for blocking
-commands (i.e. wait for state transitions and end of trajectories).
+To configure your Matlab path and make sure the CRTK custom messages support is all set, please read [CRTK Matlab client README](https://github.com/collaborative-robotics/crtk_matlab_client).
+
+The class `dvrk.arm` contains the matlab interface to the dVRK ROS topics.  It also handles data conversion from ROS messages (Poses to 4x4 homogeneous transformations) as well as timer based wait for blocking commands (i.e. wait for state transitions and end of trajectories).
 
 Warning
 =======
 
-Matlab multithreading support is not fantastic.  These wrappers use
-callbacks assuming that at one point or another Matlab will dequeue
-the ROS messages.  This is unfortunately not the case if you hog the
-CPU using a loop and perform continuous computations.  So if you have
-a loop, make sure you add plenty of sleep/pause so the ROS
-callbacks get called.
-
-Even worse, if you create your own ROS subscribers and use the
-`receive` command, this messes up with the callback since it is a
-blocking command.
-
-We don't have a good fix for now, if you find some tricks or even
-better a proper fix to improve the situation please let us know using
-either the github issues or the dVRK google group.
+The default classes in the dVRK Matlab package subscribe to all the dVRK topics we can subscribe to.  This is convenient to test your code or use in an interactive shell.  For a user application, it is recommended to create your own `arm` class and only add the features you need.  This will reduce the amount of network messages and computing load on both sides (dVRK and Matlab).  You should likely copy the file `+dvrk/arm.m` and remove the features you don't need.
 
 Usage
 =====
@@ -39,24 +21,23 @@ Usage
 You will need Matlab 2015a or higher with the Robotic System Toolbox: http://www.mathworks.com/products/robotics/.  To test on Matlab on the same computer:
  * Start the application `dvrk_console_json` or any application using the standard ROS dVRK topics outside Matlab
  * In Matlab:
+   * See examples in `examples` directory!
    * Start ROS using `rosinit`
-   * Find the robot name using `rostopic list`.  You should see a list of namespaces under `/dvrk/`.  For example `/dvrk/PSM1/status` indicates that the arm `PSM1` is connected.
-   * Create an interface for your arm using: `r = arm('PSM1);`
-   * `r` will have the following properties (e.g. PSM has 7 joints):
-     * `position_desired: [4x4 double]`
-     * `position_joint_desired: [7x1 double]`
-     * `effort_joint_desired: [7x1 double]` (output of PID)
-     * `position_current: [4x4 double]`
-     * `position_joint_current: [7x1 double]`
-     * `velocity_joint_current: [7x1 double]`
-     * `effort_joint_current: [7x1 double]` (based on motor current feedback)
+   * Find the robot name using `rostopic list`.  You should see a list of namespaces for each arm.  For example `/MTML/measured_js` indicates that the arm `MTML` is available.
+   * Create an interface for your arm using: `r = arm('MTML);`
+   * All units are SI (radians and meters)
+   * `r` will have the following methods (e.g. MTM has 7 joints):
+     * `r.setpoint_cp()` [4x4 floats]
+     * `[position, velocity, effort] = r.setpoint_js()` [n floats, empty, n floats] (output of PID)
+     * `r.measured_cp()` [4x4 floats]
+     * `[position, velocity, effort] = r.setpoint_js()` [n floats, n floats, n floats] (based on encoder and motor current feedback)
    * To control the arm, one can do:
-     * `r.home()`
-     * `r.dmove_joint_one(-0.01, int8(3))` to move a single joint, be careful with radians and meters and joint index starts at 1 (not like C/C++)
-     * `r.dmove_joint([-0.01, -0.01, 0.0, 0.0, 0.0, 0.0, 0.0])` to move all joints (radians and meters)
-     * `v = [0.0, 0.0, 0.01];`
-       `r.dmove_translation(v)` to move in cartesian space, translation only.
-     * Similar commands without the `dmove` prefix exist (start with `move`) and allow you to use absolute positions
+     * `r.enable(60)` (with timeout)
+     * `r.home(30)`
+     * `r.servo_jp()` (takes n joint positions sets the setpoint)
+     * `r.move_jp()` to move all joints
+     * `r.wait_while_busy(r.move())` move and wait until move is complete
+     * `r.servo_cp()` and `r.move_cp()` take 4x4 frame
 
 Notes
 =====
