@@ -11,7 +11,7 @@ classdef console < handle
     end
 
     % only this class methods can view/modify
-    properties (SetAccess = private)
+    properties (Access = private)
         % subscribers
         teleop_scale_subscriber
         % publishers
@@ -66,6 +66,7 @@ classdef console < handle
 
 
         function delete(self)
+            delete(self.teleop_scale_subscriber);
         end
 
 

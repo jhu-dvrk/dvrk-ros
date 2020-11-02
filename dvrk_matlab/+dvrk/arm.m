@@ -15,6 +15,11 @@ classdef arm < dynamicprops
         ros_namespace;
         body;
         spatial;
+        % publishers
+        wrench_body_orientation_absolute_publisher;
+        gravity_compensation_publisher;
+        % message placeholders
+        std_msgs_Bool;
     end
 
     methods
@@ -29,7 +34,7 @@ classdef arm < dynamicprops
             self.body = dvrk.arm_cf(strcat(name, '/body'));
             self.spatial = dvrk.arm_cf(strcat(name, '/spatial'));
             % operating state
-	        self.crtk_utils.add_operating_state();
+            self.crtk_utils.add_operating_state();
             % joint space
             self.crtk_utils.add_measured_js();
             self.crtk_utils.add_setpoint_js();
@@ -45,10 +50,35 @@ classdef arm < dynamicprops
             self.crtk_utils.add_servo_cp();
             self.crtk_utils.add_servo_cf();
             self.crtk_utils.add_move_cp();
+            % custom publishers
+            topic = strcat(self.ros_namespace, '/set_wrench_body_orientation_absolute');
+            self.wrench_body_orientation_absolute_publisher = ...
+                rospublisher(topic, rostype.std_msgs_Bool);
+            topic = strcat(self.ros_namespace, '/set_gravity_compensation');
+            self.gravity_compensation_publisher = rospublisher(topic, ...
+                                                               rostype.std_msgs_Bool);
+            % one time creation of messages to prevent lookup and creation at each call
+            self.std_msgs_Bool = rosmessage(rostype.std_msgs_Bool);
         end
 
         function delete(self)
            delete(self.crtk_utils);
+        end
+
+        function result = set_wrench_body_orientation_absolute(self, absolute)
+            self.std_msgs_Bool.Data = absolute;
+            % send message
+            send(self.wrench_body_orientation_absolute_publisher, ...
+                 self.std_msgs_Bool);
+            result = true;
+        end
+
+        function result = set_gravity_compensation(self, gravity)
+            self.std_msgs_Bool.Data = gravity;
+            % send message
+            send(self.gravity_compensation_publisher, ...
+                 self.std_msgs_Bool);
+            result = true;
         end
 
     end % methods

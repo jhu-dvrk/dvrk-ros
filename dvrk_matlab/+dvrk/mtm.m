@@ -1,4 +1,4 @@
-classdef mtm < arm
+classdef mtm < dvrk.arm
     % Class for MTM specific features
 
     % only this class methods can view/modify
@@ -16,9 +16,8 @@ classdef mtm < arm
     methods
 
         function self = mtm(name)
-            self@arm(name);
+            self@dvrk.arm(name);
             self.gripper = dvrk.mtm_gripper(strcat(name, '/gripper'));
-
             % ----------- publishers
             topic = strcat(self.ros_namespace, '/lock_orientation');
             self.lock_orientation_publisher = rospublisher(topic, ...
@@ -33,7 +32,7 @@ classdef mtm < arm
         end
 
         function result = lock_orientation_as_is(self)
-            position_current = self.get_position_current();
+            position_current = self.setpoint_cp();
             current_orientation = position_current(1:3,1:3);
             self.lock_orientation(current_orientation);
             result = true;
