@@ -18,13 +18,12 @@ function test_psm_api(arm_name)
     % move to 0 position, insert tool using joint command
     joints_home = r.setpoint_js();
     joints_home(:) = 0.0;
-    joints_home(3) = 0.10;
     r.wait_while_busy(r.move_jp(joints_home));
 
     % PSM specific api
     disp('---- Close and open after joint move, jaw should close/open twice');
+    r.jaw.move_jp(deg2rad(0.0)); % do not wait on this motion so we can close jaws at the same time
     r.wait_while_busy(r.insert_jp(0.12));
-    r.wait_while_busy(r.jaw.move_jp(deg2rad(0.0)));
     disp(rad2deg(r.jaw.measured_js()));
     r.wait_while_busy(r.jaw.move_jp(deg2rad(60.0)));
     disp(rad2deg(r.jaw.measured_js()));
