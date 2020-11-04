@@ -49,6 +49,13 @@ class arm(object):
             self.crtk.add_measured_cf()
             self.crtk.add_servo_cf()
 
+    # local kinematics
+    class Local:
+        def __init__(self, ros_namespace, expected_interval):
+            self.crtk = crtk.utils(self, ros_namespace)
+            self.crtk.add_measured_cp()
+            self.crtk.add_setpoint_cp()
+
     # initialize the arm
     def __init__(self, arm_name, ros_namespace = '', expected_interval = 0.01):
         # base class constructor in separate method so it can be called in derived classes
@@ -86,6 +93,7 @@ class arm(object):
 
         self.spatial = self.MeasuredServoCf(self.__full_ros_namespace + '/spatial', expected_interval)
         self.body = self.MeasuredServoCf(self.__full_ros_namespace + '/body', expected_interval)
+        self.local = self.Local(self.__full_ros_namespace + '/local', expected_interval)
 
         # continuous publish from dvrk_bridge
         self.__jacobian_spatial = numpy.ndarray(0, dtype = numpy.float)

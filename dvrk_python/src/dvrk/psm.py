@@ -25,7 +25,6 @@ class psm(arm):
             else:
                 jaw_namespace = ros_namespace + '/jaw'
             self.crtk = crtk.utils(self, jaw_namespace)
-            self.crtk.add_operating_state(ros_namespace)
             self.crtk.add_measured_js()
             self.crtk.add_setpoint_js()
             self.crtk.add_servo_jp()
