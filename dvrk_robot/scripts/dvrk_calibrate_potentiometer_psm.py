@@ -51,8 +51,8 @@ class example_application:
             sys.exit("Config file \"{%s}\" not found".format(self.config_file))
 
         # XML parsing, find current offset
-        tree = ET.parse(config_file)
-        root = tree.getroot()
+        self.tree = ET.parse(config_file)
+        root = self.tree.getroot()
 
         # find Robot in config file and make sure name matches
         xpath_search_results = root.findall("./Robot")
@@ -67,6 +67,11 @@ class example_application:
             robotFound = True
         else:
             sys.exit("Found robot \"{:s}\" while looking for \"{:s}\", make sure you're using the correct configuration file!".format(xmlRobot.get("Name"), robot_name))
+
+        # now find the offset for joint 2, we assume there's only one result
+        xpath_search_results = root.findall("./Robot/Actuator[@ActuatorID='2']/AnalogIn/VoltsToPosSI")
+        self.xmlPot = xpath_search_results[0]
+        print("Potentiometer offset for joint 2 is currently: {:s}".format(self.xmlPot.get("Offset")))
 
         self.arm = dvrk.psm(arm_name = robot_name,
                             expected_interval = expected_interval)
@@ -146,6 +151,7 @@ class example_application:
 
         # termios settings
         old_settings = termios.tcgetattr(sys.stdin)
+        correction = 0.0
         try:
             tty.setcbreak(sys.stdin.fileno())
             start = rospy.Time.now()
@@ -159,13 +165,14 @@ class example_application:
                     elif c == 'q':
                         sys.exit('... calibration aborted by user')
                     elif c == '-' or c == '_':
-                        goal[2] = goal[2] - 0.0001
+                        correction = correction - 0.0001
                     elif c == '+' or c == '=':
-                        goal[2] = goal[2] + 0.0001
+                        correction = correction + 0.0001
                 # move back and forth
                 dt = rospy.Time.now() - start
                 t = dt.to_sec() / 2.0
                 goal[0] = self.max + cos_ratio * (math.cos(t) - 1.0)
+                goal[2] = self.q2 + correction
                 self.arm.servo_jp(goal)
                 # display current offset
                 sys.stdout.write('\rOffest = %02.2f mm' % (goal[2] * 1000.0))
@@ -175,6 +182,14 @@ class example_application:
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
         print('')
+
+        # now save the new offset
+        oldOffset = float(self.xmlPot.get("Offset"))
+        self.xmlPot.set("Offset", str(oldOffset + correction))
+        self.tree.write(self.config_file + "-new")
+        print('Results saved in {:s}-new. Restart your dVRK application with the new file!'.format(self.config_file))
+        print('To copy the new file over the existing one: cp {:s}-new {:s}'.format(self.config_file, self.config_file))
+
 
     # main method
     def run(self):
