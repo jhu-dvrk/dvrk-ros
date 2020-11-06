@@ -147,6 +147,10 @@ class arm(object):
         return self.__arm_name
 
 
+    def namespace(self):
+        return self.__full_ros_namespace
+
+
     def set_wrench_body_orientation_absolute(self, absolute):
         """Apply body wrench using body orientation (relative/False) or reference frame (absolute/True)"""
         m = Bool()
