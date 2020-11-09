@@ -100,7 +100,7 @@ class example_application:
 
     # find range
     def find_range(self):
-        print('Finding range of motion for joint 0\n - move the arm manually (pressing the clutch)\n - press "d" when you\'re done\n - press "q" to abort')
+        print('Finding range of motion for joint 0\nMove the arm manually (pressing the clutch) to find the maximum range of motion for the first joint (left to right motion).\n - press "d" when you\'re done\n - press "q" to abort\n')
         self.min = math.radians( 180.0)
         self.max = math.radians(-180.0)
         done = False
@@ -136,6 +136,7 @@ class example_application:
 
     # direct joint control example
     def calibrate_third_joint(self):
+        print('\nAdjusting translation offset\nPress the keys "+" (or "=") and "-" or ("_") to adjust the depth until the axis 5 is mostly immobile (one can use a camera to look at the point)\n - press "d" when you\'re done\n - press "q" to abort\n')
         # move to max position as starting point
         initial_joint_position = numpy.copy(self.arm.setpoint_jp())
         goal = numpy.copy(self.arm.setpoint_jp())
@@ -175,7 +176,7 @@ class example_application:
                 goal[2] = self.q2 + correction
                 self.arm.servo_jp(goal)
                 # display current offset
-                sys.stdout.write('\rOffest = %02.2f mm' % (goal[2] * 1000.0))
+                sys.stdout.write('\rCorrection = %02.2f mm' % (correction * 1000.0))
                 sys.stdout.flush()
                 # sleep
                 rospy.sleep(self.expected_interval)
@@ -184,9 +185,11 @@ class example_application:
         print('')
 
         # now save the new offset
-        oldOffset = float(self.xmlPot.get("Offset"))
-        self.xmlPot.set("Offset", str(oldOffset + correction))
+        oldOffset = float(self.xmlPot.get("Offset")) / 1000.0 # convert from XML (mm) to m
+        newOffset = oldOffset - correction                    # add in meters
+        self.xmlPot.set("Offset", str(newOffset * 1000.0))    # convert from m to XML (mm)
         self.tree.write(self.config_file + "-new")
+        print('Old offset: {:2.2f}mm\nNew offset: {:2.2f}mm\n'.format(oldOffset * 1000.0, newOffset * 1000.0))
         print('Results saved in {:s}-new. Restart your dVRK application with the new file!'.format(self.config_file))
         print('To copy the new file over the existing one: cp {:s}-new {:s}'.format(self.config_file, self.config_file))
 
@@ -213,6 +216,18 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--config', type=str, required=True,
                         help = 'arm IO config file, i.e. something like sawRobotIO1394-xwz-12345.xml')
     args = parser.parse_args(argv[1:]) # skip argv[0], script name
+
+    print ('\nThis program can be used to improve the potentiometer offset for the third joint '
+           'of the PSM arm (translation stage).  The goal is increase the absolute accuracy of the PSM.\n'
+           'The main idea is to position a known point on the tool where the RCM should be.  '
+           'If the calibration is correct, the point shouldn\'t move while the arm is rocking from left to right.  '
+           'For this application we\'re going to use the axis of the first joint of the wrist, i.e. the first joint '
+           'at the end of the tool shaft.  To perform this calibration you need to remove the canulla otherwise you won\'t see'
+           ' the RCM point.   One simple way to track the motion is to use a camera and place the cursor where the axis is.\n\n'
+           'You must first home your PSM and make sure a tool is engaged.  '
+           'Once this is done, there are two steps:\n'
+           ' -1- find a safe range of motion for the rocking movement\n'
+           ' -2- adjust the depth so that the first hinge on the tool wrist is as close as possible to the RCM.\n\n')
 
     application = example_application()
     application.configure(args.arm, args.config, args.interval)
