@@ -190,7 +190,7 @@ class example_application:
         self.xmlPot.set("Offset", str(newOffset * 1000.0))    # convert from m to XML (mm)
         self.tree.write(self.config_file + "-new")
         print('Old offset: {:2.2f}mm\nNew offset: {:2.2f}mm\n'.format(oldOffset * 1000.0, newOffset * 1000.0))
-        print('Results saved in {:s}-new. Restart your dVRK application with the new file!'.format(self.config_file))
+        print('Results saved in {:s}-new. Restart your dVRK application with the new file and make sure you re-bias the potentiometer offsets!  To be safe, power off and on the dVRK PSM controller.'.format(self.config_file))
         print('To copy the new file over the existing one: cp {:s}-new {:s}'.format(self.config_file, self.config_file))
 
 
