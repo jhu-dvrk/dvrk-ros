@@ -88,8 +88,8 @@ class example_application:
         print('Moving to zero position...')
         goal = numpy.copy(self.arm.setpoint_jp())
         goal.fill(0)
-        self.arm.wait_while_busy(self.arm.move_jp(goal))
-        self.arm.wait_while_busy(self.arm.jaw.move_jp(numpy.array([0.0])))
+        self.arm.move_jp(goal).wait()
+        self.arm.jaw.move_jp(numpy.array([0.0])).wait()
         # identify depth for tool j5 using forward kinematics
         local_query_cp = rospy.ServiceProxy(self.arm.namespace() + '/local/query_cp', cisst_msgs.srv.QueryForwardKinematics)
         request = cisst_msgs.srv.QueryForwardKinematicsRequest()
@@ -145,7 +145,7 @@ class example_application:
         goal[2] = self.q2 # to start close to expected RCM
         goal[3] = math.radians(90.0) # so axis is facing user
 
-        self.arm.wait_while_busy(self.arm.move_jp(goal))
+        self.arm.move_jp(goal).wait()
 
         # parameters to move back and forth
         cos_ratio = (self.max - self.min) / 2.0

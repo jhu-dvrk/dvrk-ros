@@ -19,17 +19,13 @@ class psm(arm):
 
     # class to contain jaw methods
     class Jaw:
-        def __init__(self, ros_namespace, expected_interval):
-            if (ros_namespace == ''):
-                jaw_namespace = 'jaw'
-            else:
-                jaw_namespace = ros_namespace + '/jaw'
-            self.crtk = crtk.utils(self, jaw_namespace)
-            self.crtk.add_measured_js()
-            self.crtk.add_setpoint_js()
-            self.crtk.add_servo_jp()
-            self.crtk.add_move_jp()
-            self.crtk.add_servo_jf()
+        def __init__(self, ros_namespace, expected_interval, operating_state_instance):
+            self.__crtk_utils = crtk.utils(self, ros_namespace, expected_interval, operating_state_instance)
+            self.__crtk_utils.add_measured_js()
+            self.__crtk_utils.add_setpoint_js()
+            self.__crtk_utils.add_servo_jp()
+            self.__crtk_utils.add_move_jp()
+            self.__crtk_utils.add_servo_jf()
 
         def close(self):
             "Close the tool jaw"
@@ -44,7 +40,8 @@ class psm(arm):
     def __init__(self, arm_name, ros_namespace = '', expected_interval = 0.01):
         # first call base class constructor
         self._arm__init_arm(arm_name, ros_namespace, expected_interval)
-        self.jaw = self.Jaw(self._arm__full_ros_namespace, expected_interval)
+        self.jaw = self.Jaw(self._arm__full_ros_namespace + '/jaw', expected_interval,
+                            operating_state_instance = self)
 
         # publishers
         self.__set_tool_present_pub = rospy.Publisher(self._arm__full_ros_namespace

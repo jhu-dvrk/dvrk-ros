@@ -58,7 +58,7 @@ class example_application:
         # go to zero position, make sure 3rd joint is past cannula
         goal.fill(0)
         goal[2] = 0.12
-        self.arm.wait_while_busy(self.arm.move_jp(goal))
+        self.arm.move_jp(goal).wait()
 
     # utility to position tool/camera deep enough before cartesian examples
     def prepare_cartesian(self):
@@ -69,38 +69,38 @@ class example_application:
             goal[0] = 0.0
             goal[1] = 0.0
             goal[2] = 0.12
-            self.arm.wait_while_busy(self.arm.move_jp(goal))
+            self.arm.move_jp(goal).wait()
 
 
     # goal jaw control example
-    def jaw_move(self):
+    def run_jaw_move(self):
         print_id('starting jaw move')
         # try to open and close with the cartesian part of the arm in different modes
         print_id('close and open without other move command')
         input("    Press Enter to continue...")
         print_id('closing (1)')
-        self.arm.wait_while_busy(self.arm.jaw.close())
+        self.arm.jaw.close().wait()
         print_id('opening (2)')
-        self.arm.wait_while_busy(self.arm.jaw.open())
+        self.arm.jaw.open().wait()
         print_id('closing (3)')
-        self.arm.wait_while_busy(self.arm.jaw.close())
+        self.arm.jaw.close().wait()
         print_id('opening (4)')
-        self.arm.wait_while_busy(self.arm.jaw.open())
+        self.arm.jaw.open().wait()
         # try to open and close with a joint goal
         print_id('close and open with joint move command')
         input("    Press Enter to continue...")
         print_id('closing and moving up (1)')
-        self.arm.jaw.close()
-        self.arm.wait_while_busy(self.arm.insert_jp(0.1))
+        self.arm.jaw.close().wait(is_busy = True)
+        self.arm.insert_jp(0.1).wait()
         print_id('opening and moving down (2)')
-        self.arm.jaw.open()
-        self.arm.wait_while_busy(self.arm.insert_jp(0.15))
+        self.arm.jaw.open().wait(is_busy = True)
+        self.arm.insert_jp(0.15).wait()
         print_id('closing and moving up (3)')
-        self.arm.jaw.close()
-        self.arm.wait_while_busy(self.arm.insert_jp(0.1))
+        self.arm.jaw.close().wait(is_busy = True)
+        self.arm.insert_jp(0.1).wait()
         print_id('opening and moving down (4)')
-        self.arm.jaw.open()
-        self.arm.wait_while_busy(self.arm.insert_jp(0.15))
+        self.arm.jaw.open().wait(is_busy = True)
+        self.arm.insert_jp(0.15).wait()
 
         print_id('close and open with cartesian move command')
         input("    Press Enter to continue...")
@@ -122,48 +122,48 @@ class example_application:
         goal.p[0] =  initial_cartesian_position.p[0] - amplitude
         goal.p[1] =  initial_cartesian_position.p[1]
         print_id('closing and moving right (1)')
-        self.arm.move_cp(goal)
-        self.arm.wait_while_busy(self.arm.jaw.close())
+        self.arm.move_cp(goal).wait(is_busy = True)
+        self.arm.jaw.close().wait()
 
         # second motion
         goal.p[0] =  initial_cartesian_position.p[0] + amplitude
         goal.p[1] =  initial_cartesian_position.p[1]
         print_id('opening and moving left (1)')
-        self.arm.move_cp(goal)
-        self.arm.wait_while_busy(self.arm.jaw.open())
+        self.arm.move_cp(goal).wait(is_busy = True)
+        self.arm.jaw.open().wait()
 
         # back to starting point
         goal.p[0] =  initial_cartesian_position.p[0]
         goal.p[1] =  initial_cartesian_position.p[1]
         print_id('moving back (3)')
-        self.arm.wait_while_busy(self.arm.move_cp(goal))
+        self.arm.move_cp(goal).wait()
 
 
     # goal jaw control example
-    def jaw_servo(self):
+    def run_jaw_servo(self):
         print_id('starting jaw servo')
         # try to open and close directly, needs interpolation
-        print_id('close and open without other move command')
+        print_id('close and open without other servo command')
         input("    Press Enter to continue...")
-        self.arm.wait_while_busy(self.arm.jaw.open(angle = math.radians(30.0)))
+        start_angle = math.radians(50.0)
+        self.arm.jaw.open(angle = start_angle).wait()
         # assume we start at 30 the move +/- 30
         amplitude = math.radians(30.0)
-        duration = 20  # seconds
-        rate = 200 # aiming for 200 Hz
-        samples = duration * rate
+        duration = 5  # seconds
+        samples = int(duration / self.expected_interval)
         # create a new goal starting with current position
-        for i in range(samples):
-            goal = math.radians(30.0) + amplitude * math.sin(i * math.radians(360.0) / samples)
+        for i in range(samples * 4):
+            goal = start_angle + amplitude * (math.cos(i * math.radians(360.0) / samples) - 1.0)
             self.arm.jaw.servo_jp(numpy.array(goal))
-            rospy.sleep(1.0 / rate)
+            rospy.sleep(self.expected_interval)
 
 
     # main method
     def run(self):
         self.home()
-        self.jaw_move()
-        self.jaw_servo()
-        self.jaw_move() # just to make sure we can transition back to trajectory mode
+        self.run_jaw_move()
+        self.run_jaw_servo()
+        self.run_jaw_move() # just to make sure we can transition back to trajectory mode
 
 
 if __name__ == '__main__':

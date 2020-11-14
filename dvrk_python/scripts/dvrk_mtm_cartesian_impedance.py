@@ -60,8 +60,7 @@ class example_application:
         goal = numpy.copy(self.arm.setpoint_jp())
         # go to zero position, make sure 3rd joint is past cannula
         goal.fill(0)
-        self.arm.move_jp(goal)
-        self.arm.wait_while_busy()
+        self.arm.move_jp(goal).wait()
 
     # foot pedal callback
     def coag_event_cb(self, data):
@@ -183,8 +182,7 @@ class example_application:
 
         print_id('keep holding arm, press coag, arm will freeze in position')
         self.wait_for_coag()
-        self.arm.move_jp(self.arm.measured_jp())
-        self.arm.wait_while_busy()
+        self.arm.move_jp(self.arm.measured_jp()).wait()
 
         print_id('press coag to end')
         self.wait_for_coag()

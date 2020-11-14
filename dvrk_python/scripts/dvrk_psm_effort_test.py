@@ -57,7 +57,7 @@ class example_application:
         # go to zero position, make sure 3rd joint is past cannula
         goal.fill(0)
         goal[2] = 0.12
-        self.arm.wait_while_busy(self.arm.move_jp(goal))
+        self.arm.move_jp(goal).wait()
 
     # utility to position tool/camera deep enough before cartesian examples
     def prepare_cartesian(self):
@@ -68,7 +68,7 @@ class example_application:
             goal[0] = 0.0
             goal[1] = 0.0
             goal[2] = 0.12
-            self.arm.wait_while_busy(self.arm.move_jp(goal))
+            self.arm.move_jp().wait()
 
     # effort jaw control example
     def jaw_effort(self):

@@ -69,14 +69,14 @@ import PyKDL
 goal = p.setpoint_cp()
 # move 5cm in z direction
 goal.p[2] += 0.05
-p.wait_while_busy(p.move_cp(goal))
+p.move_cp(goal).wait()
 
 import math
 # start position
 goal = p.setpoint_cp()
 # rotate tool tip frame by 25 degrees
 goal.M.DoRotX(math.pi * 0.25) 
-p.wait_while_busy(p.move_cp(goal))
+p.move_cp(goal).wait()
 ```
 
 To apply wrenches on MTMs, start ipython and type the following commands while holding the MTM (otherwise the arm will start moving and might bang itself against the console and get damaged).

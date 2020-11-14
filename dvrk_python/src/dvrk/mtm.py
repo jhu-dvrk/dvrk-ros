@@ -20,29 +20,25 @@ class mtm(arm):
     # class to contain gripper methods
     class Gripper:
         def __init__(self, ros_namespace, expected_interval):
-            if (ros_namespace == ''):
-                gripper_namespace = 'gripper'
-            else:
-                gripper_namespace = ros_namespace + '/gripper'
-            self.crtk = crtk.utils(self, gripper_namespace)
-            self.crtk.add_measured_js()
+            self.__crtk_utils = crtk.utils(self, ros_namespace, expected_interval)
+            self.__crtk_utils.add_measured_js()
 
     # initialize the robot
     def __init__(self, arm_name, ros_namespace = '', expected_interval = 0.01):
         # first call base class constructor
         self._arm__init_arm(arm_name, ros_namespace, expected_interval)
-        self.gripper = self.Gripper(self._arm__full_ros_namespace, expected_interval)
+        self.gripper = self.Gripper(self._arm__full_ros_namespace + '/gripper', expected_interval)
 
         # publishers
         self.__lock_orientation_pub = rospy.Publisher(self._arm__full_ros_namespace
                                                       + '/lock_orientation',
-                                                      Quaternion, latch=True, queue_size = 1)
+                                                      Quaternion, latch = True, queue_size = 1)
         self.__unlock_orientation_pub = rospy.Publisher(self._arm__full_ros_namespace
                                                         + '/unlock_orientation',
-                                                        Empty, latch=True, queue_size = 1)
+                                                        Empty, latch = True, queue_size = 1)
 
         self._arm__pub_list.extend([self.__lock_orientation_pub,
-                               self.__unlock_orientation_pub])
+                                    self.__unlock_orientation_pub])
 
     def lock_orientation_as_is(self):
         "Lock orientation based on current orientation"

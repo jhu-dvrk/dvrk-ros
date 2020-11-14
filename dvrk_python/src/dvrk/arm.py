@@ -45,16 +45,16 @@ class arm(object):
     # class to contain spatial/body cf methods
     class MeasuredServoCf:
         def __init__(self, ros_namespace, expected_interval):
-            self.crtk = crtk.utils(self, ros_namespace)
-            self.crtk.add_measured_cf()
-            self.crtk.add_servo_cf()
+            self.__crtk_utils = crtk.utils(self, ros_namespace, expected_interval)
+            self.__crtk_utils.add_measured_cf()
+            self.__crtk_utils.add_servo_cf()
 
     # local kinematics
     class Local:
         def __init__(self, ros_namespace, expected_interval):
-            self.crtk = crtk.utils(self, ros_namespace)
-            self.crtk.add_measured_cp()
-            self.crtk.add_setpoint_cp()
+            self.__crtk_utils = crtk.utils(self, ros_namespace, expected_interval)
+            self.__crtk_utils.add_measured_cp()
+            self.__crtk_utils.add_setpoint_cp()
 
     # initialize the arm
     def __init__(self, arm_name, ros_namespace = '', expected_interval = 0.01):
