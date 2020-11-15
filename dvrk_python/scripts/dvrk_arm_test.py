@@ -68,6 +68,36 @@ class example_application:
         move_handle.wait()
         print_id('home complete')
 
+    # get methods
+    def run_get(self):
+        d = self.arm.measured_jp()
+        [d, t] = self.arm.measured_jp(extra = True)
+        d = self.arm.measured_jv()
+        [d, t] = self.arm.measured_jv(extra = True)
+        d = self.arm.measured_jf()
+        [d, t] = self.arm.measured_jf(extra = True)
+        d = self.arm.measured_cp()
+        [d, t] = self.arm.measured_cp(extra = True)
+        d = self.arm.local.measured_cp()
+        [d, t] = self.arm.local.measured_cp(extra = True)
+        d = self.arm.measured_cv()
+        [d, t] = self.arm.measured_cv(extra = True)
+        d = self.arm.body.measured_cf()
+        [d, t] = self.arm.body.measured_cf(extra = True)
+        d = self.arm.spatial.measured_cf()
+        [d, t] = self.arm.spatial.measured_cf(extra = True)
+
+        d = self.arm.setpoint_jp()
+        [d, t] = self.arm.setpoint_jp(extra = True)
+        d = self.arm.setpoint_jv()
+        [d, t] = self.arm.setpoint_jv(extra = True)
+        d = self.arm.setpoint_jf()
+        [d, t] = self.arm.setpoint_jf(extra = True)
+        d = self.arm.setpoint_cp()
+        [d, t] = self.arm.setpoint_cp(extra = True)
+        d = self.arm.local.setpoint_cp()
+        [d, t] = self.arm.local.setpoint_cp(extra = True)
+
     # direct joint control example
     def run_servo_jp(self):
         print_id('starting servo_jp')
@@ -202,6 +232,7 @@ class example_application:
     # main method
     def run(self):
         self.home()
+        self.run_get()
         self.run_servo_jp()
         self.run_move_jp()
         self.run_servo_cp()
