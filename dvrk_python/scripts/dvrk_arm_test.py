@@ -70,6 +70,7 @@ class example_application:
 
     # get methods
     def run_get(self):
+        [p, v, e, t] = self.arm.measured_js()
         d = self.arm.measured_jp()
         [d, t] = self.arm.measured_jp(extra = True)
         d = self.arm.measured_jv()
@@ -87,6 +88,7 @@ class example_application:
         d = self.arm.spatial.measured_cf()
         [d, t] = self.arm.spatial.measured_cf(extra = True)
 
+        [p, v, e, t] = self.arm.setpoint_js()
         d = self.arm.setpoint_jp()
         [d, t] = self.arm.setpoint_jp(extra = True)
         d = self.arm.setpoint_jv()

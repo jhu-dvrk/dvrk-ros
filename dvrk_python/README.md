@@ -75,7 +75,7 @@ import math
 # start position
 goal = p.setpoint_cp()
 # rotate tool tip frame by 25 degrees
-goal.M.DoRotX(math.pi * 0.25) 
+goal.M.DoRotX(math.pi * 0.25)
 p.move_cp(goal).wait()
 ```
 
