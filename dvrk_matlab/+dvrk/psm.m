@@ -14,7 +14,7 @@ classdef psm < dvrk.arm
 
         function self = psm(name)
             self@dvrk.arm(name);
-            self.jaw = dvrk.psm_jaw(strcat(name, '/jaw'));
+            self.jaw = dvrk.psm_jaw(strcat(name, '/jaw'), self);
             % ----------- publishers
             topic = strcat(self.ros_namespace, '/set_tool_present');
             self.tool_present_publisher = rospublisher(topic, rostype.std_msgs_Bool);

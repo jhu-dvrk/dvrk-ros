@@ -28,22 +28,22 @@ function test_arm_move(arm_name)
     if (strcmp(arm_name, 'ECM') || strncmp(arm_name, 'PSM', 3))
         joints_home(3) = 0.12;
     end
-    r.wait_while_busy(r.move_jp(joints_home));
+    r.move_jp(joints_home).wait();
     % wiggle first two joints, matlab index starts at 1
     amplitude = deg2rad(5.0);
     % first move
     start = r.setpoint_js();
     goal = start;
     goal(1:2) = amplitude;
-    r.wait_while_busy(r.move_jp(goal));
+    r.move_jp(goal).wait();
     % second move
     goal = start;
     goal(1:2) = -amplitude;
-    r.wait_while_busy(r.move_jp(goal));
+    r.move_jp(goal).wait();
 
     disp('---- Joint servo');
     % move to 0 position
-    r.wait_while_busy(r.move_jp(joints_home));
+    r.move_jp(joints_home).wait();
     % wiggle first two joints, matlab index starts at 1
     amplitude = deg2rad(10.0);
     duration = 10.0; % seconds
@@ -62,24 +62,24 @@ function test_arm_move(arm_name)
     % move_cp
     disp('---- Cartesian move');
     % move to 0 position
-    r.wait_while_busy(r.move_jp(goal));
+    r.move_jp(goal).wait();
     % start from current position
     start = r.setpoint_cp();
     amplitude = 0.03; % 3 cm
     % first move, translation is 4th column, x and y are element 1:2
     goal = start;
     goal(1:2, 4) = goal(1:2, 4) + amplitude;
-    r.wait_while_busy(r.move_cp(goal));
+    r.move_cp(goal).wait();
     % second move
     goal = start;
     goal(1:2, 4) = goal(1:2, 4) - amplitude;
-    r.wait_while_busy(r.move_cp(goal));
+    r.move_cp(goal).wait();
     % third move
-    r.wait_while_busy(r.move_cp(start));
+    r.move_cp(start).wait();
 
     disp('---- Cartesian servo');
      % move to 0 position
-    r.wait_while_busy(r.move_jp(joints_home));
+    r.move_jp(joints_home).wait();
     % move in diagonal around a point
     amplitude = 0.03; % 3 cm
     duration = 10.0; % seconds

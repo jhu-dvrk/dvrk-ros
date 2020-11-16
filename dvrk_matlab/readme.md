@@ -37,7 +37,7 @@ You will need Matlab 2015a or higher with the Robotic System Toolbox: http://www
      * `r.servo_jp()` defines a new PID setpoint in joint space.  Input is a vector of joint positions.
      * `r.servo_jr()` adds to the current joint setpoint (i.e. `r`elative).
      * `r.move_jp()` sets a new goal for the trajectory generator, in joint space.  Input is a vector of joints positions.  `move_` commands return the time the command was sent to the robot.
-     * `r.wait_while_busy(r.move_jp())` move and wait until move is complete.  `wait_while_busy` can be used with all `move_` commands.
+     * `r.move_jp().wait()` move and wait until move is complete.  `wait` can be used with all `move_` commands returning a `wait_move_handle`.
      * `r.servo_cp()` and `r.move_cp()` are similar to `servo_jp` and `move_jp` execpt in cartesian space.  Input is a 4x4 matrix of floats (i.e. homogeneous transformation).
 
 Notes
