@@ -81,7 +81,7 @@ class example_application:
         print_id('the jaws will open using a constant effort, the arm will go limp')
         input("    Press Enter to continue...")
         self.arm.servo_jf(effort_joint)
-        self.arm.jaw.servo_jf(numpy.array(0.02))
+        self.arm.jaw.servo_jf(numpy.array(0.015))
 
         print_id('the jaws will close using a constant effort, you can place a small object between the jaws now')
         input("    Press Enter to continue...")
@@ -103,7 +103,7 @@ class example_application:
         self.arm.servo_jf(effort_joint)
         self.arm.jaw.servo_jf(numpy.array(0.0))
 
-        print_id('hold the arm from the top and keep an hand on the Enter key, the arm will push on the first joint')
+        print_id('hold the arm from the top (near white clutch button) and keep an hand on the Enter key, the arm will push on the first joint')
         input("    Press Enter to continue...")
         effort_joint[0] = -0.5
         self.arm.servo_jf(effort_joint)
@@ -116,13 +116,12 @@ class example_application:
         print_id('arm will now apply sine wave forces on first two joints')
         input("    Press Enter to continue...")
         duration = 10  # seconds
-        rate = 200 # aiming for 200 Hz
-        samples = duration * rate
+        samples = duration / self.expected_interval
         # create a new goal starting with current position
-        for i in range(samples):
-            effort_joint[0] = 1.0 *  math.sin(i * math.radians(360.0) / samples)
-            effort_joint[1] = 1.0 *  math.sin(i * math.radians(360.0) / samples)
-            rospy.sleep(1.0 / rate)
+        for i in xrange(int(samples)):
+            effort_joint[0] = 0.5 *  (1.0 - math.cos(i * 10.0 * math.radians(360.0) / samples))
+            effort_joint[1] = 0.5 *  (1.0 - math.cos(i * 10.0 * math.radians(360.0) / samples))
+            rospy.sleep(self.expected_interval)
             self.arm.servo_jf(effort_joint)
 
         print_id('arm will now go limp')
@@ -140,13 +139,13 @@ class example_application:
         print_id('the jaws will open and arm will go limp')
         input("    Press Enter to continue...")
         self.arm.servo_jf(effort_joint)
-        self.arm.jaw.servo_jf(numpy.array(0.02))
+        self.arm.jaw.servo_jf(numpy.array(0.015))
 
         print_id('the jaws will close using a constant effort, you can place a small object between the jaws now')
         input("    Press Enter to continue...")
         self.arm.jaw.servo_jf(numpy.array(-0.02))
 
-        print_id('hold the arm close to the tool tip and keep an hand on the Enter key, the arm will push down (Z direction)')
+        print_id('hold the arm close to the tool tip and keep an hand on the Enter key, the arm will push in Z direction')
         input("    Press Enter to continue...")
         self.arm.set_wrench_body_orientation_absolute(True)
         self.arm.body.servo_cf(numpy.array([0.0, 0.0, 2.0, 0.0, 0.0, 0.0]))

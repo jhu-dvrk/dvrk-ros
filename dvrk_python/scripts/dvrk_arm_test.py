@@ -106,15 +106,15 @@ class example_application:
         # get current position
         initial_joint_position = numpy.copy(self.arm.setpoint_jp())
         print_id('testing direct joint position for 2 joints out of %i' % initial_joint_position.size)
-        amplitude = math.radians(10.0) # +/- 10 degrees
+        amplitude = math.radians(5.0) # +/- 5 degrees
         duration = 5  # seconds
         samples = duration / self.expected_interval
         # create a new goal starting with current position
         goal = numpy.copy(initial_joint_position)
         start = rospy.Time.now()
-        for i in range(int(samples)):
-            goal[0] = initial_joint_position[0] + amplitude *  math.sin(i * math.radians(360.0) / samples)
-            goal[1] = initial_joint_position[1] + amplitude *  math.sin(i * math.radians(360.0) / samples)
+        for i in xrange(int(samples)):
+            goal[0] = initial_joint_position[0] + amplitude *  (1.0 - math.cos(i * math.radians(360.0) / samples))
+            goal[1] = initial_joint_position[1] + amplitude *  (1.0 - math.cos(i * math.radians(360.0) / samples))
             self.arm.servo_jp(goal)
             rospy.sleep(self.expected_interval)
         actual_duration = rospy.Time.now() - start
@@ -167,13 +167,13 @@ class example_application:
         goal.p = self.arm.setpoint_cp().p
         goal.M = self.arm.setpoint_cp().M
         # motion parameters
-        amplitude = 0.05 # 5 cm
+        amplitude = 0.02 # 4 cm total
         duration = 5  # 5 seconds
         samples = duration / self.expected_interval
         start = rospy.Time.now()
-        for i in range(int(samples)):
-            goal.p[0] =  initial_cartesian_position.p[0] + amplitude *  math.sin(i * math.radians(360.0) / samples)
-            goal.p[1] =  initial_cartesian_position.p[1] + amplitude *  math.sin(i * math.radians(360.0) / samples)
+        for i in xrange(int(samples)):
+            goal.p[0] =  initial_cartesian_position.p[0] + amplitude *  (1.0 - math.cos(i * math.radians(360.0) / samples))
+            goal.p[1] =  initial_cartesian_position.p[1] + amplitude *  (1.0 - math.cos(i * math.radians(360.0) / samples))
             self.arm.servo_cp(goal)
             # check error on kinematics, compare to desired on arm.
             # to test tracking error we would compare to
