@@ -43,14 +43,15 @@ class arm(object):
     """
 
     # class to contain spatial/body cf methods
-    class MeasuredServoCf:
+    class __MeasuredServoCf:
         def __init__(self, ros_namespace, expected_interval):
             self.__crtk_utils = crtk.utils(self, ros_namespace, expected_interval)
             self.__crtk_utils.add_measured_cf()
             self.__crtk_utils.add_servo_cf()
+            self.__crtk_utils.add_jacobian()
 
     # local kinematics
-    class Local:
+    class __Local:
         def __init__(self, ros_namespace, expected_interval):
             self.__crtk_utils = crtk.utils(self, ros_namespace, expected_interval)
             self.__crtk_utils.add_measured_cp()
@@ -91,56 +92,30 @@ class arm(object):
         self.__crtk_utils.add_move_jr()
         self.__crtk_utils.add_move_cp()
 
-        self.spatial = self.MeasuredServoCf(self.__full_ros_namespace + '/spatial', expected_interval)
-        self.body = self.MeasuredServoCf(self.__full_ros_namespace + '/body', expected_interval)
-        self.local = self.Local(self.__full_ros_namespace + '/local', expected_interval)
-
-        # continuous publish from dvrk_bridge
-        self.__jacobian_spatial = numpy.ndarray(0, dtype = numpy.float)
-        self.__jacobian_body = numpy.ndarray(0, dtype = numpy.float)
+        self.spatial = self.__MeasuredServoCf(self.__full_ros_namespace + '/spatial', expected_interval)
+        self.body = self.__MeasuredServoCf(self.__full_ros_namespace + '/body', expected_interval)
+        self.local = self.__Local(self.__full_ros_namespace + '/local', expected_interval)
 
         self.__sub_list = []
         self.__pub_list = []
 
         # publishers
         frame = PyKDL.Frame()
-        self.__set_wrench_body_orientation_absolute_pub = rospy.Publisher(self.__full_ros_namespace
-                                                                          + '/set_wrench_body_orientation_absolute',
-                                                                          Bool, latch = True, queue_size = 1)
-        self.__set_gravity_compensation_pub = rospy.Publisher(self.__full_ros_namespace
-                                                              + '/set_gravity_compensation',
+        self.__body_set_cf_orientation_absolute_pub = rospy.Publisher(self.__full_ros_namespace
+                                                                      + '/body/set_cf_orientation_absolute',
+                                                                      Bool, latch = True, queue_size = 1)
+        self.__use_gravity_compensation_pub = rospy.Publisher(self.__full_ros_namespace
+                                                              + '/use_gravity_compensation',
                                                               Bool, latch = True, queue_size = 1)
-        self.__pub_list = [self.__set_wrench_body_orientation_absolute_pub,
-                           self.__set_gravity_compensation_pub]
+        self.__pub_list = [self.__body_set_cf_orientation_absolute_pub,
+                           self.__use_gravity_compensation_pub]
         # subscribers
-        self.__sub_list = [rospy.Subscriber(self.__full_ros_namespace + '/jacobian_spatial',
-                                            Float64MultiArray, self.__jacobian_spatial_cb),
-                           rospy.Subscriber(self.__full_ros_namespace + '/jacobian_body',
-                                            Float64MultiArray, self.__jacobian_body_cb)]
 
         # create node
         if not rospy.get_node_uri():
             rospy.init_node('arm_api', anonymous = True, log_level = rospy.WARN)
         else:
             rospy.logdebug(rospy.get_caller_id() + ' -> ROS already initialized')
-
-
-    def __jacobian_spatial_cb(self, data):
-        """Callback for the Jacobian in spatial frame.
-
-        :param data: Jacobian."""
-        jacobian = numpy.asarray(data.data)
-        jacobian.shape = data.layout.dim[0].size, data.layout.dim[1].size
-        self.__jacobian_spatial = jacobian
-
-
-    def __jacobian_body_cb(self, data):
-        """Callback for the Jacobian in spatial frame.
-
-        :param data: Jacobian."""
-        jacobian = numpy.asarray(data.data)
-        jacobian.shape = data.layout.dim[0].size, data.layout.dim[1].size
-        self.__jacobian_body = jacobian
 
 
     def name(self):
@@ -151,18 +126,18 @@ class arm(object):
         return self.__full_ros_namespace
 
 
-    def set_wrench_body_orientation_absolute(self, absolute):
+    def body_set_cf_orientation_absolute(self, absolute):
         """Apply body wrench using body orientation (relative/False) or reference frame (absolute/True)"""
         m = Bool()
         m.data = absolute
-        self.__set_wrench_body_orientation_absolute_pub.publish(m)
+        self.__body_set_cf_orientation_absolute_pub.publish(m)
 
 
-    def set_gravity_compensation(self, gravity_compensation):
+    def use_gravity_compensation(self, gravity_compensation):
         "Turn on/off gravity compensation in cartesian effort mode"
         g = Bool()
         g.data = gravity_compensation
-        self.__set_gravity_compensation_pub.publish(g)
+        self.__use_gravity_compensation_pub.publish(g)
 
 
     def unregister(self, verbose=False):

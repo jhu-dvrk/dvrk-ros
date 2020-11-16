@@ -76,7 +76,7 @@ class example_application:
     # tests
     def tests(self):
         # turn on gravity compensation
-        self.arm.set_gravity_compensation(True)
+        self.arm.use_gravity_compensation(True)
 
         gains = prmCartesianImpedanceGains()
         # set orientation to identity quaternions

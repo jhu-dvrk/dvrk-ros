@@ -24,16 +24,16 @@ function test_mtm_api(arm_name)
 
     disp('-> keep holding arm, press any key, gravity compensation will be activated');
     pause;
-    r.set_gravity_compensation(true);
+    r.use_gravity_compensation(true);
 
     disp('-> keep holding arm, press any key, a force in body frame will be applied (wrist based direction)');
     pause;
-    r.set_wrench_body_orientation_absolute(false);
+    r.body_set_cf_orientation_absolute(false);
     r.body.servo_cf([0.0, 0.0, -2.0, 0.0, 0.0, 0.0]);
 
     disp('-> keep holding arm, press any key, a force in world frame will be applied (fixed direction)');
     pause;
-    r.set_wrench_body_orientation_absolute(true);
+    r.body_set_cf_orientation_absolute(true);
     r.body.servo_cf([0.0, 0.0, 2.0, 0.0, 0.0, 0.0]);
 
     disp('-> keep holding arm, press any key, orientation will be locked');

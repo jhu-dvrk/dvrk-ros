@@ -18,7 +18,7 @@ class mtm(arm):
     """
 
     # class to contain gripper methods
-    class Gripper:
+    class __Gripper:
         def __init__(self, ros_namespace, expected_interval):
             self.__crtk_utils = crtk.utils(self, ros_namespace, expected_interval)
             self.__crtk_utils.add_measured_js()
@@ -27,7 +27,7 @@ class mtm(arm):
     def __init__(self, arm_name, ros_namespace = '', expected_interval = 0.01):
         # first call base class constructor
         self._arm__init_arm(arm_name, ros_namespace, expected_interval)
-        self.gripper = self.Gripper(self._arm__full_ros_namespace + '/gripper', expected_interval)
+        self.gripper = self.__Gripper(self._arm__full_ros_namespace + '/gripper', expected_interval)
 
         # publishers
         self.__lock_orientation_pub = rospy.Publisher(self._arm__full_ros_namespace

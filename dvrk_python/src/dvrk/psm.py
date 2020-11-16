@@ -18,7 +18,7 @@ class psm(arm):
     """
 
     # class to contain jaw methods
-    class Jaw:
+    class __Jaw:
         def __init__(self, ros_namespace, expected_interval, operating_state_instance):
             self.__crtk_utils = crtk.utils(self, ros_namespace, expected_interval, operating_state_instance)
             self.__crtk_utils.add_measured_js()
@@ -40,8 +40,8 @@ class psm(arm):
     def __init__(self, arm_name, ros_namespace = '', expected_interval = 0.01):
         # first call base class constructor
         self._arm__init_arm(arm_name, ros_namespace, expected_interval)
-        self.jaw = self.Jaw(self._arm__full_ros_namespace + '/jaw', expected_interval,
-                            operating_state_instance = self)
+        self.jaw = self.__Jaw(self._arm__full_ros_namespace + '/jaw', expected_interval,
+                              operating_state_instance = self)
 
         # publishers
         self.__set_tool_present_pub = rospy.Publisher(self._arm__full_ros_namespace

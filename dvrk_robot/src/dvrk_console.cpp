@@ -220,33 +220,33 @@ void dvrk::console::bridge_interface_provided_arm(const std::string & _arm_name,
         (_required_interface_name, "SetBaseFrame",
          _arm_name + "/set_base_frame");
     subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float64>
-        (_required_interface_name, "SetJointVelocityRatio",
-         _arm_name + "/set_joint_velocity_ratio");
+        (_required_interface_name, "trajectory_j/set_ratio_v",
+         _arm_name + "/trajectory_j/set_ratio_v");
     subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float64>
-        (_required_interface_name, "SetJointAccelerationRatio",
-         _arm_name + "/set_joint_acceleration_ratio");
+        (_required_interface_name, "trajectory_j/set_ratio_a",
+         _arm_name + "/trajectory_j/set_ratio_a");
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        (_required_interface_name, "SetWrenchBodyOrientationAbsolute",
-         _arm_name + "/set_wrench_body_orientation_absolute");
+        (_required_interface_name, "body/set_cf_orientation_absolute",
+         _arm_name + "/body/set_cf_orientation_absolute");
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        (_required_interface_name, "SetGravityCompensation",
-         _arm_name + "/set_gravity_compensation");
+        (_required_interface_name, "use_gravity_compensation",
+         _arm_name + "/use_gravity_compensation");
     subscribers_bridge().AddSubscriberToCommandWrite<prmCartesianImpedanceGains, cisst_msgs::prmCartesianImpedanceGains>
-        (_required_interface_name, "SetCartesianImpedanceGains",
+        (_required_interface_name, "set_cartesian_impedance_gains",
          _arm_name + "/set_cartesian_impedance_gains");
 
     events_bridge().AddPublisherFromEventWrite<std::string, std_msgs::String>
-        (_required_interface_name, "DesiredState",
+        (_required_interface_name, "desired_state",
          _arm_name + "/desired_state");
     events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
-        (_required_interface_name, "GoalReached",
+        (_required_interface_name, "goal_reached",
          _arm_name + "/goal_reached");
     events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float64>
-        (_required_interface_name, "JointVelocityRatio",
-         _arm_name + "/joint_velocity_ratio");
+        (_required_interface_name, "trajectory_j/ratio_v",
+         _arm_name + "/trajectory_j/ratio_v");
     events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float64>
-        (_required_interface_name, "JointAccelerationRatio",
-         _arm_name + "/joint_acceleration_ratio");
+        (_required_interface_name, "trajectory_j/ratio_a",
+         _arm_name + "/trajectory_j/ratio_a");
 }
 
 void dvrk::console::bridge_interface_provided_ecm(const std::string & _arm_name,
@@ -294,17 +294,17 @@ void dvrk::console::bridge_interface_provided_mtm(const std::string & _arm_name,
     const std::string _required_interface_name = _arm_name + "_using_" + _interface_name;
 
     subscribers_bridge().AddSubscriberToCommandWrite<vctMatRot3, geometry_msgs::Quaternion>
-        (_required_interface_name, "LockOrientation",
+        (_required_interface_name, "lock_orientation",
          _arm_name + "/lock_orientation");
     subscribers_bridge().AddSubscriberToCommandVoid
-        (_required_interface_name, "UnlockOrientation",
+        (_required_interface_name, "unlock_orientation",
          _arm_name + "/unlock_orientation");
 
     events_bridge().AddPublisherFromEventVoid
-        (_required_interface_name, "GripperPinchEvent",
+        (_required_interface_name, "gripper/pinch",
          _arm_name + "/gripper/pinch");
     events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
-        (_required_interface_name, "GripperClosedEvent",
+        (_required_interface_name, "gripper/closed",
          _arm_name + "/gripper/closed");
 }
 
@@ -549,9 +549,9 @@ void dvrk::console::add_topics_teleop_ecm(const std::string & _name)
 
     // events
     events_bridge().AddPublisherFromEventWrite<std::string, std_msgs::String>
-        (_name, "DesiredState", _ros_namespace + "/desired_state");
+        (_name, "desired_state", _ros_namespace + "/desired_state");
     events_bridge().AddPublisherFromEventWrite<std::string, std_msgs::String>
-        (_name, "CurrentState", _ros_namespace + "/current_state");
+        (_name, "current_state", _ros_namespace + "/current_state");
     events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float32>
         (_name, "Scale", _ros_namespace + "/scale");
     events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
@@ -598,9 +598,9 @@ void dvrk::console::add_topics_teleop_psm(const std::string & _name)
 
     // events
     events_bridge().AddPublisherFromEventWrite<std::string, std_msgs::String>
-        (_name, "DesiredState", _ros_namespace + "/desired_state");
+        (_name, "desired_state", _ros_namespace + "/desired_state");
     events_bridge().AddPublisherFromEventWrite<std::string, std_msgs::String>
-        (_name, "CurrentState", _ros_namespace + "/current_state");
+        (_name, "current_state", _ros_namespace + "/current_state");
     events_bridge().AddPublisherFromEventWrite<bool, sensor_msgs::Joy>
         (_name, "RotationLocked",
          _ros_namespace + "/rotation_locked");

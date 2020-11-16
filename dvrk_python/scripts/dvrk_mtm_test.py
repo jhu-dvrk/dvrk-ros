@@ -72,7 +72,7 @@ class example_application:
     # tests
     def tests(self):
         # turn on gravity compensation
-        self.arm.set_gravity_compensation(True)
+        self.arm.use_gravity_compensation(True)
 
         print_id('press COAG pedal to move to the next test')
 
@@ -82,12 +82,12 @@ class example_application:
 
         print_id('keep holding arm, press coag, a force in body frame will be applied (direction depends on wrist orientation)')
         self.wait_for_coag()
-        self.arm.set_wrench_body_orientation_absolute(False)
+        self.arm.body_set_cf_orientation_absolute(False)
         self.arm.body.servo_cf(numpy.array([0.0, 0.0, -3.0, 0.0, 0.0, 0.0]))
 
         print_id('keep holding arm, press coag, a force in world frame will be applied (fixed direction)')
         self.wait_for_coag()
-        self.arm.set_wrench_body_orientation_absolute(True)
+        self.arm.body_set_cf_orientation_absolute(True)
         self.arm.body.servo_cf(numpy.array([0.0, 0.0, -3.0, 0.0, 0.0, 0.0]))
 
         print_id('keep holding arm, press coag, orientation will be locked')

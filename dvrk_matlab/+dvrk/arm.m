@@ -58,10 +58,10 @@ classdef arm < dynamicprops
             self.crtk_utils.add_servo_cf();
             self.crtk_utils.add_move_cp();
             % custom publishers
-            topic = strcat(self.ros_namespace, '/set_wrench_body_orientation_absolute');
+            topic = strcat(self.ros_namespace, '/body_set_cf_orientation_absolute');
             self.wrench_body_orientation_absolute_publisher = ...
                 rospublisher(topic, rostype.std_msgs_Bool);
-            topic = strcat(self.ros_namespace, '/set_gravity_compensation');
+            topic = strcat(self.ros_namespace, '/use_gravity_compensation');
             self.gravity_compensation_publisher = rospublisher(topic, ...
                                                                rostype.std_msgs_Bool);
             % one time creation of messages to prevent lookup and creation at each call
@@ -75,7 +75,7 @@ classdef arm < dynamicprops
             delete(self.local);
         end
 
-        function result = set_wrench_body_orientation_absolute(self, absolute)
+        function result = body_set_cf_orientation_absolute(self, absolute)
             self.std_msgs_Bool.Data = absolute;
             % send message
             send(self.wrench_body_orientation_absolute_publisher, ...
@@ -83,7 +83,7 @@ classdef arm < dynamicprops
             result = true;
         end
 
-        function result = set_gravity_compensation(self, gravity)
+        function result = use_gravity_compensation(self, gravity)
             self.std_msgs_Bool.Data = gravity;
             % send message
             send(self.gravity_compensation_publisher, ...
