@@ -27,6 +27,10 @@
     uri: https://github.com/jhu-saw/sawKeyboard
     version: devel
 - git:
+    local-name: dvrk-gravity-compensation
+    uri: https://github.com/jhu-dvrk/dvrk-gravity-compensation
+    version: devel
+- git:
     local-name: crtk/crtk_msgs
     uri: https://github.com/collaborative-robotics/crtk_msgs
     version: master
