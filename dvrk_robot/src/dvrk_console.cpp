@@ -220,6 +220,9 @@ void dvrk::console::bridge_interface_provided_arm(const std::string & _arm_name,
         (_required_interface_name, "SetBaseFrame",
          _arm_name + "/set_base_frame");
     subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float64>
+        (_required_interface_name, "trajectory_j/set_ratio",
+         _arm_name + "/trajectory_j/set_ratio");
+    subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float64>
         (_required_interface_name, "trajectory_j/set_ratio_v",
          _arm_name + "/trajectory_j/set_ratio_v");
     subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float64>
@@ -241,6 +244,9 @@ void dvrk::console::bridge_interface_provided_arm(const std::string & _arm_name,
     events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
         (_required_interface_name, "goal_reached",
          _arm_name + "/goal_reached");
+    events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float64>
+        (_required_interface_name, "trajectory_j/ratio",
+         _arm_name + "/trajectory_j/ratio");
     events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float64>
         (_required_interface_name, "trajectory_j/ratio_v",
          _arm_name + "/trajectory_j/ratio_v");
