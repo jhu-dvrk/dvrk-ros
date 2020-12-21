@@ -28,15 +28,8 @@ import math
 
 import crtk
 import rospy
-import numpy
 import PyKDL
-
-# we should probably not import the symbols and put them in current namespace
-from tf import transformations
-from tf_conversions import posemath
-from std_msgs.msg import String, Bool, Float32, Empty, Float64MultiArray
-from geometry_msgs.msg import Pose, PoseStamped, Vector3, Quaternion, Wrench, WrenchStamped, TwistStamped
-from sensor_msgs.msg import JointState, Joy
+import std_msgs.msg
 
 class arm(object):
     """Simple arm API wrapping around ROS messages
@@ -103,13 +96,23 @@ class arm(object):
         frame = PyKDL.Frame()
         self.__body_set_cf_orientation_absolute_pub = rospy.Publisher(self.__full_ros_namespace
                                                                       + '/body/set_cf_orientation_absolute',
-                                                                      Bool, latch = True, queue_size = 1)
+                                                                      std_msgs.msg.Bool, latch = True, queue_size = 1)
         self.__use_gravity_compensation_pub = rospy.Publisher(self.__full_ros_namespace
                                                               + '/use_gravity_compensation',
-                                                              Bool, latch = True, queue_size = 1)
+                                                              std_msgs.msg.Bool, latch = True, queue_size = 1)
+        self.__trajectory_j_set_ratio_pub = rospy.Publisher(self.__full_ros_namespace
+                                                            + '/trajectory_j/set_ratio',
+                                                            std_msgs.msg.Float64, latch = True, queue_size = 1)
+
         self.__pub_list = [self.__body_set_cf_orientation_absolute_pub,
-                           self.__use_gravity_compensation_pub]
+                           self.__use_gravity_compensation_pub,
+                           self.__trajectory_j_set_ratio_pub]
         # subscribers
+        self.__trajectory_j_ratio_sub = rospy.Subscriber(self.__full_ros_namespace
+                                                         + '/trajectory_j/ratio',
+                                                         std_msgs.msg.Float64, self.__trajectory_j_ratio_cb)
+
+        self.__sub_list = [self.__trajectory_j_ratio_sub]
 
         # create node
         if not rospy.get_node_uri():
@@ -128,19 +131,35 @@ class arm(object):
 
     def body_set_cf_orientation_absolute(self, absolute):
         """Apply body wrench using body orientation (relative/False) or reference frame (absolute/True)"""
-        m = Bool()
+        m = std_msgs.msg.Bool()
         m.data = absolute
         self.__body_set_cf_orientation_absolute_pub.publish(m)
 
 
     def use_gravity_compensation(self, gravity_compensation):
         "Turn on/off gravity compensation in cartesian effort mode"
-        g = Bool()
+        g = std_msgs.msg.Bool()
         g.data = gravity_compensation
         self.__use_gravity_compensation_pub.publish(g)
 
 
-    def unregister(self, verbose=False):
+    def trajectory_j_set_ratio(self, ratio):
+        """Set ratio applied to max velocities and accelerations used for
+        joint trajectory generation.  Value should be in range ]0,
+        1]
+        """
+        r = std_msgs.msg.Float64()
+        r.data = ratio
+        self.__trajectory_j_set_ratio_pub.publish(r)
+
+    def __trajectory_j_ratio_cb(self, msg):
+        self.__trajectory_j_ratio = msg.data
+
+    def trajectory_j_ratio(self):
+        return self.__trajectory_j_ratio
+
+
+    def unregister(self, verbose = False):
         for sub in self.__sub_list:
             sub.unregister()
         if verbose:

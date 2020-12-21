@@ -13,6 +13,8 @@
 
 from dvrk.arm import *
 
+import numpy
+
 class ecm(arm):
     """Simple robot API wrapping around ROS messages
     """

@@ -13,6 +13,8 @@
 
 from dvrk.arm import *
 
+import numpy
+
 class psm(arm):
     """Simple robot API wrapping around ROS messages
     """
@@ -46,7 +48,7 @@ class psm(arm):
         # publishers
         self.__set_tool_present_pub = rospy.Publisher(self._arm__full_ros_namespace
                                                       + '/set_tool_present',
-                                                      Bool, latch = True, queue_size = 1)
+                                                      std_msgs.msg.Bool, latch = True, queue_size = 1)
 
         self._arm__pub_list.extend([self.__set_tool_present_pub])
 
@@ -58,6 +60,6 @@ class psm(arm):
 
     def set_tool_present(self, tool_present):
         "Set tool inserted.  To be used only for custom tools that can't be detected automatically"
-        tp = Bool()
+        tp = std_msgs.msg.Bool()
         tp.data = tool_present
         self.__set_tool_present_pub.publish(tp)

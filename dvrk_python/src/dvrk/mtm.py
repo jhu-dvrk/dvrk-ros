@@ -13,6 +13,8 @@
 
 from dvrk.arm import *
 
+import geometry_msgs.msg
+
 class mtm(arm):
     """Simple robot API wrapping around ROS messages
     """
@@ -32,10 +34,10 @@ class mtm(arm):
         # publishers
         self.__lock_orientation_pub = rospy.Publisher(self._arm__full_ros_namespace
                                                       + '/lock_orientation',
-                                                      Quaternion, latch = True, queue_size = 1)
+                                                      geometry_msgs.msg.Quaternion, latch = True, queue_size = 1)
         self.__unlock_orientation_pub = rospy.Publisher(self._arm__full_ros_namespace
                                                         + '/unlock_orientation',
-                                                        Empty, latch = True, queue_size = 1)
+                                                        std_msgs.msg.Empty, latch = True, queue_size = 1)
 
         self._arm__pub_list.extend([self.__lock_orientation_pub,
                                     self.__unlock_orientation_pub])
@@ -47,13 +49,13 @@ class mtm(arm):
 
 
     def lock_orientation(self, orientation):
-        """Lock orientation, expect a PyKDL rotation matrix (PyKDL.Rotation)"""
-        q = Quaternion()
+        """Lock orientation, expects a PyKDL rotation matrix (PyKDL.Rotation)"""
+        q = geometry_msgs.msg.Quaternion()
         q.x, q.y, q.z, q.w = orientation.GetQuaternion()
         self.__lock_orientation_pub.publish(q);
 
 
     def unlock_orientation(self):
         "Unlock orientation"
-        e = Empty()
+        e = std_msgs.msg.Empty()
         self.__unlock_orientation_pub.publish(e);
