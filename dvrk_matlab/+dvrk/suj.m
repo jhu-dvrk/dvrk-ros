@@ -7,7 +7,7 @@ classdef suj < dynamicprops
     % To home and check current state:
     %   s.home();
     %
-    % Naming convention follows CRTK conventions
+    % Naming follows CRTK convention
 
     % values set by this class, can be read by others
     properties (Access = protected)
@@ -28,11 +28,16 @@ classdef suj < dynamicprops
         end
 
         function self = suj(name)
-            self.ros_namespace = name;
-            self.PSM1 = dvrk.suj_arm(strcat(name, '/PSM1'));
-            self.PSM2 = dvrk.suj_arm(strcat(name, '/PSM2'));
-            self.PSM3 = dvrk.suj_arm(strcat(name, '/PSM3'));
-            self.ECM = dvrk.suj_arm(strcat(name, '/ECM'));
+            narginchk(0, 1)
+            if nargin == 1
+                self.ros_namespace = name;
+            else
+                self.ros_namespace = 'SUJ';
+            end
+            self.PSM1 = dvrk.suj_arm(strcat(self.ros_namespace, '/PSM1'));
+            self.PSM2 = dvrk.suj_arm(strcat(self.ros_namespace, '/PSM2'));
+            self.PSM3 = dvrk.suj_arm(strcat(self.ros_namespace, '/PSM3'));
+            self.ECM = dvrk.suj_arm(strcat(self.ros_namespace, '/ECM'));
         end
 
         function delete(self)
