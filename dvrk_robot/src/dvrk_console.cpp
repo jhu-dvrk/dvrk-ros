@@ -387,6 +387,15 @@ void dvrk::console::add_topics_console(void)
         ("Console", "teleop_psm_unselected",
          _ros_namespace + "/teleop/teleop_psm_unselected");
 
+    events_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float32>
+        ("Console", "set_volume",
+         _ros_namespace + "/set_volume");
+    events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float32>
+        ("Console", "volume",
+         _ros_namespace + "/volume");
+    events_bridge().AddSubscriberToCommandWrite<vctDoubleVec, std_msgs::Float64MultiArray>
+        ("Console", "beep",
+         _ros_namespace + "/beep");
     events_bridge().AddSubscriberToCommandWrite<std::string, std_msgs::String>
         ("Console", "string_to_speech",
          _ros_namespace + "/string_to_speech");
