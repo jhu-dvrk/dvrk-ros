@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2021 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -217,7 +217,7 @@ void dvrk::console::bridge_interface_provided_arm(const std::string & _arm_name,
     const std::string _required_interface_name = _arm_name + "_using_" + _interface_name;
 
     subscribers_bridge().AddSubscriberToCommandWrite<prmPositionCartesianSet, geometry_msgs::Pose>
-        (_required_interface_name, "SetBaseFrame",
+        (_required_interface_name, "set_base_frame",
          _arm_name + "/set_base_frame");
     subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float64>
         (_required_interface_name, "trajectory_j/set_ratio",
@@ -272,11 +272,11 @@ void dvrk::console::bridge_interface_provided_ecm(const std::string & _arm_name,
     const std::string _required_interface_name = _arm_name + "_using_" + _interface_name;
 
     subscribers_bridge().AddSubscriberToCommandWrite<std::string, std_msgs::String>
-        (_required_interface_name, "SetEndoscopeType",
+        (_required_interface_name, "set_endoscope_type",
          _arm_name + "/set_endoscope_type");
 
     events_bridge().AddPublisherFromEventWrite<std::string, std_msgs::String>
-        (_required_interface_name, "EndoscopeType",
+        (_required_interface_name, "endoscope_type",
          _arm_name + "/endoscope_type");
     events_bridge().AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
         (_required_interface_name, "ManipClutch",
@@ -331,23 +331,23 @@ void dvrk::console::bridge_interface_provided_psm(const std::string & _arm_name,
     const std::string _required_interface_name = _arm_name + "_using_" + _interface_name;
 
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        (_required_interface_name, "SetAdapterPresent",
+        (_required_interface_name, "set_adapter_present",
          _arm_name + "/set_adapter_present");
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        (_required_interface_name, "SetToolPresent",
+        (_required_interface_name, "set_tool_present",
          _arm_name + "/set_tool_present");
     subscribers_bridge().AddSubscriberToCommandWrite<std::string, std_msgs::String>
-        (_required_interface_name, "SetToolType",
+        (_required_interface_name, "set_tool_type",
          _arm_name + "/set_tool_type");
 
     events_bridge().AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
         (_required_interface_name, "ManipClutch",
          _arm_name + "/manip_clutch");
     events_bridge().AddPublisherFromEventVoid
-        (_required_interface_name, "ToolTypeRequest",
+        (_required_interface_name, "tool_type_request",
          _arm_name + "/tool_type_request");
     events_bridge().AddPublisherFromEventWrite<std::string, std_msgs::String>
-        (_required_interface_name, "ToolType",
+        (_required_interface_name, "tool_type",
          _arm_name + "/tool_type");
 }
 
@@ -356,39 +356,39 @@ void dvrk::console::add_topics_console(void)
     const std::string _ros_namespace = "console/";
 
     subscribers_bridge().AddSubscriberToCommandVoid
-        ("Console", "PowerOff",
+        ("Console", "power_off",
          _ros_namespace + "power_off");
     subscribers_bridge().AddSubscriberToCommandVoid
-        ("Console", "PowerOn",
+        ("Console", "power_on",
          _ros_namespace + "power_on");
     subscribers_bridge().AddSubscriberToCommandVoid
-        ("Console", "Home",
+        ("Console", "home",
          _ros_namespace + "home");
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        ("Console", "TeleopEnable",
+        ("Console", "teleop_enable",
          _ros_namespace + "teleop/enable");
     subscribers_bridge().AddSubscriberToCommandWrite<std::string, std_msgs::String>
-        ("Console", "CycleTeleopPSMByMTM",
+        ("Console", "cycle_teleop_psm_by_mtm",
          _ros_namespace + "teleop/cycle_teleop_psm_by_mtm");
     subscribers_bridge().AddSubscriberToCommandWrite<prmKeyValue, diagnostic_msgs::KeyValue>
-        ("Console", "SelectTeleopPSM",
+        ("Console", "select_teleop_psm",
          _ros_namespace + "teleop/select_teleop_psm");
     subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float32>
-        ("Console", "SetScale",
+        ("Console", "set_scale",
          _ros_namespace + "teleop/set_scale");
 
     events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float32>
-        ("Console", "Scale",
+        ("Console", "scale",
          _ros_namespace + "/teleop/scale");
     events_bridge().AddPublisherFromEventWrite<prmKeyValue, diagnostic_msgs::KeyValue>
-        ("Console", "TeleopPSMSelected",
+        ("Console", "teleop_psm_selected",
          _ros_namespace + "/teleop/teleop_psm_selected");
     events_bridge().AddPublisherFromEventWrite<prmKeyValue, diagnostic_msgs::KeyValue>
-        ("Console", "TeleopPSMUnselected",
+        ("Console", "teleop_psm_unselected",
          _ros_namespace + "/teleop/teleop_psm_unselected");
 
     events_bridge().AddSubscriberToCommandWrite<std::string, std_msgs::String>
-        ("Console", "StringToSpeech",
+        ("Console", "string_to_speech",
          _ros_namespace + "/string_to_speech");
 
     events_bridge().AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
@@ -408,13 +408,13 @@ void dvrk::console::add_topics_console(void)
                       m_console->GetName(), "Camera");
 
     subscribers_bridge().AddSubscriberToCommandWrite<prmEventButton, sensor_msgs::Joy>
-        ("Console", "EmulateOperatorPresent",
+        ("Console", "emulate_operator_present",
          _ros_namespace + "/emulate_operator_present");
     subscribers_bridge().AddSubscriberToCommandWrite<prmEventButton, sensor_msgs::Joy>
-        ("Console", "EmulateClutch",
+        ("Console", "emulate_clutch",
          _ros_namespace + "/emulate_clutch");
     subscribers_bridge().AddSubscriberToCommandWrite<prmEventButton, sensor_msgs::Joy>
-        ("Console", "EmulateCamera",
+        ("Console", "emulate_camera",
          _ros_namespace + "/emulate_camera");
 
     m_connections.Add(subscribers_bridge().GetName(), "Console",
@@ -430,24 +430,24 @@ void dvrk::console::add_topics_endoscope_focus(void)
 
     // events
     events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
-        (_focus_component_name, "Locked",
+        (_focus_component_name, "locked",
          _ros_namespace + "/locked");
     events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
-        (_focus_component_name, "FocusingIn",
+        (_focus_component_name, "focusing_in",
          _ros_namespace + "/focusing_in");
     events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
-        (_focus_component_name, "FocusingOut",
+        (_focus_component_name, "focusing_out",
          _ros_namespace + "/focusing_out");
 
     // commands
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        (_focus_component_name, "Lock",
+        (_focus_component_name, "lock",
          _ros_namespace + "/lock");
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        (_focus_component_name, "FocusIn",
+        (_focus_component_name, "focus_in",
          _ros_namespace + "/focus_in");
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        (_focus_component_name, "FocusOut",
+        (_focus_component_name, "focus_out",
          _ros_namespace + "/focus_out");
 
     m_connections.Add(subscribers_bridge().GetName(), _focus_component_name,
@@ -559,9 +559,9 @@ void dvrk::console::add_topics_teleop_ecm(const std::string & _name)
     events_bridge().AddPublisherFromEventWrite<std::string, std_msgs::String>
         (_name, "current_state", _ros_namespace + "/current_state");
     events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float32>
-        (_name, "Scale", _ros_namespace + "/scale");
+        (_name, "scale", _ros_namespace + "/scale");
     events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
-        (_name, "Following", _ros_namespace + "/following");
+        (_name, "following", _ros_namespace + "/following");
     // connect
     m_connections.Add(events_bridge().GetName(), _name,
                       _name, "Setting");
@@ -571,7 +571,7 @@ void dvrk::console::add_topics_teleop_ecm(const std::string & _name)
         (_name, "state_command",
          _ros_namespace + "/state_command");
     subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float32>
-        (_name, "SetScale",
+        (_name, "set_scale",
          _ros_namespace + "/set_scale");
     // connect
     m_connections.Add(subscribers_bridge().GetName(), _name,
@@ -596,8 +596,8 @@ void dvrk::console::add_topics_teleop_psm(const std::string & _name)
 
     // publisher
     m_pub_bridge->AddPublisherFromCommandRead<vctMatRot3, geometry_msgs::QuaternionStamped>
-        (_name, "GetAlignOffset",
-         _ros_namespace + "/align_offset");
+        (_name, "alignment_offset",
+         _ros_namespace + "/alignment_offset");
     // connect
     m_connections.Add(m_pub_bridge->GetName(), _name,
                       _name, "Setting");
@@ -608,17 +608,17 @@ void dvrk::console::add_topics_teleop_psm(const std::string & _name)
     events_bridge().AddPublisherFromEventWrite<std::string, std_msgs::String>
         (_name, "current_state", _ros_namespace + "/current_state");
     events_bridge().AddPublisherFromEventWrite<bool, sensor_msgs::Joy>
-        (_name, "RotationLocked",
+        (_name, "rotation_locked",
          _ros_namespace + "/rotation_locked");
     events_bridge().AddPublisherFromEventWrite<bool, sensor_msgs::Joy>
-        (_name, "TranslationLocked",
+        (_name, "translation_locked",
          _ros_namespace + "/translation_locked");
     events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float32>
-        (_name, "Scale", _ros_namespace + "/scale");
+        (_name, "scale", _ros_namespace + "/scale");
     events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
-        (_name, "Following", _ros_namespace + "/following");
+        (_name, "following", _ros_namespace + "/following");
     events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
-        (_name, "AlignMTM", _ros_namespace + "/align_mtm");
+        (_name, "align_mtm", _ros_namespace + "/align_mtm");
     // connect
     m_connections.Add(events_bridge().GetName(), _name,
                       _name, "Setting");
@@ -628,19 +628,19 @@ void dvrk::console::add_topics_teleop_psm(const std::string & _name)
         (_name, "state_command",
          _ros_namespace + "/state_command");
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        (_name, "LockTranslation",
+        (_name, "lock_translation",
          _ros_namespace + "/lock_translation");
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        (_name, "LockRotation",
+        (_name, "lock_rotation",
          _ros_namespace + "/lock_rotation");
     subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float32>
-        (_name, "SetScale",
+        (_name, "set_scale",
          _ros_namespace + "/set_scale");
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        (_name, "SetAlignMTM",
+        (_name, "set_align_mtm",
          _ros_namespace + "/set_align_mtm");
     subscribers_bridge().AddSubscriberToCommandWrite<vctMatRot3, geometry_msgs::Quaternion>
-        (_name, "SetRegistrationRotation",
+        (_name, "set_registration_rotation",
          _ros_namespace + "/set_registration_rotation");
     // connect
     m_connections.Add(subscribers_bridge().GetName(), _name,
