@@ -370,6 +370,10 @@ void dvrk::console::add_topics_console(void)
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         ("Console", "teleop_enable",
          _ros_namespace + "teleop/enable");
+    events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
+        ("Console", "teleop_enabled",
+         _ros_namespace + "teleop/enabled");
+
     subscribers_bridge().AddSubscriberToCommandWrite<std::string, std_msgs::String>
         ("Console", "cycle_teleop_psm_by_mtm",
          _ros_namespace + "teleop/cycle_teleop_psm_by_mtm");
