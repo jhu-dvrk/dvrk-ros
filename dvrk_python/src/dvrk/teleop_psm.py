@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-08
 
-# (C) Copyright 2016-2020 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2016-2021 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -13,7 +13,7 @@
 
 import rospy
 
-from std_msgs.msg import Bool, Float32, Empty, String
+from std_msgs.msg import Bool, Float64, Empty, String
 from geometry_msgs.msg import Quaternion
 
 class teleop_psm(object):
@@ -39,7 +39,7 @@ class teleop_psm(object):
         # publishers
         self.__set_scale_pub = rospy.Publisher(self.__full_ros_namespace
                                                + '/set_scale',
-                                               Float32, latch = True, queue_size = 1)
+                                               Float64, latch = True, queue_size = 1)
         self.__set_registration_rotation_pub = rospy.Publisher(self.__full_ros_namespace
                                                                + '/set_registration_rotation',
                                                                Quaternion, latch = True, queue_size = 1)
@@ -50,7 +50,7 @@ class teleop_psm(object):
         # subscribers
         rospy.Subscriber(self.__full_ros_namespace
                          + '/scale',
-                         Float32, self.__scale_cb)
+                         Float64, self.__scale_cb)
 
         # create node
         if not rospy.get_node_uri():

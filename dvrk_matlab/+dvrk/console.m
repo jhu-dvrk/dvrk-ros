@@ -38,7 +38,7 @@ classdef console < handle
             % teleop scale
             topic = strcat(self.ros_namespace, 'console/teleop/scale');
             self.teleop_scale_subscriber = ...
-                rossubscriber(topic, rostype.std_msgs_Float32);
+                rossubscriber(topic, rostype.std_msgs_Float64);
 
             % ----------- publishers
             % power off
@@ -59,7 +59,7 @@ classdef console < handle
 
             % teleop set scale
             topic = strcat(self.ros_namespace, 'console/teleop/set_scale');
-            self.teleop_set_scale_publisher = rospublisher(topic, rostype.std_msgs_Float32);
+            self.teleop_set_scale_publisher = rospublisher(topic, rostype.std_msgs_Float64);
         end
 
 

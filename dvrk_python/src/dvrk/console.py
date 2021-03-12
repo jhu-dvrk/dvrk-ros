@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-05
 
-# (C) Copyright 2016-2020 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2016-2021 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -13,7 +13,7 @@
 
 import rospy
 
-from std_msgs.msg import Bool, Float32, Empty
+from std_msgs.msg import Bool, Float64, Empty
 
 class console(object):
     """Simple dVRK console API wrapping around ROS messages
@@ -50,12 +50,12 @@ class console(object):
                                                    Bool, latch = True, queue_size = 1)
         self.__teleop_set_scale_pub = rospy.Publisher(self.__console_namespace
                                                       + '/teleop/set_scale',
-                                                      Float32, latch = True, queue_size = 1)
+                                                      Float64, latch = True, queue_size = 1)
 
         # subscribers
         rospy.Subscriber(self.__console_namespace
                          + '/teleop/scale',
-                         Float32, self.__teleop_scale_cb)
+                         Float64, self.__teleop_scale_cb)
 
         # create node
         if not rospy.get_node_uri():

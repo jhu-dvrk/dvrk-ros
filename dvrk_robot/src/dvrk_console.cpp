@@ -340,7 +340,7 @@ void dvrk::console::bridge_interface_provided_psm(const std::string & _arm_name,
         (_required_interface_name, "set_tool_type",
          _arm_name + "/set_tool_type");
 
-    events_bridge().AddPublisherFromEventWrite<prmEventButton, std_msgs::Bool>
+    events_bridge().AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
         (_required_interface_name, "ManipClutch",
          _arm_name + "/manip_clutch");
     events_bridge().AddPublisherFromEventVoid
@@ -377,11 +377,11 @@ void dvrk::console::add_topics_console(void)
     subscribers_bridge().AddSubscriberToCommandWrite<prmKeyValue, diagnostic_msgs::KeyValue>
         ("Console", "select_teleop_psm",
          _ros_namespace + "teleop/select_teleop_psm");
-    subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float32>
+    subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float64>
         ("Console", "set_scale",
          _ros_namespace + "teleop/set_scale");
 
-    events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float32>
+    events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float64>
         ("Console", "scale",
          _ros_namespace + "/teleop/scale");
     events_bridge().AddPublisherFromEventWrite<prmKeyValue, diagnostic_msgs::KeyValue>
@@ -391,10 +391,10 @@ void dvrk::console::add_topics_console(void)
         ("Console", "teleop_psm_unselected",
          _ros_namespace + "/teleop/teleop_psm_unselected");
 
-    events_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float32>
+    events_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float64>
         ("Console", "set_volume",
          _ros_namespace + "/set_volume");
-    events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float32>
+    events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float64>
         ("Console", "volume",
          _ros_namespace + "/volume");
     events_bridge().AddSubscriberToCommandWrite<vctDoubleVec, std_msgs::Float64MultiArray>
@@ -476,10 +476,10 @@ void dvrk::console::add_topics_io(void)
         ("io", "period_statistics",
          _ros_namespace + "period_statistics");
     m_pub_bridge->AddPublisherFromCommandRead<mtsIntervalStatistics, cisst_msgs::mtsIntervalStatistics>
-        ("io", "GetPeriodStatisticsRead",
+        ("io", "period_statistics_read",
          _ros_namespace + "period_statistics_read");
     m_pub_bridge->AddPublisherFromCommandRead<mtsIntervalStatistics, cisst_msgs::mtsIntervalStatistics>
-        ("io", "GetPeriodStatisticsWrite",
+        ("io", "period_statistics_write",
          _ros_namespace + "period_statistics_write");
 
     m_connections.Add(m_pub_bridge->GetName(), "io",
@@ -571,7 +571,7 @@ void dvrk::console::add_topics_teleop_ecm(const std::string & _name)
         (_name, "desired_state", _ros_namespace + "/desired_state");
     events_bridge().AddPublisherFromEventWrite<std::string, std_msgs::String>
         (_name, "current_state", _ros_namespace + "/current_state");
-    events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float32>
+    events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float64>
         (_name, "scale", _ros_namespace + "/scale");
     events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
         (_name, "following", _ros_namespace + "/following");
@@ -583,7 +583,7 @@ void dvrk::console::add_topics_teleop_ecm(const std::string & _name)
     subscribers_bridge().AddSubscriberToCommandWrite<std::string, crtk_msgs::StringStamped>
         (_name, "state_command",
          _ros_namespace + "/state_command");
-    subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float32>
+    subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float64>
         (_name, "set_scale",
          _ros_namespace + "/set_scale");
     // connect
@@ -626,7 +626,7 @@ void dvrk::console::add_topics_teleop_psm(const std::string & _name)
     events_bridge().AddPublisherFromEventWrite<bool, sensor_msgs::Joy>
         (_name, "translation_locked",
          _ros_namespace + "/translation_locked");
-    events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float32>
+    events_bridge().AddPublisherFromEventWrite<double, std_msgs::Float64>
         (_name, "scale", _ros_namespace + "/scale");
     events_bridge().AddPublisherFromEventWrite<bool, std_msgs::Bool>
         (_name, "following", _ros_namespace + "/following");
@@ -646,7 +646,7 @@ void dvrk::console::add_topics_teleop_psm(const std::string & _name)
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (_name, "lock_rotation",
          _ros_namespace + "/lock_rotation");
-    subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float32>
+    subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float64>
         (_name, "set_scale",
          _ros_namespace + "/set_scale");
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
