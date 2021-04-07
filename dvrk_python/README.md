@@ -1,5 +1,7 @@
 ## Introduction
 
+The dVRK Python package is based on the CRTK Python ROS client library: https://github.com/collaborative-robotics/crtk_python_client.  The API is following the CRTK conventions: https://github.com/collaborative-robotics/documentation/wiki/Robot-API-motion.
+
 This directory contains:
 * dvrk_python module.  This modules defines the class `robot` which uses the dVRK ROS topics to communicate with the `dvrk_console_json` application included in the `dvrk_robot` ROS package.
 * tutorial examples.  Python scripts using the `dvrk_python` module.
@@ -10,10 +12,11 @@ You will need to build the dVRK software stack using the ROS catkin build tools,
 
 The `dvrk_python` package is included in the `dvrk_ros` git repository.  Please checkout the whole `dvrk_ros` repository and build it using the catkin build tools (don't use `catkin_make`).
 
-You will also need some extra Python packages:
-```sh
-   sudo apt-get install ros-hydro-python-orocos-kdl ros-hydro-orocos-kinematics-dynamics ros-hydro-tf
-```
+The dVRK Python ROS client now relies on CRTK so you will also need the following packages:
+* https://github.com/collaborative-robotics/crtk_msgs
+* https://github.com/collaborative-robotics/crtk_python_client
+
+If you followed the dVRK build instructions above, these CRTK packages are likely already installed in your workspace
 
 ## Runtime
 
@@ -27,7 +30,7 @@ Once the console is running, you can check which arms are available using the `r
   rostopic list
 ```
 
-You should see one namespace per arm under `/dvrk`, e.g. `/dvrk/PSM1`, `/dvrk/MTML` and/or `/dvrk/ECM` based on your console configuration.
+You should see one namespace per arm, e.g. `/PSM1`, `/MTML` and/or `/ECM` based on your console configuration.
 
 Then in Python:
 ```python
@@ -36,55 +39,44 @@ import dvrk
 p = dvrk.psm('PSM1')
 
 # You can home from Python
+p.enable()
 p.home()
 
 # retrieve current info (numpy.array)
-p.get_current_joint_position()
-p.get_current_joint_velocity()
-p.get_current_joint_effort()
+p.measured_jp()
+p.measured_jv()
+p.measured_jf()
 
 # retrieve PID desired position and effort computed
-p.get_desired_joint_position()
-p.get_desired_joint_effort()
+p.setpoint_jp()
+p.setpoint_jf()
 
 # retrieve cartesian current and desired positions
 # PyKDL.Frame
-p.get_desired_position()
-p.get_current_position()
+p.measured_cp()
+p.setpoint_cp()
 
 # move in joint space
 # move is absolute (SI units)
-# dmove is relative
-
-# move a single joint, index starts at 0
-p.dmove_joint_one(-0.05, 2) # move 3rd joint
-p.move_joint_one(0.2, 0) # first joint
 
 # move multiple joints
 import numpy
-p.dmove_joint_some(numpy.array([-0.1, -0.1]), numpy.array([0, 1]))
-p.move_joint_some(numpy.array([0.0, 0.0]), numpy.array([0, 1]))
-
-# move all joints
-p.dmove_joint(numpy.array([0.0, 0.0, -0.05, 0.0, 0.0, 0.0, 0.0]))
-p.move_joint(numpy.array([0.0, 0.0, 0.10, 0.0, 0.0, 0.0, 0.0]))
+p.move_jp(numpy.array([0.0, 0.0, 0.10, 0.0, 0.0, 0.0]))
 
 # move in cartesian space
-# there are only 2 methods available, dmove and move
-# both accept PyKDL Frame, Vector or Rotation
 import PyKDL
-p.dmove(PyKDL.Vector(0.0, 0.05, 0.0)) # 5 cm in Y direction 
-p.move(PyKDL.Vector(0.0, 0.0, -0.05))
-
-# save current orientation
-old_orientation = p.get_desired_position().M
+# start position
+goal = p.setpoint_cp()
+# move 5cm in z direction
+goal.p[2] += 0.05
+p.move_cp(goal).wait()
 
 import math
-r = PyKDL.Rotation()
-r.DoRotX(math.pi * 0.25)
-p.dmove(r)
-
-p.move(old_orientation)
+# start position
+goal = p.setpoint_cp()
+# rotate tool tip frame by 25 degrees
+goal.M.DoRotX(math.pi * 0.25)
+p.move_cp(goal).wait()
 ```
 
 To apply wrenches on MTMs, start ipython and type the following commands while holding the MTM (otherwise the arm will start moving and might bang itself against the console and get damaged).
@@ -98,7 +90,7 @@ m = mtm('MTML')
 m.set_wrench_body_orientation_absolute(True)
 
 # about 2N force in y direction
-m.set_wrench_body_force((0.0, 2.0, 0.0))
+m.body.servo_cf(numpy.array([0.0, 0.0, 2.0, 0.0, 0.0, 0.0]))
 
 # lock the MTM wrist orientation
 m.lock_orientation_as_is()
@@ -107,6 +99,6 @@ m.lock_orientation_as_is()
 m.set_gravity_compensation(True)
 
 # turn off forces
-m.set_wrench_body_force((0.0, 0.0, 0.0))
+self.arm.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
 ```
 To access arm specific features (e.g. PSM, MTM, ...), you can use the derived classes `psm` or `mtm`.   For example `from dvrk.psm import *`.

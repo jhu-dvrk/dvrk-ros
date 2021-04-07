@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-05-23
 
-  (C) Copyright 2015-2018 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -19,29 +19,69 @@ http://www.cisst.org/cisst/license.txt.
 #ifndef _dvrk_console_h
 #define _dvrk_console_h
 
-#include <dvrk_utilities/dvrk_add_topics_functions.h>
+#include <cisst_ros_crtk/mts_ros_crtk_bridge.h>
 
 class mtsIntuitiveResearchKitConsole;
 
 namespace dvrk {
-    class console
+    class console: public mts_ros_crtk_bridge
     {
+        CMN_DECLARE_SERVICES(CMN_NO_DYNAMIC_CREATION, CMN_LOG_ALLOW_DEFAULT);
+
     public:
-        console(const double & publish_rate_in_seconds,
+        console(const std::string & name,
+                ros::NodeHandle * node_handle,
+                const double & publish_rate_in_seconds,
                 const double & tf_rate_in_seconds,
-                const std::string & ros_namespace,
-                mtsIntuitiveResearchKitConsole * mts_console,
-                const dvrk_topics_version::version version);
+                mtsIntuitiveResearchKitConsole * mts_console);
         void Configure(const std::string & jsonFile);
-        void Connect(void);
+
+        // methods using CRTK bridge_interface_provided method
+        void bridge_interface_provided_arm(const std::string & _component_name,
+                                           const std::string & _interface_name,
+                                           const double _publish_period_in_seconds,
+                                           const double _tf_period_in_seconds);
+
+        void bridge_interface_provided_ecm(const std::string & _component_name,
+                                           const std::string & _interface_name,
+                                           const double _publish_period_in_seconds,
+                                           const double _tf_period_in_seconds);
+
+        void bridge_interface_provided_mtm(const std::string & _component_name,
+                                           const std::string & _interface_name,
+                                           const double _publish_period_in_seconds,
+                                           const double _tf_period_in_seconds);
+
+        void bridge_interface_provided_psm(const std::string & _component_name,
+                                           const std::string & _interface_name,
+                                           const double _publish_period_in_seconds,
+                                           const double _tf_period_in_seconds);
+
+        // dVRK specific topics
+        void add_topics_console(void);
+        void add_topics_endoscope_focus(void);
+        // IO timing
+        void add_topics_io(void);
+        // low level IO for a given arm if requested by user
+        void add_topics_arm_io(mtsROSBridge * _pub_bridge,
+                               const std::string & _arm_name,
+                               const std::string & _io_component_name);
+        // buttons on ECM
+        void add_topics_ecm_io(const std::string & _arm_name,
+                               const std::string & _io_component_name);
+        // buttons on PSM
+        void add_topics_psm_io(const std::string & _arm_name,
+                               const std::string & _io_component_name);
+        void add_topics_teleop_ecm(const std::string & _name);
+        void add_topics_teleop_psm(const std::string & _name);
+
     protected:
-        std::string mBridgeName;
-        std::string mTfBridgeName;
-        std::string mNameSpace;
-        mtsIntuitiveResearchKitConsole * mConsole;
-        dvrk_topics_version::version mVersion;
-        std::list<std::string> mIOInterfaces;
+        mtsROSBridge * m_pub_bridge;
+        mtsIntuitiveResearchKitConsole * m_console;
     };
 }
+
+typedef dvrk::console dvrk_console;
+CMN_DECLARE_SERVICES_INSTANTIATION(dvrk_console);
 
 #endif // _dvrk_console_h

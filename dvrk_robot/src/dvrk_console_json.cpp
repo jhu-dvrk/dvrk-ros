@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2019 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -32,6 +32,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <QApplication>
 #include <QIcon>
 #include <QLocale>
+
 #include <clocale>
 
 #include <ros/ros.h>
@@ -68,34 +69,26 @@ int main(int argc, char ** argv)
     cmnLogger::AddChannel(logFileStream);
     cmnLogger::HaltDefaultLog(); // stop log to default cisstLog.txt
 
-    // ---- WARNING: hack to remove ros args ----
-    ros::V_string argout;
-    ros::removeROSArgs(argc, argv, argout);
-    argc = argout.size();
-    // ------------------------------------------
+    // create ROS node handle
+    ros::init(argc, argv, "dvrk", ros::init_options::AnonymousName);
+    ros::NodeHandle rosNodeHandle;
 
     // parse options
     cmnCommandLineOptions options;
     std::string jsonMainConfigFile;
-    std::string rosNamespace = "dvrk/";
-    double rosPeriod = 10.0 * cmn_ms;
+    double publishPeriod = 10.0 * cmn_ms;
     double tfPeriod = 20.0 * cmn_ms;
     std::list<std::string> jsonIOConfigFiles;
-    std::string versionString = "v1_4_0";
-    typedef std::list<std::string> managerConfigType;
-    managerConfigType managerConfig;
+    std::list<std::string> managerConfig;
+    std::string qtStyle;
 
     options.AddOptionOneValue("j", "json-config",
                               "json configuration file",
                               cmnCommandLineOptions::REQUIRED_OPTION, &jsonMainConfigFile);
 
-    options.AddOptionOneValue("n", "ros-namespace",
-                              "ROS namespace to prefix all topics, must end with \"/\" if not empty (default is \"dvrk/\")",
-                              cmnCommandLineOptions::OPTIONAL_OPTION, &rosNamespace);
-
     options.AddOptionOneValue("p", "ros-period",
                               "period in seconds to read all arms/teleop components and publish (default 0.01, 10 ms, 100Hz).  There is no point to have a period higher than the arm component's period",
-                              cmnCommandLineOptions::OPTIONAL_OPTION, &rosPeriod);
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &publishPeriod);
 
     options.AddOptionOneValue("P", "tf-ros-period",
                               "period in seconds to read all components and broadcast tf2 (default 0.02, 20 ms, 50Hz).  There is no point to have a period higher than the arm component's period",
@@ -108,13 +101,16 @@ int main(int argc, char ** argv)
     options.AddOptionNoValue("t", "text-only",
                              "text only interface, do not create Qt widgets");
 
-    options.AddOptionOneValue("c", "compatibility",
-                              "compatibility mode, e.g. \"v1_3_0\", \"v1_4_0\"",
-                              cmnCommandLineOptions::OPTIONAL_OPTION, &versionString);
-
     options.AddOptionMultipleValues("m", "component-manager",
                                     "JSON files to configure component manager",
                                     cmnCommandLineOptions::OPTIONAL_OPTION, &managerConfig);
+
+    options.AddOptionOneValue("S", "qt-style",
+                              "Qt style, use this option with a random name to see available styles",
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &qtStyle);
+
+    options.AddOptionNoValue("D", "dark-mode",
+                             "replaces the default Qt palette with darker colors");
 
     // check that all required options have been provided
     std::string errorMessage;
@@ -126,19 +122,6 @@ int main(int argc, char ** argv)
     std::string arguments;
     options.PrintParsedArguments(arguments);
     std::cout << "Options provided:" << std::endl << arguments;
-
-    // check version mode
-    dvrk_topics_version::version versionEnum;
-    try {
-        versionEnum = dvrk_topics_version::versionFromString(versionString);
-    } catch (std::exception e) {
-        std::cerr << "Compatibility mode " << versionString << " is invalid" << std::endl;
-        std::cerr << "Possible values are: ";
-        std::cerr << cmnData<std::vector<std::string> >::HumanReadable(dvrk_topics_version::versionVectorString());
-        std::cerr << std::endl;
-        return -1;
-    }
-    std::cout << "Using compatibility mode: " << versionString << std::endl;
 
     const bool hasQt = !options.IsSet("text-only");
 
@@ -160,19 +143,31 @@ int main(int argc, char ** argv)
         application = new QApplication(argc, argv);
         application->setWindowIcon(QIcon(":/dVRK.png"));
         cmnQt::QApplicationExitsOnCtrlC();
+        if (options.IsSet("qt-style")) {
+            std::string errorMessage = cmnQt::SetStyle(qtStyle);
+            if (errorMessage != "") {
+                std::cerr << errorMessage << std::endl;
+                return -1;
+            }
+        }
+        if (options.IsSet("dark-mode")) {
+            cmnQt::SetDarkMode();
+        }
         consoleQt = new mtsIntuitiveResearchKitConsoleQt();
         consoleQt->Configure(console);
         consoleQt->Connect();
     }
 
     // create a console with all dVRK ROS topics
-    // - rosPeriod is used to control publish rate
+    // - publishPeriod is used to control publish rate
     // - tfPeriod is used to control tf broadcast rate
     //
     // this also adds a mtsROSBridge that performs the ros::spinOnce
     // in a separate thread as fast possible
-    dvrk::console * consoleROS = new dvrk::console(rosPeriod, tfPeriod, rosNamespace,
-                                                   console, versionEnum);
+    dvrk::console * consoleROS = new dvrk::console("dvrk_robot",
+                                                   &rosNodeHandle,
+                                                   publishPeriod, tfPeriod,
+                                                   console);
     // IOs
     const std::list<std::string>::const_iterator end = jsonIOConfigFiles.end();
     std::list<std::string>::const_iterator iter;
@@ -183,25 +178,13 @@ int main(int argc, char ** argv)
         consoleROS->Configure(*iter);
     }
 
+    componentManager->AddComponent(consoleROS);
     consoleROS->Connect();
 
     // custom user component
-    const managerConfigType::iterator endConfig = managerConfig.end();
-    for (managerConfigType::iterator iterConfig = managerConfig.begin();
-         iterConfig != endConfig;
-         ++iterConfig) {
-        if (!iterConfig->empty()) {
-            if (!cmnPath::Exists(*iterConfig)) {
-                CMN_LOG_INIT_ERROR << "File " << *iterConfig
-                                   << " not found!" << std::endl;
-            } else {
-                if (!componentManager->ConfigureJSON(*iterConfig)) {
-                    CMN_LOG_INIT_ERROR << "Configure: failed to configure component-manager for "
-                                       << *iterConfig << std::endl;
-                    return -1;
-                }
-            }
-        }
+    if (!componentManager->ConfigureJSON(managerConfig)) {
+        CMN_LOG_INIT_ERROR << "Configure: failed to configure component-manager, check cisstLog for error messages" << std::endl;
+        return -1;
     }
 
     //-------------- create the components ------------------
@@ -222,6 +205,9 @@ int main(int argc, char ** argv)
     // stop all logs
     cmnLogger::Kill();
     cmnLogger::RemoveChannel(logFileStream);
+
+    // stop ROS node
+    ros::shutdown();
 
     delete console;
     if (hasQt) {

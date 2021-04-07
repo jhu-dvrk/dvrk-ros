@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-05
 
-#   (C) Copyright 2016-2017 Johns Hopkins University (JHU), All Rights Reserved.
+#   (C) Copyright 2016-2020 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -13,20 +13,19 @@
 
 from dvrk.arm import *
 
+import numpy
+
 class ecm(arm):
     """Simple robot API wrapping around ROS messages
     """
     # initialize the robot
-    def __init__(self, ecm_name, ros_namespace = '/dvrk/'):
+    # initialize the robot
+    def __init__(self, arm_name, ros_namespace = '', expected_interval = 0.01):
         # first call base class constructor
-        self._arm__init_arm(ecm_name, ros_namespace)
+        self._arm__init_arm(arm_name, ros_namespace, expected_interval)
 
-
-    def insert_endoscope(self, depth, interpolate = True, blocking = True):
-        "insert the endoscope, by moving it to an absolute depth"
-        return self.move_joint_one(depth, 2, interpolate, blocking)
-
-
-    def dinsert_endoscope(self, depth, interpolate = True, blocking = True):
-        "insert the endoscope, by moving it an additional depth"
-        return self.dmove_joint_one(depth, 2, interpolate, blocking)
+    def insert_jp(self, depth):
+        "insert the tool, by moving it to an absolute depth"
+        goal = numpy.copy(self.setpoint_jp())
+        goal[2] = depth
+        return self.move_jp(goal)
