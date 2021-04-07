@@ -1,6 +1,28 @@
 Change log
 ==========
 
+2.0.0 (2021-04-08)
+==================
+
+* API changes:
+  * All ROS topics have change to follow the CRTK naming convention, see CHANGELOG for sawIntuitiveResearchKit
+  * ROS namespaces don't use the prefix `dvrk`.  Use the standard ROS option `__ns:=` if you need a specific namespace
+* Deprecated features:
+  * None
+* New features:
+  * Added `.rosinstall` file
+  * Using Matlab and Python client based on CRTK clients - APIs are now consistent across languages
+  * Matlab python now used `+dvrk` to create dVRK package (see https://github.com/collaborative-robotics/crtk_matlab_client)
+  * ROS bridge uses *cisst-ros* CRTK bridge for most ROS topics
+  * Added `dvrk_hsrv_widget`, a simple widget that can be displayed in surgeon's console to show dVRK status
+  * Added experimental script to calibrate PSM joint 3 (inserttion joint): `dvrk_calibrate_potentiometer_psm.py`
+  * Added `dvrk_arm_from_ros` which allows to create a dVRK console with a remote arm over ROS.  This can be used for tele-operation across network
+  * More topics exposed, endoscope focus, volume, beep, text to speech, forward kinematic...  See full API: https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki/API-2.x
+* Bug fixes:
+  * Better ROS shutdown for C++ applications
+  * Support ctrl-c for Python code
+  * Plenty
+
 1.7.0 (2019-04-09)
 ==================
 
