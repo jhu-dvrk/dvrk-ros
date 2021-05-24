@@ -101,6 +101,9 @@ int main(int argc, char ** argv)
     options.AddOptionNoValue("t", "text-only",
                              "text only interface, do not create Qt widgets");
 
+    options.AddOptionNoValue("c", "calibration-mode",
+                             "run in calibration mode, doesn't use potentiometers to monitor encoder values and always force re-homing.  This mode should only be used when calibrating your potentiometers.");
+
     options.AddOptionMultipleValues("m", "component-manager",
                                     "JSON files to configure component manager",
                                     cmnCommandLineOptions::OPTIONAL_OPTION, &managerConfig);
@@ -130,6 +133,7 @@ int main(int argc, char ** argv)
 
     // console
     mtsIntuitiveResearchKitConsole * console = new mtsIntuitiveResearchKitConsole("console");
+    console->set_calibration_mode(options.IsSet("calibration-mode"));
     fileExists("console JSON configuration file", jsonMainConfigFile);
     console->Configure(jsonMainConfigFile);
     componentManager->AddComponent(console);

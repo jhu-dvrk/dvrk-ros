@@ -67,9 +67,9 @@ dvrk::console::console(const std::string & name,
     for (armIter = m_console->mArms.begin();
          armIter != armEnd;
          ++armIter) {
-        if (!armIter->second->mSkipROSBridge) {
+        if (!armIter->second->m_skip_ROS_bridge) {
             const std::string name = armIter->first;
-            switch (armIter->second->mType) {
+            switch (armIter->second->m_type) {
             case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
             case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
                 // custom dVRK
@@ -81,9 +81,9 @@ dvrk::console::console(const std::string & name,
                 // custom dVRK
                 bridge_interface_provided_ecm(name, "Arm",
                                               publish_rate_in_seconds, tf_rate_in_seconds);
-                if (armIter->second->mSimulation
+                if (armIter->second->m_simulation
                     == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
-                    add_topics_ecm_io(name, armIter->second->mIOComponentName);
+                    add_topics_ecm_io(name, armIter->second->m_IO_component_name);
                 }
                 break;
             case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
@@ -91,9 +91,9 @@ dvrk::console::console(const std::string & name,
                 // custom dVRK
                 bridge_interface_provided_psm(name, "Arm",
                                               publish_rate_in_seconds, tf_rate_in_seconds);
-                if (armIter->second->mSimulation
+                if (armIter->second->m_simulation
                     == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
-                    add_topics_psm_io(name, armIter->second->mIOComponentName);
+                    add_topics_psm_io(name, armIter->second->m_IO_component_name);
                 }
                 break;
             case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
@@ -483,7 +483,7 @@ void dvrk::console::add_topics_io(void)
          _ros_namespace + "period_statistics_write");
 
     m_connections.Add(m_pub_bridge->GetName(), "io",
-                      m_console->mIOComponentName, "Configuration");
+                      m_console->m_IO_component_name, "Configuration");
 }
 
 void dvrk::console::add_topics_arm_io(mtsROSBridge * _pub_bridge,
