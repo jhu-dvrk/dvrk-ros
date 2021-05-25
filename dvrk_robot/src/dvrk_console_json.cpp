@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2021 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -26,6 +26,10 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstCommon/cmnGetChar.h>
 #include <cisstCommon/cmnQt.h>
 #include <cisstOSAbstraction/osaGetTime.h>
+#include <cisstMultiTask/mtsCollectorFactory.h>
+#include <cisstMultiTask/mtsCollectorQtFactory.h>
+#include <cisstMultiTask/mtsCollectorQtWidget.h>
+
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsoleQt.h>
 
@@ -79,6 +83,7 @@ int main(int argc, char ** argv)
     double publishPeriod = 10.0 * cmn_ms;
     double tfPeriod = 20.0 * cmn_ms;
     std::list<std::string> jsonIOConfigFiles;
+    std::string jsonCollectionConfigFile;
     std::list<std::string> managerConfig;
     std::string qtStyle;
 
@@ -101,7 +106,11 @@ int main(int argc, char ** argv)
     options.AddOptionNoValue("t", "text-only",
                              "text only interface, do not create Qt widgets");
 
-    options.AddOptionNoValue("c", "calibration-mode",
+    options.AddOptionOneValue("c", "collection-config",
+                              "json configuration file for data collection using cisstMultiTask state table collector",
+                              cmnCommandLineOptions::OPTIONAL_OPTION, &jsonCollectionConfigFile);
+
+    options.AddOptionNoValue("C", "calibration-mode",
                              "run in calibration mode, doesn't use potentiometers to monitor encoder values and always force re-homing.  This mode should only be used when calibrating your potentiometers.");
 
     options.AddOptionMultipleValues("m", "component-manager",
@@ -160,6 +169,28 @@ int main(int argc, char ** argv)
         consoleQt = new mtsIntuitiveResearchKitConsoleQt();
         consoleQt->Configure(console);
         consoleQt->Connect();
+    }
+
+    // configure data collection if needed
+    if (options.IsSet("collection-config")) {
+        // make sure the json config file exists
+        fileExists("JSON data collection configuration", jsonCollectionConfigFile);
+
+        mtsCollectorFactory * collectorFactory = new mtsCollectorFactory("collectors");
+        collectorFactory->Configure(jsonCollectionConfigFile);
+        componentManager->AddComponent(collectorFactory);
+        collectorFactory->Connect();
+
+        if (hasQt) {
+            mtsCollectorQtWidget * collectorQtWidget = new mtsCollectorQtWidget();
+            consoleQt->addTab(collectorQtWidget, "Collection");
+
+            mtsCollectorQtFactory * collectorQtFactory = new mtsCollectorQtFactory("collectorsQt");
+            collectorQtFactory->SetFactory("collectors");
+            componentManager->AddComponent(collectorQtFactory);
+            collectorQtFactory->Connect();
+            collectorQtFactory->ConnectToWidget(collectorQtWidget);
+        }
     }
 
     // create a console with all dVRK ROS topics
