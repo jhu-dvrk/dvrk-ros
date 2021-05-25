@@ -1,6 +1,18 @@
 Change log
 ==========
 
+2.0.1 (2021-05-26)
+==================
+
+* API changes:
+  * None
+* New features:
+  * dvrk_console_json:
+    * Added calibration mode (command line option -C) to disable potentiometer checks and saving encoder offsets when calibrating potentiometers
+    * Added command line option to use cisstMultiTask state table collectors (-c)
+* Bug fixes:
+  * None
+
 2.0.0 (2021-04-08)
 ==================
 
