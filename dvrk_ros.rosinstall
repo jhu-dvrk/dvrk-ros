@@ -17,7 +17,7 @@
 - git:
     local-name: cisst-saw/sawControllers
     uri: https://github.com/jhu-saw/sawControllers
-    version: 2.0.0
+    version: devel
 - git:
     local-name: cisst-saw/sawTextToSpeech
     uri: https://github.com/jhu-saw/sawTextToSpeech
@@ -41,8 +41,8 @@
 - git:
     local-name: cisst-saw/sawIntuitiveResearchKit
     uri: https://github.com/jhu-dvrk/sawIntuitiveResearchKit
-    version: 2.0.1
+    version: devel
 - git:
     local-name: dvrk-ros
     uri: https://github.com/jhu-dvrk/dvrk-ros
-    version: 2.0.1
+    version: devel
