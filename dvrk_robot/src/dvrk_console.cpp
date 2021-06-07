@@ -492,7 +492,7 @@ void dvrk::console::add_topics_arm_io(mtsROSBridge * _pub_bridge,
 {
     const std::string _ros_namespace = _arm_name + "/io/";
     const std::string _interface_name = _arm_name + "-io";
-    _pub_bridge->AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
+    _pub_bridge->AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
         (_interface_name, "GetAnalogInputPosSI",
          _ros_namespace + "/analog_input_pos_si");
     _pub_bridge->AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
