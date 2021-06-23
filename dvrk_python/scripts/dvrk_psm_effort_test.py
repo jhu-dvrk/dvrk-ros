@@ -3,7 +3,7 @@
 # Author: Anton Deguet
 # Date: 2015-02-22
 
-# (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2015-2021 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -118,7 +118,7 @@ class example_application:
         duration = 10  # seconds
         samples = duration / self.expected_interval
         # create a new goal starting with current position
-        for i in xrange(int(samples)):
+        for i in range(int(samples)):
             effort_joint[0] = 0.5 *  (1.0 - math.cos(i * 10.0 * math.radians(360.0) / samples))
             effort_joint[1] = 0.5 *  (1.0 - math.cos(i * 10.0 * math.radians(360.0) / samples))
             rospy.sleep(self.expected_interval)
@@ -147,7 +147,7 @@ class example_application:
 
         print_id('hold the arm close to the tool tip and keep an hand on the Enter key, the arm will push in Z direction')
         input("    Press Enter to continue...")
-        self.arm.set_wrench_body_orientation_absolute(True)
+        self.arm.body_set_cf_orientation_absolute(True)
         self.arm.body.servo_cf(numpy.array([0.0, 0.0, 2.0, 0.0, 0.0, 0.0]))
 
         print_id('the jaws will be released')

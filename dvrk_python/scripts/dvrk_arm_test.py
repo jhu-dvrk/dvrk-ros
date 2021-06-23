@@ -3,7 +3,7 @@
 # Author: Anton Deguet
 # Date: 2015-02-22
 
-# (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2015-2021 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -112,7 +112,7 @@ class example_application:
         # create a new goal starting with current position
         goal = numpy.copy(initial_joint_position)
         start = rospy.Time.now()
-        for i in xrange(int(samples)):
+        for i in range(int(samples)):
             goal[0] = initial_joint_position[0] + amplitude *  (1.0 - math.cos(i * math.radians(360.0) / samples))
             goal[1] = initial_joint_position[1] + amplitude *  (1.0 - math.cos(i * math.radians(360.0) / samples))
             self.arm.servo_jp(goal)
@@ -171,7 +171,7 @@ class example_application:
         duration = 5  # 5 seconds
         samples = duration / self.expected_interval
         start = rospy.Time.now()
-        for i in xrange(int(samples)):
+        for i in range(int(samples)):
             goal.p[0] =  initial_cartesian_position.p[0] + amplitude *  (1.0 - math.cos(i * math.radians(360.0) / samples))
             goal.p[1] =  initial_cartesian_position.p[1] + amplitude *  (1.0 - math.cos(i * math.radians(360.0) / samples))
             self.arm.servo_cp(goal)
