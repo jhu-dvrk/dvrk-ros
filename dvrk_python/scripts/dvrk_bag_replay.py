@@ -118,6 +118,8 @@ print('-- Homing arm')
 if not arm.home(10):
     sys.exit('-- Failed to home within 10 seconds')
 
+input('---> Make sure the arm is ready to move using cartesian positions.  For a PSM or ECM, you need to have a tool in place and the tool tip needs to be outside the cannula.  You might have to manually adjust your arm.  Press "\Enter" when the arm is ready.')
+
 input('---> Press \"Enter\" to move to start position')
 
 # Create frame using first pose and use blocking move
