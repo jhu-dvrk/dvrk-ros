@@ -17,7 +17,7 @@
 # > rosrun dvrk_robot dvrk_console_json -j <console-file>
 
 # To communicate with the arm using ROS topics, see the python based example dvrk_arm_test.py:
-# > rosrun dvrk_python dvrk_bag_replay
+# > rosrun dvrk_python dvrk_bag_replay.py -a PSM1 -b /home/anton/2021-06-24-10-55-04.bag -t /PSM1/local/measured_cp
 
 import dvrk
 import sys
@@ -46,7 +46,7 @@ parser.add_argument('-i', '--interval', type = float, default = 0.01,
 parser.add_argument('-b', '--bag', type = argparse.FileType('r'), required = True,
                     help = 'ros bag containing the trajectory to replay.  The script assumes the topic to use is /<arm>/setpoint_cp.  You can change the topic used with the -t option')
 parser.add_argument('-t', '--topic', type = str,
-                    help = 'topic used in the ros bag.  If not set, the script will use /<arm>/setpoint_cp.  Other examples: /PSM1/local/setpoint_cp')
+                    help = 'topic used in the ros bag.  If not set, the script will use /<arm>/setpoint_cp.  Other examples: /PSM1/local/setpoint_cp.  This is useful if you recorded the trajectory on a PSM with a base-frame defined in the console.json and you are replaying the trajectory on a PSM without a base-frame (e.g. default console provided with PSM in kinematic simulation mode.  This option allows to use the recorded setpoints without base-frame')
 
 args = parser.parse_args(argv[1:]) # skip argv[0], script name
 
