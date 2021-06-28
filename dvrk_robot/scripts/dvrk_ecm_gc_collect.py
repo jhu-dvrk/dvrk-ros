@@ -25,7 +25,7 @@ def dvrk_ecm_gc_collect(robot_name):
     now_string = now.strftime("%Y-%m-%d-%H-%M")
     csv_file_name = 'ecm-gc-' + now_string + '.csv'
     print("Values will be saved in: ", csv_file_name)
-    f = open(csv_file_name, 'wb')
+    f = open(csv_file_name, 'w')
     writer = csv.writer(f)
 
     # compute joint limits
@@ -62,23 +62,23 @@ def dvrk_ecm_gc_collect(robot_name):
                     positions[index] = future
                     next_dimension_increment = False
 
-        robot.move_joint(numpy.array([positions[0],
-                                      positions[1],
-                                      positions[2],
-                                      0.0]))
+        robot.move_jp(numpy.array([positions[0],
+                                   positions[1],
+                                   positions[2],
+                                   0.0])).wait()
         time.sleep(1.0)
-        writer.writerow([robot.get_current_joint_position()[0],
-                         robot.get_current_joint_position()[1],
-                         robot.get_current_joint_position()[2],
-                         robot.get_current_joint_effort()[0],
-                         robot.get_current_joint_effort()[1],
-                         robot.get_current_joint_effort()[2]])
+        writer.writerow([robot.measured_jp()[0],
+                         robot.measured_jp()[1],
+                         robot.measured_jp()[2],
+                         robot.measured_jf()[0],
+                         robot.measured_jf()[1],
+                         robot.measured_jf()[2]])
 
     f.close()
-    robot.move_joint(numpy.array([0.0, 0.0, 0.0, 0.0]))
+    robot.move_jp(numpy.array([0.0, 0.0, 0.0, 0.0])).wait()
 
 if __name__ == '__main__':
     if (len(sys.argv) != 2):
-        print sys.argv[0] + ' requires arm name, e.g. ECM'
+        print('%s requires arm name, e.g. ECM' % (sys.argv[0])) 
     else:
         dvrk_ecm_gc_collect(sys.argv[1])
