@@ -176,7 +176,7 @@ class potentiometer_calibration:
             # write all values to csv file
             csv_file_name = 'pot_calib_scales_' + self._robot_name + '-' + self._serial_number + '-' + now_string + '.csv'
             print("Values will be saved in: %s" % csv_file_name)
-            f = open(csv_file_name, 'wb')
+            f = open(csv_file_name, 'w')
             writer = csv.writer(f)
             header = []
             for axis in range(nb_axis):
@@ -242,7 +242,7 @@ class potentiometer_calibration:
             # write all values to csv file
             csv_file_name = 'pot_calib_offsets_' + self._robot_name + '-' + self._serial_number + '-' + now_string + '.csv'
             print("Values will be saved in: ", csv_file_name)
-            f = open(csv_file_name, 'wb')
+            f = open(csv_file_name, 'w')
             writer = csv.writer(f)
             header = []
             for axis in range(nb_axis):
@@ -254,7 +254,7 @@ class potentiometer_calibration:
             if arm_type == "PSM":
                 print("For a PSM, you need to hold at least the last 4 joints in zero position.  If you don't have a way to constrain the first 3 joints, you can still just calibrate the last 4.  This program will ask you later if you want to save all PSM joint offsets");
             input("Press [enter] to continue\n")
-            nb_samples = 10 * nb_samples_per_position
+            nb_samples = 5 * nb_samples_per_position
             for sample in range(nb_samples):
                 for axis in range(nb_axis):
                     average_offsets[axis].append(self._last_potentiometers[axis] * r2d)
