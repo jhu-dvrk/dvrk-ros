@@ -9,7 +9,7 @@
 - git:
     local-name: cisst-saw/cisst-ros
     uri: https://github.com/jhu-cisst/cisst-ros
-    version: 2.0.0
+    version: devel
 - git:
     local-name: cisst-saw/sawRobotIO1394
     uri: https://github.com/jhu-saw/sawRobotIO1394
@@ -33,11 +33,11 @@
 - git:
     local-name: crtk/crtk_python_client
     uri: https://github.com/collaborative-robotics/crtk_python_client
-    version: devel
+    version: 1.0.1
 - git:
     local-name: crtk/crtk_matlab_client
     uri: https://github.com/collaborative-robotics/crtk_matlab_client
-    version: 1.0.0
+    version: 1.0.1
 - git:
     local-name: cisst-saw/sawIntuitiveResearchKit
     uri: https://github.com/jhu-dvrk/sawIntuitiveResearchKit

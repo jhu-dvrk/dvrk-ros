@@ -83,7 +83,7 @@ counter = 0
 handle = arm.move_jp(goal)
 while handle.is_busy():
     counter = counter + 1
-    sys.stdout.write('\r-- Loop counter: %d' % (counter))
+    sys.stdout.write('\r---> Loop counter: %d' % (counter))
     sys.stdout.flush()
 
 # second motion
@@ -91,7 +91,7 @@ goal[0] = initial_joint_position[0] - amplitude
 handle = arm.move_jp(goal)
 while handle.is_busy():
     counter = counter + 1
-    sys.stdout.write('\r-- Loop counter: %d' % (counter))
+    sys.stdout.write('\r---> Loop counter: %d' % (counter))
     sys.stdout.flush()
 
 # back to initial position
@@ -104,4 +104,4 @@ while handle.is_busy():
 print('')
 print('--> Time for the full trajectory: %f seconds' % (time.time() - start_time))
 
-print('--> You can change the trajectory velocity in the GUI using "arm", "Direct control" and lower the "100%%" factor.  Then re-run this program.')
+print('--> You can change the trajectory velocity in the GUI using "%s", "Direct control" and lower the "100%%" factor.  Then re-run this program.' % (args.arm))

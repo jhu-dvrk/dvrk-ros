@@ -2,7 +2,7 @@
 
 # Authors: Nick Eusman, Anton Deguet
 # Date: 2015-09-24
-# Copyright JHU 2015-2020
+# Copyright JHU 2015-2021
 
 import time
 import rospy
@@ -254,7 +254,7 @@ class potentiometer_calibration:
             if arm_type == "PSM":
                 print("For a PSM, you need to hold at least the last 4 joints in zero position.  If you don't have a way to constrain the first 3 joints, you can still just calibrate the last 4.  This program will ask you later if you want to save all PSM joint offsets");
             input("Press [enter] to continue\n")
-            nb_samples = 5 * nb_samples_per_position
+            nb_samples = 2 * nb_samples_per_position
             for sample in range(nb_samples):
                 for axis in range(nb_axis):
                     average_offsets[axis].append(self._last_potentiometers[axis] * r2d)
