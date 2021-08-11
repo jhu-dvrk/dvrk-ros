@@ -9,15 +9,15 @@
 - git:
     local-name: cisst-saw/cisst-ros
     uri: https://github.com/jhu-cisst/cisst-ros
-    version: devel
+    version: 2.0.0
 - git:
     local-name: cisst-saw/sawRobotIO1394
     uri: https://github.com/jhu-saw/sawRobotIO1394
-    version: devel
+    version: 2.1.0
 - git:
     local-name: cisst-saw/sawControllers
     uri: https://github.com/jhu-saw/sawControllers
-    version: devel
+    version: 2.0.0
 - git:
     local-name: cisst-saw/sawTextToSpeech
     uri: https://github.com/jhu-saw/sawTextToSpeech
@@ -41,8 +41,8 @@
 - git:
     local-name: cisst-saw/sawIntuitiveResearchKit
     uri: https://github.com/jhu-dvrk/sawIntuitiveResearchKit
-    version: devel
+    version: 2.1.0
 - git:
     local-name: dvrk-ros
     uri: https://github.com/jhu-dvrk/dvrk-ros
-    version: devel
+    version: 2.1.0

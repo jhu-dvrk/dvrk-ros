@@ -1,6 +1,18 @@
 Change log
 ==========
 
+2.1.0 (2021-08-10)
+==================
+
+* API changes:
+  * Potentiometer ROS topics use joint state messages
+  * Instrument name is now following the convention `name:model[version]`.  It used to be `name_model`
+* New features:
+  * Added Python example `dvrk_bag_replay` to replay trajectory from a ROS bag
+  * Added Matlab and Python examples for new CRTK feature `while move_handle.is_busy()`
+* Bug fixes:
+  * Python 3
+
 2.0.1 (2021-05-26)
 ==================
 

@@ -61,9 +61,9 @@ if (cisst_FOUND_AS_REQUIRED)
 
 
   # sawRobotIO1394 has been compiled within cisst, we should find it automatically
-  find_package (sawRobotIO1394          2.0.0 REQUIRED)
+  find_package (sawRobotIO1394          2.1.0 REQUIRED)
   find_package (sawControllers          2.0.0 REQUIRED)
-  find_package (sawIntuitiveResearchKit 2.0.1 REQUIRED)
+  find_package (sawIntuitiveResearchKit 2.1.0 REQUIRED)
 
   include_directories (
     ${dvrk_robot_SOURCE_DIR}/include
