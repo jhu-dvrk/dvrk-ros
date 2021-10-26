@@ -88,6 +88,8 @@ dvrk::console::console(const std::string & name,
                 break;
             case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
             case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_S:
+            case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_S_DERIVED:
                 // custom dVRK
                 bridge_interface_provided_psm(name, "Arm",
                                               publish_rate_in_seconds, tf_rate_in_seconds);
