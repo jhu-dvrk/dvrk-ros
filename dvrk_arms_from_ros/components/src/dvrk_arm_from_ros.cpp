@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2020-01-13
 
-  (C) Copyright 2020 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2020-2021 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -22,76 +22,43 @@ http://www.cisst.org/cisst/license.txt.
 #include <dvrk_arm_from_ros.h>
 
 CMN_IMPLEMENT_SERVICES_DERIVED_ONEARG(dvrk_arm_from_ros,
-                                      mtsROSBridge,
+                                      mts_ros_crtk_bridge_required,
                                       mtsTaskPeriodicConstructorArg);
 
 dvrk_arm_from_ros::dvrk_arm_from_ros(const std::string & componentName,
+                                     ros::NodeHandle * _node_handle,
                                      const double periodInSeconds)
-    : mtsROSBridge(componentName, periodInSeconds)
+    : mts_ros_crtk_bridge_required(componentName, _node_handle, periodInSeconds)
 {
     Init();
 }
 
 dvrk_arm_from_ros::dvrk_arm_from_ros(const mtsTaskPeriodicConstructorArg & arg)
-    : mtsROSBridge(arg.Name, arg.Period)
+    : mts_ros_crtk_bridge_required(arg)
 {
     Init();
 }
 
 void dvrk_arm_from_ros::Init(void)
 {
-    std::string ros_namespace = this->GetName();
-    std::string interface_provided = this->GetName();
+    const auto ros_namespace = this->GetName();
+    const auto interface_provided = this->GetName();
 
-    AddPublisherFromCommandWrite<std::string, crtk_msgs::StringStamped>
-        (interface_provided,
-         "state_command",
-         ros_namespace + "/state_command");
+    typedef std::vector<std::string> Commands;
+    populate_interface_provided(interface_provided,
+                                ros_namespace,
+                                // write commands
+                                Commands({"state_command", "servo_cp"}),
+                                // read commands
+                                Commands({"operating_state", "period_statistics",
+                                          "setpoint_js", "measured_js", "setpoint_cp"}),
+                                // write events
+                                Commands({"operating_state", "error", "warning", "status"}));
 
-    AddPublisherFromCommandVoid
-        (interface_provided,
-         "Freeze",
-         ros_namespace + "/freeze");
-
-    AddPublisherFromCommandWrite<prmPositionCartesianSet, geometry_msgs::TransformStamped>
-        (interface_provided,
-         "servo_cp",
-         ros_namespace + "/servo_cp");
-
-    AddSubscriberToEventWrite<prmOperatingState, crtk_msgs::operating_state>
-        (interface_provided, "operating_state",
-         ros_namespace + "/operating_state");
-
-    AddSubscriberToCommandRead<prmOperatingState, crtk_msgs::operating_state>
-        (interface_provided, "operating_state",
-         ros_namespace + "/operating_state");
-
-    AddSubscriberToCommandRead<prmStateJoint, sensor_msgs::JointState>
-        (interface_provided,
-         "setpoint_js",
-         ros_namespace + "/setpoint_js");
-
-    AddSubscriberToCommandRead<prmPositionCartesianGet, geometry_msgs::TransformStamped>
-        (interface_provided,
-         "measured_cp",
-         ros_namespace + "/measured_cp");
-
-    AddSubscriberToCommandRead<mtsIntervalStatistics, cisst_msgs::mtsIntervalStatistics>
-        (interface_provided,
-         "period_statistics",
-         ros_namespace + "/period_statistics");
-
-    AddSubscriberToEventWrite<mtsMessage, std_msgs::String>
-        (interface_provided, "error",
-         ros_namespace + "/error");
-
-    AddSubscriberToEventWrite<mtsMessage, std_msgs::String>
-        (interface_provided, "warning",
-         ros_namespace + "/warning");
-
-    AddSubscriberToEventWrite<mtsMessage, std_msgs::String>
-        (interface_provided, "status",
-         ros_namespace + "/status");
+    // non CRTK commands
+    AddPublisherFromCommandVoid(interface_provided,
+                                "Freeze",
+                                ros_namespace + "/freeze");
 }
 
 // Configure is a virtual method, we can redefine it and have our own

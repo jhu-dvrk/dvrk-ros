@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2020-01-13
 
-  (C) Copyright 2020 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2020-2021 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -19,16 +19,18 @@ http://www.cisst.org/cisst/license.txt.
 #ifndef _dvrk_arm_from_ros_h
 #define _dvrk_arm_from_ros_h
 
-#include <cisst_ros_bridge/mtsROSBridge.h>
+#include <cisst_ros_crtk/mts_ros_crtk_bridge_required.h>
 
-class dvrk_arm_from_ros: public mtsROSBridge
+class dvrk_arm_from_ros: public mts_ros_crtk_bridge_required
 {
     CMN_DECLARE_SERVICES(CMN_DYNAMIC_CREATION_ONEARG, CMN_LOG_ALLOW_DEFAULT);
 
 public:
     typedef mtsROSBridge BaseType;
 
-    dvrk_arm_from_ros(const std::string & componentName, const double periodInSeconds);
+    dvrk_arm_from_ros(const std::string & componentName,
+                      ros::NodeHandle * _node_handle,
+                      const double periodInSeconds);
     dvrk_arm_from_ros(const mtsTaskPeriodicConstructorArg & arg);
     ~dvrk_arm_from_ros(){}
 

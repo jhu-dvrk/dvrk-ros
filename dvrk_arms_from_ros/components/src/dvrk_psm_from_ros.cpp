@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2020-01-13
 
-  (C) Copyright 2020 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2020-2021 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -26,35 +26,32 @@ CMN_IMPLEMENT_SERVICES_DERIVED_ONEARG(dvrk_psm_from_ros,
                                       mtsTaskPeriodicConstructorArg);
 
 dvrk_psm_from_ros::dvrk_psm_from_ros(const std::string & componentName,
+                                     ros::NodeHandle * _node_handle,
                                      const double periodInSeconds)
-    : dvrk_arm_from_ros(componentName, periodInSeconds)
+    : dvrk_arm_from_ros(componentName, _node_handle, periodInSeconds)
 {
     InitPSM();
 }
 
 dvrk_psm_from_ros::dvrk_psm_from_ros(const mtsTaskPeriodicConstructorArg & arg)
-    : dvrk_arm_from_ros(arg.Name, arg.Period)
+    : dvrk_arm_from_ros(arg)
 {
     InitPSM();
 }
 
 void dvrk_psm_from_ros::InitPSM(void)
 {
-    std::string ros_namespace = this->GetName();
-    std::string interface_provided = this->GetName();
 
-    AddPublisherFromCommandWrite<prmPositionJointSet, sensor_msgs::JointState>
-        (interface_provided,
-         "jaw/servo_jp",
-         ros_namespace + "/jaw/servo_jp");
+    const auto ros_namespace = this->GetName();
+    const auto interface_provided = this->GetName();
 
-    AddSubscriberToCommandRead<prmStateJoint, sensor_msgs::JointState>
-        (interface_provided,
-         "jaw/measured_js",
-         ros_namespace + "/jaw/measured_js");
-
-    AddSubscriberToCommandRead<prmStateJoint, sensor_msgs::JointState>
-        (interface_provided,
-         "jaw/setpoint_js",
-         ros_namespace + "/jaw/setpoint_js");
+    typedef std::vector<std::string> Commands;
+    populate_interface_provided(interface_provided,
+                                ros_namespace,
+                                // write commands
+                                Commands({"jaw/servo_jp"}),
+                                // read commands
+                                Commands({"jaw/setpoint_js", "jaw/measured_js"}),
+                                // write events
+                                Commands());
 }

@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-05-23
 
-  (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2021 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -19,12 +19,12 @@ http://www.cisst.org/cisst/license.txt.
 #ifndef _dvrk_console_h
 #define _dvrk_console_h
 
-#include <cisst_ros_crtk/mts_ros_crtk_bridge.h>
+#include <cisst_ros_crtk/mts_ros_crtk_bridge_provided.h>
 
 class mtsIntuitiveResearchKitConsole;
 
 namespace dvrk {
-    class console: public mts_ros_crtk_bridge
+    class console: public mts_ros_crtk_bridge_provided
     {
         CMN_DECLARE_SERVICES(CMN_NO_DYNAMIC_CREATION, CMN_LOG_ALLOW_DEFAULT);
 
