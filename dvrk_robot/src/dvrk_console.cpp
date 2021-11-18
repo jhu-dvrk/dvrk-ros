@@ -21,6 +21,7 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <dvrk_utilities/dvrk_console.h>
 #include <cisst_ros_bridge/mtsROSBridge.h>
+#include <cisst_ros_crtk/cisst_ros_crtk.h>
 
 #include <cisstCommon/cmnStrings.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
@@ -45,7 +46,7 @@ dvrk::console::console(const std::string & name,
 
     // create all ROS bridges
     std::string m_bridge_name = "dvrk_ros" + node_handle->getNamespace();
-    mts_ros_crtk::clean_namespace(m_bridge_name);
+    cisst_ros_crtk::clean_namespace(m_bridge_name);
 
     // shared publish bridge
     m_pub_bridge = new mtsROSBridge(m_bridge_name, publish_rate_in_seconds, node_handle);
@@ -555,7 +556,7 @@ void dvrk::console::add_topics_psm_io(const std::string & _arm_name,
 void dvrk::console::add_topics_teleop_ecm(const std::string & _name)
 {
     std::string _ros_namespace = _name;
-    mts_ros_crtk::clean_namespace(_ros_namespace);
+    cisst_ros_crtk::clean_namespace(_ros_namespace);
 
     // messages
     events_bridge().AddLogFromEventWrite(_name + "-log", "error",
@@ -596,7 +597,7 @@ void dvrk::console::add_topics_teleop_ecm(const std::string & _name)
 void dvrk::console::add_topics_teleop_psm(const std::string & _name)
 {
     std::string _ros_namespace = _name;
-    mts_ros_crtk::clean_namespace(_ros_namespace);
+    cisst_ros_crtk::clean_namespace(_ros_namespace);
 
     // messages
     events_bridge().AddLogFromEventWrite(_name + "-log", "error",
