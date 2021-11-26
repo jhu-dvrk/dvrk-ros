@@ -13,13 +13,20 @@
 
 # --- end cisst license ---
 
-# Start a single arm using
+# First collect a bag of data using rosbag while the robot is moving:
+# > rosbag record /PSM1/setpoint_cp /PSM1/setpoint_js /PSM1/jaw/setpoint_js
+# Hit ctrl+c to stop rosbag recording
+
+# Then start a single arm using:
 # > rosrun dvrk_robot dvrk_console_json -j <console-file>
 
-# To communicate with the arm using ROS topics, see the python based example dvrk_arm_test.py:
-# > rosrun dvrk_python dvrk_bag_replay.py -a PSM1 -b /home/anton/2021-06-24-10-55-04.bag -t /PSM1/local/measured_cp
+# After that, you can replay the trajectory using:
+# > rosrun dvrk_python dvrk_bag_replay.py -a PSM1 -b /home/anton/2021-06-24-10-55-04.bag -m servo_cp
 
-import dvrk
+# If you have a PSM and want to also replay the jaw motion, use -j
+# > rosrun dvrk_python dvrk_bag_replay.py -a PSM1 -b /home/anton/2021-06-24-10-55-04.bag -m servo_cp -j
+
+import crtk
 import sys
 import time
 import rospy
@@ -28,6 +35,35 @@ import numpy
 import PyKDL
 import argparse
 
+from crtk.utils import TransformFromMsg
+
+# simplified arm class to replay motion, better performance than
+# dvrk.arm since we're only subscribing to topics we need
+class replay_device:
+
+    # simplified jaw class to control the jaws, will not be used without the -j option
+    class __jaw_device:
+        def __init__(self, jaw_namespace,
+                     expected_interval, operating_state_instance):
+            self.__crtk_utils = crtk.utils(self, jaw_namespace,
+                                           expected_interval, operating_state_instance)
+            self.__crtk_utils.add_move_jp()
+            self.__crtk_utils.add_servo_jp()
+
+    def __init__(self, device_namespace, expected_interval):
+        # ROS initialization
+        if not rospy.get_node_uri():
+            rospy.init_node('simplified_arm_class', anonymous = True, log_level = rospy.WARN)
+        # populate this class with all the ROS topics we need
+        self.crtk_utils = crtk.utils(self, device_namespace, expected_interval)
+        self.crtk_utils.add_operating_state()
+        self.crtk_utils.add_servo_jp()
+	self.crtk_utils.add_move_jp()
+        self.crtk_utils.add_servo_cp()
+	self.crtk_utils.add_move_cp()
+        self.jaw = self.__jaw_device(device_namespace + '/jaw',
+                                     expected_interval,
+                                     operating_state_instance = self)
 if sys.version_info.major < 3:
     input = raw_input
 
@@ -45,69 +81,117 @@ parser.add_argument('-i', '--interval', type = float, default = 0.01,
                     help = 'expected interval in seconds between messages sent by the device')
 parser.add_argument('-b', '--bag', type = argparse.FileType('r'), required = True,
                     help = 'ros bag containing the trajectory to replay.  The script assumes the topic to use is /<arm>/setpoint_cp.  You can change the topic used with the -t option')
+parser.add_argument('-m', '--mode', type = str, required = True,
+                    choices = ['servo_jp', 'servo_cp'],
+                    help = 'topic used to send command to arm, either joint or cartesian positions')
 parser.add_argument('-t', '--topic', type = str,
                     help = 'topic used in the ros bag.  If not set, the script will use /<arm>/setpoint_cp.  Other examples: /PSM1/local/setpoint_cp.  This is useful if you recorded the trajectory on a PSM with a base-frame defined in the console.json and you are replaying the trajectory on a PSM without a base-frame (e.g. default console provided with PSM in kinematic simulation mode.  This option allows to use the recorded setpoints without base-frame')
+parser.add_argument('-j', '--jaw', action = 'store_true',
+                    help = 'specify if the PSM jaw should also be replayed.  The topic /<arm>/jaw/setpoint_js will be used to determine the jaw trajectory')
 
 args = parser.parse_args(argv[1:]) # skip argv[0], script name
 
+is_cp = (args.mode == 'servo_cp')
+has_jaw = args.jaw
+
+# default topic to get data from the ros bag, depends on the mode
 if args.topic is None:
-    topic = '/' + args.arm + '/setpoint_cp'
+    if is_cp:
+        topic = '/' + args.arm + '/setpoint_cp'
+    else:
+        topic = '/' + args.arm + '/setpoint_js'
 else:
     topic = args.topic
+
+if has_jaw:
+    jaw_topic = '/' + args.arm + '/jaw/setpoint_js'
 
 # info
 print('-- This script will use the topic %s\n   to replay a trajectory on arm %s' % (topic, args.arm))
 
 # parse bag and create list of points
-bbmin = numpy.zeros(3)
-bbmax = numpy.zeros(3)
-last_message_time = 0.0
-out_of_order_counter = 0
-poses = []
+setpoint_time_previous = 0.0
+setpoints_out_of_order = 0
+setpoints = []
+
+if has_jaw:
+    jaw_setpoint_time_previous = 0.0
+    jaw_setpoints_out_of_order = 0
+    jaw_setpoints = []
+
+# if mode is cartesian, compute a bounding box so user can make sure
+# scale and reference frame make sense
+if is_cp:
+    bbmin = numpy.zeros(3)
+    bbmax = numpy.zeros(3)
 
 print('-- Parsing bag %s' % (args.bag.name))
 for bag_topic, bag_message, t in rosbag.Bag(args.bag.name).read_messages():
     if bag_topic == topic:
         # check order of timestamps, drop if out of order
-        transform_time = bag_message.header.stamp.to_sec()
-        if transform_time <= last_message_time:
-            out_of_order_counter = out_of_order_counter + 1
+        setpoint_time = bag_message.header.stamp.to_sec()
+        if setpoint_time <= setpoint_time_previous:
+            setpoints_out_of_order += 1
         else:
             # append message
-            poses.append(bag_message)
-            # keep track of workspace
-            position = numpy.array([bag_message.transform.translation.x,
-                                    bag_message.transform.translation.y,
-                                    bag_message.transform.translation.z])
-            if len(poses) == 1:
-                bbmin = position
-                bbmax = position
-            else:
-                bbmin = numpy.minimum(bbmin, position)
-                bbmax = numpy.maximum(bbmax, position)
+            setpoints.append(bag_message)
+            setpoint_time_previous = setpoint_time
 
-print('-- Found %i setpoints using topic %s' % (len(poses), topic))
-if len(poses) == 0:
+            # keep track of workspace in cartesian space
+            if is_cp:
+                position = numpy.array([bag_message.transform.translation.x,
+                                        bag_message.transform.translation.y,
+                                        bag_message.transform.translation.z])
+                if len(setpoints) == 1:
+                    bbmin = position
+                    bbmax = position
+                else:
+                    bbmin = numpy.minimum(bbmin, position)
+                    bbmax = numpy.maximum(bbmax, position)
+
+    if has_jaw:
+        if bag_topic == jaw_topic:
+            # check order of timestamps, drop if out of order
+            jaw_setpoint_time = bag_message.header.stamp.to_sec()
+            if jaw_setpoint_time <= jaw_setpoint_time_previous:
+                jaw_setpoints_out_of_order += 1
+            else:
+                # append message
+                jaw_setpoints.append(bag_message)
+                jaw_setpoint_time_previous = jaw_setpoint_time
+
+print('-- Found %i setpoints using topic %s' % (len(setpoints), topic))
+if len(setpoints) == 0:
     print ('-- No trajectory found!')
     sys.exit()
 
 # report out of order setpoints
-if out_of_order_counter > 0:
-    print('-- Found and removed %i out of order setpoints' % (out_of_order_counter))
+if setpoints_out_of_order > 0:
+    print('-- Found and removed %i out of order setpoints' % (setpoints_out_of_order))
+
+# same thing for jaws
+if has_jaw:
+    print('-- Found %i jaw setpoints using topic %s' % (len(jaw_setpoints), jaw_topic))
+    if len(jaw_setpoints) == 0:
+        print ('-- No jaw trajectory found!')
+        sys.exit()
+    if jaw_setpoints_out_of_order > 0:
+        print('-- Found and removed %i out of order jaw setpoints' % (jaw_setpoints_out_of_order))
 
 # convert to mm
-bbmin = bbmin * 1000.0
-bbmax = bbmax * 1000.0
-print ('-- Range of motion in mm:\n   X:[%f, %f]\n   Y:[%f, %f]\n   Z:[%f, %f]'
-       % (bbmin[0], bbmax[0], bbmin[1], bbmax[1], bbmin[2], bbmax[2]))
+if is_cp:
+    bbmin = bbmin * 1000.0
+    bbmax = bbmax * 1000.0
+    print ('-- Range of motion in mm:\n   X:[%f, %f]\n   Y:[%f, %f]\n   Z:[%f, %f]\n  Make sure these values make sense.  If the ros bag was based on a different console configuration, the base frame might have changed and the trajectory might not be safe nor feasible.'
+           % (bbmin[0], bbmax[0], bbmin[1], bbmax[1], bbmin[2], bbmax[2]))
 
 # compute duration
-duration = poses[-1].header.stamp.to_sec() - poses[0].header.stamp.to_sec()
+duration = setpoints[-1].header.stamp.to_sec() - setpoints[0].header.stamp.to_sec()
 print ('-- Duration of trajectory: %f seconds' % (duration))
 
 # send trajectory to arm
-arm = dvrk.arm(arm_name = args.arm,
-               expected_interval = args.interval)
+arm = replay_device(device_namespace = args.arm,
+                    expected_interval = args.interval)
 
 # make sure the arm is powered
 print('-- Enabling arm')
@@ -118,48 +202,61 @@ print('-- Homing arm')
 if not arm.home(10):
     sys.exit('-- Failed to home within 10 seconds')
 
-input('---> Make sure the arm is ready to move using cartesian positions.  For a PSM or ECM, you need to have a tool in place and the tool tip needs to be outside the cannula.  You might have to manually adjust your arm.  Press "\Enter" when the arm is ready.')
+if is_cp:
+    input('-> Make sure the arm is ready to move using cartesian positions.  For a PSM or ECM, you need to have a tool in place and the tool tip needs to be outside the cannula.  You might have to manually adjust your arm.  Press "Enter" when the arm is ready.')
 
-input('---> Press \"Enter\" to move to start position')
+input('-> Press "Enter" to move to start position')
 
-# Create frame using first pose and use blocking move
-cp = PyKDL.Frame()
-cp.p = PyKDL.Vector(poses[0].transform.translation.x,
-                    poses[0].transform.translation.y,
-                    poses[0].transform.translation.z)
-cp.M = PyKDL.Rotation.Quaternion(poses[0].transform.rotation.x,
-                                 poses[0].transform.rotation.y,
-                                 poses[0].transform.rotation.z,
-                                 poses[0].transform.rotation.w)
-arm.move_cp(cp).wait()
+# move to the first position using arm trajectory generation (move_)
+if is_cp:
+    arm.move_cp(TransformFromMsg(setpoints[0].transform)).wait()
+else:
+    arm.move_jp(numpy.array(setpoints[0].position)).wait()
 
-# Replay
-input('---> Press \"Enter\" to replay trajectory')
+if has_jaw:
+    arm.jaw.move_jp(numpy.array(jaw_setpoints[0].position)).wait()
 
-last_time = poses[0].header.stamp.to_sec()
+# replay
+input('-> Press "Enter" to replay trajectory')
+
+last_bag_time = setpoints[0].header.stamp.to_sec()
 
 counter = 0
-total = len(poses)
+if has_jaw:
+    total = min(len(setpoints), len(jaw_setpoints))
+else:
+    total = len(setpoints)
+
 start_time = time.time()
 
-for pose in poses:
-    # crude sleep to emulate period.  This doesn't take into account
-    # time spend to compute cp from pose and publish so this will
-    # definitely be slower than recorded trajectory
-    new_time = pose.header.stamp.to_sec()
-    time.sleep(new_time - last_time)
-    last_time = new_time
-    cp.p = PyKDL.Vector(pose.transform.translation.x,
-                        pose.transform.translation.y,
-                        pose.transform.translation.z)
-    cp.M = PyKDL.Rotation.Quaternion(pose.transform.rotation.x,
-                                     pose.transform.rotation.y,
-                                     pose.transform.rotation.z,
-                                     pose.transform.rotation.w)
-    arm.servo_cp(cp)
+# for the replay, use the jp/cp setpoint for the arm to control the
+# execution time.  Jaw positions are picked in order without checking
+# time.  There might be better ways to synchronized the two
+# sequences...
+for index in range(total):
+    # record start time
+    loop_start_time = time.time()
+    # compute expected dt
+    new_bag_time = setpoints[index].header.stamp.to_sec()
+    delta_bag_time = new_bag_time - last_bag_time
+    last_bag_time = new_bag_time
+    # replay
+    if is_cp:
+        arm.servo_cp(TransformFromMsg(setpoints[index].transform))
+    else:
+        arm.servo_jp(numpy.array(setpoints[index].position))
+    if has_jaw:
+        arm.jaw.servo_jp(numpy.array(jaw_setpoints[index].position))
+    # update progress
     counter = counter + 1
     sys.stdout.write('\r-- Progress %02.1f%%' % (float(counter) / float(total) * 100.0))
     sys.stdout.flush()
+    # try to keep motion synchronized
+    loop_end_time = time.time()
+    sleep_time = delta_bag_time - (loop_end_time - loop_start_time)
+    # if process takes time larger than console rate, don't sleep
+    if sleep_time > 0:
+        time.sleep(sleep_time)
 
 print('\n--> Time to replay trajectory: %f seconds' % (time.time() - start_time))
 print('--> Done!')
