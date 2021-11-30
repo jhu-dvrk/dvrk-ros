@@ -51,9 +51,6 @@ class replay_device:
             self.__crtk_utils.add_servo_jp()
 
     def __init__(self, device_namespace, expected_interval):
-        # ROS initialization
-        if not rospy.get_node_uri():
-            rospy.init_node('simplified_arm_class', anonymous = True, log_level = rospy.WARN)
         # populate this class with all the ROS topics we need
         self.crtk_utils = crtk.utils(self, device_namespace, expected_interval)
         self.crtk_utils.add_operating_state()
