@@ -99,8 +99,12 @@ class example_application:
         print("Depth required to position O5 on RCM point: {0:4.2f}mm".format(self.q2 * 1000.0))
 
     # find range
-    def find_range(self):
-        print('Finding range of motion for joint 0\nMove the arm manually (pressing the clutch) to find the maximum range of motion for the first joint (left to right motion).\n - press "d" when you\'re done\n - press "q" to abort\n')
+    def find_range(self, swing_joint):
+        if swing_joint == 0:
+            print('Finding range of motion for joint 0\nMove the arm manually (pressing the clutch) to find the maximum range of motion for the first joint (left to right motion).\n - press "d" when you\'re done\n - press "q" to abort\n')
+        else:
+            print('Finding range of motion for joint 1\nMove the arm manually (pressing the clutch) to find the maximum range of motion for the second joint (back to front motion).\n - press "d" when you\'re done\n - press "q" to abort\n')
+
         self.min = math.radians( 180.0)
         self.max = math.radians(-180.0)
         done = False
@@ -121,10 +125,10 @@ class example_application:
                         sys.exit('... calibration aborted by user')
                 # get measured joint values
                 p = self.arm.measured_jp()
-                if p[0] > self.max:
-                    self.max = p[0]
-                elif p[0] < self.min:
-                    self.min = p[0]
+                if p[swing_joint] > self.max:
+                    self.max = p[swing_joint]
+                elif p[swing_joint] < self.min:
+                    self.min = p[swing_joint]
                 # display current range
                 sys.stdout.write('\rRange[%02.2f, %02.2f]' % (math.degrees(self.min), math.degrees(self.max)))
                 sys.stdout.flush()
@@ -135,15 +139,18 @@ class example_application:
         print('')
 
     # direct joint control example
-    def calibrate_third_joint(self):
+    def calibrate_third_joint(self, swing_joint):
         print('\nAdjusting translation offset\nPress the keys "+" (or "=") and "-" or ("_") to adjust the depth until the axis 5 is mostly immobile (one can use a camera to look at the point)\n - press "d" when you\'re done\n - press "q" to abort\n')
         # move to max position as starting point
         initial_joint_position = numpy.copy(self.arm.setpoint_jp())
         goal = numpy.copy(self.arm.setpoint_jp())
         goal.fill(0)
-        goal[0] = self.max
+        goal[swing_joint] = self.max
         goal[2] = self.q2 # to start close to expected RCM
-        goal[3] = math.radians(90.0) # so axis is facing user
+        if swing_joint == 0:
+            goal[3] = math.radians(90.0) # so axis is facing user
+        else:
+            goal[3] = math.radians(0.0)
 
         self.arm.move_jp(goal).wait()
 
@@ -172,7 +179,7 @@ class example_application:
                 # move back and forth
                 dt = rospy.Time.now() - start
                 t = dt.to_sec() / 2.0
-                goal[0] = self.max + cos_ratio * (math.cos(t) - 1.0)
+                goal[swing_joint] = self.max + cos_ratio * (math.cos(t) - 1.0)
                 goal[2] = self.q2 + correction
                 self.arm.servo_jp(goal)
                 # display current offset
@@ -195,10 +202,10 @@ class example_application:
 
 
     # main method
-    def run(self):
+    def run(self, swing_joint):
         self.home()
-        self.find_range()
-        self.calibrate_third_joint()
+        self.find_range(swing_joint)
+        self.calibrate_third_joint(swing_joint)
 
 if __name__ == '__main__':
     # ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
@@ -215,6 +222,9 @@ if __name__ == '__main__':
                         help = 'expected interval in seconds between messages sent by the device')
     parser.add_argument('-c', '--config', type=str, required=True,
                         help = 'arm IO config file, i.e. something like sawRobotIO1394-xwz-12345.xml')
+    parser.add_argument('-s', '--swing-joint', type=int, required=False,
+                        choices=[0, 1], default=0,
+                        help = 'joint use for the swing motion around RCM')
     args = parser.parse_args(argv[1:]) # skip argv[0], script name
 
     print ('\nThis program can be used to improve the potentiometer offset for the third joint '
@@ -231,4 +241,4 @@ if __name__ == '__main__':
 
     application = example_application()
     application.configure(args.arm, args.config, args.interval)
-    application.run()
+    application.run(args.swing_joint)
