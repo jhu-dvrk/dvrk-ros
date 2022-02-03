@@ -3,7 +3,7 @@
 # Author: Anton Deguet
 # Date: 2021-06-24
 
-# (C) Copyright 2021 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2021-2022 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -34,8 +34,7 @@ import rosbag
 import numpy
 import PyKDL
 import argparse
-
-from crtk.utils import TransformFromMsg
+import tf_conversions.posemath
 
 # simplified arm class to replay motion, better performance than
 # dvrk.arm since we're only subscribing to topics we need
@@ -136,9 +135,9 @@ for bag_topic, bag_message, t in rosbag.Bag(args.bag.name).read_messages():
 
             # keep track of workspace in cartesian space
             if is_cp:
-                position = numpy.array([bag_message.transform.translation.x,
-                                        bag_message.transform.translation.y,
-                                        bag_message.transform.translation.z])
+                position = numpy.array([bag_message.pose.position.x,
+                                        bag_message.pose.position.y,
+                                        bag_message.pose.position.z])
                 if len(setpoints) == 1:
                     bbmin = position
                     bbmax = position
@@ -206,7 +205,7 @@ input('-> Press "Enter" to move to start position')
 
 # move to the first position using arm trajectory generation (move_)
 if is_cp:
-    arm.move_cp(TransformFromMsg(setpoints[0].transform)).wait()
+    arm.move_cp(tf_conversions.posemath.fromMsg(setpoints[0].pose)).wait()
 else:
     arm.move_jp(numpy.array(setpoints[0].position)).wait()
 
@@ -239,7 +238,7 @@ for index in range(total):
     last_bag_time = new_bag_time
     # replay
     if is_cp:
-        arm.servo_cp(TransformFromMsg(setpoints[index].transform))
+        arm.servo_cp(tf_conversions.posemath.fromMsg(setpoints[index].pose))
     else:
         arm.servo_jp(numpy.array(setpoints[index].position))
     if has_jaw:
