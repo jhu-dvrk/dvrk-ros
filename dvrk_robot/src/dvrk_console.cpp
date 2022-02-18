@@ -334,11 +334,11 @@ void dvrk::console::bridge_interface_provided_psm(const std::string & _arm_name,
     const std::string _required_interface_name = _arm_name + "_using_" + _interface_name;
 
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        (_required_interface_name, "set_adapter_present",
-         _arm_name + "/set_adapter_present");
+        (_required_interface_name, "emulate_adapter_present",
+         _arm_name + "/emulate_adapter_present");
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        (_required_interface_name, "set_tool_present",
-         _arm_name + "/set_tool_present");
+        (_required_interface_name, "emulate_tool_present",
+         _arm_name + "/emulate_tool_present");
     subscribers_bridge().AddSubscriberToCommandWrite<std::string, std_msgs::String>
         (_required_interface_name, "set_tool_type",
          _arm_name + "/set_tool_type");
