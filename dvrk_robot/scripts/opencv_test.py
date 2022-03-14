@@ -86,14 +86,29 @@ class Tracking:
 tracker = Tracking(30)
 
 def process(frame):
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 2, 50, param1=120, param2=40, minRadius=5, maxRadius=30)
-    if circles is None:
-        return frame
+    inverted = ~frame
+    #cv2.imwrite("./inverted.png", inverted)
+    hsv = cv2.cvtColor(inverted, cv2.COLOR_BGR2HSV)
+    thresholded = cv2.inRange(hsv, (75, int(15*2.55), int(40*2.55)), (105, int(75*2.55), int(100*2.55)))
+    
+    kernel_size = 3
+    morph_element = cv2.getStructuringElement(
+        cv2.MORPH_RECT,
+        (2 * kernel_size + 1, 2 * kernel_size + 1),
+        (kernel_size, kernel_size)
+    )
+    image = cv2.erode(thresholded, morph_element)
+    image = cv2.dilate(image, morph_element)
+    image = cv2.dilate(image, morph_element)
 
-    circles = np.round(circles[0,:]).astype("int")
-    tracker.register(circles)
+    contours, hierarchies = cv2.findContours(
+        image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE
+    )
 
+    moments = [cv2.moments(c) for c in contours]
+    detections = [(int(M['m10']/M['m00']), int(M['m01']/M['m00']), 5) for M in moments if M['m00'] != 0]
+
+    tracker.register(detections)
 
 window_title = "OpenCV calibration test"
 
