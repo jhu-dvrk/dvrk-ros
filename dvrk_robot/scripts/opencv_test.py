@@ -8,8 +8,9 @@ display_output = True
 video_capture = None
 retval = None
 
-def create_window(window_title):
+def create_window(window_title, mouse_callback):
     cv2.namedWindow(window_title)
+    cv2.setMouseCallback(window_title, mouse_callback)
 
 def init_video():
     global video_capture
@@ -32,7 +33,7 @@ class TrackedObject:
         self.position = (detection[0], detection[1])
         self.size = detection[2]
         self.strength = 1
-        self.history = collections.deque(maxlen=20)
+        self.history = collections.deque(maxlen=1000)
         self.history.append(self.position)
 
     def distanceTo(self, position):
@@ -54,10 +55,10 @@ class Tracking:
     def __init__(self, min_distance):
         self.objects = []
         self.minimum = min_distance**2
-        self.primaryTarget
+        self.primaryTarget = None
 
     def updatePrimary(self, position):
-        nearbyObjects = [x for x in self.objects if x.distanceTo(position) < self.minDistance]
+        nearbyObjects = [x for x in self.objects if x.distanceTo(position) < self.minimum]
         self.primaryTarget = nearbyObjects[0] if len(nearbyObjects) == 1 else None
 
     def register(self, detections):
@@ -135,16 +136,15 @@ init_video()
 try:
     while retval:
         retval, frame = video_capture.read()
-        process(frame)
+        process(frame, tracker)
 
         print(len([x for x in tracker.objects if x.strength >= 12]))
 
         target = tracker.primaryTarget
         if target is not None and target.strength >= 12:
             cv2.circle(frame, target.position, radius=3, color=(0, 0, 255), thickness=cv2.FILLED)
-
-        ellipse_bound = cv2.fitEllipse(np.array(target.history))
-        cv2.ellipse(ellipse_bound, color=(255, 0, 0), thickness=1)
+            ellipse_bound = cv2.fitEllipse(np.array(target.history))
+            cv2.ellipse(frame, ellipse_bound, color=(255, 0, 0), thickness=1)
 
         cv2.imshow(window_title, frame)
 
