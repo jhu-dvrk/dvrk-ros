@@ -2,6 +2,7 @@
 
 import cv2
 import numpy as np
+import collections
 
 display_output = True
 video_capture = None
@@ -31,6 +32,8 @@ class TrackedObject:
         self.position = (detection[0], detection[1])
         self.size = detection[2]
         self.strength = 1
+        self.history = collections.deque(maxlen=20)
+        self.history.append(self.position)
 
     def distanceTo(self, position):
         dx = self.position[0] - position[0]
@@ -39,6 +42,7 @@ class TrackedObject:
 
     def match(self, detection):
         self.position = (detection[0], detection[1])
+        self.history.append(self.position)
         self.size = detection[2]
         self.strength = min(self.strength+1, 20)
 
@@ -50,6 +54,11 @@ class Tracking:
     def __init__(self, min_distance):
         self.objects = []
         self.minimum = min_distance**2
+        self.primaryTarget
+
+    def updatePrimary(self, position):
+        nearbyObjects = [x for x in self.objects if x.distanceTo(position) < self.minDistance]
+        self.primaryTarget = nearbyObjects[0] if len(nearbyObjects) == 1 else None
 
     def register(self, detections):
         distances = np.array([
@@ -79,13 +88,13 @@ class Tracking:
                     obj.noMatch()
 
             self.objects = [x for x in self.objects if x.strength > 0]
+            self.primaryTarget = self.primaryTarget if self.primaryTarget in self.objects else None
         else:
             for d in detections:
                 self.objects.append(TrackedObject(d)) 
 
-tracker = Tracking(30)
 
-def process(frame):
+def process(frame, tracker):
     inverted = ~frame
     #cv2.imwrite("./inverted.png", inverted)
     hsv = cv2.cvtColor(inverted, cv2.COLOR_BGR2HSV)
@@ -110,9 +119,17 @@ def process(frame):
 
     tracker.register(detections)
 
-window_title = "OpenCV calibration test"
 
-create_window(window_title)
+window_title = "OpenCV calibration test"
+tracker = Tracking(30)
+
+def on_click(event, x, y, flags, params):
+    if event != cv2.EVENT_LBUTTONDOWN:
+        return
+
+    tracker.updatePrimary((x, y))
+
+create_window(window_title, on_click)
 init_video()
 
 try:
@@ -122,16 +139,12 @@ try:
 
         print(len([x for x in tracker.objects if x.strength >= 12]))
 
-        for obj in tracker.objects:
-            if obj.strength < 12:
-                continue
+        target = tracker.primaryTarget
+        if target is not None and target.strength >= 12:
+            cv2.circle(frame, target.position, radius=3, color=(0, 0, 255), thickness=cv2.FILLED)
 
-            (x, y) = obj.position
-            r = obj.size
-            # draw the outer circle
-            cv2.circle(frame, (x, y),r,(0,255,0),2)
-            # draw the center of the circle
-            cv2.circle(frame, (x, y),2,(0,0,255),3)
+        ellipse_bound = cv2.fitEllipse(np.array(target.history))
+        cv2.ellipse(ellipse_bound, color=(255, 0, 0), thickness=1)
 
         cv2.imshow(window_title, frame)
 
