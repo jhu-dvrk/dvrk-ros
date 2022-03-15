@@ -33,7 +33,7 @@ class TrackedObject:
         self.position = (detection[0], detection[1])
         self.size = detection[2]
         self.strength = 1
-        self.history = collections.deque(maxlen=1000)
+        self.history = collections.deque(maxlen=400)
         self.history.append(self.position)
 
     def distanceTo(self, position):
@@ -96,10 +96,12 @@ class Tracking:
 
 
 def process(frame, tracker):
-    inverted = ~frame
+    blurred = cv2.medianBlur(frame, 5)
+    inverted = ~blurred
+    cv2.imshow("inverted", inverted)
     #cv2.imwrite("./inverted.png", inverted)
     hsv = cv2.cvtColor(inverted, cv2.COLOR_BGR2HSV)
-    thresholded = cv2.inRange(hsv, (75, int(15*2.55), int(40*2.55)), (105, int(75*2.55), int(100*2.55)))
+    thresholded = cv2.inRange(hsv, (75, int(25*2.55), int(50*2.55)), (105, int(75*2.55), int(100*2.55)))
     
     kernel_size = 3
     morph_element = cv2.getStructuringElement(
@@ -112,8 +114,10 @@ def process(frame, tracker):
     image = cv2.dilate(image, morph_element)
 
     contours, hierarchies = cv2.findContours(
-        image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE
+        image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
     )
+
+    cv2.drawContours(frame, contours, -1, (0, 255, 0), 3)
 
     moments = [cv2.moments(c) for c in contours]
     detections = [(int(M['m10']/M['m00']), int(M['m01']/M['m00']), 5) for M in moments if M['m00'] != 0]
@@ -122,7 +126,7 @@ def process(frame, tracker):
 
 
 window_title = "OpenCV calibration test"
-tracker = Tracking(30)
+tracker = Tracking(60)
 
 def on_click(event, x, y, flags, params):
     if event != cv2.EVENT_LBUTTONDOWN:
@@ -137,8 +141,6 @@ try:
     while retval:
         retval, frame = video_capture.read()
         process(frame, tracker)
-
-        print(len([x for x in tracker.objects if x.strength >= 12]))
 
         target = tracker.primaryTarget
         if target is not None and target.strength >= 12:
