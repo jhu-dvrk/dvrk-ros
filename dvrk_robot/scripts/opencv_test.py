@@ -4,30 +4,6 @@ import cv2
 import numpy as np
 import collections
 
-display_output = True
-video_capture = None
-retval = None
-
-def create_window(window_title, mouse_callback):
-    cv2.namedWindow(window_title)
-    cv2.setMouseCallback(window_title, mouse_callback)
-
-def init_video():
-    global video_capture
-    global retval
-    video_capture = cv2.VideoCapture(0)
-    if video_capture.isOpened():
-        retval, _ = video_capture.read()
-    else:
-        print("Couldn't read from camera.")
-        retval = False
-
-def release():
-    global video_capture
-    video_capture.release()
-    cv2.destroyAllWindows()
-
-
 class TrackedObject:
     def __init__(self, detection):
         self.position = (detection[0], detection[1])
@@ -60,6 +36,8 @@ class Tracking:
     def updatePrimary(self, position):
         nearbyObjects = [x for x in self.objects if x.distanceTo(position) < self.minimum]
         self.primaryTarget = nearbyObjects[0] if len(nearbyObjects) == 1 else None
+        if self.primaryTarget:
+            self.primaryTarget.history.clear()
 
     def register(self, detections):
         distances = np.array([
@@ -95,67 +73,94 @@ class Tracking:
                 self.objects.append(TrackedObject(d)) 
 
 
-def process(frame, tracker):
-    blurred = cv2.medianBlur(frame, 5)
-    inverted = ~blurred
-    cv2.imshow("inverted", inverted)
-    #cv2.imwrite("./inverted.png", inverted)
-    hsv = cv2.cvtColor(inverted, cv2.COLOR_BGR2HSV)
-    thresholded = cv2.inRange(hsv, (75, int(25*2.55), int(50*2.55)), (105, int(75*2.55), int(100*2.55)))
+class ObjectTracking:
+    def __init__(self, tracking_distance=60, window_title="CV Calibration"):
+        self.tracker = Tracking(tracking_distance)
+        self.window_title = window_title
+
+    def _mouse_callback(self, event, x, y, flags, params):
+        if event != cv2.EVENT_LBUTTONDOWN:
+            return
+
+        self.tracker.updatePrimary((x, y))
     
-    kernel_size = 3
-    morph_element = cv2.getStructuringElement(
-        cv2.MORPH_RECT,
-        (2 * kernel_size + 1, 2 * kernel_size + 1),
-        (kernel_size, kernel_size)
-    )
-    image = cv2.erode(thresholded, morph_element)
-    image = cv2.dilate(image, morph_element)
-    image = cv2.dilate(image, morph_element)
+    def _create_window(self):
+        cv2.namedWindow(self.window_title)
+        cv2.setMouseCallback(self.window_title, lambda *args: self._mouse_callback(*args))
 
-    contours, hierarchies = cv2.findContours(
-        image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-    )
+    def _init_video(self):
+        self.video_capture = cv2.VideoCapture(0)
+        ok = False        
+        if self.video_capture.isOpened():
+            ok, _ = self.video_capture.read()
 
-    cv2.drawContours(frame, contours, -1, (0, 255, 0), 3)
+        if not ok:
+            print("Couldn't read from camera.")
 
-    moments = [cv2.moments(c) for c in contours]
-    detections = [(int(M['m10']/M['m00']), int(M['m01']/M['m00']), 5) for M in moments if M['m00'] != 0]
+        return ok
 
-    tracker.register(detections)
+    def _release(self):
+        self.video_capture.release()
+        cv2.destroyWindow(self.window_title)
+
+    def _process(self, frame):
+        blurred = cv2.medianBlur(frame, 2*3 + 1)
+        hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
+        thresholded = cv2.inRange(hsv, (45, int(25*2.55), int(25*2.55)), (90, int(75*2.55), int(75*2.55)))
+        
+        kernel_size = 3
+        morph_element = cv2.getStructuringElement(
+            cv2.MORPH_RECT,
+            (2 * kernel_size + 1, 2 * kernel_size + 1),
+            (kernel_size, kernel_size)
+        )
+        image = cv2.dilate(thresholded, morph_element)
+        image = cv2.erode(image, morph_element)
+        image = cv2.dilate(image, morph_element)
+
+        cv2.imshow("thresholded", blurred)
+        contours, hierarchies = cv2.findContours(
+            image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
+
+        cv2.drawContours(frame, contours, -1, (0, 255, 0), 3)
+
+        moments = [cv2.moments(c) for c in contours]
+        detections = [(int(M['m10']/M['m00']), int(M['m01']/M['m00']), 5) for M in moments if M['m00'] != 0]
+
+        self.tracker.register(detections)
+
+    def run(self):
+        try:
+            self._create_window()
+            ok = self._init_video()
+            if not ok:
+                return False
+
+            while ok:
+                ok, frame = self.video_capture.read()
+                self._process(frame)
+
+                target = self.tracker.primaryTarget
+                if target is not None and target.strength >= 12 and len(target.history) > 5:
+                    cv2.circle(frame, target.position, radius=3, color=(0, 0, 255), thickness=cv2.FILLED)
+                    ellipse_bound = cv2.fitEllipse(np.array(target.history))
+                    cv2.ellipse(frame, ellipse_bound, color=(255, 0, 0), thickness=1)
+
+                cv2.imshow(self.window_title, frame)
+
+                key = cv2.waitKey(20)
+                if key == 27:
+                    break
+
+        except KeyboardInterrupt:
+            return
+    
+        finally:
+            self._release()
 
 
-window_title = "OpenCV calibration test"
-tracker = Tracking(60)
-
-def on_click(event, x, y, flags, params):
-    if event != cv2.EVENT_LBUTTONDOWN:
-        return
-
-    tracker.updatePrimary((x, y))
-
-create_window(window_title, on_click)
-init_video()
-
-try:
-    while retval:
-        retval, frame = video_capture.read()
-        process(frame, tracker)
-
-        target = tracker.primaryTarget
-        if target is not None and target.strength >= 12:
-            cv2.circle(frame, target.position, radius=3, color=(0, 0, 255), thickness=cv2.FILLED)
-            ellipse_bound = cv2.fitEllipse(np.array(target.history))
-            cv2.ellipse(frame, ellipse_bound, color=(255, 0, 0), thickness=1)
-
-        cv2.imshow(window_title, frame)
-
-        key = cv2.waitKey(20)
-        if key == 27:
-            break
-
-except KeyboardInterrupt:
-    pass
-
-release()
+if __name__ == "__main__":
+    tracker = ObjectTracking()
+    tracker.run()
 
