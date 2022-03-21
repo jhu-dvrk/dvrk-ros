@@ -20,6 +20,7 @@ import PyKDL
 import argparse
 import sys
 import math
+import time
 
 # simplified arm class for the PSM
 class simple_psm:
@@ -49,6 +50,8 @@ class simple_ecm:
         # populate this class with all the ROS topics we need
         self.crtk_utils = crtk.utils(self, device_namespace, expected_interval)
         self.crtk_utils.add_operating_state()
+        self.crtk_utils.add_move_jp()
+        self.crtk_utils.add_setpoint_js()
         self.crtk_utils.add_move_cp()
         self.crtk_utils.add_setpoint_cp()
 
@@ -78,10 +81,22 @@ psm = simple_psm(device_namespace = args.arm,
 ecm = simple_ecm(device_namespace = 'ECM',
                  expected_interval = args.interval)
 
+input('-> Press "Enter" to align ECM')
+ecm_setpoint_jp = ecm.setpoint_jp()
+ecm_setpoint_jp[0] = 0.0
+ecm_setpoint_jp[1] = 0.0
+ecm_setpoint_jp[3] = 0.0
+ecm.move_jp(ecm_setpoint_jp).wait()
+
 input('-> Press "Enter" to close the PSM jaw')
 psm.jaw.servo_jf(numpy.array(-0.1))
 
 input('-> Press "Enter" to start ECM motion')
+
+# ECM base to tip
+ecm_t_b = PyKDL.Frame()
+ecm_t_b.p = ecm.setpoint_cp().p
+ecm_t_b.M = ecm.setpoint_cp().M
 
 goal = PyKDL.Frame()
 goal.p = ecm.setpoint_cp().p
@@ -90,51 +105,63 @@ goal.M = ecm.setpoint_cp().M
 amplitude = 0.02 # 1/2 of the full motion
 
 # X motion
-goal.p[0] -= amplitude
+disp = PyKDL.Vector(0.0, 0.0, 0.0)
+disp[0] = -amplitude
+goal.p = ecm_t_b.p + ecm_t_b.M * disp
 ecm.move_cp(goal).wait()
+time.sleep(0.5)
 psm_x0 = psm.measured_cp().p
 
-goal.p[0] += 2.0 * amplitude
+disp[0] = amplitude
+goal.p = ecm_t_b.p + ecm_t_b.M * disp
 ecm.move_cp(goal).wait()
+time.sleep(0.5)
 psm_x1 = psm.measured_cp().p
 
 psm_x = psm_x1 - psm_x0
-psm_x.Normalize()
+print('-- Amplitude of x motion: %f' % (psm_x.Normalize()))
 
 # Y motion
-goal.p[0] -= amplitude
-goal.p[1] -= amplitude
+disp[0] = 0.0
+disp[1] = -amplitude
+goal.p = ecm_t_b.p + ecm_t_b.M * disp
 ecm.move_cp(goal).wait()
+time.sleep(0.5)
 psm_y0 = psm.measured_cp().p
 
-goal.p[1] += 2.0 * amplitude
+disp[1] = amplitude
+goal.p = ecm_t_b.p + ecm_t_b.M * disp
 ecm.move_cp(goal).wait()
+time.sleep(0.5)
 psm_y1 = psm.measured_cp().p
 
 psm_y = psm_y1 - psm_y0
-psm_y.Normalize()
+print('-- Amplitude of y motion: %f' % (psm_y.Normalize()))
 
 # Z motion
-goal.p[1] -= amplitude
-goal.p[2] -= amplitude
+disp[1] = 0.0
+disp[2] = -amplitude
+goal.p = ecm_t_b.p + ecm_t_b.M * disp
 ecm.move_cp(goal).wait()
+time.sleep(0.5)
 psm_z0 = psm.measured_cp().p
 
-goal.p[2] += 2.0 * amplitude
+disp[2] = amplitude
+goal.p = ecm_t_b.p + ecm_t_b.M * disp
 ecm.move_cp(goal).wait()
+time.sleep(0.5)
 psm_z1 = psm.measured_cp().p
 
 psm_z = psm_z1 - psm_z0
-psm_z.Normalize()
+print('-- Amplitude of z motion: %f' % (psm_z.Normalize()))
 
 # back to zero
-goal.p[2] -= amplitude
-ecm.move_cp(goal).wait()
+ecm.move_cp(ecm_t_b).wait()
 
 # quick sanity checks, should be close-ish to 90 degrees
-print ('-- angle between x and y: %f' % (math.degrees(math.acos(PyKDL.dot(psm_x, psm_y)))))
-print ('-- angle between y and z: %f' % (math.degrees(math.acos(PyKDL.dot(psm_y, psm_z)))))
-print ('-- angle between z and x: %f' % (math.degrees(math.acos(PyKDL.dot(psm_z, psm_x)))))
+print ('-- Angle between x and y: %f' % (math.degrees(math.acos(PyKDL.dot(psm_x, psm_y)))))
+print ('-- Angle between y and z: %f' % (math.degrees(math.acos(PyKDL.dot(psm_y, psm_z)))))
+print ('-- Angle between z and x: %f' % (math.degrees(math.acos(PyKDL.dot(psm_z, psm_x)))))
 
 # convert to quaternion
 q = PyKDL.Rotation(psm_x, psm_y, psm_z).GetQuaternion()
@@ -145,15 +172,11 @@ q = q / (numpy.linalg.norm(q))
 # get normalized rotational matrix
 r = PyKDL.Rotation.Quaternion(q[0], q[1], q[2], q[3])
 
-print(r.UnitX().Norm())
-print(r.UnitY().Norm())
-print(r.UnitZ().Norm())
-print ('-- angle between x and y: %f' % (math.degrees(math.acos(PyKDL.dot(r.UnitX(), r.UnitY())))))
-print ('-- angle between y and z: %f' % (math.degrees(math.acos(PyKDL.dot(r.UnitY(), r.UnitZ())))))
-print ('-- angle between z and x: %f' % (math.degrees(math.acos(PyKDL.dot(r.UnitZ(), r.UnitX())))))
-
 # print text to copy/paste in json file
-print('     "base-frame": {\n"reference-frame": "ECM",\n"transform": [[ %.10f, %.10f, %.10f, 0.0],\n[ %.10f, %.10f, %.10f, 0.0],\n[%.10f, %.10f, %.10f, 0.0],\n[0.0, 0.0, 0.0, 1.0]]\n}' % ( r[0,0], r[0,1], r[0,2], r[1,0], r[1,1], r[1,2], r[2,0], r[2,1], r[2,2]))
+print(',\n"base-frame": {\n"reference-frame": "ECM",\n"transform": [[ %.10f, %.10f, %.10f, 0.0],\n[ %.10f, %.10f, %.10f, 0.0],\n[%.10f, %.10f, %.10f, 0.0],\n[0.0, 0.0, 0.0, 1.0]]\n}'
+      % ( r[0,0], r[0,1], r[0,2],
+          r[1,0], r[1,1], r[1,2],
+          r[2,0], r[2,1], r[2,2]))
 
 input('-> Press "Enter" to release the PSM jaw')
 psm.jaw.servo_jf(numpy.array(0.0))
