@@ -154,20 +154,24 @@ class ArmCalibrationApplication:
         self.goal[2] = self.q2 + self.correction 
         self.arm.servo_jp(self.goal)
 
-    def update_correction(self, delta, radius):
-        print(delta, radius)
-        if radius <= 5 or math.fabs(delta) <= 20:
+    def update_correction(self, rcm_offset, radius):
+        print("RCM vertical offset: {}, RCM-screw radius: {}".format(rcm_offset, radius))
+        
+        # Move at most 5 mm (0.005 m) in direction of estimated RCM
+        correction_delta = rcm_offset/(3*10**4)
+        correction_delta = math.copysign(min(math.fabs(correction_delta), 0.005), correction_delta)
+
+        # Limit total correction to 20 mm
+        if abs(self.correction + correction_delta) > 0.020:
+            print("Can't exceed 20 mm correction, please manually improve calibration first!")
             return False
 
-        correction_delta = math.copysign(radius/100000, delta)
-        correction_delta = math.copysign(min(math.fabs(correction_delta), 0.005), correction_delta)
-        print(self.q2, correction_delta)
         self.correction += correction_delta
         return True
 
     # direct joint control example
     def calibrate_third_joint(self, swing_joint):
-        print('\nHold <SPACE> to automatically calibrate\nPress q or ESCAPE to quit\n')
+        print('\nClick target on screen to begin tracking and calibration\nPress q or ESCAPE to quit\n')
         # move to max position as starting point
         initial_joint_position = numpy.copy(self.arm.setpoint_jp())
         goal = numpy.copy(self.arm.setpoint_jp())
@@ -188,7 +192,7 @@ class ArmCalibrationApplication:
         self.cos_ratio = cos_ratio
         self.swing_joint = swing_joint
 
-        tracker = psm_calibration_cv.ObjectTracking()
+        tracker = psm_calibration_cv.ObjectTracking(self.max - self.min)
         self.correction = 0.0
         self.start_time = None
         move_arm_timer = rospy.Timer(rospy.Duration(self.expected_interval), self.move_arm_callback)
