@@ -33,7 +33,7 @@ import cv2
 import collections
 from threading import Thread
 
-import opencv_test
+import psm_calibration_cv
 
 import os.path
 import xml.etree.ElementTree as ET
@@ -188,7 +188,7 @@ class ArmCalibrationApplication:
         self.cos_ratio = cos_ratio
         self.swing_joint = swing_joint
 
-        tracker = opencv_test.ObjectTracking()
+        tracker = psm_calibration_cv.ObjectTracking()
         self.correction = 0.0
         self.start_time = None
         move_arm_timer = rospy.Timer(rospy.Duration(self.expected_interval), self.move_arm_callback)

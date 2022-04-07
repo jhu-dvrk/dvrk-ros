@@ -6,6 +6,7 @@ import math
 import numpy as np
 
 
+# Represents single tracked detection, with location history information
 class TrackedObject:
     def __init__(self, detection):
         self.position = (detection[0], detection[1])
@@ -29,7 +30,8 @@ class TrackedObject:
         self.strength -= 2
 
 
-class Tracking:
+# Track detected objects as they move around
+class MotionTracking:
     def __init__(self, min_distance):
         self.objects = []
         self.minimum = min_distance**2
@@ -77,7 +79,7 @@ class Tracking:
 
 class ObjectTracking:
     def __init__(self, tracking_distance=50, window_title="CV Calibration"):
-        self.tracker = Tracking(tracking_distance)
+        self.tracker = MotionTracking(tracking_distance)
         self.window_title = window_title
 
     def _mouse_callback(self, event, x, y, flags, params):
