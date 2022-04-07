@@ -33,6 +33,8 @@ import cv2
 import collections
 from threading import Thread
 
+import opencv_test
+
 import os.path
 import xml.etree.ElementTree as ET
 
@@ -43,79 +45,8 @@ import cisst_msgs.srv
 def is_there_a_key_press():
     return select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
 
-
-class TrackedObject:
-    def __init__(self, detection):
-        self.position = (detection[0], detection[1])
-        self.size = detection[2]
-        self.strength = 1
-        self.history = collections.deque(maxlen=1000)
-        self.history.append(self.position)
-
-    def distanceTo(self, position):
-        dx = self.position[0] - position[0]
-        dy = self.position[1] - position[1]
-        return dx*dx + dy*dy
-
-    def match(self, detection):
-        self.position = (detection[0], detection[1])
-        self.history.append(self.position)
-        self.size = detection[2]
-        self.strength = min(self.strength+1, 20)
-
-    def noMatch(self):
-        self.strength -= 2
-
-
-class Tracking:
-    def __init__(self, min_distance):
-        self.objects = []
-        self.minimum = min_distance**2
-        self.primaryTarget = None
-
-    def updatePrimary(self, position):
-        nearbyObjects = [x for x in self.objects if x.distanceTo(position) < self.minimum]
-        self.primaryTarget = nearbyObjects[0] if len(nearbyObjects) == 1 else None
-
-    def register(self, detections):
-        distances = np.array([
-            np.array([obj.distanceTo(d) for d in detections])
-            for obj in self.objects
-        ])
-
-        current_object_count = len(self.objects)
-        
-        if len(self.objects) > 0:
-            if len(detections) > 0:
-                closest = np.argmin(distances, axis=0)
-
-                for i, detection in enumerate(detections):
-                    if distances[closest[i], i] <= self.minimum:
-                        self.objects[closest[i]].match(detection)
-                    else:
-                        self.objects.append(TrackedObject(detection))
-
-                closest = np.argmin(distances, axis=1)
-
-                for j in range(current_object_count):
-                    if distances[j, closest[j]] > self.minimum:
-                        self.objects[j].noMatch()
-            else:
-                for obj in self.objects:
-                    obj.noMatch()
-
-            self.objects = [x for x in self.objects if x.strength > 0]
-            self.primaryTarget = self.primaryTarget if self.primaryTarget in self.objects else None
-        else:
-            for d in detections:
-                self.objects.append(TrackedObject(d)) 
-
-
 # example of application using arm.py
 class ArmCalibrationApplication:
-    def __init__(self):
-        self.move_arm = False
-
     # configuration
     def configure(self, robot_name, config_file, expected_interval):
         self.expected_interval = expected_interval
@@ -212,100 +143,31 @@ class ArmCalibrationApplication:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
         print('')
 
-    def process(self, frame, tracker):
-        inverted = ~frame
-        #cv2.imwrite("./inverted.png", inverted)
-        hsv = cv2.cvtColor(inverted, cv2.COLOR_BGR2HSV)
-        thresholded = cv2.inRange(hsv, (75, int(15*2.55), int(40*2.55)), (105, int(75*2.55), int(100*2.55)))
-    
-        kernel_size = 3
-        morph_element = cv2.getStructuringElement(
-            cv2.MORPH_RECT,
-            (2 * kernel_size + 1, 2 * kernel_size + 1),
-            (kernel_size, kernel_size)
-        )
-        image = cv2.erode(thresholded, morph_element)
-        image = cv2.dilate(image, morph_element)
-        image = cv2.dilate(image, morph_element)
-
-        contours, hierarchies = cv2.findContours(
-            image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE
-        )
-
-        moments = [cv2.moments(c) for c in contours]
-        detections = [(int(M['m10']/M['m00']), int(M['m01']/M['m00']), 5) for M in moments if M['m00'] != 0]
-
-        tracker.register(detections)
-
-
-    def create_mouse_callback(self, window_title, tracker):
-        def mouse_callback(event, x, y, flags, params):
-            if event != cv2.EVENT_LBUTTONDOWN:
-                return
-
-            tracker.updatePrimary((x, y))
-
-        cv2.setMouseCallback(window_title, mouse_callback)
-
-    
-    def move_arm(self):
-        start = rospy.Time.now()
-        move_arm = True
-        while move_arm:
-            # move back and forth
-            dt = rospy.Time.now() - start
-            t = dt.to_sec() / 2.0
-            goal[swing_joint] = self.max + cos_ratio * (math.cos(t) - 1.0)
-            goal[2] = self.q2 + correction
-            self.arm.servo_jp(goal)
-            # display current offset
-            sys.stdout.write('\rCorrection = %02.2f mm' % (correction * 1000.0))
-            sys.stdout.flush()
-
-            # process camera frame
-            _, frame = video_capture.read()
-            cv2.imshow("test", frame)
-            #self.process_frame(frame, window_title, tracker)
-
-            # sleep
-            rospy.sleep(self.expected_interval)
-    
-    def process_frame(self, frame, window_title, tracker):
-        inverted = ~frame
-        #cv2.imwrite("./inverted.png", inverted)
-        hsv = cv2.cvtColor(inverted, cv2.COLOR_BGR2HSV)
-        thresholded = cv2.inRange(hsv, (75, int(15*2.55), int(40*2.55)), (105, int(75*2.55), int(100*2.55)))
+    def move_arm_callback(self, event):
+        if not self.start_time:
+            self.start_time = rospy.Time.now()
         
-        kernel_size = 3
-        morph_element = cv2.getStructuringElement(
-            cv2.MORPH_RECT,
-            (2 * kernel_size + 1, 2 * kernel_size + 1),
-            (kernel_size, kernel_size)
-        )
-        image = cv2.erode(thresholded, morph_element)
-        image = cv2.dilate(image, morph_element)
-        image = cv2.dilate(image, morph_element)
+        # move back and forth
+        dt = rospy.Time.now() - self.start_time
+        t = dt.to_sec() / 1.0
+        self.goal[self.swing_joint] = self.max + self.cos_ratio * (math.cos(t) - 1.0)
+        self.goal[2] = self.q2 + self.correction 
+        self.arm.servo_jp(self.goal)
 
-        contours, hierarchies = cv2.findContours(
-            image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE
-        )
+    def update_correction(self, delta, radius):
+        print(delta, radius)
+        if radius <= 5 or math.fabs(delta) <= 20:
+            return False
 
-        moments = [cv2.moments(c) for c in contours]
-        detections = [(int(M['m10']/M['m00']), int(M['m01']/M['m00']), 5) for M in moments if M['m00'] != 0]
-
-        tracker.register(detections)
-        target = tracker.primaryTarget
-        if target is not None and target_strength >= 12:
-            cv2.circle(frame, target.position, radius=3, color=(0, 0, 255), thickness=cv2.FILLED)
-            ellipse_bound = cv2.fitEllipse(np.array(target.history))
-            cv2.ellipse(frame, ellipse_bound, color=(255, 0, 0), thickness=1)
-
-        cv2.imshow(window_title, frame)
-
+        correction_delta = math.copysign(radius/100000, delta)
+        correction_delta = math.copysign(min(math.fabs(correction_delta), 0.005), correction_delta)
+        print(self.q2, correction_delta)
+        self.correction += correction_delta
+        return True
 
     # direct joint control example
     def calibrate_third_joint(self, swing_joint):
-        print('\nAdjusting translation offset\nPress the keys "+" (or "=") and "-" or ("_") to adjust the depth until the axis 5 is mostly immobile (one can use a camera to look at the point)\n - press "d" when you\'re done\n - press "q" to abort\n')
+        print('\nHold <SPACE> to automatically calibrate\nPress q or ESCAPE to quit\n')
         # move to max position as starting point
         initial_joint_position = numpy.copy(self.arm.setpoint_jp())
         goal = numpy.copy(self.arm.setpoint_jp())
@@ -322,71 +184,16 @@ class ArmCalibrationApplication:
         # parameters to move back and forth
         cos_ratio = (self.max - self.min) / 2.0
 
-        #opencv setup
-        window_title = "CV PSM calibration test"
-        tracker = Tracking(30)
-        cv2.namedWindow(window_title)
-        self.create_mouse_callback(window_title, tracker)
-        video_capture = cv2.VideoCapture(0)
-        
-        # Ensure camera feed is open and try reading
-        if video_capture.isOpened():
-            _, _ = video_capture.read()
-        else:
-            print("Couldn't open camera")
-            return
+        self.goal = goal
+        self.cos_ratio = cos_ratio
+        self.swing_joint = swing_joint
 
-        # termios settings
-        old_settings = termios.tcgetattr(sys.stdin)
-        correction = 0.0
-        try:
-            tty.setcbreak(sys.stdin.fileno())
-            start = rospy.Time.now()
-            done = False
-            while not done:
-                # process key
-                if is_there_a_key_press():
-                    c = sys.stdin.read(1)
-                    if c == 'd':
-                        done = True
-                    elif c == 'q':
-                        sys.exit('... calibration aborted by user')
-                    elif c == '-' or c == '_':
-                        correction = correction - 0.0001
-                    elif c == '+' or c == '=':
-                        correction = correction + 0.0001
-                # move back and forth
-                dt = rospy.Time.now() - start
-                t = dt.to_sec() / 2.0
-                goal[swing_joint] = self.max + cos_ratio * (math.cos(t) - 1.0)
-                goal[2] = self.q2 + correction
-                self.arm.servo_jp(goal)
-                # display current offset
-                sys.stdout.write('\rCorrection = %02.2f mm' % (correction * 1000.0))
-                sys.stdout.flush()
-
-                # process camera frame
-                _, frame = video_capture.read()
-                cv2.imshow("test", frame)
-                #self.process_frame(frame, window_title, tracker)
-
-                # sleep
-                rospy.sleep(self.expected_interval)
-        finally:
-            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
-            video_capture.release()
-            cv2.destroyAllWindows()
-        print('')
-
-        # now save the new offset
-        oldOffset = float(self.xmlPot.get("Offset")) / 1000.0 # convert from XML (mm) to m
-        newOffset = oldOffset - correction                    # add in meters
-        self.xmlPot.set("Offset", str(newOffset * 1000.0))    # convert from m to XML (mm)
-        self.tree.write(self.config_file + "-new")
-        print('Old offset: {:2.2f}mm\nNew offset: {:2.2f}mm\n'.format(oldOffset * 1000.0, newOffset * 1000.0))
-        print('Results saved in {:s}-new. Restart your dVRK application with the new file and make sure you re-bias the potentiometer offsets!  To be safe, power off and on the dVRK PSM controller.'.format(self.config_file))
-        print('To copy the new file over the existing one: cp {:s}-new {:s}'.format(self.config_file, self.config_file))
-
+        tracker = opencv_test.ObjectTracking()
+        self.correction = 0.0
+        self.start_time = None
+        move_arm_timer = rospy.Timer(rospy.Duration(self.expected_interval), self.move_arm_callback)
+        tracker.run(self.update_correction)
+        move_arm_timer.shutdown() 
 
     # main method
     def run(self, swing_joint):

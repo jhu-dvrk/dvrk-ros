@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 
-import cv2
-import numpy as np
 import collections
+import cv2
+import math
+import numpy as np
+
 
 class TrackedObject:
     def __init__(self, detection):
         self.position = (detection[0], detection[1])
         self.size = detection[2]
         self.strength = 1
-        self.history = collections.deque(maxlen=400)
+        self.history = collections.deque(maxlen=200)
         self.history.append(self.position)
 
     def distanceTo(self, position):
@@ -74,7 +76,7 @@ class Tracking:
 
 
 class ObjectTracking:
-    def __init__(self, tracking_distance=60, window_title="CV Calibration"):
+    def __init__(self, tracking_distance=50, window_title="CV Calibration"):
         self.tracker = Tracking(tracking_distance)
         self.window_title = window_title
 
@@ -105,22 +107,21 @@ class ObjectTracking:
 
     def _process(self, frame):
         blurred = cv2.medianBlur(frame, 2*3 + 1)
+        cv2.imwrite("capture.png", frame)
         hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
-        thresholded = cv2.inRange(hsv, (45, int(25*2.55), int(25*2.55)), (90, int(75*2.55), int(75*2.55)))
+        thresholded = cv2.inRange(hsv, (135, int(35*2.55), int(25*2.55)), (180, int(100*2.55), int(75*2.55)))
         
-        kernel_size = 3
+        kernel_size = 2
         morph_element = cv2.getStructuringElement(
             cv2.MORPH_RECT,
             (2 * kernel_size + 1, 2 * kernel_size + 1),
             (kernel_size, kernel_size)
         )
-        image = cv2.dilate(thresholded, morph_element)
-        image = cv2.erode(image, morph_element)
-        image = cv2.dilate(image, morph_element)
+       # image = cv2.erode(thresholded, morph_element)
+       # image = cv2.dilate(image, morph_element)
 
-        cv2.imshow("thresholded", blurred)
         contours, hierarchies = cv2.findContours(
-            image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+            thresholded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
         )
 
         cv2.drawContours(frame, contours, -1, (0, 255, 0), 3)
@@ -130,27 +131,45 @@ class ObjectTracking:
 
         self.tracker.register(detections)
 
-    def run(self):
+    def run(self, output_callback):
         try:
             self._create_window()
             ok = self._init_video()
             if not ok:
                 return False
 
+            key = None
+
             while ok:
                 ok, frame = self.video_capture.read()
                 self._process(frame)
 
                 target = self.tracker.primaryTarget
-                if target is not None and target.strength >= 12 and len(target.history) > 5:
+                if target is not None and target.strength >= 12:
                     cv2.circle(frame, target.position, radius=3, color=(0, 0, 255), thickness=cv2.FILLED)
-                    ellipse_bound = cv2.fitEllipse(np.array(target.history))
-                    cv2.ellipse(frame, ellipse_bound, color=(255, 0, 0), thickness=1)
+                    if len(target.history) > 5:
+                        history = np.array(target.history)
+                        ellipse_bound = cv2.fitEllipse(history)
+                        (ellipse_center, (width, height), angle) = ellipse_bound
+                        radius = (width + height)/4.0
+                        ellipse_center = np.array(ellipse_center)
+                        history_center = np.mean(history)
+                        angle = math.radians(angle)
+
+                        cv2.ellipse(frame, ellipse_bound, color=(255, 0, 0), thickness=1)
+
+                        up = np.array([0, -1])
+       
+                        if len(target.history) > 50: 
+                            refresh = output_callback(np.dot(history_center - ellipse_center, up), radius)
+                            if refresh:
+                                target.history.clear()
 
                 cv2.imshow(self.window_title, frame)
 
                 key = cv2.waitKey(20)
-                if key == 27:
+                escape = 27
+                if key == ord("q") or key == escape:
                     break
 
         except KeyboardInterrupt:
