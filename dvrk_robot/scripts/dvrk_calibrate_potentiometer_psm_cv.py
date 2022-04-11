@@ -28,10 +28,6 @@ import termios
 import rospy
 import numpy
 import argparse
-import numpy as np
-import cv2
-import collections
-from threading import Thread
 
 import psm_calibration_cv
 
@@ -41,11 +37,12 @@ import xml.etree.ElementTree as ET
 # for local_query_cp
 import cisst_msgs.srv
 
+
 # for keyboard capture
 def is_there_a_key_press():
     return select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
 
-# example of application using arm.py
+
 class ArmCalibrationApplication:
     # configuration
     def configure(self, robot_name, config_file, expected_interval):
@@ -143,6 +140,7 @@ class ArmCalibrationApplication:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
         print('')
 
+    # called periodically by timer
     def move_arm_callback(self, event):
         if not self.start_time:
             self.start_time = rospy.Time.now()
@@ -154,11 +152,15 @@ class ArmCalibrationApplication:
         self.goal[2] = self.q2 + self.correction 
         self.arm.servo_jp(self.goal)
 
+    # called by vision tracking whenever a good estimate of the current RCM offset is obtained
+    # return value indicates whether arm was moved along calibration axis
     def update_correction(self, rcm_offset, radius):
-        print("RCM vertical offset: {}, RCM-screw radius: {}".format(rcm_offset, radius))
-        
+        # arbitrary conversion from camera pixels to meters
+        # could move arm known amount to get better estimate
+        pixel_to_meter_conversion = 3*10**4 
+        correction_delta = rcm_offset/pixel_to_meter_conversion
+
         # Move at most 5 mm (0.005 m) in direction of estimated RCM
-        correction_delta = rcm_offset/(3*10**4)
         correction_delta = math.copysign(min(math.fabs(correction_delta), 0.005), correction_delta)
 
         # Limit total correction to 20 mm
@@ -169,11 +171,10 @@ class ArmCalibrationApplication:
         self.correction += correction_delta
         return True
 
-    # direct joint control example
+    # direct joint control
     def calibrate_third_joint(self, swing_joint):
         print('\nClick target on screen to begin tracking and calibration\nPress q or ESCAPE to quit\n')
         # move to max position as starting point
-        initial_joint_position = numpy.copy(self.arm.setpoint_jp())
         goal = numpy.copy(self.arm.setpoint_jp())
         goal.fill(0)
         goal[swing_joint] = self.max
@@ -192,14 +193,24 @@ class ArmCalibrationApplication:
         self.cos_ratio = cos_ratio
         self.swing_joint = swing_joint
 
+        # initialize vision tracking and periodic arm motion
         tracker = psm_calibration_cv.ObjectTracking(self.max - self.min)
         self.correction = 0.0
         self.start_time = None
         move_arm_timer = rospy.Timer(rospy.Duration(self.expected_interval), self.move_arm_callback)
         tracker.run(self.update_correction)
-        move_arm_timer.shutdown() 
+        move_arm_timer.shutdown()
 
-    # main method
+        # now save the new offset
+        oldOffset = float(self.xmlPot.get("Offset")) / 1000.0 # convert from XML (mm) to m
+        newOffset = oldOffset - self.update_correction                    # add in meters
+        self.xmlPot.set("Offset", str(newOffset * 1000.0))    # convert from m to XML (mm)
+        self.tree.write(self.config_file + "-new")
+        print('Old offset: {:2.2f}mm\nNew offset: {:2.2f}mm\n'.format(oldOffset * 1000.0, newOffset * 1000.0))
+        print('Results saved in {:s}-new. Restart your dVRK application with the new file and make sure you re-bias the potentiometer offsets!  To be safe, power off and on the dVRK PSM controller.'.format(self.config_file))
+        print('To copy the new file over the existing one: cp {:s}-new {:s}'.format(self.config_file, self.config_file))
+
+    # application entry point
     def run(self, swing_joint):
         self.home()
         self.find_range(swing_joint)
@@ -231,11 +242,12 @@ if __name__ == '__main__':
            'If the calibration is correct, the point shouldn\'t move while the arm is rocking from left to right.  '
            'For this application we\'re going to use the axis of the first joint of the wrist, i.e. the first joint '
            'at the end of the tool shaft.  To perform this calibration you need to remove the canulla otherwise you won\'t see'
-           ' the RCM point.   One simple way to track the motion is to use a camera and place the cursor where the axis is.\n\n'
+           ' the RCM point. This tool will use the camera to automatically track the point we want to be the RCM, and attempt '
+           ' to calibrate the translation joint based.\n\n'
            'You must first home your PSM and make sure a tool is engaged.  '
            'Once this is done, there are two steps:\n'
            ' -1- find a safe range of motion for the rocking movement\n'
-           ' -2- adjust the depth so that the first hinge on the tool wrist is as close as possible to the RCM.\n\n')
+           ' -2- monitor the application while auto-calibration is performed for safety.\n\n')
 
     application = ArmCalibrationApplication()
     application.configure(args.arm, args.config, args.interval)
