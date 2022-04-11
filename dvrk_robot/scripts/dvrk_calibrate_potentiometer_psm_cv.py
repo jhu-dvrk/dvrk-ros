@@ -194,7 +194,7 @@ class ArmCalibrationApplication:
         self.swing_joint = swing_joint
 
         # initialize vision tracking and periodic arm motion
-        tracker = psm_calibration_cv.ObjectTracking(self.max - self.min)
+        tracker = psm_calibration_cv.RCMTracker(self.max - self.min)
         self.correction = 0.0
         self.start_time = None
         move_arm_timer = rospy.Timer(rospy.Duration(self.expected_interval), self.move_arm_callback)
@@ -203,7 +203,7 @@ class ArmCalibrationApplication:
 
         # now save the new offset
         oldOffset = float(self.xmlPot.get("Offset")) / 1000.0 # convert from XML (mm) to m
-        newOffset = oldOffset - self.update_correction                    # add in meters
+        newOffset = oldOffset - self.correction # add in meters
         self.xmlPot.set("Offset", str(newOffset * 1000.0))    # convert from m to XML (mm)
         self.tree.write(self.config_file + "-new")
         print('Old offset: {:2.2f}mm\nNew offset: {:2.2f}mm\n'.format(oldOffset * 1000.0, newOffset * 1000.0))

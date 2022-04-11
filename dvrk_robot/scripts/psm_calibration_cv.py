@@ -71,7 +71,7 @@ class ObjectTracking:
 
                 for i, detection in enumerate(detections):
                     if distances[closest[i], i] <= self.max_distance:
-                        self.objects[closest[i]].match(detection)
+                        self.objects[closest[i]].update(detection)
                     else:
                         self.objects.append(TrackedObject(detection, history_length=self.history_length))
 
@@ -79,10 +79,10 @@ class ObjectTracking:
 
                 for j in range(current_object_count):
                     if distances[j, closest[j]] > self.max_distance:
-                        self.objects[j].noMatch()
+                        self.objects[j].update(None)
             else:
                 for obj in self.objects:
-                    obj.noMatch()
+                    obj.update(None)
 
             self.objects = [x for x in self.objects if x.strength > 0]
             self.primaryTarget = self.primaryTarget if self.primaryTarget in self.objects else None
