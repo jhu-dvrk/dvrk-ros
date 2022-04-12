@@ -85,7 +85,10 @@ class ObjectTracking:
                     obj.update(None)
 
             self.objects = [x for x in self.objects if x.strength > 0]
-            self.primaryTarget = self.primaryTarget if self.primaryTarget in self.objects else None
+            if not self.primaryTarget in self.objects and self.primaryTarget is not None:
+                print("Lost track of target! Please click on target to re-acquire")
+                self.primaryTarget = None
+        
         else:
             for d in detections:
                 self.objects.append(TrackedObject(d, history_length=self.history_length)) 
@@ -174,14 +177,46 @@ class RCMTracker:
     
         return radius, rcm_offset, ellipse_bound, bounding_rect
 
-    def run(self, output_callback):
-        try:
-            self._create_window()
-            ok = self._init_video()
-            if not ok:
+    
+    def init(self):
+        self._create_window()
+        ok = self._init_video()
+        return ok
+
+    def run_point_acquisition(self, output_callback):
+        key = None
+        ok = self.init()
+
+        while ok:
+            ok, frame = self.video_capture.read()
+            self._process(frame)
+
+            target = self.objects.primaryTarget
+            if target is not None and target.strength >= 12:
+                cv2.circle(frame, target.position, radius=3, color=(0, 0, 255), thickness=cv2.FILLED)
+                if len(target.location_history) > 5:
+                    mean = np.mean(target.location_history, axis=0)
+                    refresh = output_callback(np.int0(mean))
+                    if refresh:
+                        target.location_history.clear()
+                        self._release()
+                        return True
+
+            cv2.imshow(self.window_title, frame)
+
+            key = cv2.waitKey(20)
+            escape = 27
+            if key == ord("q") or key == escape:
+                self._release()
                 return False
 
+        self._release()
+        return False
+
+    def run(self, output_callback):
+        try:
             key = None
+            ok = self.init()
 
             while ok:
                 ok, frame = self.video_capture.read()

@@ -152,26 +152,20 @@ class ArmCalibrationApplication:
         self.goal[2] = self.q2 + self.correction 
         self.arm.servo_jp(self.goal)
 
+    # help establish orientation of camera and pixel to meters ratio
+    def point_acquisition(self, point):
+        self.offset_test_results.append(point)
+
+        if len(self.offset_test_results) == 2:
+            self.jacobian = self.offset_test_results[0] - self.offset_test_results[1]
+            self.jacobian = (self.jacobian * (2*self.exploratory_offset))/numpy.dot(self.jacobian, self.jacobian)
+        
+        return True
+
     # called by vision tracking whenever a good estimate of the current RCM offset is obtained
     # return value indicates whether arm was moved along calibration axis
     def update_correction(self, rcm_offset, radius):
-        # established orientation of camera first
-        if len(self.offset_tests) == 0:
-            self.offset_tests.append(rcm_offset)
-            self.correction = 0.005
-            return True
-        elif len(self.offset_tests) == 1:
-            self.offset_tests.append(rcm_offset)
-            self.correction = -0.005
-            return True
-        elif len(self.offset_tests) == 2:
-            self.offset_tests.append(rcm_offset)
-            self.jacobian = self.offset_tests[2] - self.offset_tests[1]
-            self.jacobian = (self.jacobian * (2*0.005))/numpy.dot(self.jacobian, self.jacobian)
-            self.correction = 0.0
-            return True
-
-        correction_delta = numpy.dot(rcm_offset, self.jacobian)
+        correction_delta = numpy.dot(rcm_offset, self.jacobian)/4
 
         # Move at most 5 mm (0.005 m) in direction of estimated RCM
         correction_delta = math.copysign(min(math.fabs(correction_delta), 0.005), correction_delta)
@@ -190,7 +184,7 @@ class ArmCalibrationApplication:
         # move to max position as starting point
         goal = numpy.copy(self.arm.setpoint_jp())
         goal.fill(0)
-        goal[swing_joint] = self.max
+        goal[swing_joint] = self.min + 0.5 * (self.max - self.min)
         goal[2] = self.q2 # to start close to expected RCM
         if swing_joint == 0:
             goal[3] = math.radians(90.0) # so axis is facing user
@@ -206,10 +200,30 @@ class ArmCalibrationApplication:
         self.cos_ratio = cos_ratio
         self.swing_joint = swing_joint
 
-        self.offset_tests = []
+        self.offset_test_results = []
 
         # initialize vision tracking and periodic arm motion
         tracker = psm_calibration_cv.RCMTracker(self.max - self.min)
+
+        self.exploratory_offset = 0.008
+        goal[2] = self.q2 + self.exploratory_offset 
+        self.arm.move_jp(goal).wait()
+        ok = tracker.run_point_acquisition(self.point_acquisition)
+        if not ok:
+            print('Calibration aborted')
+            return
+        
+        goal[2] = self.q2 - self.exploratory_offset 
+        self.arm.move_jp(goal).wait()
+        ok = tracker.run_point_acquisition(self.point_acquisition)
+        if not ok:
+            print('Calibration aborted')
+            return
+        
+        goal[2] = self.q2
+        goal[swing_joint] = self.max
+        self.arm.move_jp(goal).wait()
+
         self.correction = 0.0
         self.start_time = None
         move_arm_timer = rospy.Timer(rospy.Duration(self.expected_interval), self.move_arm_callback)
