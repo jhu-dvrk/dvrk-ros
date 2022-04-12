@@ -169,10 +169,10 @@ class RCMTracker:
 
         ellipse_center = np.array(ellipse_center)
         location_history_center = bounding_rect[0] 
-        rcm_vertical_offset = -(location_history_center - ellipse_center)[1]
+        rcm_offset = ellipse_center - location_history_center
         radius = (width + height)/4.0
     
-        return radius, rcm_vertical_offset, ellipse_bound, bounding_rect
+        return radius, rcm_offset, ellipse_bound, bounding_rect
 
     def run(self, output_callback):
         try:

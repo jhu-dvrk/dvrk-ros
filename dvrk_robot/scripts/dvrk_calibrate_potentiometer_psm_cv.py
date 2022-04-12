@@ -155,10 +155,23 @@ class ArmCalibrationApplication:
     # called by vision tracking whenever a good estimate of the current RCM offset is obtained
     # return value indicates whether arm was moved along calibration axis
     def update_correction(self, rcm_offset, radius):
-        # arbitrary conversion from camera pixels to meters
-        # could move arm known amount to get better estimate
-        pixel_to_meter_conversion = 3*10**4 
-        correction_delta = rcm_offset/pixel_to_meter_conversion
+        # established orientation of camera first
+        if len(self.offset_tests) == 0:
+            self.offset_tests.append(rcm_offset)
+            self.correction = 0.005
+            return True
+        elif len(self.offset_tests) == 1:
+            self.offset_tests.append(rcm_offset)
+            self.correction = -0.005
+            return True
+        elif len(self.offset_tests) == 2:
+            self.offset_tests.append(rcm_offset)
+            self.jacobian = self.offset_tests[2] - self.offset_tests[1]
+            self.jacobian = (self.jacobian * (2*0.005))/numpy.dot(self.jacobian, self.jacobian)
+            self.correction = 0.0
+            return True
+
+        correction_delta = numpy.dot(rcm_offset, self.jacobian)
 
         # Move at most 5 mm (0.005 m) in direction of estimated RCM
         correction_delta = math.copysign(min(math.fabs(correction_delta), 0.005), correction_delta)
@@ -192,6 +205,8 @@ class ArmCalibrationApplication:
         self.goal = goal
         self.cos_ratio = cos_ratio
         self.swing_joint = swing_joint
+
+        self.offset_tests = []
 
         # initialize vision tracking and periodic arm motion
         tracker = psm_calibration_cv.RCMTracker(self.max - self.min)
