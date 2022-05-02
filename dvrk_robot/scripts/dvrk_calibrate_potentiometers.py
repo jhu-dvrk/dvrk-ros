@@ -2,7 +2,7 @@
 
 # Authors: Nick Eusman, Anton Deguet
 # Date: 2015-09-24
-# Copyright JHU 2015-2021
+# Copyright JHU 2015-2022
 
 import time
 import rospy
@@ -51,8 +51,8 @@ class potentiometer_calibration:
         self._last_potentiometers = []
         self._last_joints = []
         ros_namespace = self._robot_name
-        rospy.Subscriber(ros_namespace +  '/io/analog_input_pos_si', JointState, self.pot_callback)
-        rospy.Subscriber(ros_namespace +  '/io/joint_measured_js', JointState, self.joints_callback)
+        rospy.Subscriber(ros_namespace +  '/io/pot/measured_js', JointState, self.pot_callback)
+        rospy.Subscriber(ros_namespace +  '/io/joint/measured_js', JointState, self.joints_callback)
 
     def pot_callback(self, data):
         self._last_potentiometers[:] = data.position
@@ -203,7 +203,7 @@ class potentiometer_calibration:
                     average_potentiometer[axis] = []
 
                 # move and sleep
-                this_arm.move_jp(numpy.array(joint_goal))
+                this_arm.move_jp(numpy.array(joint_goal)).wait()
                 time.sleep(sleep_time_after_motion)
 
                 # collect nb_samples_per_position at current position to compute average
@@ -226,9 +226,9 @@ class potentiometer_calibration:
 
             # at the end, return to home position
             if arm_type == "PSM" or arm_type == "MTM":
-                this_arm.move_jp(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
+                this_arm.move_jp(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])).wait()
             elif arm_type == "ECM":
-                this_arm.move_jp(numpy.array([0.0, 0.0, 0.0, 0.0]))
+                this_arm.move_jp(numpy.array([0.0, 0.0, 0.0, 0.0])).wait()
 
             # close file
             f.close()
