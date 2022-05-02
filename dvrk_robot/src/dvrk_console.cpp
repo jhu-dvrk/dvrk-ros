@@ -62,65 +62,40 @@ dvrk::console::console(const std::string & name,
     }
 
     // arm topics
-    const mtsIntuitiveResearchKitConsole::ArmList::iterator
-        armEnd = m_console->mArms.end();
-    mtsIntuitiveResearchKitConsole::ArmList::iterator armIter;
-    for (armIter = m_console->mArms.begin();
-         armIter != armEnd;
-         ++armIter) {
-        if (!armIter->second->m_skip_ROS_bridge) {
-            const std::string name = armIter->first;
-            switch (armIter->second->m_type) {
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
-                // custom dVRK
+    for (auto armPair : m_console->mArms) {
+        auto arm = *(armPair.second);
+        if (!arm.m_skip_ROS_bridge) {
+            const std::string name = armPair.first;
+            if (arm.native_or_derived_mtm()) {
                 bridge_interface_provided_mtm(name, "Arm",
                                               publish_rate_in_seconds, tf_rate_in_seconds);
-                break;
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
-                // custom dVRK
+            } else if (arm.native_or_derived_ecm()) {
                 bridge_interface_provided_ecm(name, "Arm",
                                               publish_rate_in_seconds, tf_rate_in_seconds);
-                if (armIter->second->m_simulation
+                if (arm.m_simulation
                     == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
-                    add_topics_ecm_io(name, armIter->second->m_IO_component_name);
+                    add_topics_ecm_io(name, arm.m_IO_component_name);
                 }
-                break;
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_S:
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_S_DERIVED:
-                // custom dVRK
+            } else if (arm.native_or_derived_psm()) {
                 bridge_interface_provided_psm(name, "Arm",
                                               publish_rate_in_seconds, tf_rate_in_seconds);
-                if (armIter->second->m_simulation
+                if (arm.m_simulation
                     == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
-                    add_topics_psm_io(name, armIter->second->m_IO_component_name);
+                    add_topics_psm_io(name, arm.m_IO_component_name);
                 }
-                break;
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_GENERIC:
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_GENERIC:
-                // standard CRTK
-                bridge_interface_provided(armIter->second->ComponentName(),
-                                          armIter->second->InterfaceName(),
+            } else if (arm.generic()) {
+                bridge_interface_provided(arm.ComponentName(),
+                                          arm.InterfaceName(),
                                           publish_rate_in_seconds, tf_rate_in_seconds);
-                break;
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
-                {
-                    const auto _sujs = std::list<std::string>({"PSM1", "PSM2", "PSM3", "ECM"});
-                    for (auto const & _suj : _sujs) {
-                        bridge_interface_provided(name,
-                                                  _suj,
-                                                  "SUJ/" + _suj,
-                                                  publish_rate_in_seconds,
-                                                  tf_rate_in_seconds);
-                    }
+            } else if (arm.m_type == mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ) {
+                const auto _sujs = std::list<std::string>({"PSM1", "PSM2", "PSM3", "ECM"});
+                for (auto const & _suj : _sujs) {
+                    bridge_interface_provided(name,
+                                              _suj,
+                                              "SUJ/" + _suj,
+                                              publish_rate_in_seconds,
+                                              tf_rate_in_seconds);
                 }
-                break;
-            default:
-                break;
             }
         }
     }
