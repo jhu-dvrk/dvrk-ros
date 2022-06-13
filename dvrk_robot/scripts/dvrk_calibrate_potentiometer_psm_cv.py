@@ -25,6 +25,7 @@ import sys
 import select
 import tty
 import termios
+import threading
 import rospy
 import numpy
 import argparse
@@ -78,7 +79,6 @@ class ArmCalibrationApplication:
         self.arm = dvrk.psm(arm_name = robot_name,
                             expected_interval = expected_interval)
 
-    # homing example
     def home(self):
         print('Enabling...')
         if not self.arm.enable(10):
@@ -100,7 +100,7 @@ class ArmCalibrationApplication:
         self.q2 = response.cp.pose.position.z
         print("Depth required to position O5 on RCM point: {0:4.2f}mm".format(self.q2 * 1000.0))
 
-    # find range
+    # get safe range of motion from user
     def find_range(self, swing_joint):
         if swing_joint == 0:
             print('Finding range of motion for joint 0\nMove the arm manually (pressing the clutch) to find the maximum range of motion for the first joint (left to right motion).\n - press "d" when you\'re done\n - press "q" to abort\n')
@@ -140,7 +140,7 @@ class ArmCalibrationApplication:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
         print('')
 
-    # called periodically by timer
+    # called periodically by timer to move arm
     def move_arm_callback(self, event):
         if not self.start_time:
             self.start_time = rospy.Time.now()
@@ -152,20 +152,36 @@ class ArmCalibrationApplication:
         self.goal[2] = self.q2 + self.correction 
         self.arm.servo_jp(self.goal)
 
-    # help establish orientation of camera and pixel to meters ratio
-    def point_acquisition(self, point):
-        self.offset_test_results.append(point)
+    
+    # get camera-relative target position at two arm poses to
+    # establish camera orientation and scale (pixel to meters ratio)
+    def get_camera_jacobian(self, goal_pose, exploratory_range=0.016):
+        goal_pose[2] = self.q2 + 0.5*exploratory_range
+        self.arm.move_jp(goal_pose).wait()
 
-        if len(self.offset_test_results) == 2:
-            self.jacobian = self.offset_test_results[0] - self.offset_test_results[1]
-            self.jacobian = (self.jacobian * (2*self.exploratory_offset))/numpy.dot(self.jacobian, self.jacobian)
+        print('Please click the target on the screen to aid target acquisition')
+        ok, point_one = self.tracker.run_point_acquisition()
+        if not ok:
+            return False, None
         
-        return True
+        goal_pose[2] = self.q2 - 0.5*exploratory_range
+        self.arm.move_jp(goal_pose).wait()
+
+        print('Please click the target again')
+        ok, point_two = self.tracker.run_point_acquisition()
+        if not ok:
+            return False, None
+
+        point_difference = point_one - point_two
+        scale = exploratory_range/numpy.linalg.norm(point_difference)
+        jacobian = scale * point_difference 
+        return True, jacobian
 
     # called by vision tracking whenever a good estimate of the current RCM offset is obtained
     # return value indicates whether arm was moved along calibration axis
     def update_correction(self, rcm_offset, radius):
         correction_delta = numpy.dot(rcm_offset, self.jacobian)/4
+        print(correction_delta)
 
         # Move at most 5 mm (0.005 m) in direction of estimated RCM
         correction_delta = math.copysign(min(math.fabs(correction_delta), 0.005), correction_delta)
@@ -173,10 +189,18 @@ class ArmCalibrationApplication:
         # Limit total correction to 20 mm
         if abs(self.correction + correction_delta) > 0.020:
             print("Can't exceed 20 mm correction, please manually improve calibration first!")
-            return False
+            return
 
-        self.correction += correction_delta
-        return True
+        def move_arm():
+            self.correction += correction_delta
+            self.goal[2] = self.q2 + self.correction
+            self.arm.move_jp(self.goal).wait()
+            self.tracker.clear_history()
+            self.tracker.pause(False)
+
+        self.tracker.pause(True)
+        task = threading.Thread(target=move_arm)
+        task.start()
 
     # direct joint control
     def calibrate_third_joint(self, swing_joint):
@@ -203,39 +227,39 @@ class ArmCalibrationApplication:
         self.offset_test_results = []
 
         # initialize vision tracking and periodic arm motion
-        tracker = psm_calibration_cv.RCMTracker(self.max - self.min)
+        self.tracker = psm_calibration_cv.RCMTracker(self.max - self.min)
 
-        self.exploratory_offset = 0.008
-        goal[2] = self.q2 + self.exploratory_offset 
-        self.arm.move_jp(goal).wait()
-        ok = tracker.run_point_acquisition(self.point_acquisition)
+        print('The first step of calibration involves orienting the camera\n')
+        ok, self.jacobian = self.get_camera_jacobian(goal)
         if not ok:
             print('Calibration aborted')
             return
-        
-        goal[2] = self.q2 - self.exploratory_offset 
-        self.arm.move_jp(goal).wait()
-        ok = tracker.run_point_acquisition(self.point_acquisition)
-        if not ok:
-            print('Calibration aborted')
-            return
+ 
+        print('Camera orientation successful, calibration will now begin\n')
         
         goal[2] = self.q2
         goal[swing_joint] = self.max
         self.arm.move_jp(goal).wait()
 
+        print('You should see a few shapes being fit to the robot\'s motion, if these disappear the target may have been lost\n')
+        print('If the target is lost, please click on it again to resume calibration')
+        print('Press q or ESC to stop calibration, for example if the camera is moved accidentally\n')
+
         self.correction = 0.0
         self.start_time = None
         move_arm_timer = rospy.Timer(rospy.Duration(self.expected_interval), self.move_arm_callback)
-        tracker.run(self.update_correction)
+        ok = self.tracker.run(self.update_correction)
         move_arm_timer.shutdown()
+        if not ok:
+            print('Calibration failed to converge within time limit')
+            return
 
         # now save the new offset
-        oldOffset = float(self.xmlPot.get("Offset")) / 1000.0 # convert from XML (mm) to m
-        newOffset = oldOffset - self.correction # add in meters
-        self.xmlPot.set("Offset", str(newOffset * 1000.0))    # convert from m to XML (mm)
+        old_offset = float(self.xmlPot.get("Offset")) / 1000.0 # convert from XML (mm) to m
+        new_offset = old_offset - self.correction # add in meters
+        self.xmlPot.set("Offset", str(new_offset * 1000.0))    # convert from m to XML (mm)
         self.tree.write(self.config_file + "-new")
-        print('Old offset: {:2.2f}mm\nNew offset: {:2.2f}mm\n'.format(oldOffset * 1000.0, newOffset * 1000.0))
+        print('Old offset: {:2.2f}mm\nNew offset: {:2.2f}mm\n'.format(old_offset * 1000.0, new_offset * 1000.0))
         print('Results saved in {:s}-new. Restart your dVRK application with the new file and make sure you re-bias the potentiometer offsets!  To be safe, power off and on the dVRK PSM controller.'.format(self.config_file))
         print('To copy the new file over the existing one: cp {:s}-new {:s}'.format(self.config_file, self.config_file))
 
