@@ -4,6 +4,7 @@ import collections
 import cv2
 import math
 import numpy as np
+import threading
 
 
 # Represents a single tracked detection, with location history information
@@ -115,11 +116,9 @@ class ObjectTracking:
 
 # tracks current offset of remote-center-of-motion of PSM
 class RCMTracker:
-    def __init__(self, expected_motion_angle, tracking_distance=12, window_title="CV Calibration"):
+    def __init__(self, tracking_distance=12, window_title="CV Calibration"):
         self.objects = ObjectTracking(tracking_distance, history_length=200)
         self.window_title = window_title
-
-        self.arm_swing_angle = expected_motion_angle
 
 
     def _mouse_callback(self, event, x, y, flags, params):
@@ -147,7 +146,7 @@ class RCMTracker:
         return ok
 
 
-    def _release(self):
+    def __del__(self):
         self.video_capture.release()
         cv2.destroyWindow(self.window_title)
 
@@ -180,7 +179,7 @@ class RCMTracker:
                 cv2.drawContours(frame, [c], -1, (255, 0, 255), 5)    
 
     
-    def is_good_ellipse_fit(self, target_bound, ellipse_bound):
+    def _is_good_ellipse_fit(self, target_bound, ellipse_bound):
         rect_area = lambda rect: rect[1][0]*rect[1][1]
         target_area = rect_area(target_bound)
         if target_area <= 0.0:
@@ -209,13 +208,13 @@ class RCMTracker:
         return True
 
 
-    def fit_ellipse(self, tracked_object):
+    def _fit_ellipse(self, tracked_object):
         location_history = np.array(tracked_object.location_history)
         bounding_rect = cv2.minAreaRect(location_history)
         ellipse_bound = cv2.fitEllipse(location_history)
         
         # Sanity check quality of ellipse fitting
-        if not self.is_good_ellipse_fit(bounding_rect, ellipse_bound):
+        if not self._is_good_ellipse_fit(bounding_rect, ellipse_bound):
             return None, None, ellipse_bound, bounding_rect
 
         ellipse_center, (width, height), _ = ellipse_bound
@@ -227,101 +226,100 @@ class RCMTracker:
         return radius, rcm_offset, ellipse_bound, bounding_rect
 
     
-    def init(self):
-        self._create_window()
-        ok = self._init_video()
-        return ok
-
-
-    def pause(self, paused):
-        self.paused = paused
-
-
-    def stop(self):
-        self.should_stop = True
-
+    def set_motion_range(self, motion_range_angle):
+        self.arm_swing_angle = motion_range_angle
+    
 
     def clear_history(self):
         self.objects.clear_history()
 
-
-    def run_point_acquisition(self):
-        key = None
-        ok = self.init()
-        self.objects.clear()
-        self.paused = False
+    
+    def start(self, exit_callback):
+        self.exit_callback = exit_callback
         self.should_stop = False
+        self._should_run_point_acquisition = False 
+        self._should_run_rcm_tracking = False
 
-        while ok and not self.should_stop:
-            ok, frame = self.video_capture.read()
-            self._process(frame)
-            cv2.imshow(self.window_title, frame)
-
-            if not self.paused:
-                target = self.objects.primaryTarget
-                if target is not None and target.is_strong():
-                    cv2.circle(frame, target.position, radius=3, color=(0, 0, 255), thickness=cv2.FILLED)
-                    if len(target.location_history) > 5:
-                        mean = np.mean(target.location_history, axis=0)
-                        self._release()
-                        return True, np.int0(mean) 
-
-            key = cv2.waitKey(20)
-            escape = 27
-            if key == ord("q") or key == escape:
-                break
-
-        self._release()
-        return False, None
-
-
-    def run(self, output_callback):
-        try:
-            key = None
-            ok = self.init()
-            self.paused = False
-            self.should_stop = False
-
+        def run_camera():
+            self._create_window()
+            ok = self._init_video()
+            
             while ok and not self.should_stop:
                 ok, frame = self.video_capture.read()
                 self._process(frame)
-
-                if not self.paused:
-                    target = self.objects.primaryTarget
-                    if target is not None and target.is_strong():
-                        cv2.circle(frame, target.position, radius=3, color=(0, 0, 255), thickness=cv2.FILLED)
-                        if len(target.location_history) > 5:
-                            radius, rcm_offset, ellipse, rect = self.fit_ellipse(target)
-                            cv2.ellipse(frame, ellipse, color=(255, 0, 0), thickness=1)
-                            cv2.drawContours(frame, [np.int0(cv2.boxPoints(ellipse))], 0, color=(0, 255, 0), thickness=1)
-                            cv2.drawContours(frame, [np.int0(cv2.boxPoints(rect))], 0, color=(0, 0, 255), thickness=1)
-                            cv2.drawContours(frame, [np.int0(list(target.location_history))], 0, color=(255, 255, 0), thickness=1)
-
-                            ellipse_center = (int(ellipse[0][0]), int(ellipse[0][1]))
-                            location_history_mean = np.mean(target.location_history, axis=0)
-                            location_history_center = (int(location_history_mean[0]), int(location_history_mean[1]))    
-                            rect_center = (int(rect[0][0]), int(rect[0][1]))
-                            
-                            cv2.circle(frame, ellipse_center, radius=0, color=(0, 255, 0), thickness=3)
-                            cv2.circle(frame, location_history_center, radius=0, color=(255, 0, 0), thickness=3)
-                            cv2.circle(frame, rect_center, radius=0, color=(0, 0, 255), thickness=3)
-
-                            if radius is not None:
-                                if len(target.location_history) > 75:
-                                    output_callback(rcm_offset, radius)
+            
+                if self._should_run_point_acquisition:
+                    self._run_point_acquisition(frame)
+                if self._should_run_rcm_tracking:
+                    self._run_rcm_tracking(frame)
 
                 cv2.imshow(self.window_title, frame)
-
                 key = cv2.waitKey(20)
                 escape = 27
                 if key == ord("q") or key == escape:
-                    break
+                    self.should_stop = True
+                    self.exit_callback()
+                    return
 
-        except KeyboardInterrupt:
-            pass 
-    
-        finally:
-            self._release()
+        self.background_task = threading.Thread(target=run_camera)
+        self.background_task.start()
 
-        return True
+
+    def stop(self):
+        self.should_stop = True
+        self.background_task.join()
+
+
+    def _run_point_acquisition(self, frame):
+        target = self.objects.primaryTarget
+        if target is not None and target.is_strong():
+            cv2.circle(frame, target.position, radius=3, color=(0, 0, 255), thickness=cv2.FILLED)
+            if len(target.location_history) > 5:
+                mean = np.mean(target.location_history, axis=0)
+                self._acquired_point = np.int0(mean) 
+
+
+    def acquire_point(self):
+        self.objects.clear()
+        self._acquired_point = None
+        self._should_run_point_acquisition = True
+
+        while not self.should_stop:
+            if self._acquired_point is not None:
+                return True, self._acquired_point 
+
+        return False, None
+        
+
+    def _run_rcm_tracking(self, frame):
+        target = self.objects.primaryTarget
+        if target is not None and target.is_strong():
+            cv2.circle(frame, target.position, radius=3, color=(0, 0, 255), thickness=cv2.FILLED)
+            if len(target.location_history) > 5:
+                radius, rcm_offset, ellipse, rect = self._fit_ellipse(target)
+                cv2.ellipse(frame, ellipse, color=(255, 0, 0), thickness=1)
+                cv2.drawContours(frame, [np.int0(cv2.boxPoints(ellipse))], 0, color=(0, 255, 0), thickness=1)
+                cv2.drawContours(frame, [np.int0(cv2.boxPoints(rect))], 0, color=(0, 0, 255), thickness=1)
+                cv2.drawContours(frame, [np.int0(list(target.location_history))], 0, color=(255, 255, 0), thickness=1)
+
+                ellipse_center = (int(ellipse[0][0]), int(ellipse[0][1]))
+                location_history_mean = np.mean(target.location_history, axis=0)
+                location_history_center = (int(location_history_mean[0]), int(location_history_mean[1]))    
+                rect_center = (int(rect[0][0]), int(rect[0][1]))
+                
+                cv2.circle(frame, ellipse_center, radius=0, color=(0, 255, 0), thickness=3)
+                cv2.circle(frame, location_history_center, radius=0, color=(255, 0, 0), thickness=3)
+                cv2.circle(frame, rect_center, radius=0, color=(0, 0, 255), thickness=3)
+
+                if radius is not None:
+                    if len(target.location_history) > 75:
+                        self._rcm_output_callback(rcm_offset, radius)
+
+
+    def rcm_tracking(self, output_callback):
+        self._rcm_output_callback = output_callback
+        self._should_run_rcm_tracking = True
+
+    def stop_rcm_tracking(self):
+        self._should_run_rcm_tracking = False
 

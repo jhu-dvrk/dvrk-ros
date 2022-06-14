@@ -46,7 +46,7 @@ def is_there_a_key_press():
 
 class ArmCalibrationApplication:
     # configuration
-    def configure(self, robot_name, config_file, expected_interval):
+    def configure(self, robot_name, config_file, expected_interval, timeout, convergence_threshold):
         self.expected_interval = expected_interval
         self.config_file = config_file
         # check that the config file is good
@@ -80,8 +80,8 @@ class ArmCalibrationApplication:
                             expected_interval = expected_interval)
 
         # Calibration parameters
-        self.calibration_timeout = 120 # Two minutes
-        self.calibration_convergence_threshold = 1e-4 # 0.1 mm
+        self.calibration_timeout = timeout 
+        self.calibration_convergence_threshold = convergence_threshold*1e-3 # mm to m 
 
     def home(self):
         print('Enabling...')
@@ -110,6 +110,7 @@ class ArmCalibrationApplication:
             print('Finding range of motion for joint 0\nMove the arm manually (pressing the clutch) to find the maximum range of motion for the first joint (left to right motion).\n - press "d" when you\'re done\n - press "q" to abort\n')
         else:
             print('Finding range of motion for joint 1\nMove the arm manually (pressing the clutch) to find the maximum range of motion for the second joint (back to front motion).\n - press "d" when you\'re done\n - press "q" to abort\n')
+        print("Make sure terminal has focus to receive key-press")
 
         self.min = math.radians( 180.0)
         self.max = math.radians(-180.0)
@@ -140,26 +141,13 @@ class ArmCalibrationApplication:
                 sys.stdout.flush()
                 # sleep
                 rospy.sleep(self.expected_interval)
+
+            self.tracker.set_motion_range(self.max - self.min)
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
         print('')
 
-    # called periodically by timer to move arm
-    def move_arm_callback(self, event):
-        if not self.start_time:
-            self.start_time = rospy.Time.now()
-        
-        # move back and forth
-        dt = rospy.Time.now() - self.start_time
-        t = dt.to_sec() / 1.0
-        self.goal[self.swing_joint] = self.max + self.cos_ratio * (math.cos(t) - 1.0)
-        self.goal[2] = self.q2 + self.correction 
-        self.arm.servo_jp(self.goal)
-
-        if dt.to_sec() > self.calibration_timeout:
-            self.tracker.stop()
-
-    
+          
     # get camera-relative target position at two arm poses to
     # establish camera orientation and scale (pixel to meters ratio)
     def get_camera_jacobian(self, goal_pose, exploratory_range=0.016):
@@ -167,7 +155,7 @@ class ArmCalibrationApplication:
         self.arm.move_jp(goal_pose).wait()
 
         print('Please click the target on the screen to aid target acquisition')
-        ok, point_one = self.tracker.run_point_acquisition()
+        ok, point_one = self.tracker.acquire_point()
         if not ok:
             return False, None
         
@@ -175,7 +163,7 @@ class ArmCalibrationApplication:
         self.arm.move_jp(goal_pose).wait()
 
         print('Please click the target again')
-        ok, point_two = self.tracker.run_point_acquisition()
+        ok, point_two = self.tracker.acquire_point()
         if not ok:
             return False, None
 
@@ -189,13 +177,11 @@ class ArmCalibrationApplication:
     # return value indicates whether arm was moved along calibration axis
     def update_correction(self, rcm_offset, radius):
         alpha = 0.25
-        raw_correction_delta = alpha*numpy.dot(rcm_offset, self.jacobian)
-        if math.fabs(raw_correction_delta) < self.calibration_convergence_threshold:
-            self.tracker.stop()
+        self.residual_error = alpha*numpy.dot(rcm_offset, self.jacobian)
 
         # Move at most 5 mm (0.005 m) in direction of estimated RCM
-        correction_delta = math.copysign(min(math.fabs(raw_correction_delta), 0.005), raw_correction_delta)
-        print("Estimated remaining calibration error: {:0.2f} mm".format(1000*raw_correction_delta))
+        correction_delta = math.copysign(min(math.fabs(self.residual_error), 0.005), self.residual_error)
+        print("Estimated remaining calibration error: {:0.2f} mm".format(1000*self.residual_error))
 
         # Limit total correction to 20 mm
         if abs(self.correction + correction_delta) > 0.020:
@@ -207,9 +193,9 @@ class ArmCalibrationApplication:
             self.goal[2] = self.q2 + self.correction
             self.arm.move_jp(self.goal).wait()
             self.tracker.clear_history()
-            self.tracker.pause(False)
+            self.tracker.rcm_tracking(self.update_correction)
 
-        self.tracker.pause(True)
+        self.tracker.stop_rcm_tracking()
         task = threading.Thread(target=move_arm)
         task.start()
 
@@ -238,8 +224,6 @@ class ArmCalibrationApplication:
         self.offset_test_results = []
 
         # initialize vision tracking and periodic arm motion
-        self.tracker = psm_calibration_cv.RCMTracker(self.max - self.min)
-
         print('The first step of calibration involves orienting the camera\n')
         ok, self.jacobian = self.get_camera_jacobian(goal)
         if not ok:
@@ -254,16 +238,37 @@ class ArmCalibrationApplication:
 
         print('You should see a few shapes being fit to the robot\'s motion, if these disappear the target may have been lost\n')
         print('If the target is lost, please click on it again to resume calibration')
-        print('Press q or ESC to stop calibration, for example if the camera is moved accidentally\n')
+        print('Press q or ESC to stop calibration (with window focused), for example if the camera is moved accidentally\n')
 
         self.correction = 0.0
-        self.start_time = None
-        move_arm_timer = rospy.Timer(rospy.Duration(self.expected_interval), self.move_arm_callback)
-        ok = self.tracker.run(self.update_correction)
-        move_arm_timer.shutdown()
-        if not ok:
-            print('Calibration failed to converge within time limit')
-            return
+        self.residual_error = self.calibration_convergence_threshold+1
+        self.tracker.rcm_tracking(self.update_correction)
+        self.start_time = rospy.Time.now()
+       
+        # move back and forth while tracker measures calibration error
+        while True: 
+            dt = rospy.Time.now() - self.start_time
+            t = dt.to_sec() / 1.0
+            self.goal[self.swing_joint] = self.max + self.cos_ratio * (math.cos(t) - 1.0)
+            self.goal[2] = self.q2 + self.correction 
+            self.arm.servo_jp(self.goal)
+
+            if dt.to_sec() > self.calibration_timeout:
+                self.tracker.stop()
+                print('\nCalibration failed to converge within {} seconds'.format(self.calibration_timeout))
+                print('Try adding diffuse lighting, or increase timeout')
+                return
+
+            if math.fabs(self.residual_error) < self.calibration_convergence_threshold:
+                self.tracker.stop()
+                print("\nCalibration successfully converged, with residual error of <{} mm".format(1000*self.calibration_convergence_threshold))
+                break
+
+            if self.stop:
+                print("\nCalibration aborted by user")
+                return
+
+            rospy.sleep(self.expected_interval)
 
         # now save the new offset
         old_offset = float(self.xmlPot.get("Offset")) / 1000.0 # convert from XML (mm) to m
@@ -274,11 +279,22 @@ class ArmCalibrationApplication:
         print('Results saved in {:s}-new. Restart your dVRK application with the new file and make sure you re-bias the potentiometer offsets!  To be safe, power off and on the dVRK PSM controller.'.format(self.config_file))
         print('To copy the new file over the existing one: cp {:s}-new {:s}'.format(self.config_file, self.config_file))
 
+    
+    def exit(self):
+        self.stop = True
+
+
     # application entry point
     def run(self, swing_joint):
+        self.tracker = psm_calibration_cv.RCMTracker()
+        self.stop = False
+        self.tracker.start(lambda: self.exit())
+
         self.home()
         self.find_range(swing_joint)
         self.calibrate_third_joint(swing_joint)
+
+        self.tracker.stop()
 
 if __name__ == '__main__':
     # ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
@@ -298,6 +314,10 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--swing-joint', type=int, required=False,
                         choices=[0, 1], default=0,
                         help = 'joint use for the swing motion around RCM')
+    parser.add_argument('-t', '--timeout', type=int, required=False, default=180,
+                        help = 'calibration timeout in seconds')
+    parser.add_argument('--threshold', type=int, required=False, default=0.1,
+                        help = 'calibration convergence threshold in mm')
     args = parser.parse_args(argv[1:]) # skip argv[0], script name
 
     print ('\nThis program can be used to improve the potentiometer offset for the third joint '
@@ -314,5 +334,6 @@ if __name__ == '__main__':
            ' -2- monitor the application while auto-calibration is performed for safety.\n\n')
 
     application = ArmCalibrationApplication()
-    application.configure(args.arm, args.config, args.interval)
+    application.configure(args.arm, args.config, args.interval, args.timeout, args.threshold)
     application.run(args.swing_joint)
+
