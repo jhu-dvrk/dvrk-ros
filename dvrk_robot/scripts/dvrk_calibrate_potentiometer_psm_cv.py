@@ -79,6 +79,10 @@ class ArmCalibrationApplication:
         self.arm = dvrk.psm(arm_name = robot_name,
                             expected_interval = expected_interval)
 
+        # Calibration parameters
+        self.calibration_timeout = 120 # Two minutes
+        self.calibration_convergence_threshold = 1e-4 # 0.1 mm
+
     def home(self):
         print('Enabling...')
         if not self.arm.enable(10):
@@ -152,6 +156,9 @@ class ArmCalibrationApplication:
         self.goal[2] = self.q2 + self.correction 
         self.arm.servo_jp(self.goal)
 
+        if dt.to_sec() > self.calibration_timeout:
+            self.tracker.stop()
+
     
     # get camera-relative target position at two arm poses to
     # establish camera orientation and scale (pixel to meters ratio)
@@ -174,17 +181,21 @@ class ArmCalibrationApplication:
 
         point_difference = point_one - point_two
         scale = exploratory_range/numpy.linalg.norm(point_difference)
-        jacobian = scale * point_difference 
+        orientation = point_difference/numpy.linalg.norm(point_difference)
+        jacobian = scale*orientation 
         return True, jacobian
 
     # called by vision tracking whenever a good estimate of the current RCM offset is obtained
     # return value indicates whether arm was moved along calibration axis
     def update_correction(self, rcm_offset, radius):
-        correction_delta = numpy.dot(rcm_offset, self.jacobian)/4
-        print(correction_delta)
+        alpha = 0.25
+        raw_correction_delta = alpha*numpy.dot(rcm_offset, self.jacobian)
+        if math.fabs(raw_correction_delta) < self.calibration_convergence_threshold:
+            self.tracker.stop()
 
         # Move at most 5 mm (0.005 m) in direction of estimated RCM
-        correction_delta = math.copysign(min(math.fabs(correction_delta), 0.005), correction_delta)
+        correction_delta = math.copysign(min(math.fabs(raw_correction_delta), 0.005), raw_correction_delta)
+        print("Estimated remaining calibration error: {:0.2f} mm".format(1000*raw_correction_delta))
 
         # Limit total correction to 20 mm
         if abs(self.correction + correction_delta) > 0.020:
