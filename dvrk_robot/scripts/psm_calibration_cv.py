@@ -81,7 +81,7 @@ class ObjectTracking:
         ])
 
         current_object_count = len(self.objects)
-        
+
         if len(self.objects) > 0:
             if len(detections) > 0:
                 closest = np.argmin(distances, axis=0)
@@ -111,7 +111,7 @@ class ObjectTracking:
         # No existing tracked objects, add all detections as new objects
         else:
             for d in detections:
-                self.objects.append(TrackedObject(d, history_length=self.history_length)) 
+                self.objects.append(TrackedObject(d, history_length=self.history_length))
 
 
 # tracks current offset of remote-center-of-motion of PSM
@@ -126,7 +126,7 @@ class RCMTracker:
             return
 
         self.objects.setPrimaryTarget((x, y))
-    
+
 
     def _create_window(self):
         cv2.namedWindow(self.window_title)
@@ -135,11 +135,11 @@ class RCMTracker:
 
     def _init_video(self):
         self.video_capture = cv2.VideoCapture(0)
-        self.video_capture.set(cv2.CAP_PROP_FPS, 30)        
+        self.video_capture.set(cv2.CAP_PROP_FPS, 30)
         ok = False
         if self.video_capture.isOpened():
             ok, _ = self.video_capture.read()
-        
+
         if not ok:
             print("Couldn't read from camera.")
 
@@ -155,7 +155,7 @@ class RCMTracker:
         blurred = cv2.medianBlur(frame, 2*5 + 1)
         hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
         thresholded = cv2.inRange(hsv, (135, int(35*2.55), int(25*2.55)), (180, int(100*2.55), int(75*2.55)))
-        
+
         contours, _ = cv2.findContours(
             thresholded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
         )
@@ -176,18 +176,18 @@ class RCMTracker:
             color = (0, 255, 0)
             if self.objects.primaryTarget is not None and self.objects.primaryTarget.position == contour_center:
                 color = (255, 0, 255)
-    
+
             cv2.drawContours(frame, [contours[i]], -1, color, 3)
 
-    
+
     def _is_good_ellipse_fit(self, target_bound, ellipse_bound):
         rect_area = lambda rect: rect[1][0]*rect[1][1]
         target_area = rect_area(target_bound)
         if target_area <= 0.0:
             return False
-        
+
         # theoretical ratio between bounding rect area of observed target trajectory and
-        # bounding rect area of full circle 
+        # bounding rect area of full circle
         expected_area_ratio = (1.0 - math.cos(0.5*self.arm_swing_angle))*(2*math.sin(0.5*self.arm_swing_angle))/4.0
         allowed_margin = 2.0
 
@@ -205,7 +205,7 @@ class RCMTracker:
         # wrong direction, etc. leading to smaller overlap. So this indicates bad fit
         if overlap_ratio < 0.85:
             return False
-       
+
         return True
 
 
@@ -213,23 +213,23 @@ class RCMTracker:
         location_history = np.array(tracked_object.location_history)
         bounding_rect = cv2.minAreaRect(location_history)
         ellipse_bound = cv2.fitEllipse(location_history)
-        
+
         # Sanity check quality of ellipse fitting
         if not self._is_good_ellipse_fit(bounding_rect, ellipse_bound):
             return None, None, ellipse_bound, bounding_rect
 
         ellipse_center, (width, height), _ = ellipse_bound
         ellipse_center = np.array(ellipse_center)
-        location_history_center = bounding_rect[0] 
+        location_history_center = bounding_rect[0]
         rcm_offset = np.array(ellipse_center) - location_history_center
         radius = (width + height)/4.0
 
         return radius, rcm_offset, ellipse_bound, bounding_rect
 
-    
+
     def set_motion_range(self, motion_range_angle):
         self.arm_swing_angle = motion_range_angle
-    
+
 
     def clear_history(self):
         self.objects.clear_history()
@@ -239,17 +239,17 @@ class RCMTracker:
         self.should_stop = False
         self._enter_handler = enter_handler
         self._quit_handler = quit_handler
-        self._should_run_point_acquisition = False 
+        self._should_run_point_acquisition = False
         self._should_run_rcm_tracking = False
 
         def run_camera():
             self._create_window()
             ok = self._init_video()
-            
+
             while ok and not self.should_stop:
                 ok, frame = self.video_capture.read()
                 self._process(frame)
-            
+
                 if self._should_run_point_acquisition:
                     self._run_point_acquisition(frame)
                 if self._should_run_rcm_tracking:
@@ -280,7 +280,7 @@ class RCMTracker:
             # output average location of target
             if len(target.location_history) > 5:
                 mean = np.mean(target.location_history, axis=0)
-                self._acquired_point = np.int32(mean) 
+                self._acquired_point = np.int32(mean)
 
 
     def acquire_point(self):
@@ -290,10 +290,10 @@ class RCMTracker:
 
         while not self.should_stop:
             if self._acquired_point is not None:
-                return True, self._acquired_point 
+                return True, self._acquired_point
 
         return False, None
-        
+
 
     def _run_rcm_tracking(self, frame):
         target = self.objects.primaryTarget
