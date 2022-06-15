@@ -233,10 +233,11 @@ class RCMTracker:
     def clear_history(self):
         self.objects.clear_history()
 
-    
-    def start(self, exit_callback):
-        self.exit_callback = exit_callback
+
+    def start(self, enter_handler, quit_handler):
         self.should_stop = False
+        self._enter_handler = enter_handler
+        self._quit_handler = quit_handler
         self._should_run_point_acquisition = False 
         self._should_run_rcm_tracking = False
 
@@ -255,11 +256,12 @@ class RCMTracker:
 
                 cv2.imshow(self.window_title, frame)
                 key = cv2.waitKey(20)
+                key = key & 0xFF # Upper bits are modifiers (control, alt, etc.)
                 escape = 27
                 if key == ord("q") or key == escape:
-                    self.should_stop = True
-                    self.exit_callback()
-                    return
+                    self._quit_handler()
+                elif key == ord("d") or key == ord("\n") or key == ord("\r"):
+                    self._enter_handler()
 
         self.background_task = threading.Thread(target=run_camera)
         self.background_task.start()
@@ -267,7 +269,6 @@ class RCMTracker:
 
     def stop(self):
         self.should_stop = True
-        self.background_task.join()
 
 
     def _run_point_acquisition(self, frame):
