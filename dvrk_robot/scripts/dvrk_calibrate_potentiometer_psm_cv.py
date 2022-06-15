@@ -227,12 +227,17 @@ class ArmCalibrationApplication:
 
         # wait for arm to make calibration adjustment in another thread
         def move_arm():
+            elapsed_time = rospy.Time.now() - self.start_time
             self.tracker.stop_rcm_tracking()
             self.correction += correction_delta
             self.goal_pose[2] = self.q2 + self.correction
             self.arm.move_jp(self.goal_pose).wait()
             self.tracker.clear_history()
             self.tracker.rcm_tracking(self.update_correction)
+            
+            # "hide" the time elapsed while updating the translation calibration
+            # so that arm doesn't try to jump while resuming periodic movement
+            self.start_time = rospy.Time.now() - elapsed_time
 
         task = threading.Thread(target=move_arm)
         task.start()

@@ -116,7 +116,7 @@ class ObjectTracking:
 
 # tracks current offset of remote-center-of-motion of PSM
 class RCMTracker:
-    def __init__(self, tracking_distance=12, window_title="CV Calibration"):
+    def __init__(self, tracking_distance=15, window_title="CV Calibration"):
         self.objects = ObjectTracking(tracking_distance, history_length=200)
         self.window_title = window_title
 
@@ -170,13 +170,14 @@ class RCMTracker:
 
         self.objects.register(detections)
 
-        for c in contours:
-            M = cv2.moments(c)
-            center = (int(M['m10']/M['m00']), int(M['m01']/M['m00']))
-            if self.objects.primaryTarget is None or self.objects.primaryTarget.position[0] != center[0] or self.objects.primaryTarget.position[1] != center[1]:
-                cv2.drawContours(frame, [c], -1, (0, 255, 0), 3)
-            elif self.objects.primaryTarget is not None:
-                cv2.drawContours(frame, [c], -1, (255, 0, 255), 5)    
+        for i in range(len(contours)):
+            contour_center = (detections[i][0], detections[i][1])
+
+            color = (0, 255, 0)
+            if self.objects.primaryTarget is not None and self.objects.primaryTarget.position == contour_center:
+                color = (255, 0, 255)
+    
+            cv2.drawContours(frame, [contours[i]], -1, color, 3)
 
     
     def _is_good_ellipse_fit(self, target_bound, ellipse_bound):
@@ -275,9 +276,11 @@ class RCMTracker:
         target = self.objects.primaryTarget
         if target is not None and target.is_strong():
             cv2.circle(frame, target.position, radius=3, color=(0, 0, 255), thickness=cv2.FILLED)
+            # once at least 5 data points have been collected since user selected target,
+            # output average location of target
             if len(target.location_history) > 5:
                 mean = np.mean(target.location_history, axis=0)
-                self._acquired_point = np.int0(mean) 
+                self._acquired_point = np.int32(mean) 
 
 
     def acquire_point(self):
@@ -294,27 +297,30 @@ class RCMTracker:
 
     def _run_rcm_tracking(self, frame):
         target = self.objects.primaryTarget
-        if target is not None and target.is_strong():
-            cv2.circle(frame, target.position, radius=3, color=(0, 0, 255), thickness=cv2.FILLED)
-            if len(target.location_history) > 5:
-                radius, rcm_offset, ellipse, rect = self._fit_ellipse(target)
-                cv2.ellipse(frame, ellipse, color=(255, 0, 0), thickness=1)
-                cv2.drawContours(frame, [np.int0(cv2.boxPoints(ellipse))], 0, color=(0, 255, 0), thickness=1)
-                cv2.drawContours(frame, [np.int0(cv2.boxPoints(rect))], 0, color=(0, 0, 255), thickness=1)
-                cv2.drawContours(frame, [np.int0(list(target.location_history))], 0, color=(255, 255, 0), thickness=1)
+        # OpenCV's fit_ellipse requires at least five points
+        if target is not None and target.is_strong() and len(target.location_history) > 5:
+            # fit ellipse to target's path and get measured RCM offset
+            radius, rcm_offset, ellipse, rect = self._fit_ellipse(target)
 
-                ellipse_center = (int(ellipse[0][0]), int(ellipse[0][1]))
-                location_history_mean = np.mean(target.location_history, axis=0)
-                location_history_center = (int(location_history_mean[0]), int(location_history_mean[1]))    
-                rect_center = (int(rect[0][0]), int(rect[0][1]))
-                
-                cv2.circle(frame, ellipse_center, radius=0, color=(0, 255, 0), thickness=3)
-                cv2.circle(frame, location_history_center, radius=0, color=(255, 0, 0), thickness=3)
-                cv2.circle(frame, rect_center, radius=0, color=(0, 0, 255), thickness=3)
+            # draw fitted ellipse
+            cv2.ellipse(frame, ellipse, color=(255, 0, 0), thickness=2)
+            # draw bounding rectangle of ellipse
+            cv2.drawContours(frame, [np.int32(cv2.boxPoints(ellipse))], 0, color=(0, 255, 0), thickness=2)
+            # draw bounding rectangle around target's trajectory
+            cv2.drawContours(frame, [np.int32(cv2.boxPoints(rect))], 0, color=(0, 0, 255), thickness=2)
+            # draw points in target's trajectory
+            cv2.polylines(frame, [np.int32(list(target.location_history))], False, color=(255, 255, 0), thickness=2)
 
-                if radius is not None:
-                    if len(target.location_history) > 75:
-                        self._rcm_output_callback(rcm_offset, radius)
+            ellipse_center = (int(ellipse[0][0]), int(ellipse[0][1]))
+            rect_center = (int(rect[0][0]), int(rect[0][1]))
+
+            cv2.circle(frame, ellipse_center, radius=0, color=(0, 255, 0), thickness=3)
+            cv2.circle(frame, rect_center, radius=0, color=(0, 0, 255), thickness=3)
+
+            # once enough data points have been collected, output measured RCM offset
+            if radius is not None and rcm_offset is not None:
+                if len(target.location_history) > 100:
+                    self._rcm_output_callback(rcm_offset, radius)
 
 
     def rcm_tracking(self, output_callback):
