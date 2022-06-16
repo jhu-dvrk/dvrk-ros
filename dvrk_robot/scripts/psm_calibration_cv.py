@@ -327,7 +327,7 @@ class RCMTracker:
 
             # once enough data points have been collected, output measured RCM offset
             if radius is not None and rcm_offset is not None:
-                if len(target.location_history) > 100:
+                if len(target.location_history) > 150:
                     self._rcm_output_callback(rcm_offset, radius)
 
 

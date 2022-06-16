@@ -191,7 +191,7 @@ class ArmCalibrationApplication:
             return False, None
 
         # slow down speed of generated trajectories - helps CV not to lose track of target
-        self.arm.trajectory_j_set_ratio(0.03)
+        self.arm.trajectory_j_set_ratio(0.05)
 
         # move arm up from RCM by half
         goal_pose[2] = self.q2 - 0.5*exploratory_range
@@ -219,11 +219,12 @@ class ArmCalibrationApplication:
     # called by vision tracking whenever a good estimate of the current RCM offset is obtained
     # return value indicates whether arm was moved along calibration axis
     def update_correction(self, rcm_offset, radius):
-        alpha = 0.25
-        self.residual_error = alpha*numpy.dot(rcm_offset, self.jacobian)
+        self.residual_error = numpy.dot(rcm_offset, self.jacobian)
+        # slow convergence at 0.25 mm
+        convergence_rate = 0.325 if math.fabs(self.residual_error) < 0.00025 else 0.8
 
         # Move at most 5 mm (0.005 m) in direction of estimated RCM
-        correction_delta = math.copysign(min(math.fabs(self.residual_error), 0.005), self.residual_error)
+        correction_delta = math.copysign(min(math.fabs(convergence_rate*self.residual_error), 0.005), self.residual_error)
         print("Estimated remaining calibration error: {:0.2f} mm".format(1000*self.residual_error))
 
         # Limit total correction to 20 mm
@@ -236,13 +237,8 @@ class ArmCalibrationApplication:
     def apply_correction(self, correction):
         elapsed_time = rospy.Time.now() - self.start_time
         self.tracker.stop_rcm_tracking()
-        self.arm.move_jp(self.goal_pose).wait()
         self.goal_pose[2] = self.q2 + correction
-        # slow down speed of generated trajectories - helps CV not to lose track of target
-        self.arm.trajectory_j_set_ratio(0.01)
         self.arm.move_jp(self.goal_pose).wait()
-        # restore normal trajectory speed
-        self.arm.trajectory_j_set_ratio(1.0)
         self.tracker.clear_history()
         self.tracker.rcm_tracking(self.update_correction)
 
@@ -254,7 +250,8 @@ class ArmCalibrationApplication:
     def calibrate_third_joint(self):
         print("\n\nBeginning auto-calibration...")
 
-        self.arm.trajectory_j_set_ratio(0.02)
+        # slow down arm, move to start position, restore normal speed
+        self.arm.trajectory_j_set_ratio(0.05)
         self.goal_pose = self.move_to_start()
         self.arm.trajectory_j_set_ratio(1.0)
 
@@ -265,15 +262,16 @@ class ArmCalibrationApplication:
         self.correction = 0.0
         previous_correction = self.correction
         self.residual_error = self.calibration_convergence_threshold+1
+        self.tracker.clear_history()
         self.tracker.rcm_tracking(self.update_correction)
-        self.start_time = rospy.Time.now()
 
-        swing_range = 0.5*(self.max - self.min)
-        swing_start = 0.5*(self.max + self.min)
+        move_command_handle = None
+        self.start_time = rospy.Time.now()
 
         old_settings = termios.tcgetattr(sys.stdin)
         try:
             tty.setcbreak(sys.stdin.fileno())
+            self.arm.trajectory_j_set_ratio(0.2)
 
             # move back and forth while tracker measures calibration error
             while True:
@@ -283,21 +281,23 @@ class ArmCalibrationApplication:
                         self.ok = False
                 if not self.ok:
                     print("\n\nCalibration aborted by user")
+                    pose = self.arm.measured_jp()
+                    self.arm.move_jp(pose).wait()
                     return
-
-                dt = rospy.Time.now() - self.start_time
-                t = dt.to_sec() / 1.0
-                self.goal_pose[self.swing_joint] = swing_start + swing_range*math.sin(t)
 
                 correction = self.correction
                 if correction != previous_correction:
                     self.apply_correction(correction)
                     previous_correction = correction
-                else:
-                    self.goal_pose[2] = self.q2 + correction
-                    self.arm.servo_jp(self.goal_pose)
 
-                if dt.to_sec() > self.calibration_timeout:
+                if move_command_handle is None or not move_command_handle.is_busy():
+                    self.goal_pose[2] = self.q2 + correction
+                    self.goal_pose[self.swing_joint] = self.max if self.goal_pose[self.swing_joint] == self.min else self.min
+                    move_command_handle = self.arm.move_jp(self.goal_pose)
+                    move_command_handle = self.arm.move_jp(self.goal_pose)
+
+                time_elapsed = rospy.Time.now() - self.start_time
+                if time_elapsed.to_sec() > self.calibration_timeout:
                     self.tracker.stop()
                     print('\n\nCalibration failed to converge within {} seconds'.format(self.calibration_timeout))
                     print('Try adding diffuse lighting, or increase timeout')
@@ -312,6 +312,7 @@ class ArmCalibrationApplication:
 
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+            self.arm.trajectory_j_set_ratio(1.0)
 
 
         # return to start position
