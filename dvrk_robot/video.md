@@ -155,7 +155,7 @@ As far as we know, ROS Kinetic on Ubuntu 16.04 uses the gstreamer 0.1 so you wil
 
 Use `apt install` to install gscam on Ubuntu 18.04.  The package name should be `ros-melodic-gscam`.   It will install all the required dependencies for you.
 
-On Ubuntu 20.04, gscam binaries are not available via `apt` so you will need to compile it in your ROS workspace.  The original source code is on github: https://github.com/ros-drivers/gscam.  But you need a different version which can be found using the pull request for Noetic Devel.  So you need to clone https://github.com/hap1961/gscam/tree/noetic-devel in your `catkin_ws/src`.  then make sure you switch to the Noetic branch: `cd ~/catkin_ws/src/gscam; git checkout noetic-devel`.  Then `catkin build`.  This info is from June 2022, it might need to be updated.
+On Ubuntu 20.04, gscam binaries are not available via `apt` so you will need to compile it in your ROS workspace.  The original source code is on github: https://github.com/ros-drivers/gscam.  But you need a different version which can be found using the pull request for Noetic Devel.  So you need to clone https://github.com/hap1961/gscam in your `catkin_ws/src`.  then make sure you switch to the Noetic branch: `cd ~/catkin_ws/src/gscam; git checkout noetic-devel`.  Then `catkin build`.  This info is from June 2022, it might need to be updated.
 
 ### Manual compilation
 
