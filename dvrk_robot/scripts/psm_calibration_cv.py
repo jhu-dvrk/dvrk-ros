@@ -153,7 +153,7 @@ class RCMTracker:
     def _process(self, frame):
         blurred = cv2.medianBlur(frame, 2*5 + 1)
         hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
-        thresholded = cv2.inRange(hsv, (135, int(35*2.55), int(25*2.55)), (180, int(100*2.55), int(75*2.55)))
+        thresholded = cv2.inRange(hsv, (125, int(35*2.55), int(25*2.55)), (180, int(100*2.55), int(75*2.55)))
 
         contours, _ = cv2.findContours(
             thresholded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE

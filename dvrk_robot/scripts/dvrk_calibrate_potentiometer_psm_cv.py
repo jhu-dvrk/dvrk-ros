@@ -242,16 +242,12 @@ class ArmCalibrationApplication:
 
     # Adjust translation stage to apply new calibration correction
     def apply_correction(self, correction):
-        elapsed_time = rospy.Time.now() - self.start_time
+        # stop tracking rcm, apply correction, re-start rcm tracking
         self.tracker.stop_rcm_tracking()
         self.goal_pose[2] = self.q2 + correction
         self.arm.move_jp(self.goal_pose).wait()
         self.tracker.clear_history()
         self.tracker.rcm_tracking(self.update_correction)
-
-        # "hide" the time elapsed while updating the translation calibration
-        # so that arm doesn't try to jump while resuming periodic movement
-        self.start_time = rospy.Time.now() - elapsed_time
 
     # auto-calibration routine for third joint
     def calibrate_third_joint(self):
@@ -293,6 +289,7 @@ class ArmCalibrationApplication:
                     self.arm.move_jp(pose).wait()
                     return
 
+                # thread-safe check for change in calibration correction
                 correction = self.correction
                 if correction != previous_correction:
                     self.apply_correction(correction)
@@ -336,7 +333,6 @@ class ArmCalibrationApplication:
         print("Restart your dVRK application with the new file and make sure you re-bias the potentiometer offsets!")
         print("To be safe, power off and on the dVRK PSM controller.")
         print("To copy the new file over the existing one: cp {:s}-new {:s}".format(self.config_file, self.config_file))
-
 
     # Exit key (q/ESCAPE) handler for GUI
     def _on_quit(self):
