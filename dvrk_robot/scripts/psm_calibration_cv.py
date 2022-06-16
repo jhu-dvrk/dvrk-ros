@@ -58,7 +58,7 @@ class ObjectTracking:
 
     # mark on object as the primary object to track
     def setPrimaryTarget(self, position):
-        nearbyObjects = [x for x in self.objects if x.distanceTo(position) < x.size]
+        nearbyObjects = [x for x in self.objects if x.distanceTo(position) < 1.35*x.size]
         self.primaryTarget = nearbyObjects[0] if len(nearbyObjects) == 1 else None
         if self.primaryTarget is not None:
             self.primaryTarget.location_history.clear()
@@ -141,7 +141,7 @@ class RCMTracker:
             ok, _ = self.video_capture.read()
         
         if not ok:
-            print("Couldn't read from camera.")
+            print("\n\nFailed to read from camera.")
 
         return ok
 
@@ -203,7 +203,7 @@ class RCMTracker:
 
         # Bounding rects should have nearly 100% overlap, but poor fit can cause ellipse to point in the
         # wrong direction, etc. leading to smaller overlap. So this indicates bad fit
-        if overlap_ratio < 0.85:
+        if overlap_ratio < 0.65:
             return False
        
         return True
@@ -242,12 +242,19 @@ class RCMTracker:
         self._should_run_point_acquisition = False 
         self._should_run_rcm_tracking = False
 
+        self._create_window()
+        ok = self._init_video()
+        if not ok:
+            return False
+
         def run_camera():
-            self._create_window()
-            ok = self._init_video()
-            
+            ok = True
             while ok and not self.should_stop:
                 ok, frame = self.video_capture.read()
+                if not ok:
+                    print("\n\nFailed to read from camera")
+                    self._quit_handler()
+
                 self._process(frame)
             
                 if self._should_run_point_acquisition:
@@ -266,6 +273,7 @@ class RCMTracker:
 
         self.background_task = threading.Thread(target=run_camera)
         self.background_task.start()
+        return True
 
 
     def stop(self):
@@ -284,7 +292,7 @@ class RCMTracker:
 
 
     def acquire_point(self):
-        self.objects.clear()
+        self.objects.clear_history()
         self._acquired_point = None
         self._should_run_point_acquisition = True
 

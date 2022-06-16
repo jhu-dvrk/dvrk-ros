@@ -90,6 +90,7 @@ class ArmCalibrationApplication:
         print('Homing...')
         if not self.arm.home(10):
             sys.exit('failed to home within 10 seconds')
+
         # get current joints just to set size
         print('Moving to zero position...')
         goal = numpy.copy(self.arm.setpoint_jp())
@@ -189,12 +190,18 @@ class ArmCalibrationApplication:
             print("Camera measurement failed")
             return False, None
         
+
+        # slow down speed of generated trajectories - helps CV not to lose track of target
+        self.arm.trajectory_j_set_ratio(0.03)
+
         # move arm up from RCM by half
         goal_pose[2] = self.q2 - 0.5*exploratory_range
         self.arm.move_jp(goal_pose).wait()
 
+        # restore normal trajectory speed
+        self.arm.trajectory_j_set_ratio(1.0)
+
         # get camera position of target again
-        print('Please click the target again')
         ok, point_two = self.tracker.acquire_point()
         if not ok:
             print("Camera measurement failed")
@@ -225,45 +232,50 @@ class ArmCalibrationApplication:
             print("Can't exceed 20 mm correction, please manually improve calibration first!")
             return
 
-        # wait for arm to make calibration adjustment in another thread
-        def move_arm():
-            elapsed_time = rospy.Time.now() - self.start_time
-            self.tracker.stop_rcm_tracking()
-            self.correction += correction_delta
-            self.goal_pose[2] = self.q2 + self.correction
-            self.arm.move_jp(self.goal_pose).wait()
-            self.tracker.clear_history()
-            self.tracker.rcm_tracking(self.update_correction)
-            
-            # "hide" the time elapsed while updating the translation calibration
-            # so that arm doesn't try to jump while resuming periodic movement
-            self.start_time = rospy.Time.now() - elapsed_time
+        self.correction += correction_delta
 
-        task = threading.Thread(target=move_arm)
-        task.start()
+    def apply_correction(self, correction):
+        elapsed_time = rospy.Time.now() - self.start_time
+        self.tracker.stop_rcm_tracking()
+        self.arm.move_jp(self.goal_pose).wait()
+        self.goal_pose[2] = self.q2 + correction
+        # slow down speed of generated trajectories - helps CV not to lose track of target
+        self.arm.trajectory_j_set_ratio(0.01)
+        self.arm.move_jp(self.goal_pose).wait()
+        # restore normal trajectory speed
+        self.arm.trajectory_j_set_ratio(1.0)
+        self.tracker.clear_history()
+        self.tracker.rcm_tracking(self.update_correction)
+
+        # "hide" the time elapsed while updating the translation calibration
+        # so that arm doesn't try to jump while resuming periodic movement
+        self.start_time = rospy.Time.now() - elapsed_time
 
     # auto-calibration routine for third joint
     def calibrate_third_joint(self):
         print("\n\nBeginning auto-calibration...")
 
+        self.arm.trajectory_j_set_ratio(0.02)
         self.goal_pose = self.move_to_start()
+        self.arm.trajectory_j_set_ratio(1.0)
 
-        print("You should see a few shapes being fit to the robot's motion, if these disappear the target may have been lost")
-        print("If the target is lost, please click on it again to resume calibration")
+        print("During calibation, the target should be highlighted in magenta - if it becomes green or the highlight disappears,")
+        print("then the target has been lost. If this occurs, please click on it to resume calibration.")
         print("Press q to stop calibration, for example if the camera is moved accidentally")
 
         self.correction = 0.0
+        previous_correction = self.correction
         self.residual_error = self.calibration_convergence_threshold+1
         self.tracker.rcm_tracking(self.update_correction)
         self.start_time = rospy.Time.now()
-    
+
         swing_range = 0.5*(self.max - self.min)
         swing_start = 0.5*(self.max + self.min)
- 
+
         old_settings = termios.tcgetattr(sys.stdin)
         try:
             tty.setcbreak(sys.stdin.fileno())
-            
+
             # move back and forth while tracker measures calibration error
             while True: 
                 if is_there_a_key_press():
@@ -277,8 +289,13 @@ class ArmCalibrationApplication:
                 dt = rospy.Time.now() - self.start_time
                 t = dt.to_sec() / 1.0
                 self.goal_pose[self.swing_joint] = swing_start + swing_range*math.sin(t)
-                self.goal_pose[2] = self.q2 + self.correction 
-                self.arm.servo_jp(self.goal_pose)
+                correction = self.correction
+                if correction != previous_correction:
+                    self.apply_correction(correction)
+                    previous_correction = correction
+                else:
+                    self.goal_pose[2] = self.q2 + correction
+                    self.arm.servo_jp(self.goal_pose)
 
                 if dt.to_sec() > self.calibration_timeout:
                     self.tracker.stop()
@@ -327,7 +344,9 @@ class ArmCalibrationApplication:
 
             # initialize vision tracking
             self.tracker = psm_calibration_cv.RCMTracker()
-            self.tracker.start(self._on_enter, self._on_quit)
+            self.ok = self.tracker.start(self._on_enter, self._on_quit)
+            if not self.ok:
+                return
 
             self.home()
 
