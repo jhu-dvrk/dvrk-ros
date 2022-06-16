@@ -80,8 +80,8 @@ class ArmCalibrationApplication:
                             expected_interval = expected_interval)
 
         # Calibration parameters
-        self.calibration_timeout = timeout 
-        self.calibration_convergence_threshold = convergence_threshold*1e-3 # mm to m 
+        self.calibration_timeout = timeout
+        self.calibration_convergence_threshold = convergence_threshold*1e-3 # mm to m
 
     def home(self):
         print('Enabling...')
@@ -160,7 +160,7 @@ class ArmCalibrationApplication:
         goal_pose.fill(0)
         goal_pose[self.swing_joint] = self.min + 0.5 * (self.max - self.min)
         goal_pose[2] = self.q2 # to start close to expected RCM
-        
+
         # rotate so vision target (joint 05) is facing user/camera
         if self.swing_joint == 0:
             goal_pose[3] = math.radians(90.0)
@@ -171,14 +171,14 @@ class ArmCalibrationApplication:
         self.arm.move_jp(goal_pose).wait()
         return goal_pose
 
-      
+
     # get camera-relative target position at two arm poses to
     # establish camera orientation and scale (pixel to meters ratio)
     # exploratory_range is distance in meters to move arm
     def get_camera_jacobian(self, exploratory_range=0.016):
         print("\n\nMeasuring the orientation/scale of the camera")
         goal_pose = self.move_to_start()
-        
+
         # move arm down from RCM by half of exploratory range
         goal_pose[2] = self.q2 + 0.5*exploratory_range
         self.arm.move_jp(goal_pose).wait()
@@ -189,7 +189,6 @@ class ArmCalibrationApplication:
         if not ok:
             print("Camera measurement failed")
             return False, None
-        
 
         # slow down speed of generated trajectories - helps CV not to lose track of target
         self.arm.trajectory_j_set_ratio(0.03)
@@ -277,7 +276,7 @@ class ArmCalibrationApplication:
             tty.setcbreak(sys.stdin.fileno())
 
             # move back and forth while tracker measures calibration error
-            while True: 
+            while True:
                 if is_there_a_key_press():
                     char = sys.stdin.read(1)
                     if char == 'q':
@@ -289,6 +288,7 @@ class ArmCalibrationApplication:
                 dt = rospy.Time.now() - self.start_time
                 t = dt.to_sec() / 1.0
                 self.goal_pose[self.swing_joint] = swing_start + swing_range*math.sin(t)
+
                 correction = self.correction
                 if correction != previous_correction:
                     self.apply_correction(correction)
@@ -313,7 +313,7 @@ class ArmCalibrationApplication:
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 
-      
+
         # return to start position
         self.move_to_start()
 
@@ -328,14 +328,14 @@ class ArmCalibrationApplication:
         print("To be safe, power off and on the dVRK PSM controller.")
         print("To copy the new file over the existing one: cp {:s}-new {:s}".format(self.config_file, self.config_file))
 
-   
+
     def _on_quit(self):
         self.ok = False
         self.tracker.stop()
 
     def _on_enter(self):
         self.done = True
- 
+
     # application entry point
     def run(self, swing_joint):
         try:
@@ -352,13 +352,13 @@ class ArmCalibrationApplication:
 
             # find safe range of motion for arm
             self.find_range()
-            
+
             # camera orientation/scale measurement
             self.ok, self.jacobian = self.get_camera_jacobian()
             if not self.ok:
                 print("Aborting calibration")
                 return
-           
+
             self.calibrate_third_joint()
 
         finally:
