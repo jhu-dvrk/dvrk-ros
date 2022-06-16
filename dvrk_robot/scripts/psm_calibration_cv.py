@@ -63,11 +63,7 @@ class ObjectTracking:
         if self.primaryTarget is not None:
             self.primaryTarget.location_history.clear()
 
-    # Clear tracked objects
-    def clear(self):
-        self.objects = []
-        self.primaryTarget = None
-
+    # Clear location history of all tracked objects
     def clear_history(self):
         for obj in self.objects:
             obj.location_history.clear()
@@ -75,6 +71,7 @@ class ObjectTracking:
     # register detections from the current frame with tracked objects,
     # removing, updating, and adding tracked objects as needed
     def register(self, detections):
+        # Matrix of minimum distance between each detection and each tracked object
         distances = np.array([
             np.array([obj.distanceTo(d) for d in detections])
             for obj in self.objects
@@ -84,6 +81,7 @@ class ObjectTracking:
 
         if len(self.objects) > 0:
             if len(detections) > 0:
+                # Array of closest tracked object to each detection
                 closest = np.argmin(distances, axis=0)
 
                 # associate detections with existing tracked objects or add as new objects
@@ -151,6 +149,7 @@ class RCMTracker:
         cv2.destroyWindow(self.window_title)
 
 
+    # Process a frame - find, track, outline all potential targets
     def _process(self, frame):
         blurred = cv2.medianBlur(frame, 2*5 + 1)
         hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
@@ -209,6 +208,12 @@ class RCMTracker:
         return True
 
 
+    # Fits ellipse to target's trajectory to estimate the current offset of the target from the RCM
+    # Returns
+    #   - RCM offset as vector in units of pixels
+    #   - Bounding rect of the fitted ellipse
+    #   - Bounding rect of target's trajectory
+    # If a good fit cannot be found, RCM offset will be None
     def _fit_ellipse(self, tracked_object):
         location_history = np.array(tracked_object.location_history)
         bounding_rect = cv2.minAreaRect(location_history)
@@ -234,6 +239,7 @@ class RCMTracker:
         self.objects.clear_history()
 
 
+    # In background, run object tracking and display video
     def start(self, enter_handler, quit_handler):
         self.should_stop = False
         self._enter_handler = enter_handler
@@ -289,7 +295,7 @@ class RCMTracker:
                 mean = np.mean(target.location_history, axis=0)
                 self._acquired_point = np.int32(mean)
 
-
+    # Get location of target
     def acquire_point(self):
         self.objects.clear_history()
         self._acquired_point = None
@@ -330,6 +336,7 @@ class RCMTracker:
                     self._rcm_output_callback(rcm_offset)
 
 
+    # Starts RCM tracking and sets callback to be used when good RCM offset measurement is made
     def rcm_tracking(self, output_callback):
         self._rcm_output_callback = output_callback
         self._should_run_rcm_tracking = True

@@ -160,6 +160,7 @@ class ArmCalibrationApplication:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 
 
+    # Move arm to middle of motion range and position joint 05 near RCM
     def move_to_start(self):
         goal_pose = numpy.copy(self.arm.setpoint_jp())
         goal_pose.fill(0)
@@ -226,7 +227,7 @@ class ArmCalibrationApplication:
     def update_correction(self, rcm_offset):
         self.residual_error = numpy.dot(rcm_offset, self.jacobian)
         # slow convergence at 0.25 mm
-        convergence_rate = 0.325 if math.fabs(self.residual_error) < 0.00025 else 0.8
+        convergence_rate = 0.325 if math.fabs(self.residual_error) < 0.00025 else 1.0
 
         # Move at most 5 mm (0.005 m) in direction of estimated RCM
         correction_delta = math.copysign(min(math.fabs(convergence_rate*self.residual_error), 0.005), self.residual_error)
@@ -239,6 +240,7 @@ class ArmCalibrationApplication:
 
         self.correction += correction_delta
 
+    # Adjust translation stage to apply new calibration correction
     def apply_correction(self, correction):
         elapsed_time = rospy.Time.now() - self.start_time
         self.tracker.stop_rcm_tracking()
@@ -273,10 +275,11 @@ class ArmCalibrationApplication:
         move_command_handle = None
         self.start_time = rospy.Time.now()
 
+        # Swing arm back and forth until timeout, convergence, or error/user abort
         old_settings = termios.tcgetattr(sys.stdin)
         try:
             tty.setcbreak(sys.stdin.fileno())
-            self.arm.trajectory_j_set_ratio(0.2)
+            self.arm.trajectory_j_set_ratio(0.15)
 
             # move back and forth while tracker measures calibration error
             while True:
@@ -295,17 +298,17 @@ class ArmCalibrationApplication:
                     self.apply_correction(correction)
                     previous_correction = correction
 
+                # Once arm has reached end of swing, set trajectory to swing back other way
                 if move_command_handle is None or not move_command_handle.is_busy():
                     self.goal_pose[2] = self.q2 + correction
                     self.goal_pose[self.swing_joint] = self.max if self.goal_pose[self.swing_joint] == self.min else self.min
-                    move_command_handle = self.arm.move_jp(self.goal_pose)
                     move_command_handle = self.arm.move_jp(self.goal_pose)
 
                 time_elapsed = rospy.Time.now() - self.start_time
                 if time_elapsed.to_sec() > self.calibration_timeout:
                     self.tracker.stop()
                     print('\n\nCalibration failed to converge within {} seconds'.format(self.calibration_timeout))
-                    print('Try adding diffuse lighting, or increase timeout')
+                    print('Try adding diffuse lighting, increasing the range of motion, or increase the timeout')
                     return
 
                 if math.fabs(self.residual_error) < self.calibration_convergence_threshold:
@@ -315,10 +318,10 @@ class ArmCalibrationApplication:
 
                 rospy.sleep(self.expected_interval)
 
+        # Restore normal terminal behavior and normal arm speed
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
             self.arm.trajectory_j_set_ratio(1.0)
-
 
         # return to start position
         self.move_to_start()
@@ -335,10 +338,12 @@ class ArmCalibrationApplication:
         print("To copy the new file over the existing one: cp {:s}-new {:s}".format(self.config_file, self.config_file))
 
 
+    # Exit key (q/ESCAPE) handler for GUI
     def _on_quit(self):
         self.ok = False
         self.tracker.stop()
 
+    # Enter (or 'd') handler for GUI
     def _on_enter(self):
         self.done = True
 
@@ -365,6 +370,7 @@ class ArmCalibrationApplication:
                 print("Aborting calibration")
                 return
 
+            # actual calibration
             self.calibrate_third_joint()
 
         finally:
