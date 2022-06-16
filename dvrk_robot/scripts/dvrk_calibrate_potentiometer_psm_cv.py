@@ -409,12 +409,12 @@ if __name__ == '__main__':
            ' the RCM point. This tool will use the camera to automatically track the point we want to be the RCM, and attempt '
            ' to calibrate the translation joint based.\n\n'
            'You must first home your PSM and make sure a tool is engaged.\n'
-           'You should also have a camera point at the end of the tool, within about 3-5 inches if possible.\n'
+           'You should also have a camera point at the end of the tool, within about 2-4 inches if possible.\n'
            'For the camera to accurately track the target joint, it must be painted with bright pink nail polish.\n'
            'Once this is done, there are three steps:\n\n'
            ' -1- find a safe range of motion for the rocking movement\n'
-           ' -3- detemine orientation/scale of camera relative to PSM\n'
-           ' -2- monitor the application while auto-calibration is performed for safety.\n\n')
+           ' -2- detemine orientation/scale of camera relative to PSM\n'
+           ' -3- monitor the application while auto-calibration is performed for safety.\n\n')
 
     application = ArmCalibrationApplication()
     application.configure(args.arm, args.config, args.interval, args.timeout, args.threshold)
