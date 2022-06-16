@@ -216,15 +216,14 @@ class RCMTracker:
 
         # Sanity check quality of ellipse fitting
         if not self._is_good_ellipse_fit(bounding_rect, ellipse_bound):
-            return None, None, ellipse_bound, bounding_rect
+            return None, ellipse_bound, bounding_rect
 
-        ellipse_center, (width, height), _ = ellipse_bound
+        ellipse_center, _, _ = ellipse_bound
         ellipse_center = np.array(ellipse_center)
         location_history_center = bounding_rect[0]
         rcm_offset = np.array(ellipse_center) - location_history_center
-        radius = (width + height)/4.0
 
-        return radius, rcm_offset, ellipse_bound, bounding_rect
+        return rcm_offset, ellipse_bound, bounding_rect
 
 
     def set_motion_range(self, motion_range_angle):
@@ -308,7 +307,7 @@ class RCMTracker:
         # OpenCV's fit_ellipse requires at least five points
         if target is not None and target.is_strong() and len(target.location_history) > 5:
             # fit ellipse to target's path and get measured RCM offset
-            radius, rcm_offset, ellipse, rect = self._fit_ellipse(target)
+            rcm_offset, ellipse, rect = self._fit_ellipse(target)
 
             # draw fitted ellipse
             cv2.ellipse(frame, ellipse, color=(255, 0, 0), thickness=2)
@@ -326,9 +325,9 @@ class RCMTracker:
             cv2.circle(frame, rect_center, radius=0, color=(0, 0, 255), thickness=3)
 
             # once enough data points have been collected, output measured RCM offset
-            if radius is not None and rcm_offset is not None:
+            if rcm_offset is not None:
                 if len(target.location_history) > 150:
-                    self._rcm_output_callback(rcm_offset, radius)
+                    self._rcm_output_callback(rcm_offset)
 
 
     def rcm_tracking(self, output_callback):

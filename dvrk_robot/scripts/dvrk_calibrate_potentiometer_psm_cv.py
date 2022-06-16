@@ -148,6 +148,11 @@ class ArmCalibrationApplication:
                 # sleep
                 rospy.sleep(self.expected_interval)
 
+            # restrict range to center it at 0
+            angle = min(math.fabs(self.min), math.fabs(self.max))
+            self.min = -max(angle, self.min)
+            self.max = min(angle, self.max)
+            print("\nRange to be used: [{:02.2f}, {:02.2f}]".format(math.degrees(self.min), math.degrees(self.max)))
             # pass range of motion to vision tracking
             self.tracker.set_motion_range(self.max - self.min)
 
@@ -218,7 +223,7 @@ class ArmCalibrationApplication:
 
     # called by vision tracking whenever a good estimate of the current RCM offset is obtained
     # return value indicates whether arm was moved along calibration axis
-    def update_correction(self, rcm_offset, radius):
+    def update_correction(self, rcm_offset):
         self.residual_error = numpy.dot(rcm_offset, self.jacobian)
         # slow convergence at 0.25 mm
         convergence_rate = 0.325 if math.fabs(self.residual_error) < 0.00025 else 0.8
