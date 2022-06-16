@@ -29,13 +29,13 @@
   <node name="dvrk_$(arg left_camera_name)_view"
 	pkg="image_view"
 	type="image_view"
-	args="image:=/$(arg rig_name)/left/decklink/camera/image_raw">
+	args="image:=/$(arg rig_name)/left/decklink/$(arg left_camera_name)/image_raw">
     <param name="autosize" value="True" />
   </node>
   <node name="dvrk_$(arg right_camera_name)_view"
 	pkg="image_view"
 	type="image_view"
-	args="image:=/$(arg rig_name)/right/decklink/camera/image_raw">
+	args="image:=/$(arg rig_name)/right/decklink/$(arg right_camera_name)/image_raw">
     <param name="autosize" value="True" />
   </node>
 
