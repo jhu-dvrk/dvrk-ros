@@ -40,7 +40,7 @@ class TrackedObject:
         self.location_history.append(self.position)
 
     # Manhattan/L1 distance between this object and 'position'
-    def distanceTo(self, position):
+    def distance_to(self, position):
         dx = self.position[0] - position[0]
         dy = self.position[1] - position[1]
         return math.sqrt(dx*dx + dy*dy)
@@ -73,8 +73,8 @@ class ObjectTracking:
         self.history_length = history_length
 
     # mark on object as the primary object to track
-    def setPrimaryTarget(self, position):
-        nearbyObjects = [x for x in self.objects if x.distanceTo(position) < 1.35*x.size]
+    def set_primary_target(self, position):
+        nearbyObjects = [x for x in self.objects if x.distance_to(position) < 1.35*x.size]
         self.primaryTarget = nearbyObjects[0] if len(nearbyObjects) == 1 else None
         if self.primaryTarget is not None:
             self.primaryTarget.location_history.clear()
@@ -89,7 +89,7 @@ class ObjectTracking:
     def register(self, detections):
         # Matrix of minimum distance between each detection and each tracked object
         distances = np.array([
-            np.array([obj.distanceTo(d) for d in detections])
+            np.array([obj.distance_to(d) for d in detections])
             for obj in self.objects
         ])
 
@@ -139,7 +139,7 @@ class RCMTracker:
         if event != cv2.EVENT_LBUTTONDOWN:
             return
 
-        self.objects.setPrimaryTarget((x, y))
+        self.objects.set_primary_target((x, y))
 
 
     def _create_window(self):
