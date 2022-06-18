@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-# Author: Anton Deguet
+# Authors: Anton Deguet, Brendan Burkhart
 # Date: 2015-02-22
 
-# (C) Copyright 2015-2020 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2015-2022 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
