@@ -1,7 +1,7 @@
 Video pipeline
 ==============
 
-This describes a fairly low cost setup that can be used with the dVRK HRSV display (High Resolution Stereo Video).  We use a couple of cheap USB frame grabbers (Hauppage Live 2) for the analog videos from SD cameras.   For HD systems, we tested a BlackMagic DeckLink Duo frame grabber with dual SDI inputs (see also the dVRK video pipeline page for the hardware setup: https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki/Video-Pipeline).  For displaying the video back, we just use a graphic card with two spare video outputs.  The software relies heavily on ROS tools to grab and display the stereo video.  Some lag is to be expected.
+This describes a fairly low cost setup that can be used with the dVRK HRSV display (High Resolution Stereo Video).  We use a couple of cheap USB frame grabbers (Hauppage Live 2) for the analog videos from SD cameras (640x480).   For HD systems (720p and 1080p), we tested a BlackMagic DeckLink Duo frame grabber with dual SDI inputs (see also the dVRK video pipeline page for the hardware setup: https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki/Video-Pipeline).  For displaying the video back, we just use a graphic card with two spare video outputs.  The software relies heavily on ROS tools to grab and display the stereo video.  Some lag is to be expected.
 
 The general steps are:
  * Make sure the frame grabber works (e.g. using tvtime or vendor application)
@@ -16,7 +16,7 @@ This page is a collection of notes that might be helpful for the dVRK community 
 
 ## USB frame grabbers
 
-The frame grabbers we use most often are Hauppage USB Live 2:
+The frame grabbers we use most often for SD endoscopes are Hauppage USB Live 2:
  * Manufacturer: http://www.hauppauge.com/site/products/data_usblive2.html
  * Amazon, about $45: http://www.amazon.com/Hauppauge-610-USB-Live-Digitizer-Capture/dp/B0036VO2BI
 
@@ -132,6 +132,8 @@ Once gstreamer is installed, you can use a few command lines to test the drivers
     * `gst-launch-1.0 decklinkvideosrc device-number=0 ! videoconvert ! autovideosink`
     * `gst-launch-1.0 decklinkvideosrc device-number=1 ! videoconvert ! autovideosink`
 
+**Note:**  For some reason, in Ubuntu 20.04 you need to add all users to the `plugdev` group.  It's a bit odd since `/dev/blackmagic/*` has `rw` permissions for all users.  If you figure out a fix, let us know.
+
 # Software
 
 ## gscam
@@ -142,16 +144,18 @@ gstreamer developement library can be installed using `apt-get install`.  Make s
 
 To figure out if the ROS provided gscam uses gstreamer 0.1 or 1.x, use the command line:
 ```sh
-apt-cache showpkg ros-kinetic-gscam # or ros-lunar-gscam or whatever ROS version
+apt-cache showpkg ros-kinetic-gscam # or ros-lunar-gscam, melodic or whatever ROS version
 ```
 
 Look at the output of the `apt-cache showpkg` command and search the "Dependencies" to find the gstreamer version used.
 
 As far as we know, ROS Kinetic on Ubuntu 16.04 uses the gstreamer 0.1 so you will have to manually compile `gscam` to use gstreamer 1.x.   Melodic on 18.04 seems to use gstreamer 1.x so you should be able install using `apt`.
 
-### ROS Ubuntu packages
+### ROS Ubuntu packages vs build from source
 
 Use `apt install` to install gscam on Ubuntu 18.04.  The package name should be `ros-melodic-gscam`.   It will install all the required dependencies for you.
+
+On Ubuntu 20.04, gscam binaries are not available via `apt` so you will need to compile it in your ROS workspace.  The original source code is on github: https://github.com/ros-drivers/gscam.  But you need a different version which can be found using the pull request for Noetic Devel.  So you need to clone https://github.com/hap1961/gscam in your `catkin_ws/src`.  then make sure you switch to the Noetic branch: `cd ~/catkin_ws/src/gscam; git checkout noetic-devel`.  Then `catkin build`.  This info is from June 2022, it might need to be updated.
 
 ### Manual compilation
 
@@ -188,6 +192,8 @@ For a system with a Decklink Duo, the `gscam_config` in a launch script would lo
 ```xml
     <param name="gscam_config" value="decklinkvideosrc connection=sdi device-number=0 ! videoconvert"/>
 ```
+
+**Note:** ROS topic names might changes when upgraded from 18.04/Melodic to 20.04/Noetic
 
 ## (rqt_)image_view
 

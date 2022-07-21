@@ -1,5 +1,5 @@
 #
-# (C) Copyright 2015-2021 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2015-2022 Johns Hopkins University (JHU), All Rights Reserved.
 #
 # --- begin cisst license - do not edit ---
 #
@@ -10,12 +10,11 @@
 # --- end cisst license ---
 
 cmake_minimum_required (VERSION 3.1)
+project (dvrk_robot VERSION 2.1.0)
 
 set (CMAKE_CXX_STANDARD 14)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_CXX_EXTENSIONS OFF)
-
-project (dvrk_robot)
 
 ## find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
