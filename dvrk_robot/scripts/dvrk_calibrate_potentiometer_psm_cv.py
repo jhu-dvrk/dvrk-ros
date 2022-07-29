@@ -344,7 +344,7 @@ class ArmCalibrationApplication:
         self.done = True
 
     # application entry point
-    def run(self, swing_joint):
+    def run(self, swing_joint, rom):
         try:
             self.ok = True
             self.swing_joint = swing_joint
@@ -357,8 +357,13 @@ class ArmCalibrationApplication:
 
             self.home()
 
-            # find safe range of motion for arm
-            self.find_range()
+            if rom == 0:
+                # find safe range of motion for arm
+                self.find_range()
+            else:
+                self.max = math.radians(rom)
+                self.min = math.radians(-rom)
+                self.tracker.set_motion_range(self.max - self.min)
 
             # camera orientation/scale measurement
             self.ok, self.jacobian = self.get_camera_jacobian()
@@ -385,6 +390,8 @@ if __name__ == '__main__':
                         help = 'arm name corresponding to ROS topics without namespace.  Use __ns:= to specify the namespace')
     parser.add_argument('-i', '--interval', type=float, default=0.01,
                         help = 'expected interval in seconds between messages sent by the device')
+    parser.add_argument('-r', '--range', type=float, default=0.0,
+                        help = 'range of motion, degrees')
     parser.add_argument('-c', '--config', type=str, required=True,
                         help = 'arm IO config file, i.e. something like sawRobotIO1394-xwz-12345.xml')
     parser.add_argument('-s', '--swing-joint', type=int, required=False,
@@ -414,5 +421,5 @@ if __name__ == '__main__':
 
     application = ArmCalibrationApplication()
     application.configure(args.arm, args.config, args.interval, args.timeout, args.threshold)
-    application.run(args.swing_joint)
+    application.run(args.swing_joint, args.range)
 
