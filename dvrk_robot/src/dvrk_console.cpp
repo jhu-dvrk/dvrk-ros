@@ -194,7 +194,7 @@ void dvrk::console::bridge_interface_provided_arm(const std::string & _arm_name,
     // bridged (e.g. subscribers and events)
     const std::string _required_interface_name = _arm_name + "_using_" + _interface_name;
 
-    subscribers_bridge().AddSubscriberToCommandWrite<prmPositionCartesianSet, geometry_msgs::Pose>
+    subscribers_bridge().AddSubscriberToCommandWrite<prmPositionCartesianSet, geometry_msgs::PoseStamped>
         (_required_interface_name, "set_base_frame",
          _arm_name + "/set_base_frame");
     subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float64>
