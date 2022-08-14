@@ -209,9 +209,6 @@ void dvrk::console::bridge_interface_provided_arm(const std::string & _arm_name,
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (_required_interface_name, "body/set_cf_orientation_absolute",
          _arm_name + "/body/set_cf_orientation_absolute");
-    subscribers_bridge().AddSubscriberToCommandWrite<prmCartesianImpedanceGains, cisst_msgs::prmCartesianImpedanceGains>
-        (_required_interface_name, "set_cartesian_impedance_gains",
-         _arm_name + "/set_cartesian_impedance_gains");
 
     events_bridge().AddPublisherFromEventWrite<std::string, std_msgs::String>
         (_required_interface_name, "desired_state",

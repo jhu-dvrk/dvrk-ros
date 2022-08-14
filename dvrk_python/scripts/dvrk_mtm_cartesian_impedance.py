@@ -3,7 +3,7 @@
 # Author: Anton Deguet
 # Date: 2017-07-22
 
-# (C) Copyright 2017-2020 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2017-2022 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -44,8 +44,8 @@ class example_application:
         self.coag_event = threading.Event()
         rospy.Subscriber('footpedals/coag',
                          Joy, self.coag_event_cb)
-        self.set_gains_pub = rospy.Publisher(self.arm._arm__full_ros_namespace + '/set_cartesian_impedance_gains',
-                                             prmCartesianImpedanceGains, latch = True, queue_size = 1)
+        self.servo_ci_pub = rospy.Publisher(self.arm._arm__full_ros_namespace + '/servo_ci',
+                                            prmCartesianImpedanceGains, latch = True, queue_size = 1)
 
     # homing example
     def home(self):
@@ -95,7 +95,7 @@ class example_application:
         gains.ForcePosition.x = self.arm.measured_cp().p[0]
         gains.ForcePosition.y = self.arm.measured_cp().p[1]
         gains.ForcePosition.z = self.arm.measured_cp().p[2]
-        self.set_gains_pub.publish(gains)
+        self.servo_ci_pub.publish(gains)
 
         print_id('orientation will be locked')
         self.wait_for_coag()
@@ -111,7 +111,7 @@ class example_application:
         gains.ForcePosition.x = self.arm.measured_cp().p[0]
         gains.ForcePosition.y = self.arm.measured_cp().p[1]
         gains.ForcePosition.z = self.arm.measured_cp().p[2]
-        self.set_gains_pub.publish(gains)
+        self.servo_ci_pub.publish(gains)
 
         print_id('an horizontal line will be created around the current position, with viscosity along the line')
         self.wait_for_coag()
@@ -131,7 +131,7 @@ class example_application:
         gains.ForcePosition.x = self.arm.measured_cp().p[0]
         gains.ForcePosition.y = self.arm.measured_cp().p[1]
         gains.ForcePosition.z = self.arm.measured_cp().p[2]
-        self.set_gains_pub.publish(gains)
+        self.servo_ci_pub.publish(gains)
 
         print_id('a plane will be created perpendicular to the master gripper')
         self.wait_for_coag()
@@ -177,7 +177,7 @@ class example_application:
         gains.TorqueOrientation.y = orientationQuaternion[1]
         gains.TorqueOrientation.z = orientationQuaternion[2]
         gains.TorqueOrientation.w = orientationQuaternion[3]
-        self.set_gains_pub.publish(gains)
+        self.servo_ci_pub.publish(gains)
         self.arm.unlock_orientation()
 
         print_id('keep holding arm, press coag, arm will freeze in position')
