@@ -102,12 +102,18 @@ dvrk::console::console(const std::string & name,
 
     // ECM teleop
     if (m_console->mTeleopECM) {
-        add_topics_teleop_ecm(m_console->mTeleopECM->Name());
+        const auto teleopName = m_console->mTeleopECM->Name();
+        bridge_interface_provided(teleopName, "Setting", teleopName,
+                                  publish_rate_in_seconds, tf_rate_in_seconds);
+        add_topics_teleop_ecm(teleopName);
     }
 
     // PSM teleops
     for (auto const & teleop : m_console->mTeleopsPSM) {
-        add_topics_teleop_psm(teleop.first);
+        const auto teleopName = teleop.first;
+        bridge_interface_provided(teleopName, "Setting", teleopName,
+                                  publish_rate_in_seconds, tf_rate_in_seconds);
+        add_topics_teleop_psm(teleopName);
     }
 
     // Endoscope focus
@@ -555,9 +561,6 @@ void dvrk::console::add_topics_teleop_ecm(const std::string & _name)
                       _name, "Setting");
 
     // commands
-    subscribers_bridge().AddSubscriberToCommandWrite<std::string, crtk_msgs::StringStamped>
-        (_name, "state_command",
-         _ros_namespace + "/state_command");
     subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float64>
         (_name, "set_scale",
          _ros_namespace + "/set_scale");
@@ -612,9 +615,6 @@ void dvrk::console::add_topics_teleop_psm(const std::string & _name)
                       _name, "Setting");
 
     // commands
-    subscribers_bridge().AddSubscriberToCommandWrite<std::string, crtk_msgs::StringStamped>
-        (_name, "state_command",
-         _ros_namespace + "/state_command");
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (_name, "lock_translation",
          _ros_namespace + "/lock_translation");
