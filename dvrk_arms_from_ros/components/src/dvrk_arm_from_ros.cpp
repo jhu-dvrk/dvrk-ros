@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2020-01-13
 
-  (C) Copyright 2020-2021 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2020-2022 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -47,6 +47,8 @@ void dvrk_arm_from_ros::Init(void)
     typedef std::vector<std::string> Commands;
     populate_interface_provided(interface_provided,
                                 ros_namespace,
+                                // void commands
+                                Commands({"hold"}),
                                 // write commands
                                 Commands({"state_command", "servo_cp"}),
                                 // read commands
@@ -54,11 +56,6 @@ void dvrk_arm_from_ros::Init(void)
                                           "setpoint_js", "measured_js", "setpoint_cp"}),
                                 // write events
                                 Commands({"operating_state", "error", "warning", "status"}));
-
-    // non CRTK commands
-    AddPublisherFromCommandVoid(interface_provided,
-                                "Freeze",
-                                ros_namespace + "/freeze");
 }
 
 // Configure is a virtual method, we can redefine it and have our own

@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2020-01-13
 
-  (C) Copyright 2020-2021 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2020-2022 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -48,6 +48,8 @@ void dvrk_psm_from_ros::InitPSM(void)
     typedef std::vector<std::string> Commands;
     populate_interface_provided(interface_provided,
                                 ros_namespace,
+                                // void commands
+                                Commands(),
                                 // write commands
                                 Commands({"jaw/servo_jp"}),
                                 // read commands
