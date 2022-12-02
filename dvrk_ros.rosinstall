@@ -1,7 +1,7 @@
 - git:
     local-name: cisst-saw/cisstNetlib
     uri: https://github.com/jhu-cisst/cisstNetlib
-    version: master
+    version: devel
 - git:
     local-name: cisst-saw/cisst
     uri: https://github.com/jhu-cisst/cisst
