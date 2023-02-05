@@ -46,3 +46,7 @@
     local-name: dvrk-ros
     uri: https://github.com/jhu-dvrk/dvrk-ros
     version: devel
+- git:
+    local-name: dvrk-config-jhu
+    uri: https://github.com/jhu-dvrk/dvrk-config-jhu
+    version: devel
