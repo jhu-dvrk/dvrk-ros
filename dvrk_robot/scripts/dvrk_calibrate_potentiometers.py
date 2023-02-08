@@ -52,7 +52,7 @@ class potentiometer_calibration:
         self._last_joints = []
         ros_namespace = self._robot_name
         rospy.Subscriber(ros_namespace +  '/io/pot/measured_js', JointState, self.pot_callback)
-        rospy.Subscriber(ros_namespace +  '/io/joint/measured_js', JointState, self.joints_callback)
+        rospy.Subscriber(ros_namespace +  '/io/actuator/measured_js', JointState, self.joints_callback)
 
     def pot_callback(self, data):
         self._last_potentiometers[:] = data.position
