@@ -48,5 +48,5 @@
     version: devel
 - git:
     local-name: dvrk_config_jhu
-    uri: https://github.com/jhu-dvrk/dvrk_config_jhu
+    uri: https://github.com/dvrk-config/dvrk_config_jhu
     version: devel
