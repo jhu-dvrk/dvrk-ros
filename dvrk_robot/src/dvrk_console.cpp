@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2022 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2023 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -215,6 +215,10 @@ void dvrk::console::bridge_interface_provided_arm(const std::string & _arm_name,
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (_required_interface_name, "body/set_cf_orientation_absolute",
          _arm_name + "/body/set_cf_orientation_absolute");
+    subscribers_bridge().AddServiceFromCommandQualifiedRead<vctDoubleVec, vctDoubleVec,
+                                                            cisst_msgs::ConvertFloat64Array>
+        (_required_interface_name, "actuator_to_joint_position",
+         _arm_name + "/actuator_to_joint_position");
 
     events_bridge().AddPublisherFromEventWrite<std::string, std_msgs::String>
         (_required_interface_name, "desired_state",
