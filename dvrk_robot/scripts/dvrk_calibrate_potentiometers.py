@@ -2,7 +2,7 @@
 
 # Authors: Nick Eusman, Anton Deguet
 # Date: 2015-09-24
-# Copyright JHU 2015-2022
+# Copyright JHU 2015-2023
 
 import time
 import rospy
@@ -18,6 +18,8 @@ from sensor_msgs.msg import JointState
 import dvrk
 import xml.etree.ElementTree as ET
 
+# for actuator_to_joint_position
+import cisst_msgs.srv
 
 if sys.version_info.major < 3:
     input = raw_input
@@ -50,9 +52,9 @@ class potentiometer_calibration:
         self._data_received = False # use pots to make sure the ROS topics are OK
         self._last_potentiometers = []
         self._last_joints = []
-        ros_namespace = self._robot_name
-        rospy.Subscriber(ros_namespace +  '/io/pot/measured_js', JointState, self.pot_callback)
-        rospy.Subscriber(ros_namespace +  '/io/actuator/measured_js', JointState, self.joints_callback)
+        self.ros_namespace = self._robot_name
+        rospy.Subscriber(self.ros_namespace +  '/io/pot/measured_js', JointState, self.pot_callback)
+        rospy.Subscriber(self.ros_namespace +  '/io/actuator/measured_js', JointState, self.joints_callback)
 
     def pot_callback(self, data):
         self._last_potentiometers[:] = data.position
@@ -283,6 +285,13 @@ class potentiometer_calibration:
                 xmlVoltsToPosSI[index].set("Scale", str(newScale))
 
         if calibrate == "offsets":
+            # convert offsets to joint space
+            a_to_j_service = rospy.ServiceProxy(self.ros_namespace + '/actuator_to_joint_position', cisst_msgs.srv.ConvertFloat64Array)
+            request = cisst_msgs.srv.ConvertFloat64ArrayRequest()
+            request.input = offsets
+            response = a_to_j_service(request)
+            offsets = response.output
+
             newOffsets = []
             print("index | old offset  | new offset | correction")
             for index in range(nb_axis):
