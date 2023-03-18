@@ -3,7 +3,7 @@
 # Authors: Anton Deguet, Brendan Burkhart
 # Date: 2015-02-22
 
-# (C) Copyright 2015-2022 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2015-2023 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -100,9 +100,9 @@ class ArmCalibrationApplication:
         # identify depth for tool j5 using forward kinematics
         local_query_cp = rospy.ServiceProxy(self.arm.namespace() + '/local/query_cp', cisst_msgs.srv.QueryForwardKinematics)
         request = cisst_msgs.srv.QueryForwardKinematicsRequest()
-        request.jp.position = [0.0, 0.0, 0.0, 0.0]
+        request.jp = [0.0, 0.0, 0.0, 0.0]
         response = local_query_cp(request)
-        self.q2 = response.cp.pose.position.z
+        self.q2 = response.cp.position.z
         print("Depth required to position O5 on RCM point: {0:4.2f}mm".format(self.q2 * 1000.0))
 
 
@@ -422,4 +422,3 @@ if __name__ == '__main__':
     application = ArmCalibrationApplication()
     application.configure(args.arm, args.config, args.interval, args.timeout, args.threshold)
     application.run(args.swing_joint, args.range)
-

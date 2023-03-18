@@ -219,6 +219,10 @@ void dvrk::console::bridge_interface_provided_arm(const std::string & _arm_name,
                                                             cisst_msgs::ConvertFloat64Array>
         (_required_interface_name, "actuator_to_joint_position",
          _arm_name + "/actuator_to_joint_position");
+    subscribers_bridge().AddServiceFromCommandQualifiedRead<prmInverseKinematicsQuery, vctDoubleVec,
+                                                            cisst_msgs::QueryInverseKinematics>
+        (_required_interface_name, "inverse_kinematics", 
+         _arm_name + "/inverse_kinematics");
 
     events_bridge().AddPublisherFromEventWrite<std::string, std_msgs::String>
         (_required_interface_name, "desired_state",
