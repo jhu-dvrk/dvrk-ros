@@ -115,7 +115,11 @@ Save the file and then do `sudo udevadm control --reload-rules` to apply the rul
 
 ## Blackmagic DeckLink Duo frame grabber
 
-You first need to install the drivers from Blackmagic, see https://www.blackmagicdesign.com/support/family/capture-and-playback   The drivers are included in the package "Desktop Video".  Once you've downloaded the binaries and extracted the files from Blackmagic, follow the instructions on their ReadMe.txt.   For 64 bits Ubuntu system, install the `.deb` files in subfolder `deb/x86_64`.   If your card is old, the DeckLink install might ask to run the BlackMagic firmware updater, i.e. something like `BlackmagicFirmwareUpdater update 0`.  After you reboot, check with `dmesg | grep -i black` to see if the card is recognized.  If the driver is working properly, the devices will show up under `/dev/blackmagic`.
+You first need to install the drivers from Blackmagic, see https://www.blackmagicdesign.com/support/family/capture-and-playback   The drivers are included in the package "Desktop Video".  Once you've downloaded the binaries and extracted the files from Blackmagic, follow the instructions on their ReadMe.txt.   For 64 bits Ubuntu system, install the `.deb` files in subfolder `deb/x86_64` using `sudo dpkg -i *.deb`.   If your card is old, the DeckLink install might ask to run the BlackMagic firmware updater, i.e. something like `BlackmagicFirmwareUpdater update 0`.  After you reboot, check with `dmesg | grep -i black` to see if the card is recognized.  If the driver is working properly, the devices will show up under `/dev/blackmagic`.
+
+You can quickly test the frame grabber using `MediaExpress` which should be installed along the drivers.  You can also select the video input using `BlackmagicDesktopVideoSetup` (also installed along drivers).
+
+If you need to remove all the Blackmagic packages to test a different version, use `sudo apt remove desktopvideo* mediaexpress*`.
 
 To test if the drivers are working and the cards are working, use gstreamer 1.0 or greater.  On Ubuntu 16.04/18.04 both gstreamer 1.0 and 0.1 are available.   Make sure you ONLY install the 1.0 packages.   You will also need the proper gstreamer plugins installed:
 ```sh
