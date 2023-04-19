@@ -87,7 +87,7 @@ dvrk::console::console(const std::string & name,
                 bridge_interface_provided(arm.ComponentName(),
                                           arm.InterfaceName(),
                                           publish_rate_in_seconds, tf_rate_in_seconds);
-            } else if (arm.m_type == mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ) {
+            } else if (arm.m_type == mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ_Classic) {
                 const auto _sujs = std::list<std::string>({"PSM1", "PSM2", "PSM3", "ECM"});
                 for (auto const & _suj : _sujs) {
                     bridge_interface_provided(name,
@@ -221,7 +221,7 @@ void dvrk::console::bridge_interface_provided_arm(const std::string & _arm_name,
          _arm_name + "/actuator_to_joint_position");
     subscribers_bridge().AddServiceFromCommandQualifiedRead<prmInverseKinematicsQuery, vctDoubleVec,
                                                             cisst_msgs::QueryInverseKinematics>
-        (_required_interface_name, "inverse_kinematics", 
+        (_required_interface_name, "inverse_kinematics",
          _arm_name + "/inverse_kinematics");
 
     events_bridge().AddPublisherFromEventWrite<std::string, std_msgs::String>
