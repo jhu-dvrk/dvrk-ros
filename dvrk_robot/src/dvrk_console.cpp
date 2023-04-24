@@ -39,6 +39,8 @@ dvrk::console::console(const std::string & name,
                        const double & tf_rate_in_seconds,
                        mtsIntuitiveResearchKitConsole * mts_console):
     mts_ros_crtk_bridge_provided(name, node_handle),
+    m_publish_rate(publish_rate_in_seconds),
+    m_tf_rate(tf_rate_in_seconds),
     m_console(mts_console)
 {
     // start creating components
@@ -473,6 +475,21 @@ void dvrk::console::add_topics_io(void)
 
     m_connections.Add(m_pub_bridge->GetName(), "io",
                       m_console->m_IO_component_name, "Configuration");
+}
+
+void dvrk::console::add_topics_pid(void)
+{
+    for (auto armPair : m_console->mArms) {
+        const auto name = armPair.first;
+        const auto arm = *(armPair.second);
+        if (arm.expects_PID()) {
+            const auto pid_component_name = name + "-PID";
+            bridge_interface_provided(pid_component_name,
+                                      "Monitoring",
+                                      name + "/pid",
+                                      m_publish_rate, m_tf_rate);
+        }
+    }
 }
 
 void dvrk::console::add_topics_arm_io(mtsROSBridge * _pub_bridge,

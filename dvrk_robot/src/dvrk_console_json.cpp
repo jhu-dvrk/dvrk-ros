@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2021 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2023 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -102,6 +102,9 @@ int main(int argc, char ** argv)
     options.AddOptionMultipleValues("i", "ros-io-config",
                                     "json config file to configure ROS bridges to collect low level data (IO)",
                                     cmnCommandLineOptions::OPTIONAL_OPTION, &jsonIOConfigFiles);
+
+    options.AddOptionNoValue("I", "pid-topics",
+                             "add some extra publishers to monitor PID state");
 
     options.AddOptionNoValue("t", "text-only",
                              "text only interface, do not create Qt widgets");
@@ -211,6 +214,10 @@ int main(int argc, char ** argv)
          iter++) {
         fileExists("ROS IO JSON configuration file", *iter);
         consoleROS->Configure(*iter);
+    }
+
+    if (options.IsSet("pid-topics")) {
+        consoleROS->add_topics_pid();
     }
 
     componentManager->AddComponent(consoleROS);

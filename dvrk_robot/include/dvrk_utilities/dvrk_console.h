@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-05-23
 
-  (C) Copyright 2015-2021 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2023 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -62,6 +62,8 @@ namespace dvrk {
         void add_topics_endoscope_focus(void);
         // IO timing
         void add_topics_io(void);
+        // add monitoring topics for all PIDs
+        void add_topics_pid(void);
         // low level IO for a given arm if requested by user
         void add_topics_arm_io(mtsROSBridge * _pub_bridge,
                                const std::string & _arm_name,
@@ -77,6 +79,7 @@ namespace dvrk {
 
     protected:
         mtsROSBridge * m_pub_bridge;
+        double m_publish_rate, m_tf_rate;
         mtsIntuitiveResearchKitConsole * m_console;
     };
 }
