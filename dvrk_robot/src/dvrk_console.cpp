@@ -89,7 +89,7 @@ dvrk::console::console(const std::string & name,
                 bridge_interface_provided(arm.ComponentName(),
                                           arm.InterfaceName(),
                                           publish_rate_in_seconds, tf_rate_in_seconds);
-            } else if (arm.m_type == mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ_Classic) {
+            } else if (arm.suj()) {
                 const auto _sujs = std::list<std::string>({"PSM1", "PSM2", "PSM3", "ECM"});
                 for (auto const & _suj : _sujs) {
                     bridge_interface_provided(name,
