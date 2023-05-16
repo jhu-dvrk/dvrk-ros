@@ -61,7 +61,6 @@ class example_application:
         # try to move again to make sure waiting is working fine, i.e. not blocking
         print('testing move to current position')
         move_handle = self.arm.move_jp(goal)
-        time.sleep(1.0) # add some artificial latency on this side
         print('move handle should return immediately')
         move_handle.wait()
         print('home complete')
@@ -108,13 +107,17 @@ class example_application:
         duration = 5  # seconds
         samples = duration / self.expected_interval
         # create a new goal starting with current position
-        goal = numpy.copy(initial_joint_position)
+        goal_p = numpy.copy(initial_joint_position)
+        goal_v = numpy.zeros(goal_p.size)
         start = time.time()
         self.ros_12.set_rate(1.0 / self.expected_interval)
         for i in range(int(samples)):
-            goal[0] = initial_joint_position[0] + amplitude *  (1.0 - math.cos(i * math.radians(360.0) / samples))
-            goal[1] = initial_joint_position[1] + amplitude *  (1.0 - math.cos(i * math.radians(360.0) / samples))
-            self.arm.servo_jp(goal)
+            angle = i * math.radians(360.0) / samples
+            goal_p[0] = initial_joint_position[0] + amplitude * (1.0 - math.cos(angle))
+            goal_p[1] = initial_joint_position[1] + amplitude *  (1.0 - math.cos(angle))
+            goal_v[0] = amplitude * math.sin(angle)
+            goal_v[1] = goal_v[0]
+            self.arm.servo_jp(goal_p, goal_v)
             self.ros_12.sleep()
         actual_duration = time.time() - start
         print('servo_jp complete in %2.2f seconds (expected %2.2f)' % (actual_duration, duration))
