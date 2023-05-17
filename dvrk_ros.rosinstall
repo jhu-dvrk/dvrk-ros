@@ -29,7 +29,7 @@
 - git:
     local-name: crtk/crtk_msgs
     uri: https://github.com/collaborative-robotics/crtk_msgs
-    version: master
+    version: devel
 - git:
     local-name: crtk/crtk_python_client
     uri: https://github.com/collaborative-robotics/crtk_python_client

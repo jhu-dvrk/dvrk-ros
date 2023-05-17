@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-05
 
-# (C) Copyright 2016-2020 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2016-2023 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -49,6 +49,7 @@ class arm(object):
             self.__crtk_utils = crtk.utils(self, ros_namespace, expected_interval)
             self.__crtk_utils.add_measured_cp()
             self.__crtk_utils.add_setpoint_cp()
+            self.__crtk_utils.add_forward_kinematics()
 
     # initialize the arm
     def __init__(self, arm_name, ros_namespace = '', expected_interval = 0.01):
@@ -77,6 +78,7 @@ class arm(object):
         self.__crtk_utils.add_measured_js()
         self.__crtk_utils.add_measured_cp()
         self.__crtk_utils.add_measured_cv()
+        self.__crtk_utils.add_hold()
         self.__crtk_utils.add_servo_jp()
         self.__crtk_utils.add_servo_jr()
         self.__crtk_utils.add_servo_cp()
@@ -84,6 +86,8 @@ class arm(object):
         self.__crtk_utils.add_move_jp()
         self.__crtk_utils.add_move_jr()
         self.__crtk_utils.add_move_cp()
+        self.__crtk_utils.add_forward_kinematics()
+        self.__crtk_utils.add_inverse_kinematics()
 
         self.spatial = self.__MeasuredServoCf(self.__full_ros_namespace + '/spatial', expected_interval)
         self.body = self.__MeasuredServoCf(self.__full_ros_namespace + '/body', expected_interval)

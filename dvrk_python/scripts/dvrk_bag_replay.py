@@ -3,7 +3,7 @@
 # Author: Anton Deguet
 # Date: 2021-06-24
 
-# (C) Copyright 2021-2022 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2021-2023 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -14,7 +14,7 @@
 # --- end cisst license ---
 
 # First collect a bag of data using rosbag while the robot is moving:
-# > rosbag record /PSM1/setpoint_cp /PSM1/setpoint_js /PSM1/jaw/setpoint_js
+# > rosbag record /PSM1/setpoint_cp /PSM1/setpoint_cv /PSM1/setpoint_js /PSM1/jaw/setpoint_js
 # Hit ctrl+c to stop rosbag recording
 
 # Then start a single arm using:
@@ -54,9 +54,9 @@ class replay_device:
         self.crtk_utils = crtk.utils(self, device_namespace, expected_interval)
         self.crtk_utils.add_operating_state()
         self.crtk_utils.add_servo_jp()
-	self.crtk_utils.add_move_jp()
+        self.crtk_utils.add_move_jp()
         self.crtk_utils.add_servo_cp()
-	self.crtk_utils.add_move_cp()
+        self.crtk_utils.add_move_cp()
         self.jaw = self.__jaw_device(device_namespace + '/jaw',
                                      expected_interval,
                                      operating_state_instance = self)
@@ -240,9 +240,9 @@ for index in range(total):
     if is_cp:
         arm.servo_cp(tf_conversions.posemath.fromMsg(setpoints[index].pose))
     else:
-        arm.servo_jp(numpy.array(setpoints[index].position))
+        arm.servo_jp(numpy.array(setpoints[index].position), numpy.array(setpoints[index].velocity))
     if has_jaw:
-        arm.jaw.servo_jp(numpy.array(jaw_setpoints[index].position))
+        arm.jaw.servo_jp(numpy.array(jaw_setpoints[index].position), numpy.array(jaw_setpoints[index].velocity))
     # update progress
     counter = counter + 1
     sys.stdout.write('\r-- Progress %02.1f%%' % (float(counter) / float(total) * 100.0))
