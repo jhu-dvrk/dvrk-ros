@@ -504,6 +504,12 @@ void dvrk::console::add_topics_arm_io(mtsROSBridge * _pub_bridge,
     _pub_bridge->AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
         (_interface_name, "measured_js",
          _ros_namespace + "actuator/measured_js");
+    _pub_bridge->AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
+        (_interface_name, "software/measured_js",
+         _ros_namespace + "software/measured_js");
+    _pub_bridge->AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
+        (_interface_name, "firmware/measured_js",
+         _ros_namespace + "firmware/measured_js");
     _pub_bridge->AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
         (_interface_name, "GetActuatorFeedbackCurrent",
          _ros_namespace + "actuator/measured_current");
