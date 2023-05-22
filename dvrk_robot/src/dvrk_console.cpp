@@ -654,9 +654,6 @@ void dvrk::console::add_topics_teleop_psm(const std::string & _name)
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (_name, "set_align_mtm",
          _ros_namespace + "/set_align_mtm");
-    subscribers_bridge().AddSubscriberToCommandWrite<vctMatRot3, geometry_msgs::Quaternion>
-        (_name, "set_registration_rotation",
-         _ros_namespace + "/set_registration_rotation");
     // connect
     m_connections.Add(subscribers_bridge().GetName(), _name,
                       _name, "Setting");

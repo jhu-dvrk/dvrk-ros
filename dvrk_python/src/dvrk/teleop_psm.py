@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-08
 
-# (C) Copyright 2016-2021 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2016-2023 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -40,9 +40,6 @@ class teleop_psm(object):
         self.__set_scale_pub = rospy.Publisher(self.__full_ros_namespace
                                                + '/set_scale',
                                                Float64, latch = True, queue_size = 1)
-        self.__set_registration_rotation_pub = rospy.Publisher(self.__full_ros_namespace
-                                                               + '/set_registration_rotation',
-                                                               Quaternion, latch = True, queue_size = 1)
         self.__set_desired_state_pub = rospy.Publisher(self.__full_ros_namespace
                                                        + '/set_desired_state',
                                                        String, latch = True, queue_size = 1)
@@ -70,12 +67,6 @@ class teleop_psm(object):
 
     def get_scale(self):
         return self.__scale
-
-    def set_registration_rotation(self, rotation):
-        """Expect a PyKDL rotation matrix (PyKDL.Rotation)"""
-        q = Quaternion()
-        q.x, q.y, q.z, q.w = rotation.GetQuaternion()
-        self.__set_registration_rotation_pub.publish(q)
 
     def enable(self):
         self.__set_desired_state_pub.publish('ENABLED')
