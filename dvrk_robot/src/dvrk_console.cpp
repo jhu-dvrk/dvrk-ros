@@ -512,6 +512,9 @@ void dvrk::console::add_topics_arm_io(mtsROSBridge * _pub_bridge,
     _pub_bridge->AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
         (_interface_name, "GetActuatorRequestedCurrent",
          _ros_namespace + "actuator/servo_current");
+    _pub_bridge->AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
+        (_interface_name, "GetActuatorTimestamp",
+         _ros_namespace + "timestamp");
 
     m_connections.Add(_pub_bridge->GetName(), _interface_name,
                       _io_component_name, _arm_name);
