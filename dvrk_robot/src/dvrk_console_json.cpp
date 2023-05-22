@@ -30,6 +30,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstMultiTask/mtsCollectorQtFactory.h>
 #include <cisstMultiTask/mtsCollectorQtWidget.h>
 
+#include <sawIntuitiveResearchKit/sawIntuitiveResearchKitConfig.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsoleQt.h>
 
@@ -43,16 +44,24 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisst_ros_bridge/mtsROSBridge.h>
 #include <dvrk_utilities/dvrk_console.h>
 
-void fileExists(const std::string & description, const std::string & filename)
+void fileExists(const std::string & description, std::string & filename)
 {
     if (!cmnPath::Exists(filename)) {
-        std::cerr << "File not found: " << description
-                  << "; " << filename << std::endl;
-        exit(-1);
-    } else {
-        std::cout << "File found: " << description
-                  << "; " << filename << std::endl;
+        cmnPath path(cmnPath::GetWorkingDirectory());
+        path.Add(std::string(sawIntuitiveResearchKit_SOURCE_DIR) + "/../share", cmnPath::TAIL);
+        path.Add(mtsIntuitiveResearchKit::DefaultInstallationDirectory, cmnPath::TAIL);
+        std::cout << "Searching for file in path: " << path.ToString() << std::endl;
+        const std::string fileInPath = path.Find(filename);
+        if (fileInPath == "") {
+            std::cerr << "File not found: " << description
+                      << "; " << filename << std::endl;
+            exit(-1);
+        } else {
+            filename = fileInPath;
+        }
     }
+    std::cout << "File found: " << description
+              << "; " << filename << std::endl;
 }
 
 int main(int argc, char ** argv)
@@ -207,8 +216,8 @@ int main(int argc, char ** argv)
                                                    publishPeriod, tfPeriod,
                                                    console);
     // IOs
-    const std::list<std::string>::const_iterator end = jsonIOConfigFiles.end();
-    std::list<std::string>::const_iterator iter;
+    const std::list<std::string>::iterator end = jsonIOConfigFiles.end();
+    std::list<std::string>::iterator iter;
     for (iter = jsonIOConfigFiles.begin();
          iter != end;
          iter++) {
