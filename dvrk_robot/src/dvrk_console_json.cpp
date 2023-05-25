@@ -30,7 +30,6 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstMultiTask/mtsCollectorQtFactory.h>
 #include <cisstMultiTask/mtsCollectorQtWidget.h>
 
-#include <sawIntuitiveResearchKit/sawIntuitiveResearchKitConfig.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsoleQt.h>
 
@@ -44,24 +43,21 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisst_ros_bridge/mtsROSBridge.h>
 #include <dvrk_utilities/dvrk_console.h>
 
-void fileExists(const std::string & description, std::string & filename)
+void fileExists(const std::string & description, std::string & filename,
+                mtsIntuitiveResearchKitConsole * console)
 {
     if (!cmnPath::Exists(filename)) {
-        cmnPath path(cmnPath::GetWorkingDirectory());
-        path.Add(std::string(sawIntuitiveResearchKit_SOURCE_DIR) + "/../share", cmnPath::TAIL);
-        path.Add(mtsIntuitiveResearchKit::DefaultInstallationDirectory, cmnPath::TAIL);
-        std::cout << "Searching for file in path: " << path.ToString() << std::endl;
-        const std::string fileInPath = path.Find(filename);
+        const std::string fileInPath = console->locate_file(filename);
         if (fileInPath == "") {
             std::cerr << "File not found: " << description
-                      << "; " << filename << std::endl;
+                      << ": " << filename << std::endl;
             exit(-1);
         } else {
             filename = fileInPath;
         }
     }
-    std::cout << "File found: " << description
-              << "; " << filename << std::endl;
+    std::cout << "Using file: " << description
+              << ": " << filename << std::endl;
 }
 
 int main(int argc, char ** argv)
@@ -137,10 +133,7 @@ int main(int argc, char ** argv)
                              "replaces the default Qt palette with darker colors");
 
     // check that all required options have been provided
-    std::string errorMessage;
-    if (!options.Parse(argc, argv, errorMessage)) {
-        std::cerr << "Error: " << errorMessage << std::endl;
-        options.PrintUsage(std::cerr);
+    if (!options.Parse(argc, argv, std::cerr)) {
         return -1;
     }
     std::string arguments;
@@ -155,7 +148,7 @@ int main(int argc, char ** argv)
     // console
     mtsIntuitiveResearchKitConsole * console = new mtsIntuitiveResearchKitConsole("console");
     console->set_calibration_mode(options.IsSet("calibration-mode"));
-    fileExists("console JSON configuration file", jsonMainConfigFile);
+    fileExists("console JSON configuration file", jsonMainConfigFile, console);
     console->Configure(jsonMainConfigFile);
     componentManager->AddComponent(console);
     console->Connect();
@@ -186,7 +179,7 @@ int main(int argc, char ** argv)
     // configure data collection if needed
     if (options.IsSet("collection-config")) {
         // make sure the json config file exists
-        fileExists("JSON data collection configuration", jsonCollectionConfigFile);
+        fileExists("JSON data collection configuration", jsonCollectionConfigFile, console);
 
         mtsCollectorFactory * collectorFactory = new mtsCollectorFactory("collectors");
         collectorFactory->Configure(jsonCollectionConfigFile);
@@ -221,7 +214,7 @@ int main(int argc, char ** argv)
     for (iter = jsonIOConfigFiles.begin();
          iter != end;
          iter++) {
-        fileExists("ROS IO JSON configuration file", *iter);
+        fileExists("ROS IO JSON configuration file", *iter, console);
         consoleROS->Configure(*iter);
     }
 
