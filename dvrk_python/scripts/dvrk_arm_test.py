@@ -33,7 +33,7 @@ class example_application:
 
     # configuration
     def __init__(self, ros_12, expected_interval):
-        print('configuring dvrk_arm_test for node %s using namespace %s' % (ros_12.node_name(), ros_12.namespace()))
+        print('configuring for node %s using namespace %s' % (ros_12.node_name(), ros_12.namespace()))
         self.ros_12 = ros_12
         self.expected_interval = expected_interval
         self.arm = dvrk.arm(arm_name = ros_12.namespace(),
