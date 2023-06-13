@@ -13,9 +13,11 @@ import datetime
 import numpy
 import argparse
 import os.path
+import os
 
-from sensor_msgs.msg import JointState
 import dvrk
+import crtk
+
 import xml.etree.ElementTree as ET
 
 # for actuator_to_joint_position
@@ -46,33 +48,31 @@ def slope(x, y):
 
 class potentiometer_calibration:
 
-    def __init__(self, robot_name):
-        self._robot_name = robot_name
-        self._serial_number = ""
-        self._data_received = False # use pots to make sure the ROS topics are OK
-        self._last_potentiometers = []
-        self._last_joints = []
-        self.ros_namespace = self._robot_name
-        rospy.Subscriber(self.ros_namespace +  '/io/pot/measured_js', JointState, self.pot_callback)
-        rospy.Subscriber(self.ros_namespace +  '/io/actuator/measured_js', JointState, self.joints_callback)
-
-    def pot_callback(self, data):
-        self._last_potentiometers[:] = data.position
-        self._data_received = True
-
-    def joints_callback(self, data):
-        self._data_received = True
-        self._last_joints[:] = data.position
+    # class to contain measured_js
+    class __sensor:
+        def __init__(self, ros_namespace, expected_interval):
+            self.__crtk_utils = crtk.utils(self, ros_namespace, expected_interval)
+            self.__crtk_utils.add_measured_js()
 
 
-    def run(self, calibrate, filename):
+    def __init__(self, robot_name, expected_interval = 0.01):
+        self.serial_number = ""
+        self.expected_interval = expected_interval
+        self.ros_namespace = robot_name
+        # Create the dVRK python ROS client
+        self.arm = dvrk.arm(self.ros_namespace, expected_interval = expected_interval)
+        self.potentiometers = self.__sensor(self.ros_namespace + '/io/pot', expected_interval)
+        self.encoders = self.__sensor(self.ros_namespace + '/io/actuator', expected_interval)
+
+
+    def run(self, calibration_type, filename):
         nb_joint_positions = 20 # number of positions between limits
-        nb_samples_per_position = 500 # number of values collected at each position
+        nb_samples_per_position = 250 # number of values collected at each position
         total_samples = nb_joint_positions * nb_samples_per_position
         samples_so_far = 0
 
         sleep_time_after_motion = 0.5 # time after motion from position to position to allow potentiometers to stabilize
-        sleep_time_between_samples = 0.01 # time between two samples read (potentiometers)
+        sleep_time_between_samples = self.expected_interval * 2.0 # time between two samples read (potentiometers)
 
         encoders = []
         potentiometers = []
@@ -105,12 +105,12 @@ class potentiometer_calibration:
         else:
             sys.exit("Can't find \"Robot\" in configuration file")
 
-        if xmlRobot.get("Name") == self._robot_name:
-            self._serial_number = xmlRobot.get("SN")
-            print("Successfully found robot \"%s\", serial number %s in XML file" % (self._robot_name, self._serial_number))
+        if xmlRobot.get("Name") == self.ros_namespace:
+            self.serial_number = xmlRobot.get("SN")
+            print("Successfully found robot \"%s\", serial number %s in XML file" % (self.ros_namespace, self.serial_number))
             robotFound = True
         else:
-            sys.exit("Found robot \"%s\" while looking for \"%s\", make sure you're using the correct configuration file!" % (xmlRobot.get("Name"), self._robot_name))
+            sys.exit("Found robot \"%s\" while looking for \"%s\", make sure you're using the correct configuration file!" % (xmlRobot.get("Name"), self.ros_namespace))
 
         # Look for all actuators/VoltsToPosSI
         xpath_search_results = root.findall("./Robot/Actuator")
@@ -120,29 +120,26 @@ class potentiometer_calibration:
             xmlVoltsToPosSI[actuatorId] = voltsToPosSI
 
         # set joint limits and number of axis based on arm type, using robot name
-        if ("").join(list(self._robot_name)[:-1]) == "PSM": #checks to see if the robot being tested is a PSM
+        if ("").join(list(self.ros_namespace)[:-1]) == "PSM": #checks to see if the robot being tested is a PSM
             arm_type = "PSM"
             lower_joint_limits = [-60.0 * d2r, -30.0 * d2r, 0.005, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r, -170.0 * d2r]
             upper_joint_limits = [ 60.0 * d2r,  30.0 * d2r, 0.235,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r,  170.0 * d2r]
             nb_axis = 7
-        elif self._robot_name == "MTML":
+        elif self.ros_namespace == "MTML":
             arm_type = "MTM"
             lower_joint_limits = [-15.0 * d2r, -10.0 * d2r, -10.0 * d2r, -180.0 * d2r, -80.0 * d2r, -40.0 * d2r, -100.0 * d2r]
             upper_joint_limits = [ 35.0 * d2r,  20.0 * d2r,  10.0 * d2r,   80.0 * d2r, 160.0 * d2r,  40.0 * d2r,  100.0 * d2r]
             nb_axis = 7
-        elif self._robot_name == "MTMR":
+        elif self.ros_namespace == "MTMR":
             arm_type = "MTM"
             lower_joint_limits = [-30.0 * d2r, -10.0 * d2r, -10.0 * d2r,  -80.0 * d2r, -80.0 * d2r, -40.0 * d2r, -100.0 * d2r]
             upper_joint_limits = [ 15.0 * d2r,  20.0 * d2r,  10.0 * d2r,  180.0 * d2r, 160.0 * d2r,  40.0 * d2r,  100.0 * d2r]
             nb_axis = 7
-        elif self._robot_name == "ECM":
+        elif self.ros_namespace == "ECM":
             arm_type = "ECM"
             lower_joint_limits = [-60.0 * d2r, -40.0 * d2r,  0.005, -80.0 * d2r]
             upper_joint_limits = [ 60.0 * d2r,  40.0 * d2r,  0.230,  80.0 * d2r]
             nb_axis = 4
-
-        # Create the dVRK python ROS client
-        this_arm = dvrk.arm(self._robot_name)
 
         # resize all arrays
         for axis in range(nb_axis):
@@ -155,13 +152,15 @@ class potentiometer_calibration:
             range_of_motion_joint.append(math.fabs(upper_joint_limits[axis] - lower_joint_limits[axis]))
 
         # Check that everything is working
-        time.sleep(2.0) # to make sure some data has arrived
-        if not self._data_received:
-            print("It seems the console for %s is not started or is not publishing the IO topics" % self._robot_name)
+        try:
+            time.sleep(self.expected_interval)
+            self.potentiometers.measured_jp()
+        except:
+            print("It seems the console for %s is not started or is not publishing the IO topics" % self.ros_namespace)
             print("Make sure you use \"rosrun dvrk_robot dvrk_console_json\" with the -i option")
             sys.exit("Start the dvrk_console_json with the proper options first")
 
-        print("The serial number found in the XML file is: %s" % self._serial_number)
+        print("The serial number found in the XML file is: %s" % self.serial_number)
         print("Make sure the dvrk_console_json is using the same configuration file.  Serial number can be found in GUI tab \"IO\".")
         ok = input("Press `c` and [enter] to continue\n")
         if ok != "c":
@@ -171,12 +170,12 @@ class potentiometer_calibration:
         now = datetime.datetime.now()
         now_string = now.strftime("%Y-%m-%d-%H:%M")
 
-        if calibrate == "scales":
+        if calibration_type == "scales":
 
             print("Calibrating scales using encoders as reference")
 
             # write all values to csv file
-            csv_file_name = 'pot_calib_scales_' + self._robot_name + '-' + self._serial_number + '-' + now_string + '.csv'
+            csv_file_name = 'pot_calib_scales_' + self.ros_namespace + '-' + self.serial_number + '-' + now_string + '.csv'
             print("Values will be saved in: %s" % csv_file_name)
             f = open(csv_file_name, 'w')
             writer = csv.writer(f)
@@ -205,16 +204,18 @@ class potentiometer_calibration:
                     average_potentiometer[axis] = []
 
                 # move and sleep
-                this_arm.move_jp(numpy.array(joint_goal)).wait()
+                self.arm.move_jp(numpy.array(joint_goal)).wait()
                 time.sleep(sleep_time_after_motion)
 
                 # collect nb_samples_per_position at current position to compute average
                 for sample in range(nb_samples_per_position):
+                    last_pot = self.potentiometers.measured_jp()
+                    last_enc = self.encoders.measured_jp()
                     for axis in range(nb_axis):
-                        average_potentiometer[axis].append(self._last_potentiometers[axis])
-                        average_encoder[axis].append(self._last_joints[axis])
+                        average_potentiometer[axis].append(last_pot[axis])
+                        average_encoder[axis].append(last_enc[axis])
                     # log data
-                    writer.writerow(self._last_potentiometers + self._last_joints)
+                    writer.writerow(last_pot + last_enc)
                     time.sleep(sleep_time_between_samples)
                     samples_so_far = samples_so_far + 1
                     sys.stdout.write('\rProgress %02.1f%%' % (float(samples_so_far) / float(total_samples) * 100.0))
@@ -228,21 +229,21 @@ class potentiometer_calibration:
 
             # at the end, return to home position
             if arm_type == "PSM" or arm_type == "MTM":
-                this_arm.move_jp(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])).wait()
+                self.arm.move_jp(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])).wait()
             elif arm_type == "ECM":
-                this_arm.move_jp(numpy.array([0.0, 0.0, 0.0, 0.0])).wait()
+                self.arm.move_jp(numpy.array([0.0, 0.0, 0.0, 0.0])).wait()
 
             # close file
             f.close()
 
 
         ######## offset calibration
-        if calibrate == "offsets":
+        if calibration_type == "offsets":
 
             print("Calibrating offsets")
 
             # write all values to csv file
-            csv_file_name = 'pot_calib_offsets_' + self._robot_name + '-' + self._serial_number + '-' + now_string + '.csv'
+            csv_file_name = 'pot_calib_offsets_' + self.ros_namespace + '-' + self.serial_number + '-' + now_string + '.csv'
             print("Values will be saved in: ", csv_file_name)
             f = open(csv_file_name, 'w')
             writer = csv.writer(f)
@@ -252,15 +253,16 @@ class potentiometer_calibration:
             writer.writerow(header)
 
             # messages
-            print("Please home AND power off the robot first.  Then hold/clamp your arm in zero position.")
+            print("Please home the robot first.  Then you can either power off the robot and hold/clamp your arm in zero position or you can keep the robot on and move it to the physical zero position (e.g. using the arm widget/direct-control)")
             if arm_type == "PSM":
                 print("For a PSM, you need to hold at least the last 4 joints in zero position.  If you don't have a way to constrain the first 3 joints, you can still just calibrate the last 4.  This program will ask you later if you want to save all PSM joint offsets");
             input("Press [enter] to continue\n")
             nb_samples = 2 * nb_samples_per_position
             for sample in range(nb_samples):
+                last_pot = self.potentiometers.measured_jp()
                 for axis in range(nb_axis):
-                    average_offsets[axis].append(self._last_potentiometers[axis] * r2d)
-                writer.writerow(self._last_potentiometers)
+                    average_offsets[axis].append(last_pot[axis] * r2d)
+                writer.writerow(last_pot)
                 time.sleep(sleep_time_between_samples)
                 sys.stdout.write('\rProgress %02.1f%%' % (float(sample) / float(nb_samples) * 100.0))
                 sys.stdout.flush()
@@ -270,7 +272,7 @@ class potentiometer_calibration:
         print("")
 
 
-        if calibrate == "scales":
+        if calibration_type == "scales":
             print("index | old scale  | new scale  | correction")
             for index in range(nb_axis):
                 # find existing values
@@ -284,7 +286,7 @@ class potentiometer_calibration:
                 # replace values
                 xmlVoltsToPosSI[index].set("Scale", str(newScale))
 
-        if calibrate == "offsets":
+        if calibration_type == "offsets":
             # convert offsets to joint space
             a_to_j_service = rospy.ServiceProxy(self.ros_namespace + '/actuator_to_joint_position', cisst_msgs.srv.ConvertFloat64Array)
             request = cisst_msgs.srv.ConvertFloat64ArrayRequest()
@@ -322,15 +324,17 @@ class potentiometer_calibration:
 
         save = input("To save this in new file press 'y' followed by [enter]\n")
         if save == "y":
-            tree.write(filename + "-new")
-            print('Results saved in %s-new. Restart your dVRK application with the new file!' % filename)
-            print('To copy the new file over the existing one: cp %s-new %s' % (filename, filename))
+            os.rename(filename, filename + '-backup')
+            tree.write(filename)
+            print('Results saved in %s. Restart your dVRK application to use the new file!' % filename)
+            print('Old file saved as %s-backup.' % filename)
+        else:
+            print('Results not saved!')
+
 
 if __name__ == '__main__':
     # ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
-    rospy.init_node('dvrk_calibrate_potentiometer')
-    # strip ros arguments
-    argv = rospy.myargv(argv=sys.argv)
+    argv = crtk.ros_12.parse_argv(sys.argv)
 
     # parse arguments
     parser = argparse.ArgumentParser()
@@ -344,5 +348,7 @@ if __name__ == '__main__':
                         help = 'arm IO config file, i.e. something like sawRobotIO1394-xwz-12345.xml')
     args = parser.parse_args(argv[1:]) # skip argv[0], script name
 
-    calibration = potentiometer_calibration(args.arm)
-    calibration.run(args.type, args.config)
+    # ROS 1 or 2 wrapper
+    ros_12 = crtk.ros_12('dvrk_arm_test', args.arm)
+    application = potentiometer_calibration(args.arm)
+    ros_12.spin_and_execute(application.run, args.type, args.config)
