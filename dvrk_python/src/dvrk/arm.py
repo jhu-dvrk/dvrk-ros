@@ -37,27 +37,31 @@ class arm(object):
 
     # class to contain spatial/body cf methods
     class __MeasuredServoCf:
-        def __init__(self, ros_namespace, expected_interval):
+        def __init__(self, ros_namespace, expected_interval, connection_timeout=5.0):
             self.__crtk_utils = crtk.utils(self, ros_namespace, expected_interval)
             self.__crtk_utils.add_measured_cf()
             self.__crtk_utils.add_servo_cf()
             self.__crtk_utils.add_jacobian()
 
+            self.__crtk_utils.check_connections(connection_timeout)
+
     # local kinematics
     class __Local:
-        def __init__(self, ros_namespace, expected_interval):
+        def __init__(self, ros_namespace, expected_interval, connection_timeout=5.0):
             self.__crtk_utils = crtk.utils(self, ros_namespace, expected_interval)
             self.__crtk_utils.add_measured_cp()
             self.__crtk_utils.add_setpoint_cp()
             self.__crtk_utils.add_forward_kinematics()
 
+            self.__crtk_utils.check_connections(connection_timeout)
+
     # initialize the arm
-    def __init__(self, arm_name, ros_namespace = '', expected_interval = 0.01):
+    def __init__(self, arm_name, ros_namespace = '', expected_interval = 0.01, connection_timeout=5.0):
         # base class constructor in separate method so it can be called in derived classes
-        self.__init_arm(arm_name, ros_namespace, expected_interval)
+        self.__init_arm(arm_name, ros_namespace, expected_interval, connection_timeout)
 
 
-    def __init_arm(self, arm_name, ros_namespace, expected_interval):
+    def __init_arm(self, arm_name, ros_namespace, expected_interval, connection_timeout=5.0):
         """Constructor.  This initializes a few data members.It
         requires a arm name, this will be used to find the ROS
         topics for the arm being controlled.  For example if the
@@ -89,9 +93,11 @@ class arm(object):
         self.__crtk_utils.add_forward_kinematics()
         self.__crtk_utils.add_inverse_kinematics()
 
-        self.spatial = self.__MeasuredServoCf(self.__full_ros_namespace + '/spatial', expected_interval)
-        self.body = self.__MeasuredServoCf(self.__full_ros_namespace + '/body', expected_interval)
-        self.local = self.__Local(self.__full_ros_namespace + '/local', expected_interval)
+        self.__crtk_utils.check_connections(connection_timeout)
+
+        self.spatial = self.__MeasuredServoCf(self.__full_ros_namespace + '/spatial', expected_interval, connection_timeout)
+        self.body = self.__MeasuredServoCf(self.__full_ros_namespace + '/body', expected_interval, connection_timeout)
+        self.local = self.__Local(self.__full_ros_namespace + '/local', expected_interval, connection_timeout)
 
         self.__sub_list = []
         self.__pub_list = []
