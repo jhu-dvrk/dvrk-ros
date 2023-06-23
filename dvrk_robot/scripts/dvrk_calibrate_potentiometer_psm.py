@@ -32,9 +32,6 @@ import argparse
 import os.path
 import xml.etree.ElementTree as ET
 
-# for local_query_cp
-import cisst_msgs.srv
-
 # for keyboard capture
 def is_there_a_key_press():
     return select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
@@ -48,30 +45,30 @@ class example_application:
         self.config_file = config_file
         # check that the config file is good
         if not os.path.exists(self.config_file):
-            sys.exit("Config file \"{%s}\" not found".format(self.config_file))
+            sys.exit('Config file "{:s}" not found'.format(self.config_file))
 
         # XML parsing, find current offset
         self.tree = ET.parse(config_file)
         root = self.tree.getroot()
 
         # find Robot in config file and make sure name matches
-        xpath_search_results = root.findall("./Robot")
+        xpath_search_results = root.findall('./Robot')
         if len(xpath_search_results) == 1:
             xmlRobot = xpath_search_results[0]
         else:
-            sys.exit("Can't find \"Robot\" in configuration file {:s}".format(self.config_file))
+            sys.exit('Can\'t find "Robot" in configuration file {:s}'.format(self.config_file))
 
-        if xmlRobot.get("Name") == robot_name:
-            serial_number = xmlRobot.get("SN")
-            print("Successfully found robot \"{:s}\", serial number {:s} in XML file".format(robot_name, serial_number))
+        if xmlRobot.get('Name') == robot_name:
+            serial_number = xmlRobot.get('SN')
+            print('Successfully found robot "{:s}", serial number {:s} in XML file'.format(robot_name, serial_number))
             robotFound = True
         else:
-            sys.exit("Found robot \"{:s}\" while looking for \"{:s}\", make sure you're using the correct configuration file!".format(xmlRobot.get("Name"), robot_name))
+            sys.exit('Found robot "{:s}" while looking for "{:s}", make sure you\'re using the correct configuration file!'.format(xmlRobot.get('Name'), robot_name))
 
         # now find the offset for joint 2, we assume there's only one result
         xpath_search_results = root.findall("./Robot/Actuator[@ActuatorID='2']/AnalogIn/VoltsToPosSI")
         self.xmlPot = xpath_search_results[0]
-        print("Potentiometer offset for joint 2 is currently: {:s}".format(self.xmlPot.get("Offset")))
+        print('Potentiometer offset for joint 2 is currently: {:s}'.format(self.xmlPot.get('Offset')))
 
         self.arm = dvrk.psm(arm_name = robot_name,
                             expected_interval = expected_interval)
@@ -91,12 +88,9 @@ class example_application:
         self.arm.move_jp(goal).wait()
         self.arm.jaw.move_jp(numpy.array([0.0])).wait()
         # identify depth for tool j5 using forward kinematics
-        local_query_cp = rospy.ServiceProxy(self.arm.namespace() + '/local/query_cp', cisst_msgs.srv.QueryForwardKinematics)
-        request = cisst_msgs.srv.QueryForwardKinematicsRequest()
-        request.jp = [0.0, 0.0, 0.0, 0.0]
-        response = local_query_cp(request)
-        self.q2 = response.cp.position.z
-        print("Depth required to position O5 on RCM point: {0:4.2f}mm".format(self.q2 * 1000.0))
+        cp = self.arm.forward_kinematics(numpy.array([0.0, 0.0, 0.0, 0.0]))
+        self.q2 = cp.p.z()
+        print('Depth required to position O5 on RCM point: {0:4.2f}mm'.format(self.q2 * 1000.0))
 
     # find range
     def find_range(self, swing_joint):
@@ -192,14 +186,14 @@ class example_application:
         print('')
 
         # now save the new offset
-        oldOffset = float(self.xmlPot.get("Offset")) / 1000.0 # convert from XML (mm) to m
+        oldOffset = float(self.xmlPot.get('Offset')) / 1000.0 # convert from XML (mm) to m
         newOffset = oldOffset - correction                    # add in meters
-        self.xmlPot.set("Offset", str(newOffset * 1000.0))    # convert from m to XML (mm)
-        self.tree.write(self.config_file + "-new")
+        self.xmlPot.set('Offset', str(newOffset * 1000.0))    # convert from m to XML (mm)
+        os.rename(self.config_file, self.config_file + '-backup')
+        self.tree.write(self.config_file)
         print('Old offset: {:2.2f}mm\nNew offset: {:2.2f}mm\n'.format(oldOffset * 1000.0, newOffset * 1000.0))
-        print('Results saved in {:s}-new. Restart your dVRK application with the new file and make sure you re-bias the potentiometer offsets!  To be safe, power off and on the dVRK PSM controller.'.format(self.config_file))
-        print('To copy the new file over the existing one: cp {:s}-new {:s}'.format(self.config_file, self.config_file))
-
+        print('Results saved in {}. Restart your dVRK application to use the new file!'.format(self.config_file))
+        print('Old file saved as {}-backup.'.format(self.config_file))
 
     # main method
     def run(self, swing_joint):
