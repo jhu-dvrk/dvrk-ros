@@ -14,6 +14,7 @@
 from dvrk.arm import *
 
 import geometry_msgs.msg
+from crtk_msgs.msg import CartesianImpedance
 
 class mtm(arm):
     """Simple robot API wrapping around ROS messages
@@ -29,7 +30,7 @@ class mtm(arm):
     def __init__(self, ral, arm_name, expected_interval = 0.01):
         # first call base class constructor
         super().__init__(ral, arm_name, expected_interval)
-        self.gripper = self.__Gripper(self._ral.creaet_child('/gripper'), expected_interval)
+        self.gripper = self.__Gripper(self._ral.create_child('/gripper'), expected_interval)
 
         # publishers
         self.__lock_orientation_publisher = self._ral.publisher('lock_orientation',
@@ -39,6 +40,11 @@ class mtm(arm):
         self.__unlock_orientation_publisher = self._ral.publisher('unlock_orientation',
                                                             std_msgs.msg.Empty,
                                                             latch = True, queue_size = 1)
+
+        self.__set_gains_publisher = self._ral.publisher('servo_ci',
+                                                         CartesianImpedance,
+                                                         queue_size = 10)
+
 
     def lock_orientation_as_is(self):
         "Lock orientation based on current orientation"
@@ -55,3 +61,6 @@ class mtm(arm):
         "Unlock orientation"
         e = std_msgs.msg.Empty()
         self.__unlock_orientation_publisher.publish(e);
+
+    def servo_ci(self, gains):
+        self.__set_gains_publisher.publish(gains)

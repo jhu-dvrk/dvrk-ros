@@ -48,7 +48,7 @@ class psm(arm):
                               operating_state_instance = self)
 
         # publishers
-        self.__set_tool_present_publisher = jaw_ral.publisher('/set_tool_present',
+        self.__set_tool_present_publisher = self._ral.publisher('/emulate_tool_present',
                                                               std_msgs.msg.Bool,
                                                               latch = True, queue_size = 1)
 
