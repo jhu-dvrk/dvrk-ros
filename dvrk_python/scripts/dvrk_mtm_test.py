@@ -57,39 +57,38 @@ class example_application:
         # turn on gravity compensation
         self.arm.use_gravity_compensation(True)
 
-        print('press COAG pedal to move to the next test')
-
-        print('arm will go limp, hold it and press coag')
+        print('press and release the COAG pedal to move to the next example, alway hole the arm')
+        print('arm will go limp')
         self.coag.wait(value = 0)
         self.arm.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
 
-        print('keep holding arm, press coag, a force in body frame will be applied (direction depends on wrist orientation)')
+        print('a force in body frame will be applied (direction depends on wrist orientation)')
         self.coag.wait(value = 0)
         self.arm.body_set_cf_orientation_absolute(False)
         self.arm.body.servo_cf(numpy.array([0.0, 0.0, -3.0, 0.0, 0.0, 0.0]))
 
-        print('keep holding arm, press coag, a force in world frame will be applied (fixed direction)')
+        print('a force in world frame will be applied (fixed direction)')
         self.coag.wait(value = 0)
         self.arm.body_set_cf_orientation_absolute(True)
         self.arm.body.servo_cf(numpy.array([0.0, 0.0, -3.0, 0.0, 0.0, 0.0]))
 
-        print('keep holding arm, press coag, orientation will be locked')
+        print('orientation will be locked')
         self.coag.wait(value = 0)
         self.arm.lock_orientation_as_is()
 
-        print('keep holding arm, press coag, force will be removed')
+        print('force will be removed')
         self.coag.wait(value = 0)
         self.arm.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
 
-        print('keep holding arm, press coag, orientation will be unlocked')
+        print('orientation will be unlocked')
         self.coag.wait(value = 0)
         self.arm.unlock_orientation()
 
-        print('keep holding arm, press coag, arm will freeze in position')
+        print('arm will freeze in position')
         self.coag.wait(value = 0)
-        self.arm.move_jp(self.arm.measured_jp()).wait()
+        self.arm.hold()
 
-        print('press coag to end')
+        print('press and release coag to end')
         self.coag.wait(value = 0)
 
     # main method

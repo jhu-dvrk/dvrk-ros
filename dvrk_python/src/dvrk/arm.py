@@ -66,6 +66,7 @@ class arm(object):
         self.__crtk_utils.add_measured_cp()
         self.__crtk_utils.add_measured_cv()
         self.__crtk_utils.add_hold()
+        self.__crtk_utils.add_free()
         self.__crtk_utils.add_servo_jp()
         self.__crtk_utils.add_servo_jr()
         self.__crtk_utils.add_servo_cp()

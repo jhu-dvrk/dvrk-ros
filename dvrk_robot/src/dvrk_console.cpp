@@ -125,14 +125,9 @@ dvrk::console::console(const std::string & name,
 
     // digital inputs
     const std::string footPedalsNameSpace = "footpedals/";
-    typedef mtsIntuitiveResearchKitConsole::DInputSourceType DInputSourceType;
-    const DInputSourceType::const_iterator inputsEnd = m_console->mDInputSources.end();
-    DInputSourceType::const_iterator inputsIter;
-    for (inputsIter = m_console->mDInputSources.begin();
-         inputsIter != inputsEnd;
-         ++inputsIter) {
-        std::string upperName = inputsIter->second.second;
-        std::string lowerName = inputsIter->first;
+    for (auto input : m_console->mDInputSources) {
+        std::string upperName = input.second.second;
+        std::string lowerName = input.first;
         std::string requiredInterfaceName = upperName + "_" + lowerName;
         // put everything lower case
         std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), tolower);
@@ -143,7 +138,7 @@ dvrk::console::console(const std::string & name,
             (requiredInterfaceName, "Button",
              footPedalsNameSpace + lowerName);
         componentManager->Connect(events_bridge().GetName(), requiredInterfaceName,
-                                  inputsIter->second.first, inputsIter->second.second);
+                                  input.second.first, input.second.second);
 
     }
 
@@ -527,12 +522,10 @@ void dvrk::console::add_topics_ecm_io(const std::string & _arm_name,
     const auto events = std::list<std::pair<std::string, std::string> >({
             {"ManipClutch", "manip_clutch"},
                 {"SUJClutch", "suj_clutch"}});
-    for (auto event = events.begin();
-         event != events.end();
-         ++event) {
-        std::string _interface_name = _arm_name + "-" + event->first;
+    for (auto event : events) {
+        std::string _interface_name = _arm_name + "-" + event.first;
         events_bridge().AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-            (_interface_name, "Button", _arm_name + "/io/" + event->second);
+            (_interface_name, "Button", _arm_name + "/io/" + event.second);
         m_connections.Add(events_bridge().GetName(), _interface_name,
                           _io_component_name, _interface_name);
     }
@@ -547,12 +540,10 @@ void dvrk::console::add_topics_psm_io(const std::string & _arm_name,
                 {"SUJClutch", "suj_clutch"},
                     {"Adapter", "adapter"},
                         {"Tool", "tool"}});
-    for (auto event = events.begin();
-         event != events.end();
-         ++event) {
-        std::string _interface_name = _arm_name + "-" + event->first;
+    for (auto event : events) {
+        std::string _interface_name = _arm_name + "-" + event.first;
         events_bridge().AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-            (_interface_name, "Button", _arm_name + "/io/" + event->second);
+            (_interface_name, "Button", _arm_name + "/io/" + event.second);
         m_connections.Add(events_bridge().GetName(), _interface_name,
                           _io_component_name, _interface_name);
     }
