@@ -15,37 +15,31 @@
 
 # Start a single arm using
 # > rosrun dvrk_robot dvrk_console_json -j <console-file>
-
-# To communicate with the arm using ROS topics, see the python based example dvrk_arm_test.py:
-# > rosrun dvrk_python dvrk_mtm_cartesian_impedance <arm-name>
+# Run test script:
+# > rosrun dvrk_python dvrk_mtm_cartesian_impedance.py -a <arm-name>
 
 import argparse
-import sys
 import crtk
+from crtk_msgs.msg import CartesianImpedance
 import dvrk
 import numpy
-
-# for servo_ci, not part of CRTK yet
-import rospy
-from crtk_msgs.msg import CartesianImpedance
+import sys
 
 
-# example of application using arm.py
 class example_application:
-
-    # configuration
-    def __init__(self, ros_12, expected_interval):
-        print('configuring for node %s using namespace %s' % (ros_12.node_name(), ros_12.namespace()))
-        self.ros_12 = ros_12
+    def __init__(self, ral, arm_name, expected_interval):
+        print('configuring dvrk_mtm_cartesian_impedance for {}'.format(arm_name))
+        self.ral = ral
         self.expected_interval = expected_interval
-        self.arm = dvrk.mtm(arm_name = ros_12.namespace(),
+        self.arm = dvrk.mtm(ral = ral,
+                            arm_name = arm_name,
                             expected_interval = expected_interval)
-        self.coag = crtk.joystick_button('footpedals/coag')
-        self.servo_ci_pub = rospy.Publisher(self.arm._arm__full_ros_namespace + '/servo_ci',
-                                            CartesianImpedance, latch = True, queue_size = 1)
+        self.coag = crtk.joystick_button(ral, 'footpedals/coag', 0)
 
     # homing example
     def home(self):
+        self.ral.check_connections()
+
         print('starting enable')
         if not self.arm.enable(10):
             sys.exit('failed to enable within 10 seconds')
@@ -81,7 +75,7 @@ class example_application:
         gains.force_position.x = self.arm.measured_cp().p[0]
         gains.force_position.y = self.arm.measured_cp().p[1]
         gains.force_position.z = self.arm.measured_cp().p[2]
-        self.servo_ci_pub.publish(gains)
+        self.arm.servo_ci(gains)
 
         print('orientation will be locked')
         self.coag.wait(value = 0)
@@ -97,7 +91,7 @@ class example_application:
         gains.force_position.x = self.arm.measured_cp().p[0]
         gains.force_position.y = self.arm.measured_cp().p[1]
         gains.force_position.z = self.arm.measured_cp().p[2]
-        self.servo_ci_pub.publish(gains)
+        self.arm.servo_ci(gains)
 
         print('an horizontal line will be created around the current position, with viscosity along the line')
         self.coag.wait(value = 0)
@@ -117,7 +111,7 @@ class example_application:
         gains.force_position.x = self.arm.measured_cp().p[0]
         gains.force_position.y = self.arm.measured_cp().p[1]
         gains.force_position.z = self.arm.measured_cp().p[2]
-        self.servo_ci_pub.publish(gains)
+        self.arm.servo_ci(gains)
 
         print('a plane will be created perpendicular to the master gripper')
         self.coag.wait(value = 0)
@@ -163,7 +157,7 @@ class example_application:
         gains.torque_orientation.y = orientationQuaternion[1]
         gains.torque_orientation.z = orientationQuaternion[2]
         gains.torque_orientation.w = orientationQuaternion[3]
-        self.servo_ci_pub.publish(gains)
+        self.arm.servo_ci(gains)
         self.arm.unlock_orientation()
 
         print('arm will freeze in position')
@@ -175,9 +169,9 @@ class example_application:
         self.home()
         self.tests()
 
-if __name__ == '__main__':
-    # ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
-    argv = crtk.ros_12.parse_argv(sys.argv)
+
+def main():
+    argv = crtk.ral.parse_argv(sys.argv[1:]) # skip argv[0], script name
 
     # parse arguments
     parser = argparse.ArgumentParser()
@@ -186,9 +180,12 @@ if __name__ == '__main__':
                         help = 'arm name corresponding to ROS topics without namespace.  Use __ns:= to specify the namespace')
     parser.add_argument('-i', '--interval', type=float, default=0.01,
                         help = 'expected interval in seconds between messages sent by the device')
-    args = parser.parse_args(argv[1:]) # skip argv[0], script name
+    args = parser.parse_args(argv)
 
-    # ROS 1 or 2 wrapper
-    ros_12 = crtk.ros_12('dvrk_mtm_cartesian_impedance_test', args.arm)
-    application = example_application(ros_12, args.interval)
-    ros_12.spin_and_execute(application.run)
+    ral = crtk.ral('dvrk_mtm_cartesian_impedance')
+    application = example_application(ral, args.arm, args.interval)
+    ral.spin_and_execute(application.run)
+
+
+if __name__ == '__main__':
+    main()

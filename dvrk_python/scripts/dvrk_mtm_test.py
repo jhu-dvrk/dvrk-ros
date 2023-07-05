@@ -15,32 +15,30 @@
 
 # Start a single arm using
 # > rosrun dvrk_robot dvrk_console_json -j <console-file>
-
-# To communicate with the arm using ROS topics, see the python based example dvrk_arm_test.py:
-# > rosrun dvrk_python dvrk_arm_test.py <arm-name>
+# Run test script:
+# > rosrun dvrk_python dvrk_mtm_test.py -a <arm-name>
 
 import argparse
-import sys
 import crtk
 import dvrk
-import math
 import numpy
+import sys
 
 
-# example of application using arm.py
 class example_application:
-
-    # configuration
-    def __init__(self, ros_12, expected_interval):
-        print('configuring for node %s using namespace %s' % (ros_12.node_name(), ros_12.namespace()))
-        self.ros_12 = ros_12
+    def __init__(self, ral, arm_name, expected_interval):
+        print('configuring dvrk_mtm_test for {}'.format(arm_name))
+        self.ral = ral
         self.expected_interval = expected_interval
-        self.arm = dvrk.mtm(arm_name = ros_12.namespace(),
+        self.arm = dvrk.mtm(ral = ral,
+                            arm_name = arm_name,
                             expected_interval = expected_interval)
-        self.coag = crtk.joystick_button('footpedals/coag')
+        self.coag = crtk.joystick_button(ral, 'footpedals/coag', 0)
 
     # homing example
     def home(self):
+        self.ral.check_connections()
+
         print('starting enable')
         if not self.arm.enable(10):
             sys.exit('failed to enable within 10 seconds')
@@ -59,8 +57,7 @@ class example_application:
         # turn on gravity compensation
         self.arm.use_gravity_compensation(True)
 
-        print('press and relase the COAG pedal to move to the next example, alway hole the arm')
-
+        print('press and release the COAG pedal to move to the next example, alway hole the arm')
         print('arm will go limp')
         self.coag.wait(value = 0)
         self.arm.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))
@@ -100,9 +97,9 @@ class example_application:
         self.tests()
 
 
-if __name__ == '__main__':
-    # ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
-    argv = crtk.ros_12.parse_argv(sys.argv)
+def main():
+    argv = crtk.ral.parse_argv(sys.argv[1:]) # skip argv[0], script name
+    ral = crtk.ral('dvrk_mtm_test')
 
     # parse arguments
     parser = argparse.ArgumentParser()
@@ -111,9 +108,10 @@ if __name__ == '__main__':
                         help = 'arm name corresponding to ROS topics without namespace.  Use __ns:= to specify the namespace')
     parser.add_argument('-i', '--interval', type=float, default=0.01,
                         help = 'expected interval in seconds between messages sent by the device')
-    args = parser.parse_args(argv[1:]) # skip argv[0], script name
+    args = parser.parse_args(argv)
 
-    # ROS 1 or 2 wrapper
-    ros_12 = crtk.ros_12('dvrk_mtm_test', args.arm)
-    application = example_application(ros_12, args.interval)
-    ros_12.spin_and_execute(application.run)
+    application = example_application(ral, args.arm, args.interval)
+    ral.spin_and_execute(application.run)
+
+if __name__ == '__main__':
+    main()

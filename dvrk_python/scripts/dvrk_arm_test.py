@@ -17,7 +17,7 @@
 # > rosrun dvrk_robot dvrk_console_json -j <console-file>
 
 # To communicate with the arm using ROS topics, see the python based example dvrk_arm_test.py:
-# > rosrun dvrk_python dvrk_arm_test.py <arm-name>
+# > rosrun dvrk_python dvrk_arm_test.py -a <arm-name>
 
 import argparse
 import sys
@@ -32,15 +32,18 @@ import PyKDL
 class example_application:
 
     # configuration
-    def __init__(self, ros_12, expected_interval):
-        print('configuring for node %s using namespace %s' % (ros_12.node_name(), ros_12.namespace()))
-        self.ros_12 = ros_12
+    def __init__(self, ral, arm_name, expected_interval):
+        print('configuring dvrk_arm_test for {}'.format(arm_name))
+        self.ral = ral
         self.expected_interval = expected_interval
-        self.arm = dvrk.arm(arm_name = ros_12.namespace(),
+        self.arm = dvrk.arm(ral = ral,
+                            arm_name = arm_name,
                             expected_interval = expected_interval)
 
     # homing example
     def home(self):
+        self.arm.check_connections()
+
         print('starting enable')
         if not self.arm.enable(10):
             sys.exit('failed to enable within 10 seconds')
@@ -110,7 +113,8 @@ class example_application:
         goal_p = numpy.copy(initial_joint_position)
         goal_v = numpy.zeros(goal_p.size)
         start = time.time()
-        self.ros_12.set_rate(1.0 / self.expected_interval)
+
+        sleep_rate = self.ral.create_rate(1.0 / self.expected_interval)
         for i in range(int(samples)):
             angle = i * math.radians(360.0) / samples
             goal_p[0] = initial_joint_position[0] + amplitude * (1.0 - math.cos(angle))
@@ -118,7 +122,8 @@ class example_application:
             goal_v[0] = amplitude * math.sin(angle)
             goal_v[1] = goal_v[0]
             self.arm.servo_jp(goal_p, goal_v)
-            self.ros_12.sleep()
+            sleep_rate.sleep()
+
         actual_duration = time.time() - start
         print('servo_jp complete in %2.2f seconds (expected %2.2f)' % (actual_duration, duration))
 
@@ -174,7 +179,8 @@ class example_application:
         duration = 5  # 5 seconds
         samples = duration / self.expected_interval
         start = time.time()
-        self.ros_12.set_rate(1.0 / self.expected_interval)
+
+        sleep_rate = self.ral.create_rate(1.0 / self.expected_interval)
         for i in range(int(samples)):
             goal.p[0] =  initial_cartesian_position.p[0] + amplitude *  (1.0 - math.cos(i * math.radians(360.0) / samples))
             goal.p[1] =  initial_cartesian_position.p[1] + amplitude *  (1.0 - math.cos(i * math.radians(360.0) / samples))
@@ -189,7 +195,8 @@ class example_application:
             error = math.sqrt(errorX * errorX + errorY * errorY + errorZ * errorZ)
             if error > 0.002: # 2 mm
                 print('Inverse kinematic error in position [%i]: %s (might be due to latency)' % (i, error))
-            self.ros_12.sleep()
+            sleep_rate.sleep()
+
         actual_duration = time.time() - start
         print('servo_cp complete in %2.2f seconds (expected %2.2f)' % (actual_duration, duration))
 
@@ -245,8 +252,8 @@ class example_application:
         self.run_move_cp()
 
 if __name__ == '__main__':
-    # ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
-    argv = crtk.ros_12.parse_argv(sys.argv)
+    # extract ros arguments (e.g. __ns:= for namespace)
+    argv = crtk.ral.parse_argv(sys.argv[1:]) # skip argv[0], script name
 
     # parse arguments
     parser = argparse.ArgumentParser()
@@ -255,9 +262,8 @@ if __name__ == '__main__':
                         help = 'arm name corresponding to ROS topics without namespace.  Use __ns:= to specify the namespace')
     parser.add_argument('-i', '--interval', type=float, default=0.01,
                         help = 'expected interval in seconds between messages sent by the device')
-    args = parser.parse_args(argv[1:]) # skip argv[0], script name
+    args = parser.parse_args(argv)
 
-    # ROS 1 or 2 wrapper
-    ros_12 = crtk.ros_12('dvrk_arm_test', args.arm)
-    application = example_application(ros_12, args.interval)
-    ros_12.spin_and_execute(application.run)
+    ral = crtk.ral('dvrk_arm_test')
+    application = example_application(ral, args.arm, args.interval)
+    ral.spin_and_execute(application.run)
