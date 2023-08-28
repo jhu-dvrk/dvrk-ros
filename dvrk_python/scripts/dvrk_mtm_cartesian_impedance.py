@@ -63,7 +63,7 @@ class example_application:
         gains.force_orientation.w = 1.0
         gains.torque_orientation.w = 1.0
 
-        print('press and release the COAG pedal to move to next example, alway hold the arm')
+        print('press and release the COAG pedal to move to next example, always hold the arm')
 
         print('arm will be constrained in X/Y plane around the current position')
         self.coag.wait(value = 0)
