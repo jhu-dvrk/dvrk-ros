@@ -5,7 +5,6 @@
 # Copyright JHU 2015-2023
 
 import time
-import rospy
 import math
 import sys
 import csv
@@ -50,19 +49,19 @@ class potentiometer_calibration:
 
     # class to contain measured_js
     class __sensor:
-        def __init__(self, ros_sub_namespace, expected_interval):
-            self.__crtk_utils = crtk.utils(self, ros_sub_namespace, expected_interval)
+        def __init__(self, ral, expected_interval):
+            self.__crtk_utils = crtk.utils(self, ral, expected_interval)
             self.__crtk_utils.add_measured_js()
 
 
-    def __init__(self, arm_name, expected_interval = 0.01):
+    def __init__(self, ral, arm_name, expected_interval = 0.01):
         self.serial_number = ""
         self.expected_interval = expected_interval
         self.ros_namespace = arm_name
         # Create the dVRK python ROS client
-        self.arm = dvrk.arm(self.ros_namespace, expected_interval = expected_interval)
-        self.potentiometers = self.__sensor(self.ros_namespace + '/io/pot', expected_interval)
-        self.encoders = self.__sensor(self.ros_namespace + '/io/actuator', expected_interval)
+        self.arm = dvrk.arm(ral = ral, arm_name = arm_name, expected_interval = expected_interval)
+        self.potentiometers = self.__sensor(ral.create_child(arm_name + '/io/pot'), expected_interval)
+        self.encoders = self.__sensor(ral.create_child(arm_name + '/io/actuator'), expected_interval)
 
 
     def run(self, calibration_type, filename):
@@ -294,7 +293,7 @@ class potentiometer_calibration:
 
         if calibration_type == 'offsets':
             # convert offsets to joint space
-            a_to_j_service = rospy.ServiceProxy(self.ros_namespace + '/actuator_to_joint_position', cisst_msgs.srv.ConvertFloat64Array)
+            a_to_j_service = ral.service_client(self.ros_namespace + '/actuator_to_joint_position', cisst_msgs.srv.ConvertFloat64Array)
             request = cisst_msgs.srv.ConvertFloat64ArrayRequest()
             request.input = offsets
             response = a_to_j_service(request)
@@ -339,8 +338,8 @@ class potentiometer_calibration:
 
 
 if __name__ == '__main__':
-    # ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
-    argv = crtk.ros_12.parse_argv(sys.argv)
+    # extract ros arguments (e.g. __ns:= for namespace)
+    argv = crtk.ral.parse_argv(sys.argv[1:]) # skip argv[0], script name
 
     # parse arguments
     parser = argparse.ArgumentParser()
@@ -352,9 +351,8 @@ if __name__ == '__main__':
                         help = 'arm name corresponding to ROS topics without namespace.  Use __ns:= to specify the namespace')
     parser.add_argument('-c', '--config', type=str, required=True,
                         help = 'arm IO config file, i.e. something like sawRobotIO1394-xwz-12345.xml')
-    args = parser.parse_args(argv[1:]) # skip argv[0], script name
+    args = parser.parse_args(argv)
 
-    # ROS 1 or 2 wrapper
-    ros_12 = crtk.ros_12('dvrk_arm_test', args.arm)
-    application = potentiometer_calibration(args.arm)
-    ros_12.spin_and_execute(application.run, args.type, args.config)
+    ral = crtk.ral('dvrk_calibrate_potentiometers')
+    application = potentiometer_calibration(ral, args.arm)
+    ral.spin_and_execute(application.run, args.type, args.config)
