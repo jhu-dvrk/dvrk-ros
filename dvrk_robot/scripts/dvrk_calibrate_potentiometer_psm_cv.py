@@ -19,14 +19,16 @@
 # To communicate with the arm using ROS topics, see the python based example dvrk_arm_test.py:
 # > rosrun dvrk_python dvrk_arm_test.py <arm-name>
 
+import crtk
 import dvrk
+
 import math
 import sys
+import time
 import select
 import tty
 import termios
 import threading
-import rospy
 import numpy
 import argparse
 
@@ -35,48 +37,47 @@ import psm_calibration_cv
 import os.path
 import xml.etree.ElementTree as ET
 
-# for local_query_cp
-import cisst_msgs.srv
-
 
 # for keyboard capture
 def is_there_a_key_press():
     return select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
 
 
-class ArmCalibrationApplication:
+class calibration_psm_cv:
+    
     # configuration
-    def configure(self, robot_name, config_file, expected_interval, timeout, convergence_threshold):
+    def __init__(self, ral, arm_name, config_file, expected_interval, timeout, convergence_threshold):
         self.expected_interval = expected_interval
         self.config_file = config_file
         # check that the config file is good
         if not os.path.exists(self.config_file):
-            sys.exit("Config file \"{%s}\" not found".format(self.config_file))
+            sys.exit('Config file "{:s}" not found'.format(self.config_file))
 
         # XML parsing, find current offset
         self.tree = ET.parse(config_file)
         root = self.tree.getroot()
 
         # find Robot in config file and make sure name matches
-        xpath_search_results = root.findall("./Robot")
+        xpath_search_results = root.findall('./Robot')
         if len(xpath_search_results) == 1:
             xmlRobot = xpath_search_results[0]
         else:
-            sys.exit("Can't find \"Robot\" in configuration file {:s}".format(self.config_file))
+            sys.exit('Can\'t find "Robot" in configuration file {:s}'.format(self.config_file))
 
-        if xmlRobot.get("Name") == robot_name:
-            serial_number = xmlRobot.get("SN")
-            print("Successfully found robot \"{:s}\", serial number {:s} in XML file".format(robot_name, serial_number))
+        if xmlRobot.get('Name') == arm_name:
+            serial_number = xmlRobot.get('SN')
+            print('Successfully found robot "{:s}", serial number {:s} in XML file'.format(arm_name, serial_number))
             robotFound = True
         else:
-            sys.exit("Found robot \"{:s}\" while looking for \"{:s}\", make sure you're using the correct configuration file!".format(xmlRobot.get("Name"), robot_name))
+            sys.exit('Found robot "{:s}" while looking for "{:s}", make sure you\'re using the correct configuration file!'.format(xmlRobot.get('Name'), arm_name))
 
         # now find the offset for joint 2, we assume there's only one result
         xpath_search_results = root.findall("./Robot/Actuator[@ActuatorID='2']/AnalogIn/VoltsToPosSI")
         self.xmlPot = xpath_search_results[0]
-        print("Potentiometer offset for joint 2 is currently: {:s}".format(self.xmlPot.get("Offset")))
+        print('Potentiometer offset for joint 2 is currently: {:s}'.format(self.xmlPot.get('Offset')))
 
-        self.arm = dvrk.psm(arm_name = robot_name,
+        self.arm = dvrk.psm(ral = ral,
+                            arm_name = arm_name,
                             expected_interval = expected_interval)
 
         # Calibration parameters
@@ -98,12 +99,9 @@ class ArmCalibrationApplication:
         self.arm.move_jp(goal).wait()
         self.arm.jaw.move_jp(numpy.array([0.0])).wait()
         # identify depth for tool j5 using forward kinematics
-        local_query_cp = rospy.ServiceProxy(self.arm.namespace() + '/local/query_cp', cisst_msgs.srv.QueryForwardKinematics)
-        request = cisst_msgs.srv.QueryForwardKinematicsRequest()
-        request.jp = [0.0, 0.0, 0.0, 0.0]
-        response = local_query_cp(request)
-        self.q2 = response.cp.position.z
-        print("Depth required to position O5 on RCM point: {0:4.2f}mm".format(self.q2 * 1000.0))
+        cp = self.arm.forward_kinematics(numpy.array([0.0, 0.0, 0.0, 0.0]))
+        self.q2 = cp.p.z()
+        print('Depth required to position O5 on RCM point: {0:4.2f}mm'.format(self.q2 * 1000.0))
 
 
     # get safe range of motion from user
@@ -146,7 +144,7 @@ class ArmCalibrationApplication:
                 sys.stdout.flush()
 
                 # sleep
-                rospy.sleep(self.expected_interval)
+                time.sleep(self.expected_interval)
 
             # restrict range to center it at 0
             angle = min(math.fabs(self.min), math.fabs(self.max))
@@ -158,6 +156,7 @@ class ArmCalibrationApplication:
 
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+        print('')
 
 
     # Move arm to middle of motion range and position joint 05 near RCM
@@ -269,7 +268,7 @@ class ArmCalibrationApplication:
         self.tracker.rcm_tracking(self.update_correction)
 
         move_command_handle = None
-        self.start_time = rospy.Time.now()
+        self.start_time = time.time()
 
         # Swing arm back and forth until timeout, convergence, or error/user abort
         old_settings = termios.tcgetattr(sys.stdin)
@@ -301,7 +300,7 @@ class ArmCalibrationApplication:
                     self.goal_pose[self.swing_joint] = self.max if self.goal_pose[self.swing_joint] == self.min else self.min
                     move_command_handle = self.arm.move_jp(self.goal_pose)
 
-                time_elapsed = rospy.Time.now() - self.start_time
+                time_elapsed = time.time() - self.start_time
                 if time_elapsed.to_sec() > self.calibration_timeout:
                     self.tracker.stop()
                     print('\n\nCalibration failed to converge within {} seconds'.format(self.calibration_timeout))
@@ -313,7 +312,7 @@ class ArmCalibrationApplication:
                     print("\n\nCalibration successfully converged, with residual error of <{} mm".format(1000*self.calibration_convergence_threshold))
                     break
 
-                rospy.sleep(self.expected_interval)
+                time.sleep(self.expected_interval)
 
         # Restore normal terminal behavior and normal arm speed
         finally:
@@ -378,10 +377,8 @@ class ArmCalibrationApplication:
             self.tracker.stop()
 
 if __name__ == '__main__':
-    # ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
-    rospy.init_node('dvrk_arm_test', anonymous=True)
-    # strip ros arguments
-    argv = rospy.myargv(argv=sys.argv)
+    # extract ros arguments (e.g. __ns:= for namespace)
+    argv = crtk.ral.parse_argv(sys.argv[1:]) # skip argv[0], script name
 
     # parse arguments
     parser = argparse.ArgumentParser()
@@ -401,7 +398,7 @@ if __name__ == '__main__':
                         help = 'calibration timeout in seconds')
     parser.add_argument('--threshold', type=int, required=False, default=0.1,
                         help = 'calibration convergence threshold in mm')
-    args = parser.parse_args(argv[1:]) # skip argv[0], script name
+    args = parser.parse_args(argv)
 
     print ('\nThis program can be used to improve the potentiometer offset for the third joint '
            'of the PSM arm (translation stage).  The goal is increase the absolute accuracy of the PSM.\n'
@@ -419,6 +416,6 @@ if __name__ == '__main__':
            ' -2- detemine orientation/scale of camera relative to PSM\n'
            ' -3- monitor the application while auto-calibration is performed for safety.\n\n')
 
-    application = ArmCalibrationApplication()
-    application.configure(args.arm, args.config, args.interval, args.timeout, args.threshold)
-    application.run(args.swing_joint, args.range)
+    ral = crtk.ral('dvrk_calibrate_potentiometer_psm_cv')
+    application = calibration_psm_cv(ral, args.arm, args.config, args.interval, args.timeout, args.threshold)
+    ral.spin_and_execute(application.run, args.swing_joint, args.range)

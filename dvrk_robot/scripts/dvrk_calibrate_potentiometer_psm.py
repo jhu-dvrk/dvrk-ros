@@ -39,7 +39,7 @@ def is_there_a_key_press():
     return select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
 
 # example of application using arm.py
-class example_application:
+class calibration_psm:
 
     # configuration
     def __init__(self, ral, arm_name, config_file, expected_interval = 0.01):
@@ -84,6 +84,7 @@ class example_application:
         print('Homing...')
         if not self.arm.home(10):
             sys.exit('failed to home within 10 seconds')
+
         # get current joints just to set size
         print('Moving to zero position...')
         goal = numpy.copy(self.arm.setpoint_jp())
@@ -235,5 +236,5 @@ if __name__ == '__main__':
            ' -2- adjust the depth so that the first hinge on the tool wrist is as close as possible to the RCM.\n\n')
 
     ral = crtk.ral('dvrk_calibrate_potentiometer_psm')
-    application = example_application(ral, args.arm, args.config, args.interval)
+    application = calibration_psm(ral, args.arm, args.config, args.interval)
     ral.spin_and_execute(application.run, args.swing_joint)
