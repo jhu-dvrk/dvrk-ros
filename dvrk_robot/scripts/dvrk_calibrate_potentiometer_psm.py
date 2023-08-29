@@ -19,13 +19,15 @@
 # To communicate with the arm using ROS topics, see the python based example dvrk_arm_test.py:
 # > rosrun dvrk_python dvrk_arm_test.py <arm-name>
 
+import crtk
 import dvrk
+
 import math
 import sys
+import time
 import select
 import tty
 import termios
-import rospy
 import numpy
 import argparse
 
@@ -40,7 +42,7 @@ def is_there_a_key_press():
 class example_application:
 
     # configuration
-    def configure(self, robot_name, config_file, expected_interval):
+    def __init__(self, ral, arm_name, config_file, expected_interval = 0.01):
         self.expected_interval = expected_interval
         self.config_file = config_file
         # check that the config file is good
@@ -58,19 +60,20 @@ class example_application:
         else:
             sys.exit('Can\'t find "Robot" in configuration file {:s}'.format(self.config_file))
 
-        if xmlRobot.get('Name') == robot_name:
+        if xmlRobot.get('Name') == arm_name:
             serial_number = xmlRobot.get('SN')
-            print('Successfully found robot "{:s}", serial number {:s} in XML file'.format(robot_name, serial_number))
+            print('Successfully found robot "{:s}", serial number {:s} in XML file'.format(arm_name, serial_number))
             robotFound = True
         else:
-            sys.exit('Found robot "{:s}" while looking for "{:s}", make sure you\'re using the correct configuration file!'.format(xmlRobot.get('Name'), robot_name))
+            sys.exit('Found robot "{:s}" while looking for "{:s}", make sure you\'re using the correct configuration file!'.format(xmlRobot.get('Name'), arm_name))
 
         # now find the offset for joint 2, we assume there's only one result
         xpath_search_results = root.findall("./Robot/Actuator[@ActuatorID='2']/AnalogIn/VoltsToPosSI")
         self.xmlPot = xpath_search_results[0]
         print('Potentiometer offset for joint 2 is currently: {:s}'.format(self.xmlPot.get('Offset')))
 
-        self.arm = dvrk.psm(arm_name = robot_name,
+        self.arm = dvrk.psm(ral = ral,
+                            arm_name = arm_name,
                             expected_interval = expected_interval)
 
     # homing example
@@ -127,7 +130,7 @@ class example_application:
                 sys.stdout.write('\rRange[%02.2f, %02.2f]' % (math.degrees(self.min), math.degrees(self.max)))
                 sys.stdout.flush()
                 # sleep
-                rospy.sleep(self.expected_interval)
+                time.sleep(self.expected_interval)
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
         print('')
@@ -156,7 +159,7 @@ class example_application:
         correction = 0.0
         try:
             tty.setcbreak(sys.stdin.fileno())
-            start = rospy.Time.now()
+            start = time.time()
             done = False
             while not done:
                 # process key
@@ -171,8 +174,8 @@ class example_application:
                     elif c == '+' or c == '=':
                         correction = correction + 0.0001
                 # move back and forth
-                dt = rospy.Time.now() - start
-                t = dt.to_sec() / 2.0
+                dt = time.time() - start
+                t = dt / 2.0
                 goal[swing_joint] = self.max + cos_ratio * (math.cos(t) - 1.0)
                 goal[2] = self.q2 + correction
                 self.arm.servo_jp(goal)
@@ -180,7 +183,7 @@ class example_application:
                 sys.stdout.write('\rCorrection = %02.2f mm' % (correction * 1000.0))
                 sys.stdout.flush()
                 # sleep
-                rospy.sleep(self.expected_interval)
+                time.sleep(self.expected_interval)
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
         print('')
@@ -202,10 +205,8 @@ class example_application:
         self.calibrate_third_joint(swing_joint)
 
 if __name__ == '__main__':
-    # ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
-    rospy.init_node('dvrk_arm_test', anonymous=True)
-    # strip ros arguments
-    argv = rospy.myargv(argv=sys.argv)
+    # extract ros arguments (e.g. __ns:= for namespace)
+    argv = crtk.ral.parse_argv(sys.argv[1:]) # skip argv[0], script name
 
     # parse arguments
     parser = argparse.ArgumentParser()
@@ -219,7 +220,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--swing-joint', type=int, required=False,
                         choices=[0, 1], default=0,
                         help = 'joint use for the swing motion around RCM')
-    args = parser.parse_args(argv[1:]) # skip argv[0], script name
+    args = parser.parse_args(argv)
 
     print ('\nThis program can be used to improve the potentiometer offset for the third joint '
            'of the PSM arm (translation stage).  The goal is increase the absolute accuracy of the PSM.\n'
@@ -233,6 +234,6 @@ if __name__ == '__main__':
            ' -1- find a safe range of motion for the rocking movement\n'
            ' -2- adjust the depth so that the first hinge on the tool wrist is as close as possible to the RCM.\n\n')
 
-    application = example_application()
-    application.configure(args.arm, args.config, args.interval)
-    application.run(args.swing_joint)
+    ral = crtk.ral('dvrk_calibrate_potentiometer_psm')
+    application = example_application(ral, args.arm, args.config, args.interval)
+    ral.spin_and_execute(application.run, args.swing_joint)

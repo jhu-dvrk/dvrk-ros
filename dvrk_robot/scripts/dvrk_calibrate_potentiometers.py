@@ -195,7 +195,7 @@ class potentiometer_calibration:
             input('To start with some initial values, you first need to "home" the robot.  When homed, press [enter]\n')
 
             if arm_type == 'PSM':
-                input('Since you are calibrating a PSM, make sure there is no tool inserted.  Please remove tool or calibration plate if any and press [enter]\n')
+                input('Since you are calibrating a PSM, make sure there is no instrument inserted.  Please remove instrument, sterile adapter or calibration plate if any and press [enter]\n')
             if arm_type == 'ECM':
                 input('Since you are calibrating an ECM, remove the endoscope and press [enter]\n')
             input('The robot will make LARGE MOVEMENTS, please hit [enter] to continue once it is safe to proceed\n')
