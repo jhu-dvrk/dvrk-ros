@@ -327,7 +327,7 @@ class potentiometer_calibration:
                     # replace values
                     xmlVoltsToPosSI[axis].set('Offset', str(newOffsets[axis]))
 
-        save = input('To save this in new file press "y" followed by [enter]\n')
+        save = input('To save this, press "y" followed by [enter]\n')
         if save == 'y':
             os.rename(filename, filename + '-backup')
             tree.write(filename)
