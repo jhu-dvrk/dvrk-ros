@@ -52,11 +52,11 @@ class arm(object):
         topics for the arm being controlled.  For example if the
         user wants `PSM1`, the ROS topics will be from the namespace
         `PSM1`"""
-        self._arm_name = arm_name
-        self._ral = ral.create_child(arm_name)
+        self.__name = arm_name
+        self.__ral = ral.create_child(arm_name)
 
         # crtk features
-        self.__crtk_utils = crtk.utils(self, self._ral, expected_interval)
+        self.__crtk_utils = crtk.utils(self, self.__ral, expected_interval)
 
         # add crtk features that we need and are supported by the dVRK
         self.__crtk_utils.add_operating_state()
@@ -77,31 +77,34 @@ class arm(object):
         self.__crtk_utils.add_forward_kinematics()
         self.__crtk_utils.add_inverse_kinematics()
 
-        self.spatial = self.__MeasuredServoCf(self._ral.create_child('spatial'), expected_interval)
-        self.body = self.__MeasuredServoCf(self._ral.create_child('body'), expected_interval)
-        self.local = self.__Local(self._ral.create_child('local'), expected_interval)
+        self.spatial = self.__MeasuredServoCf(self.__ral.create_child('spatial'), expected_interval)
+        self.body = self.__MeasuredServoCf(self.__ral.create_child('body'), expected_interval)
+        self.local = self.__Local(self.__ral.create_child('local'), expected_interval)
 
         # publishers
-        self.__body_set_cf_orientation_absolute_pub = self._ral.publisher(
+        self.__body_set_cf_orientation_absolute_pub = self.__ral.publisher(
             '/body/set_cf_orientation_absolute', std_msgs.msg.Bool,
             latch = True, queue_size = 1)
-        self.__use_gravity_compensation_pub = self._ral.publisher(
+        self.__use_gravity_compensation_pub = self.__ral.publisher(
             '/use_gravity_compensation', std_msgs.msg.Bool,
             latch = True, queue_size = 1)
-        self.__trajectory_j_set_ratio_pub = self._ral.publisher(
+        self.__trajectory_j_set_ratio_pub = self.__ral.publisher(
             '/trajectory_j/set_ratio', std_msgs.msg.Float64,
             latch = True, queue_size = 1)
 
         self.__trajectory_j_ratio = 1.0
-        self.__trajectory_j_ratio_sub = self._ral.subscriber(
+        self.__trajectory_j_ratio_sub = self.__ral.subscriber(
             '/trajectory_j/ratio', std_msgs.msg.Float64,
             self.__trajectory_j_ratio_cb)
 
     def name(self):
-        return self._arm_name
+        return self.__name
 
+    def ral(self):
+        return self.__ral
+    
     def check_connections(self, timeout = 5.0):
-        self._ral.check_connections(timeout)
+        self.__ral.check_connections(timeout)
 
     def body_set_cf_orientation_absolute(self, absolute):
         """Apply body wrench using body orientation (relative/False) or reference frame (absolute/True)"""

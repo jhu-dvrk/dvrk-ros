@@ -11,7 +11,8 @@
 
 # --- end cisst license ---
 
-from std_msgs.msg import Float64, String
+import std_msgs.msg
+import crtk_msgs.msg
 
 class teleop_psm(object):
     """Simple dVRK teleop PSM API wrapping around ROS messages"""
@@ -20,34 +21,40 @@ class teleop_psm(object):
         """Requires a teleop name, this will be used to find the ROS topics
         for the console being controlled."""
         # data members
-        self._ral = ral.create_child(teleop_name)
-        self._scale = 0.0
+        self.__ral = ral.create_child(teleop_name)
+        self.__scale = 0.0
 
         # publishers
-        self._set_scale_pub = self._ral.publisher('/set_scale',
-                                                  Float64,
-                                                  latch = True, queue_size = 1)
-        self._set_desired_state_pub = self._ral.publisher('/set_desired_state',
-                                                          String,
-                                                          latch = True, queue_size = 1)
+        self.__set_scale_pub = self.__ral.publisher('/set_scale',
+                                                    std_msgs.msg.Float64,
+                                                    latch = False, queue_size = 1)
+        self.__set_state_command_pub = self.__ral.publisher('/state_command',
+                                                            crtk_msgs.msg.StringStamped,
+                                                            latch = False, queue_size = 1)
 
         # subscribers
-        self._scale_sub = self._ral.subscriber('/scale', Float64, self._scale_cb)
+        self.__scale_sub = self.__ral.subscriber('/scale', std_msgs.msg.Float64, self.__scale_cb)
 
-    def _scale_cb(self, data):
+    def __scale_cb(self, data):
         """Callback for teleop scale.
 
         :param data: the latest scale requested for the teleop"""
-        self._scale = data.data
+        self.__scale = data.data
 
     def set_scale(self, scale):
-        self._set_scale_pub.publish(scale)
+        msg = std_msgs.msg.Float64()
+        msg.data = scale
+        self.__set_scale_pub.publish(msg)
 
     def get_scale(self):
-        return self._scale
+        return self.__scale
 
     def enable(self):
-        self._set_desired_state_pub.publish('ENABLED')
+        msg = crtk_msgs.msg.StringStamped()
+        msg.string = 'enable'
+        self.__set_state_command_pub.publish(msg)
 
     def disable(self):
-        self._set_desired_state_pub.publish('DISABLED')
+        msg = crtk_msgs.msg.StringStamped()
+        msg.string = 'disable'
+        self.__set_state_command_pub.publish(msg)

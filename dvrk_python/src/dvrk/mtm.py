@@ -1,7 +1,7 @@
 #  Author(s):  Anton Deguet
 #  Created on: 2016-05
 
-#   (C) Copyright 2016-2022 Johns Hopkins University (JHU), All Rights Reserved.
+#   (C) Copyright 2016-2023 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -30,20 +30,20 @@ class mtm(arm):
     def __init__(self, ral, arm_name, expected_interval = 0.01):
         # first call base class constructor
         super().__init__(ral, arm_name, expected_interval)
-        self.gripper = self.__Gripper(self._ral.create_child('/gripper'), expected_interval)
+        self.gripper = self.__Gripper(self.ral().create_child('/gripper'), expected_interval)
 
         # publishers
-        self.__lock_orientation_publisher = self._ral.publisher('lock_orientation',
-                                                          geometry_msgs.msg.Quaternion,
-                                                          latch = True, queue_size = 1)
+        self.__lock_orientation_publisher = self.ral().publisher('lock_orientation',
+                                                                 geometry_msgs.msg.Quaternion,
+                                                                 latch = True, queue_size = 1)
+        
+        self.__unlock_orientation_publisher = self.ral().publisher('unlock_orientation',
+                                                                   std_msgs.msg.Empty,
+                                                                   latch = True, queue_size = 1)
 
-        self.__unlock_orientation_publisher = self._ral.publisher('unlock_orientation',
-                                                            std_msgs.msg.Empty,
-                                                            latch = True, queue_size = 1)
-
-        self.__set_gains_publisher = self._ral.publisher('servo_ci',
-                                                         CartesianImpedance,
-                                                         queue_size = 10)
+        self.__set_gains_publisher = self.ral().publisher('servo_ci',
+                                                          CartesianImpedance,
+                                                          queue_size = 10)
 
 
     def lock_orientation_as_is(self):
@@ -55,12 +55,12 @@ class mtm(arm):
         """Lock orientation, expects a PyKDL rotation matrix (PyKDL.Rotation)"""
         q = geometry_msgs.msg.Quaternion()
         q.x, q.y, q.z, q.w = orientation.GetQuaternion()
-        self.__lock_orientation_publisher.publish(q);
+        self.__lock_orientation_publisher.publish(q)
 
     def unlock_orientation(self):
         "Unlock orientation"
         e = std_msgs.msg.Empty()
-        self.__unlock_orientation_publisher.publish(e);
+        self.__unlock_orientation_publisher.publish(e)
 
     def servo_ci(self, gains):
         self.__set_gains_publisher.publish(gains)
