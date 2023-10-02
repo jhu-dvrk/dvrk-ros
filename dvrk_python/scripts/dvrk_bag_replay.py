@@ -29,12 +29,10 @@
 import crtk
 import sys
 import time
-import rospy
 import rosbag
 import numpy
 import PyKDL
 import argparse
-import tf_conversions.posemath
 
 # simplified arm class to replay motion, better performance than
 # dvrk.arm since we're only subscribing to topics we need
@@ -42,31 +40,33 @@ class replay_device:
 
     # simplified jaw class to control the jaws, will not be used without the -j option
     class __jaw_device:
-        def __init__(self, jaw_namespace,
+        def __init__(self, ral,
                      expected_interval, operating_state_instance):
-            self.__crtk_utils = crtk.utils(self, jaw_namespace,
+            self.__crtk_utils = crtk.utils(self, ral,
                                            expected_interval, operating_state_instance)
             self.__crtk_utils.add_move_jp()
             self.__crtk_utils.add_servo_jp()
 
-    def __init__(self, device_namespace, expected_interval):
+    def __init__(self, ral, expected_interval):
         # populate this class with all the ROS topics we need
-        self.crtk_utils = crtk.utils(self, device_namespace, expected_interval)
+        self.__ral = ral
+        self.crtk_utils = crtk.utils(self, ral, expected_interval)
         self.crtk_utils.add_operating_state()
         self.crtk_utils.add_servo_jp()
         self.crtk_utils.add_move_jp()
         self.crtk_utils.add_servo_cp()
         self.crtk_utils.add_move_cp()
-        self.jaw = self.__jaw_device(device_namespace + '/jaw',
+        self.jaw = self.__jaw_device(ral.create_child('/jaw'),
                                      expected_interval,
                                      operating_state_instance = self)
+    def ral(self):
+        return self.__ral
+
 if sys.version_info.major < 3:
     input = raw_input
 
-# ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
-rospy.init_node('dvrk_bag_replay', anonymous=True)
-# strip ros arguments
-argv = rospy.myargv(argv=sys.argv)
+# extract ros arguments (e.g. __ns:= for namespace)
+argv = crtk.ral.parse_argv(sys.argv[1:]) # skip argv[0], script name
 
 # parse arguments
 parser = argparse.ArgumentParser()
@@ -85,7 +85,9 @@ parser.add_argument('-t', '--topic', type = str,
 parser.add_argument('-j', '--jaw', action = 'store_true',
                     help = 'specify if the PSM jaw should also be replayed.  The topic /<arm>/jaw/setpoint_js will be used to determine the jaw trajectory')
 
-args = parser.parse_args(argv[1:]) # skip argv[0], script name
+args = parser.parse_args(argv)
+
+ral = crtk.ral('dvrk_bag_replay')
 
 is_cp = (args.mode == 'servo_cp')
 has_jaw = args.jaw
@@ -125,7 +127,7 @@ print('-- Parsing bag %s' % (args.bag.name))
 for bag_topic, bag_message, t in rosbag.Bag(args.bag.name).read_messages():
     if bag_topic == topic:
         # check order of timestamps, drop if out of order
-        setpoint_time = bag_message.header.stamp.to_sec()
+        setpoint_time = ral.to_sec(bag_message.header.stamp)
         if setpoint_time <= setpoint_time_previous:
             setpoints_out_of_order += 1
         else:
@@ -148,7 +150,7 @@ for bag_topic, bag_message, t in rosbag.Bag(args.bag.name).read_messages():
     if has_jaw:
         if bag_topic == jaw_topic:
             # check order of timestamps, drop if out of order
-            jaw_setpoint_time = bag_message.header.stamp.to_sec()
+            jaw_setpoint_time = ral.to_sec(bag_message.header.stamp)
             if jaw_setpoint_time <= jaw_setpoint_time_previous:
                 jaw_setpoints_out_of_order += 1
             else:
@@ -182,12 +184,13 @@ if is_cp:
            % (bbmin[0], bbmax[0], bbmin[1], bbmax[1], bbmin[2], bbmax[2]))
 
 # compute duration
-duration = setpoints[-1].header.stamp.to_sec() - setpoints[0].header.stamp.to_sec()
+duration = ral.to_sec(setpoints[-1].header.stamp) - ral.to_sec(setpoints[0].header.stamp)
 print ('-- Duration of trajectory: %f seconds' % (duration))
 
 # send trajectory to arm
-arm = replay_device(device_namespace = args.arm,
+arm = replay_device(ral.create_child(args.arm),
                     expected_interval = args.interval)
+arm.ral().check_connections()
 
 # make sure the arm is powered
 print('-- Enabling arm')
@@ -205,7 +208,7 @@ input('-> Press "Enter" to move to start position')
 
 # move to the first position using arm trajectory generation (move_)
 if is_cp:
-    arm.move_cp(tf_conversions.posemath.fromMsg(setpoints[0].pose)).wait()
+    arm.move_cp(crtk.msg_conversions.FrameFromPoseMsg(setpoints[0].pose)).wait()
 else:
     arm.move_jp(numpy.array(setpoints[0].position)).wait()
 
@@ -215,7 +218,7 @@ if has_jaw:
 # replay
 input('-> Press "Enter" to replay trajectory')
 
-last_bag_time = setpoints[0].header.stamp.to_sec()
+last_bag_time = ral.to_sec(setpoints[0].header.stamp)
 
 counter = 0
 if has_jaw:
@@ -233,12 +236,12 @@ for index in range(total):
     # record start time
     loop_start_time = time.time()
     # compute expected dt
-    new_bag_time = setpoints[index].header.stamp.to_sec()
+    new_bag_time = ral.to_sec(setpoints[index].header.stamp)
     delta_bag_time = new_bag_time - last_bag_time
     last_bag_time = new_bag_time
     # replay
     if is_cp:
-        arm.servo_cp(tf_conversions.posemath.fromMsg(setpoints[index].pose))
+        arm.servo_cp(crtk.msg_conversions.FrameFromPoseMsg(setpoints[index].pose))
     else:
         arm.servo_jp(numpy.array(setpoints[index].position), numpy.array(setpoints[index].velocity))
     if has_jaw:

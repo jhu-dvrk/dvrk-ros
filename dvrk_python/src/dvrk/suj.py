@@ -26,6 +26,7 @@ class suj(object):
                 self.__crtk_utils.add_measured_cp()
 
         def __init__(self, ral, expected_interval):
+            self.__ral = ral
             self.__crtk_utils = crtk.utils(self, ral, expected_interval)
             self.__crtk_utils.add_operating_state()
             self.__crtk_utils.add_measured_js()
@@ -33,11 +34,17 @@ class suj(object):
             self.__crtk_utils.add_move_jp() # for simulated SUJs only
             self.local = self.__Local(ral.create_child('/local'), expected_interval)
 
-            # initialize the arm
+        def ral(self):
+            return self.__ral
+
+    # initialize the all SUJ arms
     def __init__(self, ral, expected_interval = 1.0):
         """Constructor.  This initializes a few data members and creates
         instances of classes for each SUJ arm."""
-        ral = ral.create_child('SUJ')
+        self.__ral = ral.create_child('SUJ')
         self.__crtk_utils = crtk.utils(self, ral, expected_interval)
         for arm in ('ECM', 'PSM1', 'PSM2', 'PSM3'):
             setattr(self, arm, self.__Arm(ral.create_child(arm), expected_interval))
+
+    def ral(self):
+        return self.__ral
