@@ -1,0 +1,46 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+
+  <!-- Set this to your camera's name -->
+  <arg name="rig_name" default="jhu_dVRK"/>
+  <arg name="left_camera_name" default="$(arg rig_name)_left"/>
+  <arg name="left_camera_info" default="package://dvrk_video/data/$(arg left_camera_name).ini"/>
+  <arg name="left_camera_device" default="/dev/video-left"/>
+  <arg name="right_camera_name" default="$(arg rig_name)_right"/>
+  <arg name="right_camera_device" default="/dev/video-right"/>
+  <arg name="right_camera_info" default="package://dvrk_video/data/$(arg right_camera_name).ini"/>
+  <arg name="rect" default = "true"/>
+
+  <!-- camera driver nodes -->
+    <!-- camera driver node -->
+  <include file="$(find dvrk_video)/launch/gscam_hauppauge_live2.launch" ns="$(arg rig_name)/left">
+    <arg name="cam_name" value="$(arg left_camera_name)"/>
+    <arg name="dev_name" value="$(arg left_camera_device)"/>
+    <arg name="cam_info" value="$(arg left_camera_info)"/>
+    <arg name="rect" value = "$(arg rect)"/>
+  </include>
+
+  <!-- camera driver node -->
+  <include file="$(find dvrk_video)/launch/gscam_hauppauge_live2.launch" ns="$(arg rig_name)/right">
+    <arg name="cam_name" value="$(arg right_camera_name)"/>
+    <arg name="dev_name" value="$(arg right_camera_device)"/>
+    <arg name="cam_info" value="$(arg right_camera_info)"/>
+    <arg name="rect" value = "$(arg rect)"/>
+  </include>
+
+  <!-- display video using simple ros image_view -->
+  <node name="dvrk_$(arg left_camera_name)_view"
+	pkg="image_view"
+	type="image_view"
+	args="image:=/$(arg rig_name)/left/image_raw">
+    <param name="autosize" value="True" />
+  </node>
+  <node name="dvrk_$(arg right_camera_name)_view"
+	pkg="image_view"
+	type="image_view"
+	args="image:=/$(arg rig_name)/right/image_raw">
+    <param name="autosize" value="True" />
+  </node>
+
+</launch>
