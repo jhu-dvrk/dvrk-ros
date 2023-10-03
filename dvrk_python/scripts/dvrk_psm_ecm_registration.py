@@ -3,7 +3,7 @@
 # Author: Anton Deguet
 # Date: 2021-06-24
 
-# (C) Copyright 2021 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2021-2023 Johns Hopkins University (JHU), All Rights Reserved.
 
 # --- begin cisst license - do not edit ---
 
@@ -27,28 +27,28 @@ class simple_psm:
 
     # simplified jaw class to control the jaws
     class __jaw_device:
-        def __init__(self, jaw_namespace,
+        def __init__(self, ral,
                      expected_interval, operating_state_instance):
-            self.__crtk_utils = crtk.utils(self, jaw_namespace,
+            self.__crtk_utils = crtk.utils(self, ral,
                                            expected_interval, operating_state_instance)
             self.__crtk_utils.add_servo_jf() # to control jaw effort
 
-    def __init__(self, device_namespace, expected_interval):
+    def __init__(self, ral, expected_interval):
         # populate this class with all the ROS topics we need
-        self.crtk_utils = crtk.utils(self, device_namespace, expected_interval)
+        self.crtk_utils = crtk.utils(self, ral, expected_interval)
         self.crtk_utils.add_operating_state()
         self.crtk_utils.add_servo_jf()    # to make arm limp
-	self.crtk_utils.add_measured_cp() # to measure actual cartesian pose
-        self.jaw = self.__jaw_device(device_namespace + '/jaw',
+        self.crtk_utils.add_measured_cp() # to measure actual cartesian pose
+        self.jaw = self.__jaw_device(ral.create_child('jaw'),
                                      expected_interval,
                                      operating_state_instance = self)
 
 # simplified arm class for the ECM
 class simple_ecm:
 
-    def __init__(self, device_namespace, expected_interval):
+    def __init__(self, ral, expected_interval):
         # populate this class with all the ROS topics we need
-        self.crtk_utils = crtk.utils(self, device_namespace, expected_interval)
+        self.crtk_utils = crtk.utils(self, ral, expected_interval)
         self.crtk_utils.add_operating_state()
         self.crtk_utils.add_move_jp()
         self.crtk_utils.add_setpoint_js()
@@ -58,11 +58,8 @@ class simple_ecm:
 if sys.version_info.major < 3:
     input = raw_input
 
-# ros init node so we can use default ros arguments (e.g. __ns:= for namespace)
-rospy.init_node('dvrk_psm_ecm_registration', anonymous = True)
-
-# strip ros arguments
-argv = rospy.myargv(argv=sys.argv)
+# extract ros arguments (e.g. __ns:= for namespace)
+argv = crtk.ral.parse_argv(sys.argv[1:]) # skip argv[0], script name
 
 # parse arguments
 parser = argparse.ArgumentParser()
@@ -72,14 +69,18 @@ parser.add_argument('-a', '--arm', type = str, required = True,
 parser.add_argument('-i', '--interval', type = float, default = 0.01,
                     help = 'expected interval in seconds between messages sent by the device')
 
-args = parser.parse_args(argv[1:]) # skip argv[0], script name
+args = parser.parse_args(argv)
+
+ral = crtk.ral('dvrk_psm_ecm_registration')
 
 # create PSM and ECM
-psm = simple_psm(device_namespace = args.arm,
+psm = simple_psm(ral = ral.create_child(args.arm),
                  expected_interval = args.interval)
 
-ecm = simple_ecm(device_namespace = 'ECM',
+ecm = simple_ecm(ral = ral.create_child('ECM'),
                  expected_interval = args.interval)
+ral.check_connections()
+ral.spin()
 
 input('-> Press "Enter" to align ECM')
 ecm_setpoint_jp = ecm.setpoint_jp()
@@ -89,7 +90,7 @@ ecm_setpoint_jp[3] = 0.0
 ecm.move_jp(ecm_setpoint_jp).wait()
 
 input('-> Press "Enter" to close the PSM jaw')
-psm.jaw.servo_jf(numpy.array(-0.1))
+psm.jaw.servo_jf(numpy.array([-0.1]))
 
 input('-> Press "Enter" to start ECM motion')
 
@@ -179,4 +180,6 @@ print(',\n"base-frame": {\n"reference-frame": "ECM",\n"transform": [[ %.10f, %.1
           r[2,0], r[2,1], r[2,2]))
 
 input('-> Press "Enter" to release the PSM jaw')
-psm.jaw.servo_jf(numpy.array(0.0))
+psm.jaw.servo_jf(numpy.array([0.0]))
+
+ral.shutdown()
