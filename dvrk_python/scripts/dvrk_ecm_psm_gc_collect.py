@@ -2,28 +2,35 @@
 
 # Authors: Anton Deguet
 # Date: 2018-09-10
-# Copyright JHU 2010
+# Copyright JHU 2018-2023
 
-# Todo:
-# - test calibrating 3rd offset on PSM?
+# Simple script to collect data on ECM Classic for gravity
+# compensation identification.
+
+# This scripts needs to be use different joints limits for different
+# arms, i.e. Classic vs Si, PSM vs ECM.
 
 import time
-import rospy
 import math
 import sys
 import csv
 import datetime
+import crtk
 import dvrk
 import numpy
+import argparse
 
-def dvrk_ecm_gc_collect(robot_name):
+def dvrk_ecm_psm_gc_collect(ral, name, expected_interval):
     # create dVRK robot
-    robot = dvrk.ecm(robot_name)
+    robot = dvrk.ecm(ral = ral,
+                     arm_name = name,
+                     expected_interval = expected_interval)
+    ral.check_connections()
 
     # file to save data
     now = datetime.datetime.now()
     now_string = now.strftime("%Y-%m-%d-%H-%M")
-    csv_file_name = 'ecm-gc-' + now_string + '.csv'
+    csv_file_name = name + '-gc-' + now_string + '.csv'
     print("Values will be saved in: ", csv_file_name)
     f = open(csv_file_name, 'w')
     writer = csv.writer(f)
@@ -78,7 +85,17 @@ def dvrk_ecm_gc_collect(robot_name):
     robot.move_jp(numpy.array([0.0, 0.0, 0.0, 0.0])).wait()
 
 if __name__ == '__main__':
-    if (len(sys.argv) != 2):
-        print('%s requires arm name, e.g. ECM' % (sys.argv[0])) 
-    else:
-        dvrk_ecm_gc_collect(sys.argv[1])
+    # extract ros arguments (e.g. __ns:= for namespace)
+    argv = crtk.ral.parse_argv(sys.argv[1:]) # skip argv[0], script name
+
+    # parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-a', '--arm', type=str, required=True,
+                        choices=['ECM', 'PSM1', 'PSM2', 'PSM3'],
+                        help = 'arm name corresponding to ROS topics without namespace.  Use __ns:= to specify the namespace')
+    parser.add_argument('-i', '--interval', type=float, default=0.01,
+                        help = 'expected interval in seconds between messages sent by the device')
+    args = parser.parse_args(argv)
+
+    ral = crtk.ral('dvrk_ecm_psm_gc_collect')
+    ral.spin_and_execute(dvrk_ecm_psm_gc_collect, ral, args.arm, args.interval)
