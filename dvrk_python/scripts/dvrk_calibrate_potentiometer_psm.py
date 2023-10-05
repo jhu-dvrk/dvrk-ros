@@ -67,14 +67,26 @@ class calibration_psm:
         else:
             sys.exit('Found robot "{:s}" while looking for "{:s}", make sure you\'re using the correct configuration file!'.format(xmlRobot.get('Name'), arm_name))
 
+        hardware_version = xmlRobot.get('HardwareVersion')
+        self.analog_potentiometers = True
+        if hardware_version in ['QLA1', 'DQLA']:
+            print('Calibrating analog potentiometers on PSM Classic')
+        elif hardware_version in ['dRA1']:
+            self.analog_potentiometers = False
+            print('Calibrating digital potentiometers on PSM Si')
+        else:
+            sys.exit('"HardwareVersion is not defined/supported for robot "{:s}"'.format(arm_name))
+
         # now find the offset for joint 2, we assume there's only one result
-        xpath_search_results = root.findall("./Robot/Actuator[@ActuatorID='2']/AnalogIn/VoltsToPosSI")
-        self.xmlPot = xpath_search_results[0]
-        print('Potentiometer offset for joint 2 is currently: {:s}'.format(self.xmlPot.get('Offset')))
+        if self.analog_potentiometers:
+            xpath_search_results = root.findall("./Robot/Actuator[@ActuatorID='2']/AnalogIn/VoltsToPosSI")
+            self.xmlPot = xpath_search_results[0]
+            print('Potentiometer offset for joint 2 is currently: {:s}'.format(self.xmlPot.get('Offset')))
 
         self.arm = dvrk.psm(ral = ral,
                             arm_name = arm_name,
                             expected_interval = expected_interval)
+        self.arm.check_connections()
 
     # homing example
     def home(self):
@@ -190,14 +202,17 @@ class calibration_psm:
         print('')
 
         # now save the new offset
-        oldOffset = float(self.xmlPot.get('Offset')) / 1000.0 # convert from XML (mm) to m
-        newOffset = oldOffset - correction                    # add in meters
-        self.xmlPot.set('Offset', str(newOffset * 1000.0))    # convert from m to XML (mm)
-        os.rename(self.config_file, self.config_file + '-backup')
-        self.tree.write(self.config_file)
-        print('Old offset: {:2.2f}mm\nNew offset: {:2.2f}mm\n'.format(oldOffset * 1000.0, newOffset * 1000.0))
-        print('Results saved in {}. Restart your dVRK application to use the new file!'.format(self.config_file))
-        print('Old file saved as {}-backup.'.format(self.config_file))
+        if self.analog_potentiometers:
+            oldOffset = float(self.xmlPot.get('Offset')) / 1000.0 # convert from XML (mm) to m
+            newOffset = oldOffset - correction                    # add in meters
+            self.xmlPot.set('Offset', str(newOffset * 1000.0))    # convert from m to XML (mm)
+            os.rename(self.config_file, self.config_file + '-backup')
+            self.tree.write(self.config_file)
+            print('Old offset: {:2.2f}mm\nNew offset: {:2.2f}mm\n'.format(oldOffset * 1000.0, newOffset * 1000.0))
+            print('Results saved in {}. Restart your dVRK application to use the new file!'.format(self.config_file))
+            print('Old file saved as {}-backup.'.format(self.config_file))
+        else:
+            print('need to correct all in lookup table')
 
     # main method
     def run(self, swing_joint):

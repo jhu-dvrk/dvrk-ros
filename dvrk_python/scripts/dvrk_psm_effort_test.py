@@ -15,7 +15,7 @@
 
 # Start a single arm using
 # > rosrun dvrk_robot dvrk_console_json -j <console-file>
-# Run test script: 
+# Run test script:
 # > rosrun dvrk_python dvrk_psm_effort_test.py -a <arm-name>
 
 import argparse
@@ -37,6 +37,7 @@ class example_application:
         self.arm = dvrk.psm(ral = ral,
                             arm_name = arm_name,
                             expected_interval = expected_interval)
+        self.arm.check_connections()
 
     # homing example
     def home(self):

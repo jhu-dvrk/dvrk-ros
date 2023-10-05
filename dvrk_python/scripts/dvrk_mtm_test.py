@@ -57,7 +57,7 @@ class example_application:
         # turn on gravity compensation
         self.arm.use_gravity_compensation(True)
 
-        print('press and release the COAG pedal to move to the next example, alway hole the arm')
+        print('press and release the COAG pedal to move to the next example, always hold the arm')
         print('arm will go limp')
         self.coag.wait(value = 0)
         self.arm.body.servo_cf(numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]))

@@ -62,6 +62,7 @@ class potentiometer_calibration:
         self.arm = dvrk.arm(ral = ral, arm_name = arm_name, expected_interval = expected_interval)
         self.potentiometers = self.__sensor(ral.create_child(arm_name + '/io/pot'), expected_interval)
         self.encoders = self.__sensor(ral.create_child(arm_name + '/io/actuator'), expected_interval)
+        self.arm.check_connections()
 
 
     def run(self, calibration_type, filename):
