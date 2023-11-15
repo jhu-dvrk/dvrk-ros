@@ -51,8 +51,8 @@ repositories:
     type: git
     url: https://github.com/jhu-dvrk/dvrk-gravity-compensation.git
     version: devel
-  dvrk/dESSJ-firmware
+  dvrk/dESSJ-firmware:
     type: git
-    url: https://github.com/jhu-dvrk/dESSJ-firmware
+    url: https://github.com/jhu-dvrk/dESSJ-firmware.git
     version: devel
 
