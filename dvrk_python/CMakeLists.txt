@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.1)
-project (dvrk_python VERSION 2.1.0)
+project (dvrk_python VERSION 2.2.0)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)

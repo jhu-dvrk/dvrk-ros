@@ -1,5 +1,5 @@
 #
-# (C) Copyright 2020-2021 Johns Hopkins University (JHU), All Rights Reserved.
+# (C) Copyright 2020-2023 Johns Hopkins University (JHU), All Rights Reserved.
 #
 # --- begin cisst license - do not edit ---
 #
@@ -15,7 +15,7 @@ set (CMAKE_CXX_STANDARD 14)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_CXX_EXTENSIONS OFF)
 
-project (dvrk_arms_from_ros)
+project (dvrk_arms_from_ros VERSION 2.2.0)
 
 ## find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -38,7 +38,7 @@ set (REQUIRED_CISST_LIBRARIES
      cisstParameterTypes
      )
 
-find_package (cisst 1.1.0 REQUIRED ${REQUIRED_CISST_LIBRARIES})
+find_package (cisst 1.2.0 REQUIRED ${REQUIRED_CISST_LIBRARIES})
 
 if (cisst_FOUND_AS_REQUIRED)
 
