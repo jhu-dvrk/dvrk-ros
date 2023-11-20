@@ -53,4 +53,4 @@
 - git:
     local-name: dESSJ-firmware
     uri: https://github.com/jhu-dvrk/dESSJ-firmware
-    version: master
+    version: main
