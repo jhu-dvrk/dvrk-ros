@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2021 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2023 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -25,7 +25,7 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisstCommon/cmnCommandLineOptions.h>
 #include <cisstCommon/cmnGetChar.h>
 #include <cisstCommon/cmnQt.h>
-#include <cisstOSAbstraction/osaGetTime.h>
+#include <cisstMultiTask/mtsManagerLocal.h>
 #include <cisstMultiTask/mtsCollectorFactory.h>
 #include <cisstMultiTask/mtsCollectorQtFactory.h>
 #include <cisstMultiTask/mtsCollectorQtWidget.h>
@@ -43,16 +43,21 @@ http://www.cisst.org/cisst/license.txt.
 #include <cisst_ros_bridge/mtsROSBridge.h>
 #include <dvrk_utilities/dvrk_console.h>
 
-void fileExists(const std::string & description, const std::string & filename)
+void fileExists(const std::string & description, std::string & filename,
+                mtsIntuitiveResearchKitConsole * console)
 {
     if (!cmnPath::Exists(filename)) {
-        std::cerr << "File not found: " << description
-                  << "; " << filename << std::endl;
-        exit(-1);
-    } else {
-        std::cout << "File found: " << description
-                  << "; " << filename << std::endl;
+        const std::string fileInPath = console->locate_file(filename);
+        if (fileInPath == "") {
+            std::cerr << "File not found: " << description
+                      << ": " << filename << std::endl;
+            exit(-1);
+        } else {
+            filename = fileInPath;
+        }
     }
+    std::cout << "Using file: " << description
+              << ": " << filename << std::endl;
 }
 
 int main(int argc, char ** argv)
@@ -61,17 +66,7 @@ int main(int argc, char ** argv)
     std::setlocale(LC_ALL, "C");
 
     // log configuration
-    cmnLogger::SetMask(CMN_LOG_ALLOW_ALL);
-    cmnLogger::SetMaskDefaultLog(CMN_LOG_ALLOW_ALL);
-    cmnLogger::SetMaskFunction(CMN_LOG_ALLOW_ALL);
-    cmnLogger::SetMaskClassMatching("mtsIntuitiveResearchKit", CMN_LOG_ALLOW_ALL);
-    cmnLogger::AddChannel(std::cerr, CMN_LOG_ALLOW_ERRORS_AND_WARNINGS);
-    // add log file with date so logs don't get overwritten
-    std::string currentDateTime;
-    osaGetDateTimeString(currentDateTime);
-    std::ofstream logFileStream(std::string("cisstLog-" + currentDateTime + ".txt").c_str());
-    cmnLogger::AddChannel(logFileStream);
-    cmnLogger::HaltDefaultLog(); // stop log to default cisstLog.txt
+    mtsIntuitiveResearchKit::Logger logger; 
 
     // create ROS node handle
     ros::init(argc, argv, "dvrk", ros::init_options::AnonymousName);
@@ -103,6 +98,9 @@ int main(int argc, char ** argv)
                                     "json config file to configure ROS bridges to collect low level data (IO)",
                                     cmnCommandLineOptions::OPTIONAL_OPTION, &jsonIOConfigFiles);
 
+    options.AddOptionNoValue("I", "pid-topics",
+                             "add some extra publishers to monitor PID state");
+
     options.AddOptionNoValue("t", "text-only",
                              "text only interface, do not create Qt widgets");
 
@@ -125,10 +123,7 @@ int main(int argc, char ** argv)
                              "replaces the default Qt palette with darker colors");
 
     // check that all required options have been provided
-    std::string errorMessage;
-    if (!options.Parse(argc, argv, errorMessage)) {
-        std::cerr << "Error: " << errorMessage << std::endl;
-        options.PrintUsage(std::cerr);
+    if (!options.Parse(argc, argv, std::cerr)) {
         return -1;
     }
     std::string arguments;
@@ -143,7 +138,7 @@ int main(int argc, char ** argv)
     // console
     mtsIntuitiveResearchKitConsole * console = new mtsIntuitiveResearchKitConsole("console");
     console->set_calibration_mode(options.IsSet("calibration-mode"));
-    fileExists("console JSON configuration file", jsonMainConfigFile);
+    fileExists("console JSON configuration file", jsonMainConfigFile, console);
     console->Configure(jsonMainConfigFile);
     componentManager->AddComponent(console);
     console->Connect();
@@ -174,7 +169,7 @@ int main(int argc, char ** argv)
     // configure data collection if needed
     if (options.IsSet("collection-config")) {
         // make sure the json config file exists
-        fileExists("JSON data collection configuration", jsonCollectionConfigFile);
+        fileExists("JSON data collection configuration", jsonCollectionConfigFile, console);
 
         mtsCollectorFactory * collectorFactory = new mtsCollectorFactory("collectors");
         collectorFactory->Configure(jsonCollectionConfigFile);
@@ -204,13 +199,17 @@ int main(int argc, char ** argv)
                                                    publishPeriod, tfPeriod,
                                                    console);
     // IOs
-    const std::list<std::string>::const_iterator end = jsonIOConfigFiles.end();
-    std::list<std::string>::const_iterator iter;
+    const std::list<std::string>::iterator end = jsonIOConfigFiles.end();
+    std::list<std::string>::iterator iter;
     for (iter = jsonIOConfigFiles.begin();
          iter != end;
          iter++) {
-        fileExists("ROS IO JSON configuration file", *iter);
+        fileExists("ROS IO JSON configuration file", *iter, console);
         consoleROS->Configure(*iter);
+    }
+
+    if (options.IsSet("pid-topics")) {
+        consoleROS->add_topics_pid();
     }
 
     componentManager->AddComponent(consoleROS);
@@ -238,8 +237,7 @@ int main(int argc, char ** argv)
     componentManager->Cleanup();
 
     // stop all logs
-    cmnLogger::Kill();
-    cmnLogger::RemoveChannel(logFileStream);
+    logger.Stop();
 
     // stop ROS node
     ros::shutdown();

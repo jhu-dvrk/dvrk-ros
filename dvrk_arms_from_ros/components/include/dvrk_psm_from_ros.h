@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2020-01-13
 
-  (C) Copyright 2020 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2020-2021 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -28,7 +28,9 @@ class dvrk_psm_from_ros: public dvrk_arm_from_ros
 public:
     typedef mtsROSBridge BaseType;
 
-    dvrk_psm_from_ros(const std::string & componentName, const double periodInSeconds);
+    dvrk_psm_from_ros(const std::string & componentName,
+                      ros::NodeHandle * _node_handle,
+                      const double periodInSeconds);
     dvrk_psm_from_ros(const mtsTaskPeriodicConstructorArg & arg);
     ~dvrk_psm_from_ros() {}
 

@@ -1,0 +1,61 @@
+repositories:
+  cisst-saw/cisstNetlib:
+    type: git
+    url: https://github.com/jhu-cisst/cisstNetlib.git
+    version: devel
+  cisst-saw/cisst:
+    type: git
+    url: https://github.com/jhu-cisst/cisst.git
+    version: devel
+  cisst-saw/cisst-ros:
+    type: git
+    url: https://github.com/jhu-cisst/cisst-ros.git
+    version: devel
+  cisst-saw/sawKeyboard:
+    type: git
+    url: https://github.com/jhu-saw/sawKeyboard.git
+    version: devel
+  cisst-saw/sawTextToSpeech:
+    type: git
+    url: https://github.com/jhu-saw/sawTextToSpeech.git
+    version: devel
+  cisst-saw/sawRobotIO1394:
+    type: git
+    url: https://github.com/jhu-saw/sawRobotIO1394.git
+    version: devel
+  cisst-saw/sawControllers:
+    type: git
+    url: https://github.com/jhu-saw/sawControllers.git
+    version: devel
+  cisst-saw/sawIntuitiveResearchKit:
+    type: git
+    url: https://github.com/jhu-dvrk/sawIntuitiveResearchKit.git
+    version: devel
+  crtk/crtk_msgs:
+    type: git
+    url: https://github.com/collaborative-robotics/crtk_msgs.git
+    version: devel
+  crtk/crtk_python_client:
+    type: git
+    url: https://github.com/collaborative-robotics/crtk_python_client.git
+    version: devel
+  crtk/crtk_matlab_client:
+    type: git
+    url: https://github.com/collaborative-robotics/crtk_matlab_client.git
+    version: devel
+  dvrk/dvrk-ros:
+    type: git
+    url: https://github.com/jhu-dvrk/dvrk-ros.git
+    version: devel
+  dvrk/dvrk-gravity-compensation:
+    type: git
+    url: https://github.com/jhu-dvrk/dvrk-gravity-compensation.git
+    version: devel
+  dvrk/dvrk_config_jhu:
+    type: git
+    url: https://github.com/jhu-dvrk/dvrk_config_jhu.git
+    version: devel
+  dvrk/dESSJ-firmware:
+    type: git
+    url: https://github.com/jhu-dvrk/dESSJ-firmware.git
+    version: devel

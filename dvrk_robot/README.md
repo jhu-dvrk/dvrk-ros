@@ -35,4 +35,4 @@ We provide a few console configurations for simulated arms in `sawIntuitiveResea
 
 The best way to figure how to use the ROS topics is to look at the
 python ROS wrappers in `dvrk_python` or the Matlab ROS wrappers in
-`dvrk_matlab`.  The ROS topics are described in https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki/API-2.x
+`dvrk_matlab`.

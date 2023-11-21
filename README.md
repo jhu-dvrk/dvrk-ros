@@ -4,7 +4,9 @@ This repository has code related to daVinci Research Kit (dVRK) ROS packages.
 See https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki
 
 # Install
-We use the catkin build tools, NOT `catkin_make`.  See download and compilation instructions: https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki/CatkinBuild
+We use the catkin build tools, NOT catkin_make.  Please don't use catkin_make
+* Download and compile the cisst libraries and SAW components for the dVRK, see the dVRK tutorial wiki: https://github.com/jhu-cisst/cisst/wiki/Compiling-cisst-and-SAW-with-CMake#13-building-using-catkin-build-tools-for-ros
+* Download and compile dvrk-ros: https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki/CatkinBuild
 
 # List of Packages:
 * `dvrk_robot` **[maintained]** 

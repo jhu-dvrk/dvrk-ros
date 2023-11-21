@@ -5,7 +5,7 @@
   Author(s):  Anton Deguet
   Created on: 2015-07-18
 
-  (C) Copyright 2015-2021 Johns Hopkins University (JHU), All Rights Reserved.
+  (C) Copyright 2015-2023 Johns Hopkins University (JHU), All Rights Reserved.
 
 --- begin cisst license - do not edit ---
 
@@ -21,6 +21,7 @@ http://www.cisst.org/cisst/license.txt.
 
 #include <dvrk_utilities/dvrk_console.h>
 #include <cisst_ros_bridge/mtsROSBridge.h>
+#include <cisst_ros_crtk/cisst_ros_crtk.h>
 
 #include <cisstCommon/cmnStrings.h>
 #include <sawIntuitiveResearchKit/mtsIntuitiveResearchKitConsole.h>
@@ -37,7 +38,9 @@ dvrk::console::console(const std::string & name,
                        const double & publish_rate_in_seconds,
                        const double & tf_rate_in_seconds,
                        mtsIntuitiveResearchKitConsole * mts_console):
-    mts_ros_crtk_bridge(name, node_handle),
+    mts_ros_crtk_bridge_provided(name, node_handle),
+    m_publish_rate(publish_rate_in_seconds),
+    m_tf_rate(tf_rate_in_seconds),
     m_console(mts_console)
 {
     // start creating components
@@ -45,7 +48,7 @@ dvrk::console::console(const std::string & name,
 
     // create all ROS bridges
     std::string m_bridge_name = "dvrk_ros" + node_handle->getNamespace();
-    clean_namespace(m_bridge_name);
+    cisst_ros_crtk::clean_namespace(m_bridge_name);
 
     // shared publish bridge
     m_pub_bridge = new mtsROSBridge(m_bridge_name, publish_rate_in_seconds, node_handle);
@@ -61,75 +64,58 @@ dvrk::console::console(const std::string & name,
     }
 
     // arm topics
-    const mtsIntuitiveResearchKitConsole::ArmList::iterator
-        armEnd = m_console->mArms.end();
-    mtsIntuitiveResearchKitConsole::ArmList::iterator armIter;
-    for (armIter = m_console->mArms.begin();
-         armIter != armEnd;
-         ++armIter) {
-        if (!armIter->second->m_skip_ROS_bridge) {
-            const std::string name = armIter->first;
-            switch (armIter->second->m_type) {
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM:
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_DERIVED:
-                // custom dVRK
+    for (auto armPair : m_console->mArms) {
+        auto arm = *(armPair.second);
+        if (!arm.m_skip_ROS_bridge) {
+            const std::string name = armPair.first;
+            if (arm.native_or_derived_mtm()) {
                 bridge_interface_provided_mtm(name, "Arm",
                                               publish_rate_in_seconds, tf_rate_in_seconds);
-                break;
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM:
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_DERIVED:
-                // custom dVRK
+            } else if (arm.native_or_derived_ecm()) {
                 bridge_interface_provided_ecm(name, "Arm",
                                               publish_rate_in_seconds, tf_rate_in_seconds);
-                if (armIter->second->m_simulation
+                if (arm.m_simulation
                     == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
-                    add_topics_ecm_io(name, armIter->second->m_IO_component_name);
+                    add_topics_ecm_io(name, arm.m_IO_component_name);
                 }
-                break;
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM:
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_DERIVED:
-                // custom dVRK
+            } else if (arm.native_or_derived_psm()) {
                 bridge_interface_provided_psm(name, "Arm",
                                               publish_rate_in_seconds, tf_rate_in_seconds);
-                if (armIter->second->m_simulation
+                if (arm.m_simulation
                     == mtsIntuitiveResearchKitConsole::Arm::SIMULATION_NONE) {
-                    add_topics_psm_io(name, armIter->second->m_IO_component_name);
+                    add_topics_psm_io(name, arm.m_IO_component_name);
                 }
-                break;
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_MTM_GENERIC:
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_PSM_GENERIC:
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_ECM_GENERIC:
-                // standard CRTK
-                bridge_interface_provided(armIter->second->ComponentName(),
-                                          armIter->second->InterfaceName(),
+            } else if (arm.generic()) {
+                bridge_interface_provided(arm.ComponentName(),
+                                          arm.InterfaceName(),
                                           publish_rate_in_seconds, tf_rate_in_seconds);
-                break;
-            case mtsIntuitiveResearchKitConsole::Arm::ARM_SUJ:
-                {
-                    const auto _sujs = std::list<std::string>({"PSM1", "PSM2", "PSM3", "ECM"});
-                    for (auto const & _suj : _sujs) {
-                        bridge_interface_provided(name,
-                                                  _suj,
-                                                  "SUJ/" + _suj,
-                                                  publish_rate_in_seconds,
-                                                  tf_rate_in_seconds);
-                    }
+            } else if (arm.suj()) {
+                const auto _sujs = std::list<std::string>({"PSM1", "PSM2", "PSM3", "ECM"});
+                for (auto const & _suj : _sujs) {
+                    bridge_interface_provided(name,
+                                              _suj,
+                                              "SUJ/" + _suj,
+                                              publish_rate_in_seconds,
+                                              tf_rate_in_seconds);
                 }
-                break;
-            default:
-                break;
             }
         }
     }
 
     // ECM teleop
     if (m_console->mTeleopECM) {
-        add_topics_teleop_ecm(m_console->mTeleopECM->Name());
+        const auto teleopName = m_console->mTeleopECM->Name();
+        bridge_interface_provided(teleopName, "Setting", teleopName,
+                                  publish_rate_in_seconds, tf_rate_in_seconds);
+        add_topics_teleop_ecm(teleopName);
     }
 
     // PSM teleops
     for (auto const & teleop : m_console->mTeleopsPSM) {
-        add_topics_teleop_psm(teleop.first);
+        const auto teleopName = teleop.first;
+        bridge_interface_provided(teleopName, "Setting", teleopName,
+                                  publish_rate_in_seconds, tf_rate_in_seconds);
+        add_topics_teleop_psm(teleopName);
     }
 
     // Endoscope focus
@@ -139,14 +125,9 @@ dvrk::console::console(const std::string & name,
 
     // digital inputs
     const std::string footPedalsNameSpace = "footpedals/";
-    typedef mtsIntuitiveResearchKitConsole::DInputSourceType DInputSourceType;
-    const DInputSourceType::const_iterator inputsEnd = m_console->mDInputSources.end();
-    DInputSourceType::const_iterator inputsIter;
-    for (inputsIter = m_console->mDInputSources.begin();
-         inputsIter != inputsEnd;
-         ++inputsIter) {
-        std::string upperName = inputsIter->second.second;
-        std::string lowerName = inputsIter->first;
+    for (auto input : m_console->mDInputSources) {
+        std::string upperName = input.second.second;
+        std::string lowerName = input.first;
         std::string requiredInterfaceName = upperName + "_" + lowerName;
         // put everything lower case
         std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), tolower);
@@ -157,7 +138,7 @@ dvrk::console::console(const std::string & name,
             (requiredInterfaceName, "Button",
              footPedalsNameSpace + lowerName);
         componentManager->Connect(events_bridge().GetName(), requiredInterfaceName,
-                                  inputsIter->second.first, inputsIter->second.second);
+                                  input.second.first, input.second.second);
 
     }
 
@@ -216,7 +197,7 @@ void dvrk::console::bridge_interface_provided_arm(const std::string & _arm_name,
     // bridged (e.g. subscribers and events)
     const std::string _required_interface_name = _arm_name + "_using_" + _interface_name;
 
-    subscribers_bridge().AddSubscriberToCommandWrite<prmPositionCartesianSet, geometry_msgs::Pose>
+    subscribers_bridge().AddSubscriberToCommandWrite<prmPositionCartesianSet, geometry_msgs::PoseStamped>
         (_required_interface_name, "set_base_frame",
          _arm_name + "/set_base_frame");
     subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float64>
@@ -231,9 +212,10 @@ void dvrk::console::bridge_interface_provided_arm(const std::string & _arm_name,
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (_required_interface_name, "body/set_cf_orientation_absolute",
          _arm_name + "/body/set_cf_orientation_absolute");
-    subscribers_bridge().AddSubscriberToCommandWrite<prmCartesianImpedanceGains, cisst_msgs::prmCartesianImpedanceGains>
-        (_required_interface_name, "set_cartesian_impedance_gains",
-         _arm_name + "/set_cartesian_impedance_gains");
+    subscribers_bridge().AddServiceFromCommandQualifiedRead<vctDoubleVec, vctDoubleVec,
+                                                            cisst_msgs::ConvertFloat64Array>
+        (_required_interface_name, "actuator_to_joint_position",
+         _arm_name + "/actuator_to_joint_position");
 
     events_bridge().AddPublisherFromEventWrite<std::string, std_msgs::String>
         (_required_interface_name, "desired_state",
@@ -331,11 +313,11 @@ void dvrk::console::bridge_interface_provided_psm(const std::string & _arm_name,
     const std::string _required_interface_name = _arm_name + "_using_" + _interface_name;
 
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        (_required_interface_name, "set_adapter_present",
-         _arm_name + "/set_adapter_present");
+        (_required_interface_name, "emulate_adapter_present",
+         _arm_name + "/emulate_adapter_present");
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
-        (_required_interface_name, "set_tool_present",
-         _arm_name + "/set_tool_present");
+        (_required_interface_name, "emulate_tool_present",
+         _arm_name + "/emulate_tool_present");
     subscribers_bridge().AddSubscriberToCommandWrite<std::string, std_msgs::String>
         (_required_interface_name, "set_tool_type",
          _arm_name + "/set_tool_type");
@@ -486,6 +468,21 @@ void dvrk::console::add_topics_io(void)
                       m_console->m_IO_component_name, "Configuration");
 }
 
+void dvrk::console::add_topics_pid(void)
+{
+    for (auto armPair : m_console->mArms) {
+        const auto name = armPair.first;
+        const auto arm = *(armPair.second);
+        if (arm.expects_PID()) {
+            const auto pid_component_name = name + "-PID";
+            bridge_interface_provided(pid_component_name,
+                                      "Monitoring",
+                                      name + "/pid",
+                                      m_publish_rate, m_tf_rate);
+        }
+    }
+}
+
 void dvrk::console::add_topics_arm_io(mtsROSBridge * _pub_bridge,
                                       const std::string & _arm_name,
                                       const std::string & _io_component_name)
@@ -493,20 +490,26 @@ void dvrk::console::add_topics_arm_io(mtsROSBridge * _pub_bridge,
     const std::string _ros_namespace = _arm_name + "/io/";
     const std::string _interface_name = _arm_name + "-io";
     _pub_bridge->AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
-        (_interface_name, "GetAnalogInputPosSI",
-         _ros_namespace + "/analog_input_pos_si");
+        (_interface_name, "pot/measured_js",
+         _ros_namespace + "pot/measured_js");
     _pub_bridge->AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
         (_interface_name, "measured_js",
-         _ros_namespace + "/joint_measured_js");
+         _ros_namespace + "actuator/measured_js");
     _pub_bridge->AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
-        (_interface_name, "actuator_measured_js",
-         _ros_namespace + "/actuator_measured_js");
+        (_interface_name, "software/measured_js",
+         _ros_namespace + "software/measured_js");
+    _pub_bridge->AddPublisherFromCommandRead<prmStateJoint, sensor_msgs::JointState>
+        (_interface_name, "firmware/measured_js",
+         _ros_namespace + "firmware/measured_js");
     _pub_bridge->AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
         (_interface_name, "GetActuatorFeedbackCurrent",
-         _ros_namespace + "/actuator_measured_current");
+         _ros_namespace + "actuator/measured_current");
     _pub_bridge->AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
         (_interface_name, "GetActuatorRequestedCurrent",
-         _ros_namespace + "/actuator_servo_current");
+         _ros_namespace + "actuator/servo_current");
+    _pub_bridge->AddPublisherFromCommandRead<vctDoubleVec, sensor_msgs::JointState>
+        (_interface_name, "GetActuatorTimestamp",
+         _ros_namespace + "timestamp");
 
     m_connections.Add(_pub_bridge->GetName(), _interface_name,
                       _io_component_name, _arm_name);
@@ -519,12 +522,10 @@ void dvrk::console::add_topics_ecm_io(const std::string & _arm_name,
     const auto events = std::list<std::pair<std::string, std::string> >({
             {"ManipClutch", "manip_clutch"},
                 {"SUJClutch", "suj_clutch"}});
-    for (auto event = events.begin();
-         event != events.end();
-         ++event) {
-        std::string _interface_name = _arm_name + "-" + event->first;
+    for (auto event : events) {
+        std::string _interface_name = _arm_name + "-" + event.first;
         events_bridge().AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-            (_interface_name, "Button", _arm_name + "/io/" + event->second);
+            (_interface_name, "Button", _arm_name + "/io/" + event.second);
         m_connections.Add(events_bridge().GetName(), _interface_name,
                           _io_component_name, _interface_name);
     }
@@ -539,12 +540,10 @@ void dvrk::console::add_topics_psm_io(const std::string & _arm_name,
                 {"SUJClutch", "suj_clutch"},
                     {"Adapter", "adapter"},
                         {"Tool", "tool"}});
-    for (auto event = events.begin();
-         event != events.end();
-         ++event) {
-        std::string _interface_name = _arm_name + "-" + event->first;
+    for (auto event : events) {
+        std::string _interface_name = _arm_name + "-" + event.first;
         events_bridge().AddPublisherFromEventWrite<prmEventButton, sensor_msgs::Joy>
-            (_interface_name, "Button", _arm_name + "/io/" + event->second);
+            (_interface_name, "Button", _arm_name + "/io/" + event.second);
         m_connections.Add(events_bridge().GetName(), _interface_name,
                           _io_component_name, _interface_name);
     }
@@ -553,7 +552,7 @@ void dvrk::console::add_topics_psm_io(const std::string & _arm_name,
 void dvrk::console::add_topics_teleop_ecm(const std::string & _name)
 {
     std::string _ros_namespace = _name;
-    clean_namespace(_ros_namespace);
+    cisst_ros_crtk::clean_namespace(_ros_namespace);
 
     // messages
     events_bridge().AddLogFromEventWrite(_name + "-log", "error",
@@ -580,9 +579,6 @@ void dvrk::console::add_topics_teleop_ecm(const std::string & _name)
                       _name, "Setting");
 
     // commands
-    subscribers_bridge().AddSubscriberToCommandWrite<std::string, crtk_msgs::StringStamped>
-        (_name, "state_command",
-         _ros_namespace + "/state_command");
     subscribers_bridge().AddSubscriberToCommandWrite<double, std_msgs::Float64>
         (_name, "set_scale",
          _ros_namespace + "/set_scale");
@@ -594,7 +590,7 @@ void dvrk::console::add_topics_teleop_ecm(const std::string & _name)
 void dvrk::console::add_topics_teleop_psm(const std::string & _name)
 {
     std::string _ros_namespace = _name;
-    clean_namespace(_ros_namespace);
+    cisst_ros_crtk::clean_namespace(_ros_namespace);
 
     // messages
     events_bridge().AddLogFromEventWrite(_name + "-log", "error",
@@ -637,9 +633,6 @@ void dvrk::console::add_topics_teleop_psm(const std::string & _name)
                       _name, "Setting");
 
     // commands
-    subscribers_bridge().AddSubscriberToCommandWrite<std::string, crtk_msgs::StringStamped>
-        (_name, "state_command",
-         _ros_namespace + "/state_command");
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (_name, "lock_translation",
          _ros_namespace + "/lock_translation");
@@ -652,9 +645,6 @@ void dvrk::console::add_topics_teleop_psm(const std::string & _name)
     subscribers_bridge().AddSubscriberToCommandWrite<bool, std_msgs::Bool>
         (_name, "set_align_mtm",
          _ros_namespace + "/set_align_mtm");
-    subscribers_bridge().AddSubscriberToCommandWrite<vctMatRot3, geometry_msgs::Quaternion>
-        (_name, "set_registration_rotation",
-         _ros_namespace + "/set_registration_rotation");
     // connect
     m_connections.Add(subscribers_bridge().GetName(), _name,
                       _name, "Setting");

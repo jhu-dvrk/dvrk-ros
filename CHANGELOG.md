@@ -1,6 +1,24 @@
 Change log
 ==========
 
+2.2.0 (2023-11-21)
+==================
+
+* API changes:
+  * :warning: All topics `measured_cp` and `setpoint_cp` use `PoseStamped` instead of `TransformStamped`
+  * `video.md` and video launch files moved to newly created `dvrk_video` package (still part of this repository)
+* New features:
+  * Support for Si PSMs, ECM and SUJ
+  * All video related files (launch and md) moved to ROS package `dvrk_video` to avoid build dependencies on the full dVRK stack
+  * Added `vcs` files (replacing `wstool`) for dVRK 2.1, 2.2 and devel
+  * Added command line options to expose more IO and PID topics
+  * `dvrk_console_json` can locate `ros-io-<arm>.json` files using internal path, no need to specify the full path
+  * All Python examples updated to use newly introduced `crtk.ral` (ROS Abstraction Layer) and `crtk.check_connections`
+  * Added `dvrk_reset_teleoperation.py` to reposition MTMs and PSMs to better position between teleoperation tasks, very useful for user studies!
+  * `dvrk_bag_replay.py`: can now replay using `setpoint_jp` or `setpoint_cp`, fixed timing, doesn't use full `dvrk.psm` but creates a light class using `crtk.utils`, record and send joint velocities for better trajectory following
+* Bug fixes:
+  * Many
+
 2.1.0 (2021-08-10)
 ==================
 
