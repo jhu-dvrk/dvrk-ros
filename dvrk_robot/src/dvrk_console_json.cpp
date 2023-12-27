@@ -98,6 +98,9 @@ int main(int argc, char ** argv)
                                     "json config file to configure ROS bridges to collect low level data (IO)",
                                     cmnCommandLineOptions::OPTIONAL_OPTION, &jsonIOConfigFiles);
 
+    options.AddOptionNoValue("s", "suj-voltages",
+                             "add ROS topics for SUJ voltages");
+
     options.AddOptionNoValue("I", "pid-topics",
                              "add some extra publishers to monitor PID state");
 
@@ -109,7 +112,7 @@ int main(int argc, char ** argv)
                               cmnCommandLineOptions::OPTIONAL_OPTION, &jsonCollectionConfigFile);
 
     options.AddOptionNoValue("C", "calibration-mode",
-                             "run in calibration mode, doesn't use potentiometers to monitor encoder values and always force re-homing.  This mode should only be used when calibrating your potentiometers.");
+                             "run in calibration mode, doesn't use potentiometers to monitor encoder values and always force re-homing.  This mode should only be used when calibrating your potentiometers");
 
     options.AddOptionMultipleValues("m", "component-manager",
                                     "JSON files to configure component manager",
@@ -206,6 +209,10 @@ int main(int argc, char ** argv)
          iter++) {
         fileExists("ROS IO JSON configuration file", *iter, console);
         consoleROS->Configure(*iter);
+    }
+
+    if (options.IsSet("suj-voltages")) {
+        consoleROS->add_topics_suj_voltages();
     }
 
     if (options.IsSet("pid-topics")) {
