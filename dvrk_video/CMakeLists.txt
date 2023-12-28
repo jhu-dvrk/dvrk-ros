@@ -1,5 +1,5 @@
-cmake_minimum_required (VERSION 3.1)
-project (dvrk_video VERSION 2.2.0)
+cmake_minimum_required (VERSION 3.10)
+project (dvrk_video VERSION 2.2.1)
 
 find_package (
   catkin REQUIRED

@@ -1,6 +1,18 @@
 Change log
 ==========
 
+2.2.1 (2023-12-29)
+==================
+
+* API changes:
+  * Add `deinterlace` for gscam launch for DeckLink cards
+* Deprecated features:
+  * None
+* New features:
+  * Added `-s` to publish raw voltages for SUJs
+* Bug fixes:
+  * None
+
 2.2.0 (2023-11-21)
 ==================
 
