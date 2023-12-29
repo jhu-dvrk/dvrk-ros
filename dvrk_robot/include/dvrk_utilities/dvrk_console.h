@@ -74,6 +74,7 @@ namespace dvrk {
         // buttons on PSM
         void add_topics_psm_io(const std::string & _arm_name,
                                const std::string & _io_component_name);
+        void add_topics_suj_voltages(void);
         void add_topics_teleop_ecm(const std::string & _name);
         void add_topics_teleop_psm(const std::string & _name);
 
