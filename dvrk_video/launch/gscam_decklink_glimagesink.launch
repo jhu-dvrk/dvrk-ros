@@ -1,0 +1,24 @@
+<!-- -*- mode: XML -*- -->
+
+<launch>
+  <!-- This launchfile should bring up a node that broadcasts a ros image
+       transport on /decklink/image_raw from the input channel of a BlackMagic
+       DeckLink SDI capture card-->
+
+  <!-- DeckLink config, run $ gst-inspect decklinksrc to see all the options for your card -->
+  <arg name="camera_name" default="camera"/>
+  <arg name="connection" default="sdi"/>
+  <arg name="device" default="0"/>
+
+  <node ns="decklink" name="$(arg camera_name)" pkg="gscam" type="gscam" output="screen">
+    <param name="camera_name" value="$(arg camera_name)"/>
+    <param name="camera_info_url" value="package://gscam/examples/uncalibrated_parameters.ini"/>
+    <param name="gscam_config" value="decklinkvideosrc connection=$(arg connection) device-number=$(arg device) ! deinterlace ! tee name=t  t. ! queue ! glimagesink force-aspect-ratio=false  t. ! queue ! videoconvert"/>
+    <param name="frame_id" value="/decklink_frame"/>
+    <!-- This needs to be set to false to avoid dropping tons of frames -->
+    <param name="sync_sink" value="false"/>
+    <remap from="decklink/image_raw" to="image_raw"/>
+  </node>
+
+  <node name="decklink_transform" pkg="tf" type="static_transform_publisher" args="1 2 3 0 -3.141 0 /world /decklink_frame 10"/>
+</launch>
