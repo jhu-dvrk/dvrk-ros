@@ -564,16 +564,16 @@ void dvrk::console::add_topics_suj_voltages(void)
         CMN_LOG_CLASS_INIT_WARNING << "add_topics_suj_voltages: no SUJ on this console!  option -s ignored!" << std::endl;
         return;
     }
-    mtsROSBridge * _pub_bridge = new mtsROSBridge("SUJ-Voltages", 0.01 * cmn_s,
+    mtsROSBridge * _pub_bridge = new mtsROSBridge("SUJ-Voltages", 0.005 * cmn_s,
                                                 node_handle_ptr());
     const auto arms = std::list<std::string>({"ECM", "PSM1", "PSM2", "PSM3"});
     for (auto arm : arms) {
         _pub_bridge->AddPublisherFromCommandRead<vctDoubleVec, JointState>
             ("SUJ-" + arm, "GetVoltagesPrimary",
-             "SUJ/" + arm + "/primary_voltage");
+             "SUJ/" + arm + "/primary_voltage/measured_js");
         _pub_bridge->AddPublisherFromCommandRead<vctDoubleVec, JointState>
             ("SUJ-" + arm, "GetVoltagesSecondary",
-             "SUJ/" + arm + "/secondary_voltage");
+             "SUJ/" + arm + "/secondary_voltage/measured_js");
         m_connections.Add(_pub_bridge->GetName(), "SUJ-" + arm,
                           "SUJ", arm);
     }
