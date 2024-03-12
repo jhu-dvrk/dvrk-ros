@@ -1,0 +1,13 @@
+<launch>
+
+  <!-- video nodes -->
+  <include file="$(find dvrk_video)/launch/jhu_daVinci_video.launch"/>
+
+  <!-- Start the dVRK console -->
+  <node name="dvrk_node"
+        pkg="dvrk_robot"
+        type="dvrk_console_json"
+        args="-j $(find dvrk_config_jhu)/jhu-daVinci/console-SUJ-ECM-MTMR-PSM1-MTML-PSM2-Teleop.json"
+        output="screen"/>
+
+</launch>

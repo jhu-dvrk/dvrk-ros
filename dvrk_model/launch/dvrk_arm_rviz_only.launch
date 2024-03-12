@@ -1,0 +1,31 @@
+<launch>
+
+  <arg name="arm"/>
+  <arg name="model" default="$(find dvrk_model)/model/$(arg arm).urdf.xacro"/>
+  <arg name="joint_gui" default="false"/>
+
+  <group ns="$(arg arm)">
+      <arg name="rate" default="20"/>
+
+      <param name="robot_description" command="rosrun xacro xacro $(arg model) prefix:=$(arg arm)_"/>
+      <param name="rate" value="$(arg rate)"/>
+      <param name="use_gui" value="false"/>
+
+      <rosparam param="source_list" subst_value="True">
+          [/$(arg arm)/measured_js,
+           /$(arg arm)/jaw/measured_js,
+           /$(arg arm)/gripper/measured_js]
+      </rosparam>
+
+      <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"/>
+      <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+      <group if="$(arg joint_gui)">
+          <node name="joint_state_publisher_gui" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui"/>
+      </group>
+
+  </group>
+
+  <node name="rviz_$(arg arm)" pkg="rviz" type="rviz"
+     args="-d $(find dvrk_model)/rviz_config/$(arg arm).rviz"/>
+
+</launch>
