@@ -1,0 +1,28 @@
+<!-- -*- mode: XML -*- -->
+
+<!-- ROS2 version -->
+
+<launch>
+  <arg name="rig_name" default="jhu_daVinci_Si"/>
+
+  <!-- Set this to your camera's name -->
+  <arg name="left_camera_name" default="$(var rig_name)_left"/>
+  <arg name="left_cam_device" default="1"/>
+  <arg name="right_camera_name" default="$(var rig_name)_right"/>
+  <arg name="right_cam_device" default="0"/>
+
+  <!-- camera driver node -->
+  <include file="$(find-pkg-share dvrk_video)/launch/gscam_decklink_glimagesink.launch.xml">
+    <arg name="camera_name" value="$(var left_camera_name)"/>
+    <arg name="device" value="$(var left_cam_device)"/>
+    <arg name="namespace" value="$(var rig_name)/left"/>
+  </include>
+
+  <!-- camera driver node -->
+  <include file="$(find-pkg-share dvrk_video)/launch/gscam_decklink_glimagesink.launch.xml">
+    <arg name="camera_name" value="$(var right_camera_name)"/>
+    <arg name="device" value="$(var right_cam_device)"/>
+    <arg name="namespace" value="$(var rig_name)/right"/>
+  </include>
+
+</launch>
