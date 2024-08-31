@@ -1,5 +1,15 @@
+:warning: This repository is now archived and used for older dVRK distributions.  As of August 2024, the packages listed below have been moved to different repositories.  The new repositories contains code for both ROS1 and ROS2.
+
+* `dvrk_robot`, `dvrk_hrsv_widget` and `dvrk_arms_from_ros` are now in https://github.com/jhu-dvrk/sawIntuitiveResearchKit under `ros`
+* Video launch files that used to be under `dvrk_robot` are now in https://github.com/jhu-dvrk/dvrk_video
+* `dvrk_model` has been split into 2 repositories:
+  *  https://github.com/jhu-dvrk/dvrk_model for launch files, urdf, rviz and meshes
+  *  https://github.com/jhu-dvrk/dvrk_cad for CAD files (larger files)
+* `dvrk_python` is now in https://github.com/jhu-dvrk/dvrk_python
+* `dvrk_matlab` has not been migrated yet
+
 da Vinci Research Kit ROS
-====================
+=========================
 This repository has code related to daVinci Research Kit (dVRK) ROS packages.
 See https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki
 
